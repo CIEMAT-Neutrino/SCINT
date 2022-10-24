@@ -6,8 +6,10 @@ from pynput import keyboard
 from itertools import product
 
 def root2npy (in_path,out_path):
-    DEBUG=False
+    DEBUG=False;
     """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
+    # in_path ="../data/run26_ch6.root"
+    # out_path="../data/run26_ch6.npy"
     f=uproot.open(in_path)
     my_dict={}
     print("----------------------")
@@ -15,9 +17,12 @@ def root2npy (in_path,out_path):
     for branch in f["IR02"].keys():
         if DEBUG: print("dumping brach:",branch)
         my_dict[branch]=f["IR02"][branch].array().to_numpy()
+    
+    #additional useful info
     my_dict["NBins_wvf"]=my_dict["ADC"][0].shape[0]
-    print(my_dict.keys())
+    my_dict["Raw_file_keys"]=f["IR02"].keys()
 
+    print(my_dict.keys())
     np.save(out_path,my_dict)
     print("Saved data in:" , out_path)
 

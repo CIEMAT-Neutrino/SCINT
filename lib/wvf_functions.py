@@ -1,4 +1,5 @@
 import copy
+import numpy as np
 
 def save_proccesed_variables(my_runs,out_path="data/Analysis_"):
     """Does exactly what it says, no RawWvfs here"""
