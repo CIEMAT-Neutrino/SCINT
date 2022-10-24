@@ -1,4 +1,13 @@
 # cd to /lib and run -> python3 Vis.py
-from lib.my_functions import vis_raw_npy
+from lib.vis_functions import vis_raw_npy
 
-vis_raw_npy("22",1)
+PATH = "data/"
+
+RUNS = [10]
+CH   = [0,1,4,6]
+POL  = [1,1,1,1]
+
+# OPT  = [AdjBaseLine,Norm,LogY]
+OPT  = [True,True,True]
+
+vis_raw_npy(RUNS,CH,POL,OPT,PATH) # Input variables should be lists of integers
