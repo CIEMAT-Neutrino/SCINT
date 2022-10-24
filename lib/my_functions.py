@@ -44,7 +44,7 @@ def load_npy(RUNS,CH):
     for run in RUNS:
         channels=dict();
         for ch in CH:
-            channels[ch]=np.load("../data/run"+run+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+            channels[ch]=np.load("../data_sample/run"+run+"_ch"+str(ch)+".npy",allow_pickle=True).item()
         runs[run]=channels;
     return runs;
 
@@ -52,7 +52,7 @@ def vis_raw_npy(RUN,CH,PATH = ""):
     buffer = 20
     runs=dict()
     channels=dict()
-    channels[CH]=np.load("../data/run"+RUN+"_ch"+str(CH)+".npy",allow_pickle=True).item()
+    channels[CH]=np.load("../data_sample/run"+RUN+"_ch"+str(CH)+".npy",allow_pickle=True).item()
     runs[RUN]=channels
     
     plt.ion()
