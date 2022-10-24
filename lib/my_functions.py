@@ -3,6 +3,7 @@ import numpy as np
 import uproot
 
 from pynput import keyboard
+from itertools import product
 
 def root2npy (in_path,out_path):
     DEBUG=False
@@ -58,38 +59,39 @@ def vis_raw_npy(RUN,CH,PATH = ""):
     buffer = 20
     runs=dict()
     channels=dict()
-    channels[CH]=np.load("data/run"+RUN+"_ch"+str(CH)+".npy",allow_pickle=True).item()
-    runs[RUN]=channels
     
-    plt.ion()
-    next_plot = False
+    for run,ch in product(RUN,CH):
+        channels[ch]=np.load("data/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+        runs[run]=channels
+    
+        plt.ion()
+        next_plot = False
 
+        for i in range(len(runs[run][ch]["ADC"])):
+            min = np.argmin(runs[run][ch]["ADC"][i])
+            try:
+                PED = runs[run][ch]["Ped_mean"][i]    
+                STD = runs[run][ch]["Ped_STD"][i]    
+            except:
+                PED = np.mean(runs[run][ch]["ADC"][i][:min-buffer])
+                STD = np.std(runs[run][ch]["ADC"][i][:min-buffer])
+                plt.title("PED and Signal time evaluated at vis. time")
+            
+            plt.xlabel("Time in [s]")
+            plt.ylabel("ADC Counts")
+            plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,np.array(runs[run][ch]["ADC"][i]))
+            
+            try:
+                # plt.axhline(len(runs[run][ch]["Pedestal"]),c="red")
+                plt.plot(4e-9*np.array([min-buffer,min-buffer]),[PED+5*STD,PED-5*STD],c="green")
+                plt.axhline(PED,c="red")
+                plt.axhline(PED+STD,c="k",alpha=0.5,ls="--")
+                plt.axhline(PED-STD,c="k",alpha=0.5,ls="--")
+            except:
+                print("Unprocessed WVFs. Run Processing.py to obtain pedestal information.")
+            
+            while not plt.waitforbuttonpress(-1): pass
 
-    for i in range(len(runs[RUN][CH]["ADC"])):
-        min = np.argmin(runs[RUN][CH]["ADC"][i])
-        try:
-            PED = runs[RUN][CH]["Ped_mean"][i]    
-            STD = runs[RUN][CH]["Ped_STD"][i]    
-        except:
-            PED = np.mean(runs[RUN][CH]["ADC"][i][:min-buffer])
-            STD = np.std(runs[RUN][CH]["ADC"][i][:min-buffer])
-            plt.title("PED and Signal time evaluated at vis. time")
-        
-        plt.xlabel("Time in [s]")
-        plt.ylabel("ADC Counts")
-        plt.plot(np.arange(len(runs[RUN][CH]["ADC"][i]))*4e-9,np.array(runs[RUN][CH]["ADC"][i]))
-        
-        try:
-            # plt.axhline(len(runs[RUN][CH]["Pedestal"]),c="red")
-            plt.plot(4e-9*np.array([min-buffer,min-buffer]),[PED+5*STD,PED-5*STD],c="green")
-            plt.axhline(PED,c="red")
-            plt.axhline(PED+STD,c="k",alpha=0.5,ls="--")
-            plt.axhline(PED-STD,c="k",alpha=0.5,ls="--")
-        except:
-            print("Unprocessed WVFs. Run Processing.py to obtain pedestal information.")
-        
-        while not plt.waitforbuttonpress(-1): pass
+            plt.clf()
 
-        plt.clf()
-
-    plt.ioff()
+        plt.ioff()
