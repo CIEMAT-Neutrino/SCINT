@@ -50,7 +50,7 @@ def load_npy(RUNS,CH,POL,PATH = "../data/"):
     for run in RUNS:
         channels=dict();
         for ch in CH:
-            channels[ch]=np.load(PATH+"run"+str(run)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+            channels[ch]=np.load(PATH+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
         runs[run]=channels
     return runs
 
