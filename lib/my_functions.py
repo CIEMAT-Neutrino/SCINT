@@ -2,6 +2,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import uproot
 
+from pynput import keyboard
+
+def on_press(key):
+    try:
+        print('alphanumeric key {0} pressed'.format(
+            key.char))
+    except AttributeError:
+        print('special key {0} pressed'.format(
+            key))
+    return 
+
 def root2npy (in_path,out_path):
     DEBUG=False;
     """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
@@ -71,7 +82,12 @@ def vis_raw_npy(RUN,CH,PATH = ""):
         except:
             print("Unprocessed WVFs. Run Processing.py to obtain pedestal information.")
         
-        next_plot = plt.waitforbuttonpress(-1)
+
+        # while not plt.waitforbuttonpress(-1): pass
+
+        listener = keyboard.Listener(on_press=on_press)
+        listener.start()
+
         plt.clf()
 
     plt.ioff()
