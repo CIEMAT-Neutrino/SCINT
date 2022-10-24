@@ -1,4 +1,5 @@
 from lib.my_functions import load_npy
+from lib.my_functions import load_analysis_npy
 from lib.my_functions import compute_pedestal_variables
 from lib.my_functions import compute_peak_variables
 from lib.wvf_functions import save_proccesed_variables
@@ -26,3 +27,6 @@ compute_peak_variables(RUNS)
 # RUNS["10"][0].keys()
 
 save_proccesed_variables(RUNS)
+
+ana_runs = load_analysis_npy(N_runs, N_channels, P_channels, "data/")
+print(ana_runs[10][0].keys())

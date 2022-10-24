@@ -5,7 +5,7 @@ PATH = "data/"
 
 RUNS = [10]
 CH   = [0,1,4,6]
-POL  = [1,1,1,1]
+POL  = [-1,-1,-1,-1]
 
 # OPT  = [AdjBaseLine,Norm,LogY]
 OPT  = [True,True,True]
