@@ -42,6 +42,22 @@ def load_npy(RUNS,CH,POL,PATH = "../data/"):
         runs[run]=channels
     return runs
 
+def load_analysis_npy(RUNS,CH,POL,PATH = "../data/"):
+    """Structure: run_dict[RUN][CH][BRANCH] 
+    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
+
+    runs=dict()
+    runs["N_runs"]    =RUNS
+    runs["N_channels"]=CH
+    runs["P_channels"]=POL
+    
+    for run in RUNS:
+        channels=dict()
+        for ch in CH:
+            channels[ch]=np.load(PATH+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+        runs[run]=channels
+    return runs
+
 def compute_pedestal_variables(my_runs,nbins,PATH=""):
     """Computes the pedestal variables of a collection of a run's collection in standard format"""
 
