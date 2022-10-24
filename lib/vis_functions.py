@@ -6,7 +6,7 @@ from pynput import keyboard
 from itertools import product
 
 
-def vis_raw_npy(RUN,CH,POL,PATH = ""):
+def vis_raw_npy(RUN,CH,POL,OPT,PATH = ""):
 
     runs=load_npy(RUN,CH,POL,PATH)
     buffer = 20
@@ -27,14 +27,21 @@ def vis_raw_npy(RUN,CH,POL,PATH = ""):
             
             plt.xlabel("Time in [s]")
             plt.ylabel("ADC Counts")
-            plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,np.array(runs[run][ch]["ADC"][i]))
             
+            if OPT[0] == True:
+                try:
+                    plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,np.array(runs[run][ch]["ADC"][i]))
+                except:
+                    plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,np.array(runs[run][ch]["ADC"][i]))
+                    print("No PED nor POL information found to apply option.")
             try:
                 # plt.axhline(len(runs[run][ch]["Pedestal"]),c="red")
                 plt.plot(4e-9*np.array([min-buffer,min-buffer]),[PED+5*STD,PED-5*STD],c="green")
                 plt.axhline(PED,c="red")
                 plt.axhline(PED+STD,c="k",alpha=0.5,ls="--")
                 plt.axhline(PED-STD,c="k",alpha=0.5,ls="--")
+                if OPT[2] == True:
+                    plt.logy()
             except:
                 print("Unprocessed WVFs. Run Processing.py to obtain pedestal information.")
             
