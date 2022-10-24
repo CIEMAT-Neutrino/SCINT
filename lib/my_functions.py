@@ -4,14 +4,13 @@ import uproot
 
 from pynput import keyboard
 
-def on_press(key):
-    try:
-        print('alphanumeric key {0} pressed'.format(
-            key.char))
-    except AttributeError:
-        print('special key {0} pressed'.format(
-            key))
-    return 
+# def on_press(key):
+#     try:
+#         print('alphanumeric key {0} pressed'.format(
+#             key.char))
+#     except AttributeError:
+#         print('special key {0} pressed'.format(
+#             key)) 
 
 def root2npy (in_path,out_path):
     DEBUG=False;
@@ -52,7 +51,7 @@ def vis_raw_npy(RUN,CH,PATH = ""):
     buffer = 20
     runs=dict()
     channels=dict()
-    channels[CH]=np.load("../data_sample/run"+RUN+"_ch"+str(CH)+".npy",allow_pickle=True).item()
+    channels[CH]=np.load("data/run"+RUN+"_ch"+str(CH)+".npy",allow_pickle=True).item()
     runs[RUN]=channels
     
     plt.ion()
@@ -83,10 +82,10 @@ def vis_raw_npy(RUN,CH,PATH = ""):
             print("Unprocessed WVFs. Run Processing.py to obtain pedestal information.")
         
 
-        # while not plt.waitforbuttonpress(-1): pass
+        while not plt.waitforbuttonpress(-1): pass
 
-        listener = keyboard.Listener(on_press=on_press)
-        listener.start()
+        # listener = keyboard.Listener(on_press=on_press)
+        # listener.start()
 
         plt.clf()
 
