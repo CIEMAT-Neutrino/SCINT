@@ -30,7 +30,7 @@ def root2npy (in_path,out_path):
     np.save(out_path,my_dict)
     print("Saved data in:" , out_path)
 
-def load_npy(RUNS,CH,POL,PATH = "../data/run"+run+"_ch"+str(ch)+".npy"):
+def load_npy(RUNS,CH,POL,PATH = "../data/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
@@ -50,7 +50,7 @@ def load_npy(RUNS,CH,POL,PATH = "../data/run"+run+"_ch"+str(ch)+".npy"):
     for run in RUNS:
         channels=dict();
         for ch in CH:
-            channels[ch]=np.load(PATH,allow_pickle=True).item()
+            channels[ch]=np.load(PATH+"run"+run+"_ch"+str(ch)+".npy",allow_pickle=True).item()
         runs[run]=channels;
     return runs;
 
@@ -73,11 +73,11 @@ def compute_peak_variables(my_runs,range1=0,range2=0):
             my_runs[run][ch]["Peak_time"] =np.argmax (my_runs[run][ch]["ADC"][:,:]*my_runs["P_channels"][ch],axis=1)
 
 def vis_raw_npy(RUNS,RUN,CH,PATH = ""):
-    # buffer = 20
-    # runs=dict()
-    # channels=dict()
-    # channels[CH]=np.load("data/run"+RUN+"_ch"+str(CH)+".npy",allow_pickle=True).item()
-    # runs[RUN]=channels
+    buffer = 20
+    runs=dict()
+    channels=dict()
+    channels[CH]=np.load("data/run"+RUN+"_ch"+str(CH)+".npy",allow_pickle=True).item()
+    runs[RUN]=channels
     
     plt.ion()
     next_plot = False
@@ -85,13 +85,13 @@ def vis_raw_npy(RUNS,RUN,CH,PATH = ""):
 
     for i in range(len(RUNS[RUN][CH]["ADC"])):
         min = np.argmin(RUNS[RUN][CH]["ADC"][i])
-        # try:
-        PED = RUNS[RUN][CH]["Ped_mean"][i]    
-        STD = RUNS[RUN][CH]["Ped_STD"][i]    
-        # except:
-        #     PED = np.mean(runs[RUN][CH]["ADC"][i][:min-buffer])
-        #     STD = np.std(runs[RUN][CH]["ADC"][i][:min-buffer])
-        #     plt.title("PED and Signal time evaluated at vis. time")
+        try:
+            PED = RUNS[RUN][CH]["Ped_mean"][i]    
+            STD = RUNS[RUN][CH]["Ped_STD"][i]    
+        except:
+            PED = np.mean(runs[RUN][CH]["ADC"][i][:min-buffer])
+            STD = np.std(runs[RUN][CH]["ADC"][i][:min-buffer])
+            plt.title("PED and Signal time evaluated at vis. time")
         
         plt.xlabel("Time in [s]")
         plt.ylabel("ADC Counts")
