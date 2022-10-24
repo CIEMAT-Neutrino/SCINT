@@ -1,6 +1,7 @@
 from lib.my_functions import load_npy
 from lib.my_functions import compute_pedestal_variables
 from lib.my_functions import compute_peak_variables
+from lib.wvf_functions import save_proccesed_variables
 
 N_runs     =[10,22,26]     
 N_channels =[0,1,4,6]       
@@ -23,3 +24,5 @@ compute_pedestal_variables(RUNS,PROP["NBins_Ped"])
 
 compute_peak_variables(RUNS)
 # RUNS["10"][0].keys()
+
+save_proccesed_variables(RUNS)
