@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, '../')
 from lib.my_functions import load_npy
 from lib.wvf_functions import average_wvf
 
@@ -8,6 +10,6 @@ P_channels ={}
 for ch,pl in zip(N_channels,Pl): P_channels[ch]=pl
 
 L_channels  =["SiPM1","SiPM2","PMT","SuperCell"]
-RUNS = load_npy(N_runs, N_channels,P_channels,"data/")
+RUNS = load_npy(N_runs, N_channels,P_channels)
 
 average_wvf(RUNS)
