@@ -72,7 +72,7 @@ def compute_peak_variables(my_runs,range1=0,range2=0):
             my_runs[run][ch]["Peak_amp" ] =np.max    (my_runs[run][ch]["ADC"][:,:]*my_runs["P_channels"][ch],axis=1)
             my_runs[run][ch]["Peak_time"] =np.argmax (my_runs[run][ch]["ADC"][:,:]*my_runs["P_channels"][ch],axis=1)
 
-def vis_raw_npy(RUNS,RUN,CH,PATH = ""):
+def vis_raw_npy(RUN,CH,PATH = ""):
     buffer = 20
     runs=dict()
     channels=dict()
@@ -83,11 +83,11 @@ def vis_raw_npy(RUNS,RUN,CH,PATH = ""):
     next_plot = False
 
 
-    for i in range(len(RUNS[RUN][CH]["ADC"])):
-        min = np.argmin(RUNS[RUN][CH]["ADC"][i])
+    for i in range(len(runs[RUN][CH]["ADC"])):
+        min = np.argmin(runs[RUN][CH]["ADC"][i])
         try:
-            PED = RUNS[RUN][CH]["Ped_mean"][i]    
-            STD = RUNS[RUN][CH]["Ped_STD"][i]    
+            PED = runs[RUN][CH]["Ped_mean"][i]    
+            STD = runs[RUN][CH]["Ped_STD"][i]    
         except:
             PED = np.mean(runs[RUN][CH]["ADC"][i][:min-buffer])
             STD = np.std(runs[RUN][CH]["ADC"][i][:min-buffer])
@@ -95,7 +95,7 @@ def vis_raw_npy(RUNS,RUN,CH,PATH = ""):
         
         plt.xlabel("Time in [s]")
         plt.ylabel("ADC Counts")
-        plt.plot(np.arange(len(RUNS[RUN][CH]["ADC"][i]))*4e-9,np.array(RUNS[RUN][CH]["ADC"][i]))
+        plt.plot(np.arange(len(runs[RUN][CH]["ADC"][i]))*4e-9,np.array(runs[RUN][CH]["ADC"][i]))
         
         try:
             # plt.axhline(len(runs[RUN][CH]["Pedestal"]),c="red")
