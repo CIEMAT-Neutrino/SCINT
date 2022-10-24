@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import uproot
+import copy
 
-from pynput import keyboard
+# from pynput import keyboard #Todo: cosas chulas, sergio mas adelante
 
 def root2npy (in_path,out_path):
     DEBUG=False;
@@ -16,13 +17,16 @@ def root2npy (in_path,out_path):
     for branch in f["IR02"].keys():
         if DEBUG: print("dumping brach:",branch)
         my_dict[branch]=f["IR02"][branch].array().to_numpy()
+    
+    #additional useful info
     my_dict["NBins_wvf"]=my_dict["ADC"][0].shape[0]
-    print(my_dict.keys())
+    my_dict["Raw_file_keys"]=f["IR02"].keys()
 
+    print(my_dict.keys())
     np.save(out_path,my_dict)
     print("Saved data in:" , out_path)
 
-def load_npy(RUNS,CH,POL,PATH = "../data/"):
+def load_npy(RUNS,CH,POL,PATH = "data/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
