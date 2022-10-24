@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, '../')
 from lib.my_functions import root2npy
 
 RUNS=[10,22,26]
