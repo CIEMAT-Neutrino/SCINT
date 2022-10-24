@@ -5,10 +5,8 @@ import uproot
 from pynput import keyboard
 
 def root2npy (in_path,out_path):
-    DEBUG=False;
+    DEBUG=False
     """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
-    # in_path ="../data/run26_ch6.root"
-    # out_path="../data/run26_ch6.npy"
     f=uproot.open(in_path)
     my_dict={}
     print("----------------------")
@@ -26,13 +24,13 @@ def load_npy(RUNS,CH,POL,PATH = "../data/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
-    runs=dict();
-    runs["N_runs"]    =RUNS;
-    runs["N_channels"]=CH;
-    runs["P_channels"]=POL;
+    runs=dict()
+    runs["N_runs"]    =RUNS
+    runs["N_channels"]=CH
+    runs["P_channels"]=POL
     
     for run in RUNS:
-        channels=dict();
+        channels=dict()
         for ch in CH:
             channels[ch]=np.load(PATH+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
         runs[run]=channels
