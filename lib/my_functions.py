@@ -4,14 +4,6 @@ import uproot
 
 from pynput import keyboard
 
-# def on_press(key):
-#     try:
-#         print('alphanumeric key {0} pressed'.format(
-#             key.char))
-#     except AttributeError:
-#         print('special key {0} pressed'.format(
-#             key)) 
-
 def root2npy (in_path,out_path):
     DEBUG=False;
     """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
@@ -34,14 +26,6 @@ def load_npy(RUNS,CH,POL,PATH = "../data/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
-    # RUNS=[
-    #     # "02",
-    #     "10",
-    #     "22",
-    #     # "26"
-    #     ]
-    # CH=[0,1,4,6]
-
     runs=dict();
     runs["N_runs"]    =RUNS;
     runs["N_channels"]=CH;
@@ -54,7 +38,7 @@ def load_npy(RUNS,CH,POL,PATH = "../data/"):
         runs[run]=channels
     return runs
 
-def compute_pedestal_variables(my_runs,nbins):
+def compute_pedestal_variables(my_runs,nbins,PATH=""):
     """Computes the pedestal variables of a collection of a run's collection in standard format"""
 
     for run in my_runs["N_runs"]:
@@ -64,7 +48,7 @@ def compute_pedestal_variables(my_runs,nbins):
             my_runs[run][ch]["Ped_max"] =np.max (my_runs[run][ch]["ADC"][:,:nbins],axis=1)
             my_runs[run][ch]["Ped_min"] =np.min (my_runs[run][ch]["ADC"][:,:nbins],axis=1)
 
-def compute_peak_variables(my_runs,range1=0,range2=0):
+def compute_peak_variables(my_runs,range1=0,range2=0,PATH=""):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
     # to do: implement ranges 
     for run in my_runs["N_runs"]:
@@ -107,9 +91,6 @@ def vis_raw_npy(RUN,CH,PATH = ""):
             print("Unprocessed WVFs. Run Processing.py to obtain pedestal information.")
         
         while not plt.waitforbuttonpress(-1): pass
-
-        # listener = keyboard.Listener(on_press=on_press)
-        # listener.start()
 
         plt.clf()
 
