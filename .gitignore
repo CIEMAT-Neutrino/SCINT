@@ -1,5 +1,7 @@
 # Add coustom folders
 data/
+#remove raw data from repo (up to tens of Gbs), download script available.
+*.root 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
