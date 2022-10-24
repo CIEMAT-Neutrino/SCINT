@@ -38,7 +38,7 @@ def load_npy(RUNS,CH,POL,PATH = "../data/"):
     for run in RUNS:
         channels=dict()
         for ch in CH:
-            channels[ch]=np.load(PATH+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+            channels[ch]=np.load(PATH+"raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
         runs[run]=channels
     return runs
 
@@ -54,24 +54,6 @@ def load_analysis_npy(RUNS,CH,POL,PATH = "../data/"):
     for run in RUNS:
         channels=dict()
         for ch in CH:
-            channels[ch]=np.load(PATH+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+            channels[ch]=np.load(PATH+"ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
         runs[run]=channels
     return runs
-
-def compute_pedestal_variables(my_runs,nbins,PATH=""):
-    """Computes the pedestal variables of a collection of a run's collection in standard format"""
-
-    for run in my_runs["N_runs"]:
-        for ch in my_runs["N_channels"]:
-            my_runs[run][ch]["Ped_STD"] =np.std (my_runs[run][ch]["ADC"][:,:nbins],axis=1)
-            my_runs[run][ch]["Ped_mean"]=np.mean(my_runs[run][ch]["ADC"][:,:nbins],axis=1)
-            my_runs[run][ch]["Ped_max"] =np.max (my_runs[run][ch]["ADC"][:,:nbins],axis=1)
-            my_runs[run][ch]["Ped_min"] =np.min (my_runs[run][ch]["ADC"][:,:nbins],axis=1)
-
-def compute_peak_variables(my_runs,range1=0,range2=0,PATH=""):
-    """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
-    # to do: implement ranges 
-    for run in my_runs["N_runs"]:
-        for ch in my_runs["N_channels"]:
-            my_runs[run][ch]["Peak_amp" ] =np.max    (my_runs[run][ch]["ADC"][:,:]*my_runs["P_channels"][ch],axis=1)
-            my_runs[run][ch]["Peak_time"] =np.argmax (my_runs[run][ch]["ADC"][:,:]*my_runs["P_channels"][ch],axis=1)

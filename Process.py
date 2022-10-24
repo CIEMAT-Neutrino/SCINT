@@ -1,8 +1,8 @@
 from lib.my_functions import load_npy
 from lib.my_functions import load_analysis_npy
-from lib.my_functions import compute_pedestal_variables
-from lib.my_functions import compute_peak_variables
-from lib.wvf_functions import save_proccesed_variables
+from lib.ana_functions import compute_pedestal_variables
+from lib.ana_functions import compute_peak_variables
+from lib.ana_functions import save_proccesed_variables
 
 N_runs     =[10,22,26]     
 N_channels =[0,1,4,6]       
