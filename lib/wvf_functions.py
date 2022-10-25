@@ -3,7 +3,7 @@ import numpy as np
 from .my_functions import load_analysis_npy, load_npy
 from itertools import product
 
-def average_wvf(my_runs,PATH="../data/ave/"):
+def average_wvfs(my_runs,PATH="../data/ave/"):
     
     try:
         ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
