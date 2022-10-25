@@ -26,14 +26,14 @@ def root2npy (in_path,out_path):
     np.save(out_path,my_dict)
     print("Saved data in:" , out_path)
 
-def load_npy(RUNS,CH,POL,PATH = "../data/raw/"):
+def load_npy(RUNS,CH,PATH = "../data/raw/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
     runs=dict()
     runs["N_runs"]    =RUNS
     runs["N_channels"]=CH
-    runs["P_channels"]=POL
+    # runs["P_channels"]=POL
     
     for run in RUNS:
         channels=dict()
@@ -42,14 +42,14 @@ def load_npy(RUNS,CH,POL,PATH = "../data/raw/"):
         runs[run]=channels
     return runs
 
-def load_analysis_npy(RUNS,CH,POL,PATH = "../data/ana/"):
+def load_analysis_npy(RUNS,CH,PATH = "../data/ana/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
     runs=dict()
     runs["N_runs"]    =RUNS
     runs["N_channels"]=CH
-    runs["P_channels"]=POL
+    # runs["P_channels"]=POL
     
     for run in RUNS:
         channels=dict()
@@ -58,14 +58,14 @@ def load_analysis_npy(RUNS,CH,POL,PATH = "../data/ana/"):
         runs[run]=channels
     return runs
 
-def load_average_npy(RUNS,CH,POL,PATH = "../data/ave/"):
+def load_average_npy(RUNS,CH,PATH = "../data/ave/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
     runs=dict()
     runs["N_runs"]    =RUNS
     runs["N_channels"]=CH
-    runs["P_channels"]=POL
+    # runs["P_channels"]=POL
     
     for run in RUNS:
         channels=dict()
