@@ -1,0 +1,5 @@
+numpy
+matplotlib
+uproot
+scipy
+pynput
