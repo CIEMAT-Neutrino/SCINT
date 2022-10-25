@@ -9,4 +9,4 @@ N_channels =[0,1,4,6]
 L_channels  =["SiPM1","SiPM2","PMT","SuperCell"]
 RUNS = load_npy(N_runs, N_channels)
 
-average_wvf(RUNS)
+average_wvfs(RUNS)
