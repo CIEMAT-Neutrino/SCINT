@@ -4,7 +4,6 @@ import numpy as np
 from .my_functions import load_npy
 from .my_functions import load_analysis_npy
 from .my_functions import load_average_npy
-from pynput import keyboard
 from itertools import product
 
 
