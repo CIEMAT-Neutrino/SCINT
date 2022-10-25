@@ -18,13 +18,12 @@ We don't want:
 
     then place all your root files in data/raw folder (check copy_data.sh for ideas)
 
-2. Make additional subfolders: data/ana and data/ave
-3. Run the following macros from the macros folder:
+2. Run the following macros from the macros folder:
     - macros/Root2Np.py
     - macros/Process.py
     - macros/Average.py
     - macros/Vis.py
-4. To better visualize what is happening, there are jupyter notebooks available in notebooks/
+3. To better visualize what is happening, there are jupyter notebooks available in notebooks/
 
 Rodrigo & Sergio
 November 2022
