@@ -12,14 +12,19 @@ We don't want:
     -Complicated hyerarchies
     -Comented/uncomented lines with the same code but different runs/configs
 
-1. To start make the folder data/raw and and place there your root files
+1. To start run:
+
+    ./scripts/setup.sh
+
+    then place all your root files in data/raw folder (check copy_data.sh for ideas)
+
 2. Make additional subfolders: data/ana and data/ave
 3. Run the following macros from the macros folder:
     - macros/Root2Np.py
     - macros/Process.py
     - macros/Average.py
     - macros/Vis.py
-4. To better visualize what is happening, there are jupyter notebooks available unader notebooks/
+4. To better visualize what is happening, there are jupyter notebooks available in notebooks/
 
 Rodrigo & Sergio
 November 2022
