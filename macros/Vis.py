@@ -6,9 +6,8 @@ from lib.vis_functions import vis_raw_npy
 PATH = "data/"
 
 RUNS = [10]
-CH   = [0,1,4,6]
-POL  = [-1,-1,-1,-1]
+CH   = [1]
 
-OPT  = {"NORM":True,"LOGY":False,"BASELINE":False}
+OPT  = {"NORM":True,"LOGY":True,"BASELINE":True}
 
-vis_raw_npy(RUNS,CH,POL,OPT) # Input variables should be lists of integers
+vis_raw_npy(RUNS,CH,OPT) # Input variables should be lists of integers

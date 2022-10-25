@@ -8,17 +8,17 @@ from pynput import keyboard
 from itertools import product
 
 
-def vis_raw_npy(RUN,CH,POL,OPT):
+def vis_raw_npy(RUN,CH,OPT):
     
     norm_raw = 1
     norm_ave = 1
     buffer = 40
-    runs   = load_npy(RUN,CH,POL)
+    runs   = load_npy(RUN,CH)
 
     try:
-        ana_runs = load_analysis_npy(RUN,CH,POL)
+        ana_runs = load_analysis_npy(RUN,CH)
         try:
-            ave_runs = load_average_npy(RUN,CH,POL)
+            ave_runs = load_average_npy(RUN,CH)
         except:
             print("Events have not been averaged")
     except:
@@ -36,11 +36,12 @@ def vis_raw_npy(RUN,CH,POL,OPT):
             
             try:
                 PED = ana_runs[run][ch]["Ped_mean"][i]    
-                STD = ana_runs[run][ch]["Ped_STD"][i]    
+                STD = ana_runs[run][ch]["Ped_STD"][i]
+
                 if OPT["BASELINE"] == True:
                     if OPT["NORM"] == True:
-                        norm_raw = np.max(POL[ch]*(np.array(runs[run][ch]["ADC"][i])-PED))      
-                    plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,POL[ch]*(np.array(runs[run][ch]["ADC"][i])-PED)/norm_raw,label="RAW_WVF")
+                        norm_raw = np.max(ana_runs[run][ch]["P_channel"]*(np.array(runs[run][ch]["ADC"][i])-PED))      
+                    plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,ana_runs[run][ch]["P_channel"]*(np.array(runs[run][ch]["ADC"][i])-PED)/norm_raw,label="RAW_WVF")
                     try:
                         if OPT["NORM"] == True:
                             norm_ave = np.max(ave_runs[run][ch]["ADC"])
