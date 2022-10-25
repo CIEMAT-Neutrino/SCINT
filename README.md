@@ -19,6 +19,7 @@ We don't want:
     - macros/Process.py
     - macros/Average.py
     - macros/Vis.py
+4. To better visualize what is happening, there are jupyter notebooks available unader notebooks/
 
 Rodrigo & Sergio
 November 2022
