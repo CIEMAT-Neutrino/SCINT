@@ -7,7 +7,7 @@ from lib.dec_functions import deconvolve
 
 run = 26
 dec_run = 10
-ch = 0
+ch = 6
 
 my_runs = load_npy([run],[ch])
 dec_runs = load_average_npy([dec_run],[ch])
