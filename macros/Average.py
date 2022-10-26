@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, '../')
-from lib.my_functions import load_npy
-from lib.wvf_functions import average_wvf
+from lib.io_functions import load_npy
+from lib.wvf_functions import average_wvfs
 
 N_runs     =[10,22,26]     
 N_channels =[0,1,4,6]       
