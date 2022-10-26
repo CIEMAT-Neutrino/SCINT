@@ -6,7 +6,7 @@ from pynput import keyboard
 from itertools import product
 
 def root2npy (in_path,out_path):
-    DEBUG=False;
+    DEBUG=False
     """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
     # in_path ="../data/run26_ch6.root"
     # out_path="../data/run26_ch6.npy"

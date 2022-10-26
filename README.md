@@ -3,9 +3,10 @@ This is a python library to process and analyse raw data from the IR02 lab.
 
 We want:
 
-    -Classless structure, dictionaries hold all the run/channels information + the wvfs.
-    
-    -To avoid as much overcalculation as posible, in particular: produce pedestal/charge/time values once and store them sepparatly from the raw data to prevent memmory issues when dealing with multiple runs. 
+    -Classless structure, dictionaries hold all the run/channels information + the wvfs.   
+    -To avoid as much overcalculation as posible, in particular: 
+        -Calculate pedestal/charge/time values all at once and store them sepparatly from the raw data
+        -Prevent excessive memmory usage when dealing with multiple runs. 
 
 We don't want:
 
@@ -23,6 +24,7 @@ We don't want:
     - macros/Process.py
     - macros/Average.py
     - macros/Vis.py
+
 3. To better visualize what is happening, there are jupyter notebooks available in notebooks/
 
 Rodrigo & Sergio
