@@ -4,6 +4,7 @@ import numpy as np
 from .io_functions import load_npy
 from .io_functions import load_analysis_npy
 from .io_functions import load_average_npy
+from .io_functions import check_key
 from itertools import product
 
 
@@ -16,6 +17,8 @@ def vis_raw_npy(RUN,CH,OPT):
 
     try:
         ana_runs = load_analysis_npy(RUN,CH)
+        if check_key(OPT,"AVE") != False: AVE = OPT["AVE"]
+        else: AVE = "AvWvf"
         try:
             ave_runs = load_average_npy(RUN,CH)
         except:
@@ -43,8 +46,8 @@ def vis_raw_npy(RUN,CH,OPT):
                     plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,ana_runs[run][ch]["P_channel"]*(np.array(runs[run][ch]["ADC"][i])-PED)/norm_raw,label="RAW_WVF")
                     try:
                         if OPT["NORM"] == True:
-                            norm_ave = np.max(ave_runs[run][ch]["ADC"])
-                        plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,ave_runs[run][ch]["ADC"]/norm_ave,alpha = 0.5,label="AVE_WVF")
+                            norm_ave = np.max(ave_runs[run][ch][AVE])
+                        plt.plot(np.arange(len(runs[run][ch]["ADC"][i]))*4e-9,ave_runs[run][ch][AVE]/norm_ave,alpha = 0.5,label="AVE_WVF")
                     except:
                         print("Remember to run Average.py")
                     PED = 0
