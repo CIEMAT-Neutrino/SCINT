@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib.my_functions import load_npy,load_average_npy
+from lib.io_functions import load_npy,load_average_npy
 from lib.dec_functions import deconvolve
 from lib.dec_functions import deconvolve
 

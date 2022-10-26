@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0, '../')
-from lib.my_functions import root2npy
+from lib.io_functions import root2npy
 
 RUNS=[10,22,26]
 RUNS_calib=["02"]
