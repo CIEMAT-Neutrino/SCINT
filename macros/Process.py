@@ -1,8 +1,8 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib.my_functions import load_npy
-from lib.my_functions import load_analysis_npy
+from lib.io_functions import load_npy
+from lib.io_functions import load_analysis_npy
 from lib.ana_functions import compute_pedestal_variables
 from lib.ana_functions import compute_peak_variables
 from lib.ana_functions import insert_polarity

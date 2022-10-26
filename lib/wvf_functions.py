@@ -1,6 +1,6 @@
 # import copy
 import numpy as np
-from .my_functions import load_analysis_npy, load_npy
+from .io_functions import load_analysis_npy, load_npy
 from itertools import product
 
 def average_wvfs(my_runs,PATH="../data/ave/"):
