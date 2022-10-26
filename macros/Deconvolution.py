@@ -5,11 +5,17 @@ from lib.io_functions import load_npy,load_average_npy
 from lib.dec_functions import deconvolve
 from lib.dec_functions import deconvolve
 
-my_runs = load_npy([26],[6])
-dec_runs = load_average_npy([10],[6])
+run = 26
+dec_run = 10
+ch = 0
+
+my_runs = load_npy([run],[ch])
+dec_runs = load_average_npy([dec_run],[ch])
+
+OPT = {"LOGY":False, "FOCUS":True}
 OPT = {"LOGY":False}
 
 # print(dec_runs[10][0].keys())
 # KERNEL = dec_runs["ADC"]
 
-deconvolve(my_runs,dec_runs[10][6]["ADC"],80,200,OPT)
+deconvolve(my_runs,dec_runs[dec_run][ch]["ADC"],120,0,OPT)
