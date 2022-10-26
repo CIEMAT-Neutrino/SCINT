@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from .my_functions import load_analysis_npy
+from .io_functions import load_analysis_npy
 
 from itertools import product
 
