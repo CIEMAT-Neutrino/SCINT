@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .my_functions import load_npy
-from .my_functions import load_analysis_npy
-from .my_functions import load_average_npy
+from .io_functions import load_npy
+from .io_functions import load_analysis_npy
+from .io_functions import load_average_npy
 from itertools import product
 
 
