@@ -42,7 +42,7 @@ def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
             if TRIMM != 0: SIGNAL = POL*(RAW[:-TRIMM]-PED)
             else: SIGNAL = POL*(RAW-PED)
             
-            NOISE = 100*np.random.randn(len(SIGNAL))
+            NOISE = 20*np.random.randn(len(SIGNAL))
             FFT_NOISE = np.fft.rfft(NOISE)
 
             while np.argmax(SIGNAL) < np.argmax(KERNEL):
@@ -83,6 +83,8 @@ def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
             DEC = np.fft.irfft(FFT_DEC)
             DEC = np.roll(DEC,np.argmax(KERNEL))
             
+            plt.ion()
+            next_plot = False
             plt.rcParams['figure.figsize'] = [16, 8]
             plt.subplot(1,2,1)
             plt.plot(np.arange(len(SIGNAL))*4e-9,SIGNAL,label = "SIGNAL",c="tab:blue")
@@ -99,7 +101,7 @@ def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
             plt.subplot(1,2,2)
             plt.plot(FFT_SIGNAL_X,np.abs(FFT_SIGNAL),label = "SIGNAL",c="tab:blue")
             plt.plot(FFT_SIGNAL_X,np.abs(GAUSS_SIGNAL),label = "GAUSS_SIGNAL",c="blue")
-            plt.plot(FFT_KERNEL_X,np.abs(FFT_KERNEL),label = "KERNEL",c="tab:orange")
+            plt.plot(FFT_KERNEL_X,np.abs(FFT_KERNEL),label = "DET_RESPONSE",c="tab:orange")
             
             plt.plot(FFT_SIGNAL_X,np.abs(FFT_DEC),label = "DECONVOLUTION",c="tab:green")
             plt.plot(FFT_SIGNAL_X,WIENER,label = "WIENER",c="tab:red")
@@ -111,4 +113,9 @@ def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
             plt.ylim(1e-6,np.max(FFT_KERNEL)*10)
             plt.semilogy();plt.semilogx()
             plt.legend()
-            plt.show()
+            
+            while not plt.waitforbuttonpress(-1): pass
+
+            plt.clf()
+
+        plt.ioff()
