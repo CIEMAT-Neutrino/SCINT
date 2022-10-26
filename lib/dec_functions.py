@@ -4,15 +4,14 @@ from .my_functions import load_analysis_npy
 
 from itertools import product
 
-def gauss(x, sd, m=0, norm =1, n=2):
-    A=1;mean=m;std=sd
-    if norm=="standard":
-        A=1/(std * np.sqrt(2 * np.pi))
+def gauss(X,STD,MEAN=0,NORM=1,N=2):
+    A=1
+    if NORM=="standard":
+        A=1/(STD*np.sqrt(2*np.pi))
     else:
-        A=norm
-    y_out = A*np.exp( - (x - mean)**n / (2 * std**n))
-    
-    return y_out
+        A=NORM
+    Y=A*np.exp(-(X-MEAN)**N/(2*STD**N))
+    return Y
 
 def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
     try:
