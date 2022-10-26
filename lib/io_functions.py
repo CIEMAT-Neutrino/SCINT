@@ -73,3 +73,9 @@ def load_average_npy(RUNS,CH,PATH = "../data/ave/"):
             channels[ch]=np.load(PATH+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
         runs[run]=channels
     return runs
+
+def check_key(OPT,KEY):
+    try:
+        return OPT[KEY]    
+    except KeyError:
+        return False
