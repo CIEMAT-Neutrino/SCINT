@@ -34,54 +34,55 @@ def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
 
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         for i in range(len(my_runs[run][ch]["ADC"])):
+            # Select required runs and parameters
             RAW = my_runs [run][ch]["ADC"][i]
             PED = ana_runs[run][ch]["Ped_mean"][i]    
             STD = ana_runs[run][ch]["Ped_STD"][i]
             POL = ana_runs[run][ch]["P_channel"]
             
+            # Can be used for test to trimm array
             if TRIMM != 0: SIGNAL = POL*(RAW[:-TRIMM]-PED)
             else: SIGNAL = POL*(RAW-PED)
             
+            # Define noise (should be imported in future iterations)
             NOISE = 20*np.random.randn(len(SIGNAL))
             FFT_NOISE = np.fft.rfft(NOISE)
 
+            # Roll signal to align wvfs
             while np.argmax(SIGNAL) < np.argmax(KERNEL):
                 SIGNAL = np.roll(SIGNAL,1)    
             
+            # Calculate FFT arrays
             FFT_SIGNAL = np.fft.rfft(SIGNAL)
             FFT_SIGNAL_X = np.fft.rfftfreq(len(SIGNAL),4e-9)
             FFT_KERNEL = np.fft.rfft(KERNEL)
             FFT_KERNEL_X = np.fft.rfftfreq(len(KERNEL),4e-9)
             WIENER = abs(FFT_KERNEL)**2/(abs(FFT_KERNEL)**2+abs(FFT_NOISE)**2)
             
+            # Interpolate wiener envelop for fit of gaussian filter
             WIENER_CURVE = Curve(FFT_KERNEL_X,(-1*WIENER)+2)
-            # print(len(FFT_KERNEL_X))
             ENV = WIENER_CURVE.envelope2(tc=1e6)
-            # print(len(ENV_WIENER.x))
-
             ENV_WIENER = scipy.interpolate.interp1d(ENV.x, ENV.y)
             ENV_WIENER_Y = ENV_WIENER(FFT_SIGNAL_X)
-            p0 = [100,2]
-            # lim = [[10,1],[1000,10]]
-            
             ENV_WIENER_MIN = np.argmin(-1*(ENV_WIENER_Y-2))
-            # print(ENV_WIENER_MIN)
 
-            params,cov=curve_fit(fit_gauss, np.arange(len(FFT_SIGNAL_X))[:ENV_WIENER_MIN], np.log10(-1*(ENV_WIENER_Y[:ENV_WIENER_MIN]-2)),p0=p0)
+            # Select fit parameters and perform fit to determin cut-off
+            p0 = [100,2]
+            lim = [[10,1],[1000,10]]
+            params,cov=curve_fit(fit_gauss, np.arange(len(FFT_SIGNAL_X))[:ENV_WIENER_MIN], np.log10(-1*(ENV_WIENER_Y[:ENV_WIENER_MIN]-2)),p0=p0,bounds=lim)
             
-            # plt.plot(FFT_SIGNAL_X[:ENV_WIENER_MIN],-1*(ENV_WIENER_Y[:ENV_WIENER_MIN]-2))
-            # plt.plot(FFT_SIGNAL_X[:ENV_WIENER_MIN],gauss(np.arange(len(FFT_SIGNAL)),*params)[:ENV_WIENER_MIN],label = "GAUSS",c="k")
-            # plt.semilogx();plt.semilogy()
-            # plt.show()
-
-            # FFT_GAUSS = gauss(np.arange(len(FFT_SIGNAL)),FS,2)
+            # Generate gauss filter and filtered signal
             FFT_GAUSS = gauss(np.arange(len(FFT_SIGNAL)),*params)
-            # print(*params)
             GAUSS_SIGNAL = FFT_SIGNAL*FFT_GAUSS
             
+            # Generate deconvoluted function
             FFT_DEC = GAUSS_SIGNAL/np.array(FFT_KERNEL/np.max(FFT_KERNEL))
             DEC = np.fft.irfft(FFT_DEC)
-            DEC = np.roll(DEC,np.argmax(KERNEL))
+            DEC = np.roll(DEC,np.argmax(KERNEL)) # Roll the function to match original position
+            
+            #-------------------------------------------------------------------------------------------------------------------
+            # Plot results: left shows process in time space; right in frequency space.
+            #-------------------------------------------------------------------------------------------------------------------
             
             plt.ion()
             next_plot = False
@@ -113,7 +114,7 @@ def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
             plt.ylim(1e-6,np.max(FFT_KERNEL)*10)
             plt.semilogy();plt.semilogx()
             plt.legend()
-            
+
             while not plt.waitforbuttonpress(-1): pass
 
             plt.clf()
