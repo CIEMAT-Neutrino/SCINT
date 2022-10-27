@@ -10,12 +10,24 @@ dec_run = 10
 ch = 6
 
 my_runs = load_npy([run],[ch])
+my_runs = load_average_npy([run],[ch])
 dec_runs = load_average_npy([dec_run],[ch])
 
-OPT = {"LOGY":False, "FOCUS":True}
-OPT = {"LOGY":False}
+OPT = {
+    # "AVE":False,
+    "AVE":"AvWvf",
+    "FIX_EXP":True,
+    "LOGY":False,
+    "FOCUS":False,
+    "SHOW_F_SIGNAL":True,
+    "SHOW_F_GAUSS":True,
+    "SHOW_F_WIENER":True,
+    "SHOW_F_DEC":True,
+    "AUTO_TRIMM":True,
+    "REVERSE":True
+    }
 
 # print(dec_runs[dec_run][ch].keys())
 det_response = dec_runs[dec_run][ch]["AvWvf"]
 
-deconvolve(my_runs,det_response,120,0,OPT)
+deconvolve(my_runs,det_response,0,OPT)
