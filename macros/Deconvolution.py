@@ -15,7 +15,7 @@ dec_runs = load_average_npy([dec_run],[ch])
 OPT = {"LOGY":False, "FOCUS":True}
 OPT = {"LOGY":False}
 
-# print(dec_runs[10][0].keys())
-# KERNEL = dec_runs["ADC"]
+# print(dec_runs[dec_run][ch].keys())
+det_response = dec_runs[dec_run][ch]["AvWvf"]
 
-deconvolve(my_runs,dec_runs[dec_run][ch]["ADC"],120,0,OPT)
+deconvolve(my_runs,det_response,120,0,OPT)
