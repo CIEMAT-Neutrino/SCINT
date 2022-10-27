@@ -3,6 +3,7 @@ from curve import Curve
 import matplotlib.pyplot as plt
 from .io_functions import load_analysis_npy
 from .io_functions import check_key
+from .wvf_functions import smooth
 import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
@@ -25,14 +26,14 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
     Y=A*np.exp(-(X-MEAN)**N/(2*STD**N))
     return np.log10(Y)
 
-def deconvolve(my_runs,CLEAN,TRIMM,OPT,PATH = "../data/dec/"):
+def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
     try:
         ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
     except:
         print("Events have not been processed")
 
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-        if check_key(OPT, "AVE") != False: 
+        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold"): 
             AVE = OPT["AVE"]
             LOOP = 1
         else: 
@@ -50,7 +51,8 @@ def deconvolve(my_runs,CLEAN,TRIMM,OPT,PATH = "../data/dec/"):
                 RAW = my_runs[run][ch][AVE]
 
             # Can be used for test to trimm array
-            if check_key(OPT, "AUTO_TRIMM") != False:
+            if check_key(OPT, "TRIMM") == True: TRIMM = OPT["TRIMM"]
+            if check_key(OPT, "AUTO_TRIMM") == True:
                 j = 0
                 while 2**j < len(RAW):
                     j = j+1
@@ -63,6 +65,13 @@ def deconvolve(my_runs,CLEAN,TRIMM,OPT,PATH = "../data/dec/"):
                 print("Array length after trimming = %i"%len(SIGNAL))
             
             else: SIGNAL = RAW
+            
+            if check_key(OPT, "SMOOTH") == True:
+                if OPT["SMOOTH"] > 0:
+                    SIGNAL = smooth(SIGNAL,OPT["SMOOTH"])
+                else:
+                    print("Invalid value encountered in smooth")
+
             STD = ana_runs[run][ch]["Ped_STD"][i]
             X = 4e-9*np.arange(len(SIGNAL))
             
@@ -92,7 +101,7 @@ def deconvolve(my_runs,CLEAN,TRIMM,OPT,PATH = "../data/dec/"):
             # Select fit parameters and perform fit to determin cut-off
             p0 = [100,1.999999]
             lim = [[10,1],[2000,8]]
-            if check_key(OPT,"FIX_EXP") != False:
+            if check_key(OPT,"FIX_EXP") == True and OPT["FIX_EXP"] == True:
                 lim = [[10,1.99999],[2000,2]]
             
             try:
@@ -110,7 +119,7 @@ def deconvolve(my_runs,CLEAN,TRIMM,OPT,PATH = "../data/dec/"):
             # Generate deconvoluted function
             FFT_DEC = FFT_GAUSS_SIGNAL/np.array(FFT_KERNEL/np.max(FFT_KERNEL))
             DEC = np.fft.irfft(FFT_DEC)
-            if check_key(OPT, "REVERSE") != False: DEC = DEC[::-1]
+            if check_key(OPT, "REVERSE") == True and OPT["REVERSE"] == True: DEC = DEC[::-1]
             DEC = np.roll(DEC,np.argmax(KERNEL)) # Roll the function to match original position
             
             #-------------------------------------------------------------------------------------------------------------------
@@ -125,8 +134,8 @@ def deconvolve(my_runs,CLEAN,TRIMM,OPT,PATH = "../data/dec/"):
             plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL,X)),c="blue")
             plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC,X)),c="tab:green")
             plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
-            if check_key(OPT,"LOGY") == True: plt.semilogy()
-            if check_key(OPT,"FOCUS") == True: 
+            if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy()
+            if check_key(OPT,"FOCUS") == True and OPT["LOGY"] == True: 
                 plt.xlim(4e-9*np.array([np.argmax(SIGNAL)-100,np.argmax(SIGNAL)+1000]))
                 plt.ylim([np.min(SIGNAL)*1.1,np.max(DEC)*1.1])
             plt.legend()
