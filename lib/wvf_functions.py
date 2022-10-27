@@ -85,3 +85,24 @@ def integrate(my_runs,PATH="../data/ana/"):
                     break
             print(RAW[INT_I:INT_F])
             my_runs[run][ch]["Int"][i] = np.trapz(RAW[INT_I:INT_F],x=4e-9*np.arange(len(RAW[INT_I:INT_F])))
+
+def expo_average(my_run,alpha):
+    v_averaged=np.zeros(len(my_run))
+    v_averaged[0]=my_run[0]
+    for i in range (len(my_run)-1):
+        v_averaged[i+1]=(1-alpha)*v_averaged[i]+alpha*my_run[i+1]
+    return v_averaged
+
+def unweighted_average(my_run):
+    v_averaged=np.zeros(len(my_run))
+    v_averaged[0]=my_run[0]
+    v_averaged[-1]=my_run[-1]
+
+    for i in range (len(my_run)-2):
+        v_averaged[i+1]=(my_run[i]+my_run[i+1]+my_run[i+2])/3
+    return v_averaged
+
+def smooth(my_run,alpha):
+    my_run=expo_average(my_run,alpha)
+    my_run=unweighted_average(my_run)
+    return my_run

@@ -24,6 +24,9 @@ def func2sigma(T,P,A1,SIGMA1,SIGMA2,TAU1,T0,A2,TAU2):
 def logfunc2sigma(T,P,A1,SIGMA1,SIGMA2,TAU1,T0,A2,TAU2):
     return np.log(P + func(T,A1,SIGMA1,TAU1,T0) + func(T,A2,SIGMA2,TAU2,T0))
 
+def scfunc(T,Y):
+    return ([0]*np.exp(-(T-[2])/[1])/np.pow(2*np.pi,0.5)*np.exp(-[3]*[3]/([1]*[1])))*erf((([2]-T)/[3]+[3]/[1])/np.pow(2,0.5))+([4]*np.exp(-(T-[2])/[5])/np.pow(2*np.pi,0.5)*np.exp(-[3]*[3]/([5]*[5])))*erf((([2]-T)/[3]+[3]/[5])/np.pow(2,0.5))
+
 def sipm_fit(my_runs,OPT):
     print("\n### WELCOME TO THE SiPM FIT ###")
         
@@ -46,6 +49,8 @@ def sipm_fit(my_runs,OPT):
             thrld = 1e-1
             BUFFER = 100
             buffer2 = 2000
+
+            OPT["CUT_NEGATIVE"] == True
             popt1,perr1 = peak_fit(RAW, RAW_X,BUFFER,OPT)
 
             p = np.mean(RAW[:MAX-BUFFER])
@@ -116,14 +121,17 @@ def scint_fit(my_runs,OPT):
     try:
         ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
     except:
-        print("EVENTS HAVE NOT BEEN PROCESSED! Please run Process.py")
-        return 0
+        print("Events have not been processed")
 
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-        if check_key(OPT, "AVE") != False: AVE = OPT["AVE"]
-        else: AVE = "ADC"
+        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold"): 
+            AVE = OPT["AVE"]
+            LOOP = 1
+        else: 
+            AVE = "ADC"
+            LOOP = len(my_runs[run][ch][AVE])
         
-        for i in range(len(my_runs[run][ch][AVE])):
+        for i in range(LOOP):
             
             if AVE == "ADC": RAW = ana_runs[run][ch]["P_channel"]*(my_runs[run][ch][AVE][i]-ana_runs[run][ch]["Ped_mean"][i])
             else: RAW = my_runs[run][ch][AVE]
@@ -133,6 +141,8 @@ def scint_fit(my_runs,OPT):
             thrld = 1e-1
             BUFFER = 100
             buffer2 = 2000
+
+            OPT["CUT_NEGATIVE"] = True
             popt1,perr1 = peak_fit(RAW, RAW_X,BUFFER,OPT)
 
             # CHECK FIRST FIT
@@ -195,9 +205,93 @@ def scint_fit(my_runs,OPT):
 
         plt.ioff()
 
-def peak_fit(RAW,RAW_X,BUFFER,OPT):
+def sc_fit(my_runs,OPT):
+    print("\n### WELCOME TO THE SC FIT ###")        
+    try:
+        ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
+    except:
+        print("Events have not been processed")
 
-    MAX = np.argmax(RAW)
+    for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
+        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold"): 
+            AVE = OPT["AVE"]
+            LOOP = 1
+        else: 
+            AVE = "ADC"
+            LOOP = len(my_runs[run][ch][AVE])
+        
+        for i in range(LOOP):
+            
+            if AVE == "ADC": RAW = ana_runs[run][ch]["P_channel"]*(my_runs[run][ch][AVE][i]-ana_runs[run][ch]["Ped_mean"][i])
+            else: RAW = my_runs[run][ch][AVE]
+            
+            RAW_X = 4e-9*np.arange(len(RAW))
+            MAX = np.argmax(RAW)
+            thrld = 1e-1
+            BUFFER = 100
+            buffer2 = 2000
+
+            popt1,perr1 = peak_fit(RAW,RAW_X,BUFFER,OPT)
+
+            # CHECK FIRST FIT
+            plt.ion()
+            next_plot = False
+            plt.rcParams['figure.figsize'] = [16, 8]
+            plt.subplot(1,2,1)
+            plt.title("First fit to determine peak")
+            plt.plot(RAW_X,RAW,label="RAW")
+            plt.plot(RAW_X[MAX-BUFFER:MAX+int(BUFFER/2)],func(RAW_X[MAX-BUFFER:MAX+int(BUFFER/2)],*popt1),label="FIT")
+            # plt.axvline(RAW_X[-buffer2],ls = "--",c = "k")
+            plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
+            if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: 
+                plt.semilogy()
+                plt.ylim(thrld,RAW[MAX]*1.1)
+            plt.legend()
+
+            # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
+            # p = np.mean(RAW[:MAX-BUFFER])
+            # a1 = 2e-5; a1_low = 1e-8;  a1_high = 9e-2                    
+            # a2 = 2e-5; a2_low = 1e-8; a2_high = 9e-2                    
+            # a3 = 2e-5; a3_low = 1e-8; a3_high = 9e-2
+            # tau1 = 9e-8; tau1_low = 6e-9; tau1_high = 1e-7
+            # tau2 = 9e-7; tau2_low = tau1_high; tau2_high = 1e-6
+            # tau3 = 9e-6; tau3_low = tau2_high; tau3_high = 1e-5
+            # sigma2 = popt1[1]*10; sigma2_low = popt1[1]; sigma2_high = popt1[1]*100
+            # bounds2 = ([sigma2_low,a3_low,tau3_low],[sigma2_high,a3_high,tau3_high])
+            # initial2 = (sigma2,a3,tau3)
+            # labels2 = ["SIG2","AMP2","TAU2"]
+
+            # popt, pcov = curve_fit(lambda T,SIGMA2,A3,TAU3: logfunc2sigma(T,p,a1,popt1[1],SIGMA2,tau1,popt1[3],A3,TAU3),RAW_X[MAX-BUFFER:buffer2],np.log(RAW[MAX-BUFFER:buffer2]),p0 = initial2, bounds = bounds2, method = "trf")
+            # perr2 = np.sqrt(np.diag(pcov))
+            # sigma2 = popt[0];a3 = popt[1];tau3 = popt[2]
+            # param = [p,a1,popt1[1],sigma2,tau1,popt1[3],a3,tau3]
+
+            # print("\n--- SECOND FIT VALUES (SLOW) ---")
+            # for i in range(len(initial2)):
+            #     print("%s: \t%.2E \u00B1 %.2E"%(labels2[i],popt[i],perr2[i]))
+            # print("--------------------------------\n")
+
+            # plt.subplot(1,2,2)
+            # plt.title("Second fit with full wvf")
+            # plt.plot(RAW_X,RAW,zorder=0,c="tab:blue",label="RAW")
+            # plt.plot(RAW_X[MAX-BUFFER:],func2sigma(RAW_X[MAX-BUFFER:],*param),c="tab:orange",label="FIT")
+            # plt.plot(RAW_X,func2sigma(RAW_X,*param),c="tab:green",label="FIT_FULL_LENGHT")
+            # plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
+            # # plt.axvline(RAW_X[-buffer2],ls = "--",c = "k")
+            # if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: 
+            #     plt.semilogy()
+            #     plt.ylim(thrld,RAW[MAX]*1.1)
+            
+            # plt.legend()
+            while not plt.waitforbuttonpress(-1): pass
+
+            plt.clf()
+
+        plt.ioff()
+
+def peak_fit(FIT_RAW,RAW_X,BUFFER,OPT):
+
+    MAX = np.argmax(FIT_RAW)
 
     # output_file = open("scint_fit/"+file+"_CONV.txt","w")
 
@@ -205,20 +299,18 @@ def peak_fit(RAW,RAW_X,BUFFER,OPT):
     buffer2     = 2000
     check       = False
     autozoom    = True
-    logy        = True
     thrld       = 1e-1
-    term_output = check
     
-    for i in range(len(RAW)):
-        if RAW[i] <= 1e-10:
-            RAW[i] = 1e-10
-        if np.isnan(RAW[i]):
-            RAW[i] = 1e-10
+    if check_key(OPT, "CUT_NEGATIVE") == True and OPT["CUT_NEGATIVE"] == True:
+        for i in range(len(FIT_RAW)):
+            if FIT_RAW[i] <= 1e-10:
+                FIT_RAW[i] = 1e-10
+            if np.isnan(FIT_RAW[i]):
+                FIT_RAW[i] = 1e-10
 
     # output_file = open("scint_fit/"+file+"_FIT.txt","w")
-    MAX = np.argmax(RAW)
-    guess_t0 = RAW_X[np.argmax(RAW)-10]
-    p = np.mean(RAW[:MAX-BUFFER])
+    guess_t0 = RAW_X[np.argmax(FIT_RAW)-10]
+    p = np.mean(FIT_RAW[:MAX-BUFFER])
 
     t0 = guess_t0; t0_low = guess_t0*0.02; t0_high = guess_t0*50
     sigma = 2e-8; sigma_low = 6e-9; sigma_high = 9e-8
@@ -229,7 +321,7 @@ def peak_fit(RAW,RAW_X,BUFFER,OPT):
     labels = ["AMP1","SIG1","TAU1","TIME"]
 
     # FIT PEAK
-    popt, pcov = curve_fit(func,RAW_X[MAX-BUFFER:-buffer2],RAW[MAX-BUFFER:-buffer2],p0 = initial, bounds = bounds, method = "trf")
+    popt, pcov = curve_fit(func,RAW_X[MAX-BUFFER:-buffer2],FIT_RAW[MAX-BUFFER:-buffer2],p0 = initial, bounds = bounds, method = "trf")
     perr1 = np.sqrt(np.diag(pcov))
 
     # PRINT FIRST FIT VALUE

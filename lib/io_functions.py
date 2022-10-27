@@ -76,6 +76,7 @@ def load_average_npy(RUNS,CH,PATH = "../data/ave/"):
 
 def check_key(OPT,KEY):
     try:
-        return OPT[KEY]    
+        OPT[KEY]
+        return True    
     except KeyError:
         return False
