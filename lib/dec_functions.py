@@ -25,27 +25,49 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
     Y=A*np.exp(-(X-MEAN)**N/(2*STD**N))
     return np.log10(Y)
 
-def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
+def deconvolve(my_runs,CLEAN,TRIMM,OPT,PATH = "../data/dec/"):
     try:
         ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
     except:
         print("Events have not been processed")
-    if TRIMM != 0: KERNEL = KERNEL[:-TRIMM]
 
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-        for i in range(len(my_runs[run][ch]["ADC"])):
+        if check_key(OPT, "AVE") != False: 
+            AVE = OPT["AVE"]
+            LOOP = 1
+        else: 
+            AVE = "ADC"
+            LOOP = len(my_runs[run][ch][AVE])
+        
+        for i in range(LOOP):
             # Select required runs and parameters
-            RAW = my_runs [run][ch]["ADC"][i]
-            PED = ana_runs[run][ch]["Ped_mean"][i]    
-            STD = ana_runs[run][ch]["Ped_STD"][i]
-            POL = ana_runs[run][ch]["P_channel"]
-            
+            if AVE == "ADC": 
+                PED = ana_runs[run][ch]["Ped_mean"][i]    
+                POL = ana_runs[run][ch]["P_channel"]
+                RAW = POL*(my_runs [run][ch]["ADC"][i]-PED)
+
+            else: 
+                RAW = my_runs[run][ch][AVE]
+
             # Can be used for test to trimm array
-            if TRIMM != 0: SIGNAL = POL*(RAW[:-TRIMM]-PED)
-            else: SIGNAL = POL*(RAW-PED)
+            if check_key(OPT, "AUTO_TRIMM") != False:
+                j = 0
+                while 2**j < len(RAW):
+                    j = j+1
+
+                TRIMM = len(RAW)-2**(j-1)
+
+            if TRIMM != 0: 
+                SIGNAL = RAW[:-TRIMM]
+                KERNEL = CLEAN[:-TRIMM]
+                print("Array length after trimming = %i"%len(SIGNAL))
+            
+            else: SIGNAL = RAW
+            STD = ana_runs[run][ch]["Ped_STD"][i]
+            X = 4e-9*np.arange(len(SIGNAL))
             
             # Define noise (should be imported in future iterations)
-            NOISE = 20*np.random.randn(len(SIGNAL))
+            NOISE = STD*np.random.randn(len(SIGNAL))
             FFT_NOISE = np.fft.rfft(NOISE)
 
             # Roll signal to align wvfs
@@ -60,24 +82,35 @@ def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
             WIENER = abs(FFT_KERNEL)**2/(abs(FFT_KERNEL)**2+abs(FFT_NOISE)**2)
             
             # Interpolate wiener envelop for fit of gaussian filter
-            WIENER_CURVE = Curve(FFT_KERNEL_X,(-1*WIENER)+2)
+            WIENER_BUFFER = 800
+            WIENER_CURVE = Curve(FFT_KERNEL_X[:-WIENER_BUFFER],(-1*WIENER[:-WIENER_BUFFER])+2)
             ENV = WIENER_CURVE.envelope2(tc=1e6)
             ENV_WIENER = scipy.interpolate.interp1d(ENV.x, ENV.y)
-            ENV_WIENER_Y = ENV_WIENER(FFT_SIGNAL_X)
+            ENV_WIENER_Y = ENV_WIENER(FFT_SIGNAL_X[:-WIENER_BUFFER])
             ENV_WIENER_MIN = np.argmin(-1*(ENV_WIENER_Y-2))
 
             # Select fit parameters and perform fit to determin cut-off
-            p0 = [100,2]
-            lim = [[10,1],[1000,10]]
-            params,cov=curve_fit(fit_gauss, np.arange(len(FFT_SIGNAL_X))[:ENV_WIENER_MIN], np.log10(-1*(ENV_WIENER_Y[:ENV_WIENER_MIN]-2)),p0=p0,bounds=lim)
+            p0 = [100,1.999999]
+            lim = [[10,1],[2000,8]]
+            if check_key(OPT,"FIX_EXP") != False:
+                lim = [[10,1.99999],[2000,2]]
+            
+            try:
+                params,cov=curve_fit(fit_gauss, np.arange(len(FFT_SIGNAL_X))[:ENV_WIENER_MIN], np.log10(-1*(ENV_WIENER_Y[:ENV_WIENER_MIN]-2)),p0=p0,bounds=lim)
+            except:
+                params = p0
+                print("FIT COULD NOT BE PERFORMED!")
+            print("Filter strengh %f and exp %f"%(params[0],params[1]))
             
             # Generate gauss filter and filtered signal
             FFT_GAUSS = gauss(np.arange(len(FFT_SIGNAL)),*params)
-            GAUSS_SIGNAL = FFT_SIGNAL*FFT_GAUSS
+            FFT_GAUSS_SIGNAL = FFT_SIGNAL*FFT_GAUSS
+            GAUSS_SIGNAL = np.fft.irfft(FFT_GAUSS_SIGNAL)
             
             # Generate deconvoluted function
-            FFT_DEC = GAUSS_SIGNAL/np.array(FFT_KERNEL/np.max(FFT_KERNEL))
+            FFT_DEC = FFT_GAUSS_SIGNAL/np.array(FFT_KERNEL/np.max(FFT_KERNEL))
             DEC = np.fft.irfft(FFT_DEC)
+            if check_key(OPT, "REVERSE") != False: DEC = DEC[::-1]
             DEC = np.roll(DEC,np.argmax(KERNEL)) # Roll the function to match original position
             
             #-------------------------------------------------------------------------------------------------------------------
@@ -88,30 +121,29 @@ def deconvolve(my_runs,KERNEL,FS,TRIMM,OPT,PATH = "../data/dec/"):
             next_plot = False
             plt.rcParams['figure.figsize'] = [16, 8]
             plt.subplot(1,2,1)
-            plt.plot(np.arange(len(SIGNAL))*4e-9,SIGNAL,label = "SIGNAL",c="tab:blue")
-            # plt.plot(np.arange(len(KERNEL))*4e-9,KERNEL,label = "KERNEL")
-            plt.plot(np.arange(len(np.fft.irfft(GAUSS_SIGNAL)))*4e-9,np.fft.irfft(GAUSS_SIGNAL), label = "GAUSS_SIGNAL",c="blue")
-            plt.plot(np.arange(len(DEC))*4e-9,DEC,label="DECONVOLUTION",c="tab:green")
+            plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL,X)),c="tab:blue")
+            plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL,X)),c="blue")
+            plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC,X)),c="tab:green")
             plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
             if check_key(OPT,"LOGY") == True: plt.semilogy()
             if check_key(OPT,"FOCUS") == True: 
                 plt.xlim(4e-9*np.array([np.argmax(SIGNAL)-100,np.argmax(SIGNAL)+1000]))
-                plt.ylim([-10,np.max(DEC)*1.1])
+                plt.ylim([np.min(SIGNAL)*1.1,np.max(DEC)*1.1])
             plt.legend()
             
             plt.subplot(1,2,2)
-            plt.plot(FFT_SIGNAL_X,np.abs(FFT_SIGNAL),label = "SIGNAL",c="tab:blue")
-            plt.plot(FFT_SIGNAL_X,np.abs(GAUSS_SIGNAL),label = "GAUSS_SIGNAL",c="blue")
-            plt.plot(FFT_KERNEL_X,np.abs(FFT_KERNEL),label = "DET_RESPONSE",c="tab:orange")
+            if check_key(OPT,"SHOW_F_SIGNAL") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_SIGNAL),label = "SIGNAL",c="tab:blue")
+            if check_key(OPT,"SHOW_F_GSIGNAL") != False: plt.plot(FFT_SIGNAL_X,np.abs(GAUSS_SIGNAL),label = "GAUSS_SIGNAL",c="blue")
+            if check_key(OPT,"SHOW_F_DET_RESPONSE") != False: plt.plot(FFT_KERNEL_X,np.abs(FFT_KERNEL),label = "DET_RESPONSE",c="tab:orange")
             
-            plt.plot(FFT_SIGNAL_X,np.abs(FFT_DEC),label = "DECONVOLUTION",c="tab:green")
-            plt.plot(FFT_SIGNAL_X,WIENER,label = "WIENER",c="tab:red")
-            plt.plot(ENV_WIENER.x[:ENV_WIENER_MIN],-1*(ENV_WIENER.y[:ENV_WIENER_MIN]-2),label = "ENV_WIENER",c="tab:pink")
+            if check_key(OPT,"SHOW_F_DEC") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_DEC),label = "DECONVOLUTION",c="tab:green")
+            if check_key(OPT,"SHOW_F_WIENER") != False: 
+                plt.plot(FFT_SIGNAL_X,WIENER,label = "WIENER",c="tab:red")
+                plt.plot(ENV_WIENER.x[:ENV_WIENER_MIN],-1*(ENV_WIENER.y[:ENV_WIENER_MIN]-2),label = "ENV_WIENER",c="tab:pink",ls="--")
 
-            plt.plot(FFT_SIGNAL_X,FFT_GAUSS,label = "GAUSS",c="k")
-            # ENV_WIENER.plot(label="ENV_WIENER")
+            if check_key(OPT,"SHOW_F_GAUSS") != False: plt.plot(FFT_SIGNAL_X,FFT_GAUSS,label = "GAUSS",c="k",ls="--")
             plt.ylabel("a.u.");plt.xlabel("Frequency in [Hz]")
-            plt.ylim(1e-6,np.max(FFT_KERNEL)*10)
+            plt.ylim(1e-8,np.max(FFT_KERNEL)*10)
             plt.semilogy();plt.semilogx()
             plt.legend()
 
