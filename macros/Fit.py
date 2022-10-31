@@ -1,16 +1,23 @@
 import sys
 sys.path.insert(0, '../')
-from lib.io_functions import load_npy,load_average_npy
-from lib.fit_functions import sipm_fit,scint_fit,sc_fit
+from lib.io_functions import load_npy,load_average_npy,load_fit_npy,load_deconvolution_npy
+from lib.fit_functions import sipm_fit,scint_fit,sc_fit,fit_wvfs
+import matplotlib.pyplot as plt
+import numpy as np
 
-N_runs     =[10]     
+N_runs     =[26]     
 N_channels =[6]       
 
-# L_channels  =["SiPM1","SiPM2"]
-RUNS = load_npy(N_runs, N_channels)
-AVE_RUNS = load_average_npy(N_runs, N_channels)
+# RUNS = load_npy(N_runs, N_channels)
+# AVE_RUNS = load_average_npy(N_runs, N_channels)
+DEC_RUNS = load_deconvolution_npy(N_runs, N_channels)
 
-OPT = {"LOGY":False,"AVE":False} # To evaluate average wvf instead of raw select the appropiate key in the OPT dict. Else, exclude "AVE" or write "AVE":False
+FIT_RANGE = [80,300] # Fit range in units of array length defined left and right from the max (peak of the wvf)
 
-# sc_fit(AVE_RUNS,OPT)
-sc_fit(RUNS,OPT)
+OPT = {
+    "SHOW":True,
+    "LOGY":True,
+    "AVE":"Deconvolution"
+    } 
+
+fit_wvfs(DEC_RUNS,"SCINT",FIT_RANGE,OPT)

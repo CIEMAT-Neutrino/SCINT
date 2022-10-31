@@ -31,7 +31,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
         ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
     except:
         print("Events have not been processed")
-
+    aux = dict()
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         if check_key(OPT, "AVE") == True and (OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold"): 
             AVE = OPT["AVE"]
@@ -52,7 +52,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
 
             # Can be used for test to trimm array
             if check_key(OPT, "TRIMM") == True: TRIMM = OPT["TRIMM"]
-            if check_key(OPT, "AUTO_TRIMM") == True:
+            if check_key(OPT, "AUTO_TRIMM") == True and OPT["AUTO_TRIMM"] == True:
                 j = 0
                 while 2**j < len(RAW):
                     j = j+1
@@ -64,8 +64,10 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 KERNEL = CLEAN[:-TRIMM]
                 print("Array length after trimming = %i"%len(SIGNAL))
             
-            else: SIGNAL = RAW
-            
+            else: 
+                SIGNAL = RAW
+                KERNEL = CLEAN
+            # print(KERNEL)
             if check_key(OPT, "SMOOTH") == True:
                 if OPT["SMOOTH"] > 0:
                     SIGNAL = smooth(SIGNAL,OPT["SMOOTH"])
@@ -76,7 +78,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             X = 4e-9*np.arange(len(SIGNAL))
             
             # Define noise (should be imported in future iterations)
-            NOISE = STD*np.random.randn(len(SIGNAL))
+            NOISE = 10*STD*np.random.randn(len(SIGNAL))
             FFT_NOISE = np.fft.rfft(NOISE)
 
             # Roll signal to align wvfs
@@ -91,7 +93,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             WIENER = abs(FFT_KERNEL)**2/(abs(FFT_KERNEL)**2+abs(FFT_NOISE)**2)
             
             # Interpolate wiener envelop for fit of gaussian filter
-            WIENER_BUFFER = 800
+            WIENER_BUFFER = 1500
             WIENER_CURVE = Curve(FFT_KERNEL_X[:-WIENER_BUFFER],(-1*WIENER[:-WIENER_BUFFER])+2)
             ENV = WIENER_CURVE.envelope2(tc=1e6)
             ENV_WIENER = scipy.interpolate.interp1d(ENV.x, ENV.y)
@@ -99,8 +101,8 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             ENV_WIENER_MIN = np.argmin(-1*(ENV_WIENER_Y-2))
 
             # Select fit parameters and perform fit to determin cut-off
-            p0 = [100,1.999999]
-            lim = [[10,1],[2000,8]]
+            p0 = [50,1.999999]
+            lim = [[10,1],[500,8]]
             if check_key(OPT,"FIX_EXP") == True and OPT["FIX_EXP"] == True:
                 lim = [[10,1.99999],[2000,2]]
             
@@ -135,7 +137,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC,X)),c="tab:green")
             plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
             if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy()
-            if check_key(OPT,"FOCUS") == True and OPT["LOGY"] == True: 
+            if check_key(OPT,"FOCUS") == True and OPT["FOCUS"] == True: 
                 plt.xlim(4e-9*np.array([np.argmax(SIGNAL)-100,np.argmax(SIGNAL)+1000]))
                 plt.ylim([np.min(SIGNAL)*1.1,np.max(DEC)*1.1])
             plt.legend()
@@ -157,7 +159,17 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             plt.legend()
 
             while not plt.waitforbuttonpress(-1): pass
-
             plt.clf()
+            aux = DEC
 
         plt.ioff()
+        my_runs[run][ch]["Deconvolution"] = aux
+        aux_path=PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+        
+        try:
+            del my_runs[run][ch]["ADC"]
+        except:
+            print("'ADC' branch has already been deleted")
+
+        np.save(aux_path,my_runs[run][ch])
+        print("Saved data in:" , aux_path)

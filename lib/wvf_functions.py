@@ -14,7 +14,7 @@ def average_wvfs(my_runs,PATH="../data/ave/",threshold=50):
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         
         # No centering
-        aux_ADC=ana_runs[run][ch]["P_channel"]*((my_runs[run][ch]["ADC"].T-ana_runs[run][ch]["Ped_mean"]).T);
+        aux_ADC=ana_runs[run][ch]["P_channel"]*((my_runs[run][ch]["ADC"].T-ana_runs[run][ch]["Ped_mean"]).T)
 
         my_runs[run][ch]["AvWvf"] = np.mean(aux_ADC,axis=0)
         aux_path=PATH+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
@@ -53,9 +53,9 @@ def average_wvfs(my_runs,PATH="../data/ave/",threshold=50):
                 av_wvf_threshold[bin_ref:-1]                   += (wvf[bin_threshold:-(bin_ref-bin_threshold+1)]/n_wvs);
         
         
-        my_runs[run][ch]["AvWvf_peak"]=av_wvf_peak;
-        my_runs[run][ch]["AvWvf_threshold"]=av_wvf_threshold;
-        del my_runs[run][ch]["ADC"];
+        my_runs[run][ch]["AvWvf_peak"]=av_wvf_peak
+        my_runs[run][ch]["AvWvf_threshold"]=av_wvf_threshold
+        del my_runs[run][ch]["ADC"]
 
         np.save(aux_path,my_runs[run][ch])
         print("Saved data in:" , aux_path)
@@ -83,7 +83,7 @@ def integrate(my_runs,PATH="../data/ana/"):
                 if RAW[MAX-j] < 0:
                     INT_I = MAX-j+1
                     break
-            print(RAW[INT_I:INT_F])
+            # print(RAW[INT_I:INT_F])
             my_runs[run][ch]["Int"][i] = np.trapz(RAW[INT_I:INT_F],x=4e-9*np.arange(len(RAW[INT_I:INT_F])))
 
 def expo_average(my_run,alpha):
