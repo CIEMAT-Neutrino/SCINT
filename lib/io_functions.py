@@ -74,6 +74,38 @@ def load_average_npy(RUNS,CH,PATH = "../data/ave/"):
         runs[run]=channels
     return runs
 
+def load_fit_npy(RUNS,CH,PATH = "../data/fit/"):
+    """Structure: run_dict[RUN][CH][BRANCH] 
+    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
+
+    runs=dict()
+    runs["N_runs"]    =RUNS
+    runs["N_channels"]=CH
+    # runs["P_channels"]=POL
+    
+    for run in RUNS:
+        channels=dict()
+        for ch in CH:
+            channels[ch]=np.load(PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+        runs[run]=channels
+    return runs
+
+def load_deconvolution_npy(RUNS,CH,PATH = "../data/dec/"):
+    """Structure: run_dict[RUN][CH][BRANCH] 
+    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
+
+    runs=dict()
+    runs["N_runs"]    =RUNS
+    runs["N_channels"]=CH
+    # runs["P_channels"]=POL
+    
+    for run in RUNS:
+        channels=dict()
+        for ch in CH:
+            channels[ch]=np.load(PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+        runs[run]=channels
+    return runs
+
 def check_key(OPT,KEY):
     try:
         OPT[KEY]
