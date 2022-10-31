@@ -10,6 +10,7 @@ fi
 #raw data .root and .npy
 if [ ! -d "data/raw" ]; then
 mkdir data/raw
+
 fi
 #Analized data (charge, pedestal, peak...) variables
 if [ ! -d "data/ana" ]; then
@@ -19,6 +20,16 @@ fi
 #Average wvfs 
 if [ ! -d "data/ave" ]; then
 mkdir data/ave
+fi
+
+#Fitted wvfs 
+if [ ! -d "data/fit" ]; then
+mkdir data/fit
+fi
+
+#Deconvolved wvfs 
+if [ ! -d "data/fit" ]; then
+mkdir data/dec
 fi
 
 pip3 install -r requirements.txt
