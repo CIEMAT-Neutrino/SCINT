@@ -3,7 +3,7 @@ sys.path.insert(0, '../')
 
 from lib.io_functions import load_npy,load_average_npy,load_analysis_npy,load_fit_npy
 from lib.dec_functions import deconvolve
-from lib.dec_functions import deconvolve
+
 
 run = 10
 dec_run = 10
