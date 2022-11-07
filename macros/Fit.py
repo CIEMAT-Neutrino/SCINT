@@ -5,8 +5,8 @@ from lib.fit_functions import sipm_fit,scint_fit,sc_fit,fit_wvfs
 import matplotlib.pyplot as plt
 import numpy as np
 
-N_runs     =[26]     
-N_channels =[6]       
+N_runs     =[0]     
+N_channels =[0]       
 
 # RUNS = load_npy(N_runs, N_channels)
 # AVE_RUNS = load_average_npy(N_runs, N_channels)
@@ -16,8 +16,8 @@ FIT_RANGE = [80,300] # Fit range in units of array length defined left and right
 
 OPT = {
     "SHOW":True,
-    "LOGY":True,
+    "LOGY":False,
     "AVE":"Deconvolution"
     } 
 
-fit_wvfs(DEC_RUNS,"SCINT",FIT_RANGE,OPT)
+fit_wvfs(DEC_RUNS,"SC",FIT_RANGE,OPT)

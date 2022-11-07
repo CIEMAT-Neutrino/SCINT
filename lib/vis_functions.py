@@ -83,3 +83,8 @@ def vis_raw_npy(RUN,CH,OPT,KEY="ADC",PATH = "../data/raw/"):
             plt.clf()
 
         plt.ioff()
+
+def vis_ave_npy(RUN,CH,CUTS,OPT,PATH = "../data/raw"):
+    aux_ADC=ana_runs[run][ch]["P_channel"]*((my_runs[run][ch]["ADC"].T-ana_runs[run][ch]["Ped_mean"]).T)
+    my_runs[run][ch]["AvWvf"] = np.mean(aux_ADC,axis=0)
+    return my_runs[run][ch]["AvWvf"]

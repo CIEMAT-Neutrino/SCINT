@@ -9,7 +9,7 @@ CH   = [6]
 OPT  = {
     "NORM":     False,
     "LOGY":     False,
-    "BASELINE": False
+    "BASELINE": True
     }
 
 vis_raw_npy(RUNS,CH,OPT) # Input variables should be lists of integers

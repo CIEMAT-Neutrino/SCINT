@@ -39,14 +39,18 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
         else: 
             AVE = "ADC"
             LOOP = len(my_runs[run][ch][AVE])
-        
+            if check_key(OPT, "SINGLE") == True: LOOP = OPT["SINGLE"] 
         for i in range(LOOP):
             # Select required runs and parameters
             if AVE == "ADC": 
-                PED = ana_runs[run][ch]["Ped_mean"][i]    
-                POL = ana_runs[run][ch]["P_channel"]
-                RAW = POL*(my_runs [run][ch]["ADC"][i]-PED)
-
+                try:
+                    PED = ana_runs[run][ch]["Ped_mean"][i]    
+                    POL = ana_runs[run][ch]["P_channel"]
+                    RAW = POL*(my_runs [run][ch]["ADC"][i]-PED)
+                except:
+                    PED = 0
+                    POL = 1
+                    RAW = my_runs [run][ch]["ADC"]
             else: 
                 RAW = my_runs[run][ch][AVE]
 
@@ -62,7 +66,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             if TRIMM != 0: 
                 SIGNAL = RAW[:-TRIMM]
                 KERNEL = CLEAN[:-TRIMM]
-                print("Array length after trimming = %i"%len(SIGNAL))
+                # print("Array length after trimming = %i"%len(SIGNAL))
             
             else: 
                 SIGNAL = RAW
@@ -73,8 +77,11 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                     SIGNAL = smooth(SIGNAL,OPT["SMOOTH"])
                 else:
                     print("Invalid value encountered in smooth")
-
-            STD = ana_runs[run][ch]["Ped_STD"][i]
+            try:
+                STD = ana_runs[run][ch]["Ped_STD"][i]
+            except:
+                STD = np.std(RAW)
+                
             X = 4e-9*np.arange(len(SIGNAL))
             
             # Define noise (should be imported in future iterations)
@@ -94,6 +101,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             
             # Interpolate wiener envelop for fit of gaussian filter
             WIENER_BUFFER = 1500
+            if check_key(OPT,"WIENER_BUFFER") == True: WIENER_BUFFER = OPT["WIENER_BUFFER"]
             WIENER_CURVE = Curve(FFT_KERNEL_X[:-WIENER_BUFFER],(-1*WIENER[:-WIENER_BUFFER])+2)
             ENV = WIENER_CURVE.envelope2(tc=1e6)
             ENV_WIENER = scipy.interpolate.interp1d(ENV.x, ENV.y)
@@ -111,7 +119,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             except:
                 params = p0
                 print("FIT COULD NOT BE PERFORMED!")
-            print("Filter strengh %f and exp %f"%(params[0],params[1]))
+            # print("Filter strengh %f and exp %f"%(params[0],params[1]))
             
             # Generate gauss filter and filtered signal
             FFT_GAUSS = gauss(np.arange(len(FFT_SIGNAL)),*params)
@@ -127,41 +135,40 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             #-------------------------------------------------------------------------------------------------------------------
             # Plot results: left shows process in time space; right in frequency space.
             #-------------------------------------------------------------------------------------------------------------------
-            
-            plt.ion()
-            next_plot = False
-            plt.rcParams['figure.figsize'] = [16, 8]
-            plt.subplot(1,2,1)
-            plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL,X)),c="tab:blue")
-            plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL,X)),c="blue")
-            plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC,X)),c="tab:green")
-            plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
-            if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy()
-            if check_key(OPT,"FOCUS") == True and OPT["FOCUS"] == True: 
-                plt.xlim(4e-9*np.array([np.argmax(SIGNAL)-100,np.argmax(SIGNAL)+1000]))
-                plt.ylim([np.min(SIGNAL)*1.1,np.max(DEC)*1.1])
-            plt.legend()
-            
-            plt.subplot(1,2,2)
-            if check_key(OPT,"SHOW_F_SIGNAL") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_SIGNAL),label = "SIGNAL",c="tab:blue")
-            if check_key(OPT,"SHOW_F_GSIGNAL") != False: plt.plot(FFT_SIGNAL_X,np.abs(GAUSS_SIGNAL),label = "GAUSS_SIGNAL",c="blue")
-            if check_key(OPT,"SHOW_F_DET_RESPONSE") != False: plt.plot(FFT_KERNEL_X,np.abs(FFT_KERNEL),label = "DET_RESPONSE",c="tab:orange")
-            
-            if check_key(OPT,"SHOW_F_DEC") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_DEC),label = "DECONVOLUTION",c="tab:green")
-            if check_key(OPT,"SHOW_F_WIENER") != False: 
-                plt.plot(FFT_SIGNAL_X,WIENER,label = "WIENER",c="tab:red")
-                plt.plot(ENV_WIENER.x[:ENV_WIENER_MIN],-1*(ENV_WIENER.y[:ENV_WIENER_MIN]-2),label = "ENV_WIENER",c="tab:pink",ls="--")
+            if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
+                plt.ion()
+                next_plot = False
+                plt.rcParams['figure.figsize'] = [16, 8]
+                plt.subplot(1,2,1)
+                plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL,X)),c="tab:blue")
+                plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL,X)),c="blue")
+                plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC,X)),c="tab:green")
+                plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
+                if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy()
+                if check_key(OPT,"FOCUS") == True and OPT["FOCUS"] == True: 
+                    plt.xlim(4e-9*np.array([np.argmax(SIGNAL)-100,np.argmax(SIGNAL)+1000]))
+                    plt.ylim([np.min(SIGNAL)*1.1,np.max(DEC)*1.1])
+                plt.legend()
+                
+                plt.subplot(1,2,2)
+                if check_key(OPT,"SHOW_F_SIGNAL") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_SIGNAL),label = "SIGNAL",c="tab:blue")
+                if check_key(OPT,"SHOW_F_GSIGNAL") != False: plt.plot(FFT_SIGNAL_X,np.abs(GAUSS_SIGNAL),label = "GAUSS_SIGNAL",c="blue")
+                if check_key(OPT,"SHOW_F_DET_RESPONSE") != False: plt.plot(FFT_KERNEL_X,np.abs(FFT_KERNEL),label = "DET_RESPONSE",c="tab:orange")
+                
+                if check_key(OPT,"SHOW_F_DEC") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_DEC),label = "DECONVOLUTION",c="tab:green")
+                if check_key(OPT,"SHOW_F_WIENER") != False: 
+                    plt.plot(FFT_SIGNAL_X,WIENER,label = "WIENER",c="tab:red")
+                    plt.plot(ENV_WIENER.x[:ENV_WIENER_MIN],-1*(ENV_WIENER.y[:ENV_WIENER_MIN]-2),label = "ENV_WIENER",c="tab:pink",ls="--")
 
-            if check_key(OPT,"SHOW_F_GAUSS") != False: plt.plot(FFT_SIGNAL_X,FFT_GAUSS,label = "GAUSS",c="k",ls="--")
-            plt.ylabel("a.u.");plt.xlabel("Frequency in [Hz]")
-            plt.ylim(1e-8,np.max(FFT_KERNEL)*10)
-            plt.semilogy();plt.semilogx()
-            plt.legend()
+                if check_key(OPT,"SHOW_F_GAUSS") != False: plt.plot(FFT_SIGNAL_X,FFT_GAUSS,label = "GAUSS",c="k",ls="--")
+                plt.ylabel("a.u.");plt.xlabel("Frequency in [Hz]")
+                plt.ylim(1e-8,np.max(FFT_KERNEL)*10)
+                plt.semilogy();plt.semilogx()
+                plt.legend()
 
-            while not plt.waitforbuttonpress(-1): pass
-            plt.clf()
+                while not plt.waitforbuttonpress(-1): pass
+                plt.clf()
             aux = DEC
-
         plt.ioff()
         my_runs[run][ch]["Deconvolution"] = aux
         aux_path=PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
@@ -173,3 +180,4 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
 
         np.save(aux_path,my_runs[run][ch])
         print("Saved data in:" , aux_path)
+    return aux

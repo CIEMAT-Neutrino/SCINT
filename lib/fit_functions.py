@@ -9,6 +9,30 @@ from scipy.special import erf
 
 from itertools import product
 
+def gaussian_train(x, *params):
+    y = np.zeros_like(x)
+    for i in range(0, len(params), 3):
+        ctr = params[i]
+        amp = params[i+1]
+        wid = params[i+2]
+        y = y + amp * np.exp( -((x - ctr)/wid)**2)
+    return y
+
+def loggaussian_train(x, *params):
+    y = np.zeros_like(x)
+    for i in range(0, len(params), 3):
+        ctr = params[i]
+        amp = params[i+1]
+        wid = params[i+2]
+        y = y + amp * np.exp( -((x - ctr)/wid)**2)
+    return np.log10(y)
+
+def gaussian(x, height, center, width):
+    return height*np.exp(-(x - center)**2/(2*width**2))
+
+def loggaussian(x, height, center, width):
+    return np.log10(height*np.exp(-(x - center)**2/(2*width**2)))
+
 def func(T,A,SIGMA,TAU,T0):
     return (2*A/TAU)*np.exp((SIGMA/(np.sqrt(2)*TAU))**2-(np.array(T)-T0)/TAU)*(1-erf((SIGMA**2-TAU*(np.array(T)-T0))/(np.sqrt(2)*SIGMA*TAU)))
 
@@ -31,7 +55,7 @@ def sipm_fit(RAW,RAW_X,FIT_RANGE,OPT):
     MAX = np.argmax(RAW)
     thrld = 1e-1
     BUFFER1 = FIT_RANGE[0]
-    buffer2 = FIT_RANGE[1]
+    BUFFER2 = FIT_RANGE[1]
 
     OPT["CUT_NEGATIVE"] = True
     popt1,perr1 = peak_fit(RAW, RAW_X,BUFFER1,OPT)
