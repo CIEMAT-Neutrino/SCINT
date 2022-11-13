@@ -1,16 +1,22 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import uproot
+import copy
 
-from pynput import keyboard
 from itertools import product
+
+def check_key(OPT,KEY):
+    try:
+        OPT[KEY]
+        return True    
+    except KeyError:
+        return False
 
 def root2npy (in_path,out_path):
     DEBUG=False
     """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
-    # in_path ="../data/run26_ch6.root"
-    # out_path="../data/run26_ch6.npy"
-    f=uproot.open(in_path)
+
+    f = uproot.open(in_path)
     my_dict={}
     print("----------------------")
     print("Dumping file:", in_path)
@@ -26,89 +32,118 @@ def root2npy (in_path,out_path):
     np.save(out_path,my_dict)
     print("Saved data in:" , out_path)
 
-def load_npy(RUNS,CH,PATH = "../data/raw/"):
+def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
-    runs=dict()
-    runs["N_runs"]    =RUNS
-    runs["N_channels"]=CH
-    # runs["P_channels"]=POL
+    runs = dict()
+    runs["N_runs"]     = RUNS
+    runs["N_channels"] = CH
     
     for run in RUNS:
         channels=dict()
         for ch in CH:
-            channels[ch]=np.load(PATH+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+            channels[ch]=np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
         runs[run]=channels
     return runs
 
-def load_analysis_npy(RUNS,CH,PATH = "../data/ana/"):
-    """Structure: run_dict[RUN][CH][BRANCH] 
-    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-
-    runs=dict()
-    runs["N_runs"]    =RUNS
-    runs["N_channels"]=CH
-    # runs["P_channels"]=POL
+def save_proccesed_variables(my_runs,out_path="../data/ana/"):
+    """Does exactly what it says, no RawWvfs here"""
     
-    for run in RUNS:
-        channels=dict()
-        for ch in CH:
-            channels[ch]=np.load(PATH+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-        runs[run]=channels
-    return runs
-
-def load_average_npy(RUNS,CH,PATH = "../data/ave/"):
-    """Structure: run_dict[RUN][CH][BRANCH] 
-    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-
-    runs=dict()
-    runs["N_runs"]    =RUNS
-    runs["N_channels"]=CH
-    # runs["P_channels"]=POL
+    #  Remove the unwanted branches in the copy
+    aux=copy.deepcopy(my_runs)
+    for run in aux["N_runs"]:
+        for ch in aux["N_channels"]:
+            for key in aux[run][ch]["Raw_file_keys"]:
+                del aux[run][ch][key]
     
-    for run in RUNS:
-        channels=dict()
-        for ch in CH:
-            channels[ch]=np.load(PATH+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-        runs[run]=channels
-    return runs
+    # Save the info in aux dict
+    for run in aux["N_runs"]:
+        for ch in aux["N_channels"]:
+            aux_path=out_path+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+            np.save(aux_path,aux[run][ch])
+            print("Saved data in:", aux_path)
+            
+# def load_analysis_npy(RUNS,CH,PATH = "../data/ana/"):
+#     """Structure: run_dict[RUN][CH][BRANCH] 
+#     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
-def load_fit_npy(RUNS,CH,PATH = "../data/fit/"):
-    """Structure: run_dict[RUN][CH][BRANCH] 
-    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-
-    runs=dict()
-    runs["N_runs"]    =RUNS
-    runs["N_channels"]=CH
-    # runs["P_channels"]=POL
+#     runs=dict()
+#     runs["N_runs"]    = RUNS
+#     runs["N_channels"]= CH
+#     # runs["P_channels"]=POL
     
-    for run in RUNS:
-        channels=dict()
-        for ch in CH:
-            channels[ch]=np.load(PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-        runs[run]=channels
-    return runs
+#     for run in RUNS:
+#         channels=dict()
+#         for ch in CH:
+#             channels[ch]=np.load(PATH+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+#         runs[run]=channels
+#     return runs
 
-def load_deconvolution_npy(RUNS,CH,PATH = "../data/dec/"):
-    """Structure: run_dict[RUN][CH][BRANCH] 
-    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
+# def load_average_npy(RUNS,CH,PATH = "../data/ave/"):
+#     """Structure: run_dict[RUN][CH][BRANCH] 
+#     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
 
-    runs=dict()
-    runs["N_runs"]    =RUNS
-    runs["N_channels"]=CH
-    # runs["P_channels"]=POL
+#     runs=dict()
+#     runs["N_runs"]    =RUNS
+#     runs["N_channels"]=CH
+#     # runs["P_channels"]=POL
     
-    for run in RUNS:
-        channels=dict()
-        for ch in CH:
-            channels[ch]=np.load(PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-        runs[run]=channels
-    return runs
+#     for run in RUNS:
+#         channels=dict()
+#         for ch in CH:
+#             channels[ch]=np.load(PATH+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+#         runs[run]=channels
+#     return runs
 
-def check_key(OPT,KEY):
-    try:
-        OPT[KEY]
-        return True    
-    except KeyError:
-        return False
+# def load_fit_npy(RUNS,CH,PATH = "../data/fit/"):
+#     """Structure: run_dict[RUN][CH][BRANCH] 
+#     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
+
+#     runs=dict()
+#     runs["N_runs"]    =RUNS
+#     runs["N_channels"]=CH
+#     # runs["P_channels"]=POL
+    
+#     for run in RUNS:
+#         channels=dict()
+#         for ch in CH:
+#             channels[ch]=np.load(PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+#         runs[run]=channels
+#     return runs
+
+# def load_deconvolution_npy(RUNS,CH,PATH = "../data/dec/"):
+#     """Structure: run_dict[RUN][CH][BRANCH] 
+#     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
+
+#     runs=dict()
+#     runs["N_runs"]    =RUNS
+#     runs["N_channels"]=CH
+#     # runs["P_channels"]=POL
+    
+#     for run in RUNS:
+#         channels=dict()
+#         for ch in CH:
+#             channels[ch]=np.load(PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+#         runs[run]=channels
+#     return runs
+
+# def insert_variable(my_runs,KEYS,VAR,out_path="../data/ana/"):
+#     aux=copy.deepcopy(my_runs)
+#     for run in aux["N_runs"]:
+#         for ch in aux["N_channels"]:
+#             for key in KEYS:
+#                 aux[run][ch][key] = VAR[run][ch][key]
+#                 print("Added key %s to npy"%key)
+            
+#             if out_path == "../data/ana/":
+#                 aux_path=out_path+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+#             elif out_path == "../data/ave/":
+#                 aux_path=out_path+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+#             elif out_path == "../data/dec/":
+#                 aux_path=out_path+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+#             elif out_path == "../data/fit/":
+#                 aux_path=out_path+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+            
+#             np.save(aux_path,aux[run][ch])
+#             print("Saved data in:", aux_path)

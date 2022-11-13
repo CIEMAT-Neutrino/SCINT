@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from .io_functions import load_analysis_npy
 from .io_functions import check_key
 from .wvf_functions import smooth
+from .ana_functions import find_baseline_cuts
 import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
@@ -81,11 +82,14 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 STD = ana_runs[run][ch]["Ped_STD"][i]
             except:
                 STD = np.std(RAW)
-                
-            X = 4e-9*np.arange(len(SIGNAL))
-            
+
+            TIMEBIN = 4e-9
+            if check_key(OPT,"TIMEBIN") == True: TIMEBIN = OPT["TIMEBIN"]    
+            X = TIMEBIN*np.arange(len(SIGNAL))
+            # AMP = np.trapz(X,KERNEL)
             # Define noise (should be imported in future iterations)
-            NOISE = 10*STD*np.random.randn(len(SIGNAL))
+            NOISE = STD*np.random.randn(len(SIGNAL))
+            # NOISE = np.random.randn(len(SIGNAL))
             FFT_NOISE = np.fft.rfft(NOISE)
 
             # Roll signal to align wvfs
@@ -95,9 +99,16 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             # Calculate FFT arrays
             FFT_SIGNAL = np.fft.rfft(SIGNAL)
             FFT_SIGNAL_X = np.fft.rfftfreq(len(SIGNAL),4e-9)
+           
+            i_kernel,f_kernel = find_baseline_cuts(KERNEL)
             FFT_KERNEL = np.fft.rfft(KERNEL)
-            FFT_KERNEL_X = np.fft.rfftfreq(len(KERNEL),4e-9)
             WIENER = abs(FFT_KERNEL)**2/(abs(FFT_KERNEL)**2+abs(FFT_NOISE)**2)
+            
+            # FFT_KERNEL = np.fft.rfft(KERNEL/np.sum(KERNEL[i_kernel:f_kernel]))
+
+            if check_key(OPT,"NORM_DET_RESPONSE") == True and OPT["NORM_DET_RESPONSE"] == True:
+                FFT_KERNEL = (FFT_KERNEL/np.max(FFT_KERNEL))
+            FFT_KERNEL_X = np.fft.rfftfreq(len(KERNEL),4e-9)
             
             # Interpolate wiener envelop for fit of gaussian filter
             WIENER_BUFFER = 1500
@@ -127,8 +138,10 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             GAUSS_SIGNAL = np.fft.irfft(FFT_GAUSS_SIGNAL)
             
             # Generate deconvoluted function
-            FFT_DEC = FFT_GAUSS_SIGNAL/np.array(FFT_KERNEL/np.max(FFT_KERNEL))
+            FFT_DEC = FFT_GAUSS_SIGNAL/np.array(FFT_KERNEL)
+            # FFT_DEC = np.max(FFT_SIGNAL)*FFT_DEC/np.max(FFT_DEC)
             DEC = np.fft.irfft(FFT_DEC)
+            # DEC = np.fft.irfft(FFT_DEC)/np.abs(np.trapz(KERNEL,X))
             if check_key(OPT, "REVERSE") == True and OPT["REVERSE"] == True: DEC = DEC[::-1]
             DEC = np.roll(DEC,np.argmax(KERNEL)) # Roll the function to match original position
             
@@ -140,9 +153,25 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 next_plot = False
                 plt.rcParams['figure.figsize'] = [16, 8]
                 plt.subplot(1,2,1)
-                plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL,X)),c="tab:blue")
-                plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL,X)),c="blue")
-                plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC,X)),c="tab:green")
+                
+                i_signal,f_signal = find_baseline_cuts(SIGNAL)
+                i_signal,f_signal = find_baseline_cuts(SIGNAL)
+                i_resp,f_resp = find_baseline_cuts(KERNEL)
+                i_dec,f_dec = find_baseline_cuts(DEC)
+                if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
+                    plt.plot(X,SIGNAL/np.max(SIGNAL),label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
+                    plt.plot(X,GAUSS_SIGNAL/np.max(GAUSS_SIGNAL), label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
+                    plt.plot(X,KERNEL/np.max(KERNEL), label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
+                    plt.plot(X,DEC/np.max(DEC),label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC[i_dec:f_dec],X[i_dec:f_dec])),c="tab:green")
+                else:
+                    plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
+                    plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
+                    plt.plot(X,KERNEL, label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
+                    plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC[i_dec:f_dec],X[i_dec:f_dec])),c="tab:green")
+                
+                plt.axhline(0,label="# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]),c="black",alpha=0.5,ls="--")
+                # print("# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]))
+                
                 plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
                 if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy()
                 if check_key(OPT,"FOCUS") == True and OPT["FOCUS"] == True: 
@@ -162,7 +191,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
 
                 if check_key(OPT,"SHOW_F_GAUSS") != False: plt.plot(FFT_SIGNAL_X,FFT_GAUSS,label = "GAUSS",c="k",ls="--")
                 plt.ylabel("a.u.");plt.xlabel("Frequency in [Hz]")
-                plt.ylim(1e-8,np.max(FFT_KERNEL)*10)
+                plt.ylim(1e-12,np.max(FFT_SIGNAL)*100)
                 plt.semilogy();plt.semilogx()
                 plt.legend()
 
@@ -180,4 +209,4 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
 
         np.save(aux_path,my_runs[run][ch])
         print("Saved data in:" , aux_path)
-    return aux
+    return aux,X

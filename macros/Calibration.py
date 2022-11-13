@@ -4,22 +4,29 @@ sys.path.insert(0, '../')
 import scipy
 import numpy as np
 import matplotlib.pyplot as plt
-from lib.io_functions import load_npy,load_analysis_npy,load_average_npy
+from lib.io_functions import load_npy,load_analysis_npy,load_average_npy,insert_variable
+from lib.ana_functions import find_baseline_cuts
 from lib.fit_functions import gaussian,loggaussian, gaussian_train, loggaussian_train
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 
 RUN = 2
-CH = 0
+CH = 1
 RUNS = load_analysis_npy([RUN],[CH])
-print(len(RUNS[RUN][CH]["AVE_INT_LIMITS"]))
+INT_KEY = "AVE_INT_LIMITS"
+# INT_KEY = "BASELINE_INT_LIMITS"
+# print(len(RUNS[RUN][CH]["AVE_INT_LIMITS"]))
+
 raw_array = []
+raw_amp = []
 max_charge = 0 
 min_charge = 0
 
-for i in range(len(RUNS[RUN][CH]["AVE_INT_LIMITS"])):
-    thischarge = RUNS[RUN][CH]["AVE_INT_LIMITS"][i]
+for i in range(len(RUNS[RUN][CH][INT_KEY])):
+    thischarge = RUNS[RUN][CH][INT_KEY][i]
+    thisamp = RUNS[RUN][CH]["Peak_amp"][i]
     raw_array.append(thischarge)
+    raw_amp.append(thisamp)
 
 mean = np.mean(raw_array)
 mode = raw_array[int(len(raw_array)/2)]
@@ -31,13 +38,17 @@ for i in range(len(raw_array)):
         array.append(raw_array[i])
 
 # Threshold value (for height of peaks and valleys)
-binning = 300
+binning = 1000
 thresh = 20
 wdth = 10
 prom = 0.1
 acc = 1000
 
+# counts, bins, bars = plt.hist(raw_amp,binning,alpha=0.75)
+# plt.show()
+
 counts, bins, bars = plt.hist(array,binning,(np.min(array)*0.5,np.max(array)),alpha=0.75)
+plt.xlabel("Charge in [ADC x ns]");plt.ylabel("Counts")
 for i in range(len(counts)):
     if counts[i] > thresh and bins[i] > max_charge:
         max_charge = bins[i]
@@ -100,3 +111,34 @@ plt.semilogy()
 plt.ylim(thresh*0.9,np.max(counts)*1.1)
 plt.xlim(np.min(bins)*0.9,x[peak_idx[-1]]*1.1)
 plt.show()
+
+
+RUNS = load_npy([RUN],[CH])
+ANA_RUNS = load_analysis_npy([RUN],[CH])
+AVE_RUNS = load_average_npy([RUN],[CH])
+
+AVE = np.zeros(len(RUNS[RUN][CH]["ADC"][0]))
+counts = 1
+for i in range(len(RUNS[RUN][CH]["ADC"])):
+    if (0.15e-5 < ANA_RUNS[RUN][CH][INT_KEY][i] < 0.35e-5):
+        AVE = AVE + ANA_RUNS[RUN][CH]["P_channel"]*(RUNS[RUN][CH]["ADC"][i]-ANA_RUNS[RUN][CH]["Ped_mean"][i])
+        counts = counts+1
+        # plt.plot(4e-9*np.arange(len(RUNS[RUN][CH]["ADC"][i])),ANA_RUNS[RUN][CH]["P_channel"]*(RUNS[RUN][CH]["ADC"][i]-ANA_RUNS[RUN][CH]["Ped_mean"][i]))
+        # plt.show()
+    else:
+        continue
+
+AVE = AVE/counts
+
+i_ave,f_ave = find_baseline_cuts(AVE)
+print(i_ave,f_ave)
+print(np.trapz(AVE[i_ave:f_ave],4e-9*np.arange(len(AVE[i_ave:f_ave]))))
+plt.plot(4e-9*np.arange(len(AVE)),AVE)
+plt.show()
+
+AVE_DICT = dict()
+AVE_DICT[RUN] = dict()
+AVE_DICT[RUN][CH] = dict()
+AVE_DICT[RUN][CH]["Single_AvWvf"] = AVE
+
+insert_variable(AVE_RUNS,["Single_AvWvf"],AVE_DICT,out_path="../data/ave/")

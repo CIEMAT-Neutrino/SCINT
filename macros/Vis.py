@@ -3,7 +3,7 @@ import sys
 sys.path.insert(0, '../')
 from lib.vis_functions import vis_raw_npy
 
-RUNS = [26]
+RUNS = [2]
 CH   = [6]
 
 OPT  = {
