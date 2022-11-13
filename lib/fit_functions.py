@@ -123,11 +123,11 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):
 
     # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
     p = np.mean(RAW[:MAX-BUFFER1])
-    p = 1e-1
-    a1 = 5e-5; a1_low = 1e-6;  a1_high = 9e-3                               
-    a3 = 5e-5; a3_low = 1e-7; a3_high = 9e-4
+    # p = 1e-1
+    a1 = 5e-5; a1_low = 1e-6;  a1_high = 9e-4                               
+    a3 = 1e-5; a3_low = 1e-6; a3_high = 9e-4
     tau1 = 1e-8; tau1_low = 6e-9; tau1_high = 9e-8
-    tau3 = 5e-7; tau3_low = tau1_high; tau3_high = 9e-6
+    tau3 = 8e-7; tau3_low = tau1_high; tau3_high = 5e-6
     sigma2 = popt1[1]; sigma2_low = popt1[1]*0.1; sigma2_high = popt1[1]*10
     bounds2 = ([sigma2_low,a3_low,tau3_low],[sigma2_high,a3_high,tau3_high])
     initial2 = (sigma2,a3,tau3)
@@ -179,10 +179,11 @@ def sc_fit(RAW,RAW_X,FIT_RANGE,OPT):
     # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
     t0 = np.argmax(RAW)
     initial = (1500,150,t0,8,-700,300)
+    # bounds = ([-200,10,t0*0.1,1,-1500,10],[10000,3000,t0*10,20,1500,1000])
     labels = ["AMP","TAU1","T0","SIGMA","AMP2","TAU2"]
 
     try:
-        popt, pcov = curve_fit(scfunc,FIT_RAW_X,RAW,p0 = initial, method = "trf")
+        popt, pcov = curve_fit(scfunc,FIT_RAW_X,RAW,p0 = initial,method = "trf")
         perr = np.sqrt(np.diag(pcov))
     except:
         print("Fit did not succeed")
@@ -227,7 +228,7 @@ def peak_fit(FIT_RAW,RAW_X,BUFFER,OPT):
     tau1 = 9e-8; tau1_low = 6e-9; tau1_high = 1e-7
     bounds = ([a1_low,sigma_low,tau1_low,t0_low],[a1_high,sigma_high,tau1_high,t0_high])
     initial = (a1,sigma,tau1,t0)
-    labels = ["AMP1","SIG1","TAU1","TIME"]
+    labels = ["AMP1","SIGM","TAU1","TIME"]
 
     # FIT PEAK
     try:

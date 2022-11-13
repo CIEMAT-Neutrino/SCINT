@@ -3,7 +3,7 @@ import numpy as np
 from .io_functions import load_analysis_npy, load_npy
 from itertools import product
 
-def average_wvfs(my_runs,PATH="../data/ave/",threshold=50):
+def average_wvfs(my_runs,threshold=50,PATH="../data/ave/"):
     
     try:
         ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
@@ -15,8 +15,8 @@ def average_wvfs(my_runs,PATH="../data/ave/",threshold=50):
         
         # No centering
         aux_ADC=ana_runs[run][ch]["P_channel"]*((my_runs[run][ch]["ADC"].T-ana_runs[run][ch]["Ped_mean"]).T)
-
         my_runs[run][ch]["AvWvf"] = np.mean(aux_ADC,axis=0)
+        
         aux_path=PATH+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
         
         # centering
