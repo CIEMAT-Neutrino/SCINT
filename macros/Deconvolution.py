@@ -4,13 +4,13 @@ sys.path.insert(0, '../')
 import numpy as np
 import matplotlib.pyplot as plt
 
-from lib.io_functions import load_npy
+from lib.io_functions import load_npy,save_proccesed_variables
 from lib.dec_functions import deconvolve
 
-run = 2
+run = 26
 dec_run = 10
 single_run = 2
-ch = 0
+ch = 6
 
 # my_runs = load_npy([run],[ch],"Analysis_","../data/ana/") # Activate in case deconvolution of average wvf wants to be performed
 my_runs = load_npy([run],[ch],"Average_","../data/ave/") # Activate in case deconvolution of average wvf wants to be performed
@@ -18,12 +18,14 @@ my_runs = load_npy([run],[ch],"Average_","../data/ave/") # Activate in case deco
 dec_runs = load_npy([dec_run],[ch],"Average_","../data/ave/")
 single_runs = load_npy([single_run],[ch],"Average_","../data/ave/")
 
+out_runs = load_npy([run],[ch],"Deconvolution_","../data/dec/")
+
 OPT = {
-    "KEY":"SPE_AvWvf", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
+    "KEY":"AvWvf", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
     # "NORM_DET_RESPONSE": True,
     "FIX_EXP":True,
     "LOGY":False,
-    "NORM":True,
+    "NORM":False,
     "FOCUS":False,
     "SHOW": True,
     "SHOW_F_SIGNAL":True,
@@ -55,4 +57,6 @@ det_response = dec_runs[dec_run][ch]["AvWvf_threshold"][0]
 # det_response = det_response
 det_response = np.max(single_response)*det_response/np.max(det_response)
 
-deconvolve(my_runs,det_response,OPT)
+deconvolve(my_runs,out_runs,det_response,OPT)
+
+save_proccesed_variables(out_runs,"Deconvolution_","../data/dec/")
