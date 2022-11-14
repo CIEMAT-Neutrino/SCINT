@@ -64,7 +64,7 @@ def vis_npy(run,ch,KEY,OPT):
             
             try:
                 AVE_KEY = OPT["SHOW_AVE"]
-                AVE = AVE_RUN[run][ch][AVE_KEY]
+                AVE = AVE_RUN[run][ch][AVE_KEY][0]
                 if OPT["NORM"] == True and OPT["NORM"] == True:
                     AVE = AVE/np.max(AVE)
                 plt.plot(AVE_RUN[run][ch]["Sampling"]*np.arange(len(AVE)),AVE,alpha=.5,label="AVE_WVF_%s"%AVE_KEY)             

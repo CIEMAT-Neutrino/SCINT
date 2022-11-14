@@ -27,7 +27,7 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
     Y=A*np.exp(-(X-MEAN)**N/(2*STD**N))
     return np.log10(Y)
 
-def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
+def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         aux = dict()
         if check_key(OPT,"KEY") == True: KEY = OPT["KEY"]
@@ -147,6 +147,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 i_signal,f_signal = find_baseline_cuts(SIGNAL)
                 i_resp,f_resp = find_baseline_cuts(KERNEL)
                 i_dec,f_dec = find_baseline_cuts(DEC)
+                
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
                     plt.plot(X,SIGNAL/np.max(SIGNAL),label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
                     plt.plot(X,GAUSS_SIGNAL/np.max(GAUSS_SIGNAL), label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
@@ -158,7 +159,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                     plt.plot(X,KERNEL, label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
                     plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC[i_dec:f_dec],X[i_dec:f_dec])),c="tab:green")
                 
-                plt.axhline(0,label="# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]),c="black",alpha=0.5,ls="--")
+                plt.axhline(0,label="# PE in deconvolved signal %f"%np.sum(DEC),c="black",alpha=0.5,ls="--")
                 # print("# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]))
                 
                 plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
@@ -188,14 +189,14 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 plt.clf()
             aux[i] = DEC
         plt.ioff()
-        my_runs[run][ch]["Deconvolution"] = aux
-        aux_path=PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+
+        dec_key = "Dec_"+KEY
+        out_runs[run][ch][dec_key] = aux
+        print("Generated wvfs with key %s"%dec_key)
         
         try:
             del my_runs[run][ch]["ADC"]
         except:
             print("'ADC' branch has already been deleted")
 
-        np.save(aux_path,my_runs[run][ch])
-        print("Saved data in:" , aux_path)
     return aux,X

@@ -44,8 +44,15 @@ def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
     for run in RUNS:
         channels=dict()
         for ch in CH:
-            channels[ch]=np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+            try:
+                channels[ch] = np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+            except:
+                channels[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                del channels[ch]["Ana_ADC"]
+
         runs[run]=channels
+    print("Loaded runs with keys:")
+    print(runs.keys())
     return runs
 
 def delete_keys(my_runs,KEYS):
