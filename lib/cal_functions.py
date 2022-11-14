@@ -123,8 +123,8 @@ def calibrate(my_runs,KEY,OPT={}):
             if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
                 plt.semilogy()
             
-            plt.ylim(thresh*0.9,np.max(counts)*1.1)
-            plt.xlim(x[peak_idx[0]]-abs(wdth*(bins[0]-bins[1])),x[peak_idx[-1]]*1.1)
+            # plt.ylim(thresh*0.9,np.max(counts)*1.1)
+            # plt.xlim(x[peak_idx[0]]-abs(wdth*(bins[0]-bins[1])),x[peak_idx[-1]]*1.1)
             
             while not plt.waitforbuttonpress(-1): pass
 

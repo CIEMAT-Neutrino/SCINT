@@ -15,7 +15,7 @@ RUNS = load_npy(N_runs_calib,N_channels_calib,"Analysis_","../data/ana/")
 AVE_RUNS = load_npy(N_runs_calib,N_channels_calib,"Average_","../data/ave/")
 INT_KEY = "AVE_INT_LIMITS"
 
-OPT = {"LOGY": True}
+OPT = {"LOGY": False}
 calibrate(RUNS,INT_KEY,OPT)
 
 # print(RUNS[2][6]["SPE_max_charge"])

@@ -43,6 +43,7 @@ def vis_npy(run,ch,KEY,OPT):
             
         plt.xlabel("Time in [s]")
         plt.ylabel("ADC Counts")
+        plt.grid(True, alpha = 0.7)
         
         if (KEY == "ADC"):
             min = np.argmin(RUN[run][ch][KEY][i])
@@ -57,6 +58,7 @@ def vis_npy(run,ch,KEY,OPT):
             STD = ANA_RUN[run][ch]["Ped_STD"][i]
 
         if OPT["NORM"] == True and OPT["NORM"] == True:
+            norm_raw = np.max(RAW)
             RAW = RAW/np.max(RAW)
         plt.plot(sampling*np.arange(len(RAW)),RAW,label="RAW_WVF")             
 
@@ -64,7 +66,7 @@ def vis_npy(run,ch,KEY,OPT):
             
             try:
                 AVE_KEY = OPT["SHOW_AVE"]
-                AVE = AVE_RUN[run][ch][AVE_KEY]
+                AVE = AVE_RUN[run][ch][AVE_KEY][0]
                 if OPT["NORM"] == True and OPT["NORM"] == True:
                     AVE = AVE/np.max(AVE)
                 plt.plot(AVE_RUN[run][ch]["Sampling"]*np.arange(len(AVE)),AVE,alpha=.5,label="AVE_WVF_%s"%AVE_KEY)             
