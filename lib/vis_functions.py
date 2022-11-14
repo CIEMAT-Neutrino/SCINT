@@ -57,6 +57,7 @@ def vis_npy(run,ch,KEY,OPT):
             STD = ANA_RUN[run][ch]["Ped_STD"][i]
 
         if OPT["NORM"] == True and OPT["NORM"] == True:
+            norm_raw = np.max(RAW)
             RAW = RAW/np.max(RAW)
         plt.plot(sampling*np.arange(len(RAW)),RAW,label="RAW_WVF")             
 
