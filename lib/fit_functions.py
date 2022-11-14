@@ -2,10 +2,10 @@ import numpy as np
 import scipy as sc
 import matplotlib.pyplot as plt
 
-from .io_functions import load_npy,load_analysis_npy
-from .io_functions import check_key
 from scipy.optimize import curve_fit
 from scipy.special import erf
+
+from .io_functions import load_npy,check_key
 
 from itertools import product
 
@@ -31,7 +31,7 @@ def gaussian(x, height, center, width):
     return height*np.exp(-(x - center)**2/(2*width**2))
 
 def loggaussian(x, height, center, width):
-    return np.log10(height*np.exp(-(x - center)**2/(2*width**2)))
+    return np.log10(gaussian(x, height, center, width))
 
 def func(T,A,SIGMA,TAU,T0):
     return (2*A/TAU)*np.exp((SIGMA/(np.sqrt(2)*TAU))**2-(np.array(T)-T0)/TAU)*(1-erf((SIGMA**2-TAU*(np.array(T)-T0))/(np.sqrt(2)*SIGMA*TAU)))
@@ -252,19 +252,16 @@ def peak_fit(FIT_RAW,RAW_X,BUFFER,OPT):
     return popt,perr
 
 def fit_wvfs(my_runs,signal_type,FIT_RANGE,OPT,PATH="../data/fit/"):
-    
-    try:
-        ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
-    except:
-        print("Events have not been processed")
-    aux = dict()
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold" or OPT["AVE"] == "Deconvolution"): 
+        aux = dict()
+        
+        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "SPE_AvWvf" or OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold" or OPT["AVE"] == "Deconvolution"): 
             RAW = [my_runs[run][ch][OPT["AVE"]]]
             LOOP = 1
+        
         else:
-            RAW = ana_runs[run][ch]["P_channel"]*((my_runs[run][ch]["ADC"].T-ana_runs[run][ch]["Ped_mean"]).T)
-            LOOP = len(my_runs[run][ch]["ADC"])
+            RAW = my_runs[run][ch]["Ana_ADC"]
+            LOOP = len(my_runs[run][ch]["Ana_ADC"])
         
         RAW_X = 4e-9*np.arange(len(RAW[0]))
         for i in range(LOOP):
@@ -274,7 +271,7 @@ def fit_wvfs(my_runs,signal_type,FIT_RANGE,OPT,PATH="../data/fit/"):
             if signal_type == "SC":    fit = sc_fit(RAW[i],RAW_X,FIT_RANGE,OPT)
             aux[i] = fit
         
-        plt.ioff()
+       
         my_runs[run][ch][signal_type] = aux
         aux_path=PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
         
@@ -283,5 +280,4 @@ def fit_wvfs(my_runs,signal_type,FIT_RANGE,OPT,PATH="../data/fit/"):
         except:
             print("'ADC' branch has already been deleted")
 
-        np.save(aux_path,my_runs[run][ch])
-        print("Saved data in:" , aux_path)
+    plt.ioff()

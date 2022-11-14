@@ -1,10 +1,10 @@
 import numpy as np
 from curve import Curve
 import matplotlib.pyplot as plt
-from .io_functions import load_analysis_npy
+
 from .io_functions import check_key
-from .wvf_functions import smooth
-from .ana_functions import find_baseline_cuts
+from .wvf_functions import smooth,find_baseline_cuts
+
 import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
@@ -28,32 +28,23 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
     return np.log10(Y)
 
 def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
-    try:
-        ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
-    except:
-        print("Events have not been processed")
-    aux = dict()
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold"): 
+        
+        aux = dict()
+        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "SPE_AvWvf" or OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold"): 
             AVE = OPT["AVE"]
             LOOP = 1
         else: 
-            AVE = "ADC"
+            AVE = "Ana_ADC"
             LOOP = len(my_runs[run][ch][AVE])
             if check_key(OPT, "SINGLE") == True: LOOP = OPT["SINGLE"] 
+        
         for i in range(LOOP):
             # Select required runs and parameters
-            if AVE == "ADC": 
-                try:
-                    PED = ana_runs[run][ch]["Ped_mean"][i]    
-                    POL = ana_runs[run][ch]["P_channel"]
-                    RAW = POL*(my_runs [run][ch]["ADC"][i]-PED)
-                except:
-                    PED = 0
-                    POL = 1
-                    RAW = my_runs [run][ch]["ADC"]
+            if AVE == "Ana_ADC": 
+                RAW = my_runs [run][ch]["Ana_ADC"][i]
             else: 
-                RAW = my_runs[run][ch][AVE]
+              RAW = my_runs[run][ch][AVE]
 
             # Can be used for test to trimm array
             if check_key(OPT, "TRIMM") == True: TRIMM = OPT["TRIMM"]
@@ -67,11 +58,13 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             if TRIMM != 0: 
                 SIGNAL = RAW[:-TRIMM]
                 KERNEL = CLEAN[:-TRIMM]
-                # print("Array length after trimming = %i"%len(SIGNAL))
+                print("Array length after trimming = %i vs detector response = %i"%(len(SIGNAL),len(KERNEL)))
             
             else: 
                 SIGNAL = RAW
                 KERNEL = CLEAN
+                print("Array length after trimming = %i vs detector response = %i"%(len(SIGNAL),len(KERNEL)))
+
             # print(KERNEL)
             if check_key(OPT, "SMOOTH") == True:
                 if OPT["SMOOTH"] > 0:
@@ -79,17 +72,16 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 else:
                     print("Invalid value encountered in smooth")
             try:
-                STD = ana_runs[run][ch]["Ped_STD"][i]
+                STD = my_runs[run][ch]["Ped_STD"][i]
             except:
                 STD = np.std(RAW)
 
-            TIMEBIN = 4e-9
+            TIMEBIN = my_runs[run][ch]["Sampling"]
             if check_key(OPT,"TIMEBIN") == True: TIMEBIN = OPT["TIMEBIN"]    
             X = TIMEBIN*np.arange(len(SIGNAL))
-            # AMP = np.trapz(X,KERNEL)
+
             # Define noise (should be imported in future iterations)
             NOISE = STD*np.random.randn(len(SIGNAL))
-            # NOISE = np.random.randn(len(SIGNAL))
             FFT_NOISE = np.fft.rfft(NOISE)
 
             # Roll signal to align wvfs
@@ -134,6 +126,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             
             # Generate gauss filter and filtered signal
             FFT_GAUSS = gauss(np.arange(len(FFT_SIGNAL)),*params)
+            # FFT_GAUSS[0] = 0
             FFT_GAUSS_SIGNAL = FFT_SIGNAL*FFT_GAUSS
             GAUSS_SIGNAL = np.fft.irfft(FFT_GAUSS_SIGNAL)
             
@@ -197,7 +190,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
 
                 while not plt.waitforbuttonpress(-1): pass
                 plt.clf()
-            aux = DEC
+            aux[i] = DEC
         plt.ioff()
         my_runs[run][ch]["Deconvolution"] = aux
         aux_path=PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"

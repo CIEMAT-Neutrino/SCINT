@@ -28,7 +28,7 @@ mkdir data/fit
 fi
 
 #Deconvolved wvfs 
-if [ ! -d "data/fit" ]; then
+if [ ! -d "data/dec" ]; then
 mkdir data/dec
 fi
 

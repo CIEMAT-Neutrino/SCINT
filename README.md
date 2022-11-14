@@ -23,6 +23,8 @@ We don't want:
     - macros/Root2Np.py
     - macros/Process.py
     - macros/Average.py
+    - macros/Calibration.py
+    
     - macros/Vis.py
 
 3. To better visualize what is happening, there are jupyter notebooks available in notebooks/
