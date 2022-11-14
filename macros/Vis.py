@@ -1,15 +1,16 @@
 # cd to /lib and run -> python3 Vis.py
 import sys
 sys.path.insert(0, '../')
-from lib.vis_functions import vis_raw_npy
 
-RUNS = [2]
-CH   = [6]
+from lib.vis_functions import vis_npy
+
+RUN = 2
+CH  = 6
 
 OPT  = {
     "NORM":     False,
     "LOGY":     False,
-    "BASELINE": True
+    "SHOW_AVE": "SPE_AvWvf"
     }
 
-vis_raw_npy(RUNS,CH,OPT) # Input variables should be lists of integers
+vis_npy(RUN,CH,"Ana_ADC",OPT) # Input variables should be lists of integers

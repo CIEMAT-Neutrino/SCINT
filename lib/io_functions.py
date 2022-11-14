@@ -27,6 +27,7 @@ def root2npy (in_path,out_path):
     #additional useful info
     my_dict["NBins_wvf"]=my_dict["ADC"][0].shape[0]
     my_dict["Raw_file_keys"]=f["IR02"].keys()
+    my_dict["Raw_file_keys"].remove("Sampling")
 
     print(my_dict.keys())
     np.save(out_path,my_dict)
@@ -47,20 +48,27 @@ def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
         runs[run]=channels
     return runs
 
-def save_proccesed_variables(my_runs,out_path="../data/ana/"):
+def delete_keys(my_runs,KEYS):
+    for run in my_runs["N_runs"]:
+        for ch in my_runs["N_channels"]:
+            for key in KEYS:
+                del my_runs[run][ch][key]
+
+def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
     """Does exactly what it says, no RawWvfs here"""
     
-    #  Remove the unwanted branches in the copy
+    # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
     aux=copy.deepcopy(my_runs)
-    for run in aux["N_runs"]:
-        for ch in aux["N_channels"]:
-            for key in aux[run][ch]["Raw_file_keys"]:
-                del aux[run][ch][key]
     
-    # Save the info in aux dict
     for run in aux["N_runs"]:
         for ch in aux["N_channels"]:
-            aux_path=out_path+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+            try:
+                for key in aux[run][ch]["Raw_file_keys"]:
+                    del aux[run][ch][key]
+            except:
+                print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
+
+            aux_path=PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
             np.save(aux_path,aux[run][ch])
             print("Saved data in:", aux_path)
             

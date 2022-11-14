@@ -1,8 +1,8 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib.io_functions  import load_npy
-from lib.ana_functions import compute_pedestal_variables,compute_peak_variables,compute_ana_wvfs,insert_variable,save_proccesed_variables
+from lib.io_functions  import load_npy,save_proccesed_variables
+from lib.ana_functions import compute_pedestal_variables,compute_peak_variables,compute_ana_wvfs,insert_variable
 
 # Arrays used in load_run
 N_runs           = [10,22,26]     
@@ -32,8 +32,8 @@ insert_variable(RUNS_CALIB,LABELS,"Label")
 compute_peak_variables(RUNS)
 compute_peak_variables(RUNS_CALIB)
 
-compute_pedestal_variables(RUNS,PROP["NBins_Ped"])
-compute_pedestal_variables(RUNS_CALIB,PROP["NBins_Ped"])
+compute_pedestal_variables(RUNS)
+compute_pedestal_variables(RUNS_CALIB)
 
 compute_ana_wvfs(RUNS)
 compute_ana_wvfs(RUNS_CALIB)
