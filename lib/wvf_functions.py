@@ -121,14 +121,15 @@ def integrate_wvfs(my_runs,TYPE,REF,PATH="../data/ana/"):
     # AVE_RUNS = load_average_npy(my_runs["N_runs"],my_runs["N_channels"])
     
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-        
         AVE = my_runs[run][ch][REF]
-        i_idx,f_idx = find_baseline_cuts(AVE)
-        # x = my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch]["Ana_ADC"][0]))
+        for i in range(len(AVE)):
+            i_idx,f_idx = find_baseline_cuts(AVE[i])
+            # x = my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch]["Ana_ADC"][0]))
+            
+            if TYPE == "AVE_INT_LIMITS":
+                my_runs[run][ch][TYPE] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)
         
-        if TYPE == "AVE_INT_LIMITS":
-            my_runs[run][ch][TYPE] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)
-        
+        print("Integrated wvfs according to %s baseline integration limits"%REF)
         # aux = dict()
         # for i in range(len(my_runs[runAna_ADC][ch]["ADC"])):
         #     RAW = my_runs[run][ch]["Ana_ADC"][i]

@@ -29,22 +29,16 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
 
 def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-        
         aux = dict()
-        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "SPE_AvWvf" or OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold"): 
-            AVE = OPT["AVE"]
-            LOOP = 1
+        if check_key(OPT,"KEY") == True: KEY = OPT["KEY"]
         else: 
-            AVE = "Ana_ADC"
-            LOOP = len(my_runs[run][ch][AVE])
-            if check_key(OPT, "SINGLE") == True: LOOP = OPT["SINGLE"] 
-        
-        for i in range(LOOP):
+            KEY = "Ana_ADC"
+            print("Selected default wvf key %s"%KEY)
+
+        for i in range(len(my_runs[run][ch][KEY])):
             # Select required runs and parameters
-            if AVE == "Ana_ADC": 
-                RAW = my_runs [run][ch]["Ana_ADC"][i]
-            else: 
-              RAW = my_runs[run][ch][AVE]
+
+            RAW = my_runs[run][ch][KEY][i]
 
             # Can be used for test to trimm array
             if check_key(OPT, "TRIMM") == True: TRIMM = OPT["TRIMM"]
@@ -126,7 +120,9 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             
             # Generate gauss filter and filtered signal
             FFT_GAUSS = gauss(np.arange(len(FFT_SIGNAL)),*params)
-            # FFT_GAUSS[0] = 0
+            if check_key(OPT, "PRO_RODRIGO") == True and OPT["PRO_RODRIGO"] == True:
+                FFT_GAUSS[0] = 0
+            
             FFT_GAUSS_SIGNAL = FFT_SIGNAL*FFT_GAUSS
             GAUSS_SIGNAL = np.fft.irfft(FFT_GAUSS_SIGNAL)
             

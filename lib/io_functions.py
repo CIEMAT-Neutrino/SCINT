@@ -66,7 +66,7 @@ def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
                 for key in aux[run][ch]["Raw_file_keys"]:
                     del aux[run][ch][key]
             except:
-                print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
+                if PREFIX == "Analysis_": print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
 
             aux_path=PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
             np.save(aux_path,aux[run][ch])
