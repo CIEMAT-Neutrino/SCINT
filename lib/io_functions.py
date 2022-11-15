@@ -28,6 +28,7 @@ def root2npy (in_path,out_path):
     my_dict["NBins_wvf"]=my_dict["ADC"][0].shape[0]
     my_dict["Raw_file_keys"]=f["IR02"].keys()
     my_dict["Raw_file_keys"].remove("Sampling")
+    my_dict["Raw_file_keys"].remove("ADC")
 
     print(my_dict.keys())
     np.save(out_path,my_dict)

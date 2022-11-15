@@ -84,6 +84,15 @@ def vis_npy(run,ch,KEY,OPT):
         plt.axhline((PED-STD)/norm_raw,c="k",alpha=.5,ls="--")
         plt.legend()
 
+        if OPT["SHOW_PARAM"] == True:
+            print("Event Number {} from RUN_{} CH_{} ({})".format(i,run,ch,ANA_RUN[run][ch]["Label"]))
+            print("Sampling: {:.0E}".format(ANA_RUN[run][ch]["Sampling"]))
+            print("Pedestal mean: {:.2E}".format(ANA_RUN[run][ch]["Ped_mean"][i]))
+            print("Pedestal STD: {:.4f}".format(ANA_RUN[run][ch]["Ped_STD"][i]))
+            print("Max Peak Amplitude: {:.4f}".format(ANA_RUN[run][ch]["Peak_amp"][i]))
+            print("Max Peak Time: {:.2E}".format(ANA_RUN[run][ch]["Peak_time"][i]*ANA_RUN[run][ch]["Sampling"]))
+            print("Charge: {:.2E}\n".format(ANA_RUN[run][ch]["AVE_INT_LIMITS"][i]))
+
         while not plt.waitforbuttonpress(-1): pass
 
         plt.clf()
