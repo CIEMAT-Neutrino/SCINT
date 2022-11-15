@@ -30,6 +30,7 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
 def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         aux = dict()
+        TRIMM = 0
         if check_key(OPT,"KEY") == True: KEY = OPT["KEY"]
         else: 
             KEY = "Ana_ADC"
@@ -39,6 +40,12 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
             # Select required runs and parameters
 
             RAW = my_runs[run][ch][KEY][i]
+            
+            # Roll signal to align wvfs
+            rollcount = 0
+            while np.argmax(RAW) < np.argmax(CLEAN):
+                RAW = np.roll(RAW,1)    
+                rollcount = rollcount + 1
 
             # Can be used for test to trimm array
             if check_key(OPT, "TRIMM") == True: TRIMM = OPT["TRIMM"]
@@ -50,15 +57,21 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
                 TRIMM = len(RAW)-2**(j-1)
 
             if TRIMM != 0: 
-                SIGNAL = RAW[:-TRIMM]
-                KERNEL = CLEAN[:-TRIMM]
-                print("Array length after trimming = %i vs detector response = %i"%(len(SIGNAL),len(KERNEL)))
+                SIGNAL = RAW[rollcount:-TRIMM]
+                KERNEL = CLEAN[rollcount:-TRIMM]
+                # print("Array length after trimming = %i vs detector response = %i"%(len(SIGNAL),len(KERNEL)))
             
             else: 
-                SIGNAL = RAW
-                KERNEL = CLEAN
-                print("Array length after trimming = %i vs detector response = %i"%(len(SIGNAL),len(KERNEL)))
-
+                SIGNAL = RAW[rollcount:]
+                KERNEL = CLEAN[rollcount:]
+  
+                # print("Array length after trimming = %i vs detector response = %i"%(len(SIGNAL),len(KERNEL)))
+            
+            if len(SIGNAL) % 2 > 0:
+                SIGNAL = SIGNAL[:-1]
+            if len(KERNEL) % 2 > 0:
+                KERNEL = KERNEL[:-1]
+            
             # print(KERNEL)
             if check_key(OPT, "SMOOTH") == True:
                 if OPT["SMOOTH"] > 0:
@@ -75,12 +88,10 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
             X = TIMEBIN*np.arange(len(SIGNAL))
 
             # Define noise (should be imported in future iterations)
-            NOISE = STD*np.random.randn(len(SIGNAL))
+            NOISE_AMP = 1
+            if check_key(OPT, "NOISE_AMP") == True: NOISE_AMP = OPT["NOISE_AMP"]
+            NOISE = NOISE_AMP*STD*np.random.randn(len(SIGNAL))
             FFT_NOISE = np.fft.rfft(NOISE)
-
-            # Roll signal to align wvfs
-            while np.argmax(SIGNAL) < np.argmax(KERNEL):
-                SIGNAL = np.roll(SIGNAL,1)    
             
             # Calculate FFT arrays
             FFT_SIGNAL = np.fft.rfft(SIGNAL)
@@ -97,7 +108,7 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
             FFT_KERNEL_X = np.fft.rfftfreq(len(KERNEL),4e-9)
             
             # Interpolate wiener envelop for fit of gaussian filter
-            WIENER_BUFFER = 1500
+            WIENER_BUFFER = 800
             if check_key(OPT,"WIENER_BUFFER") == True: WIENER_BUFFER = OPT["WIENER_BUFFER"]
             WIENER_CURVE = Curve(FFT_KERNEL_X[:-WIENER_BUFFER],(-1*WIENER[:-WIENER_BUFFER])+2)
             ENV = WIENER_CURVE.envelope2(tc=1e6)
@@ -134,6 +145,9 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
             if check_key(OPT, "REVERSE") == True and OPT["REVERSE"] == True: DEC = DEC[::-1]
             DEC = np.roll(DEC,np.argmax(KERNEL)) # Roll the function to match original position
             
+            DEC_STD = np.mean(DEC[:np.argmax(DEC)-10])
+            DEC = DEC-DEC_STD
+
             #-------------------------------------------------------------------------------------------------------------------
             # Plot results: left shows process in time space; right in frequency space.
             #-------------------------------------------------------------------------------------------------------------------
@@ -152,14 +166,15 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
                     plt.plot(X,SIGNAL/np.max(SIGNAL),label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
                     plt.plot(X,GAUSS_SIGNAL/np.max(GAUSS_SIGNAL), label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
                     plt.plot(X,KERNEL/np.max(KERNEL), label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
-                    plt.plot(X,DEC/np.max(DEC),label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC[i_dec:f_dec],X[i_dec:f_dec])),c="tab:green")
+                    plt.plot(X,DEC/np.max(DEC),label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:green")
                 else:
                     plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
                     plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
                     plt.plot(X,KERNEL, label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
-                    plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC[i_dec:f_dec],X[i_dec:f_dec])),c="tab:green")
+                    plt.plot(X,DEC,label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:green")
                 
-                plt.axhline(0,label="# PE in deconvolved signal %f"%np.sum(DEC),c="black",alpha=0.5,ls="--")
+                # plt.axhline(0,label="# PE in deconvolved signal %f"%np.sum(DEC),c="black",alpha=0.5,ls="--")
+                plt.axhline(0,c="black",alpha=0.5,ls="--")
                 # print("# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]))
                 
                 plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
@@ -193,10 +208,11 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
         dec_key = "Dec_"+KEY
         out_runs[run][ch][dec_key] = aux
         print("Generated wvfs with key %s"%dec_key)
+
         
-        try:
-            del my_runs[run][ch]["ADC"]
-        except:
-            print("'ADC' branch has already been deleted")
+        # try:
+            # del my_runs[run][ch]["ADC"]
+        # except:
+            # print("'ADC' branch has already been deleted")
 
     return aux,X

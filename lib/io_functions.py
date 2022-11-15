@@ -51,7 +51,7 @@ def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
                 del channels[ch]["Ana_ADC"]
 
         runs[run]=channels
-    print("Loaded runs with keys:")
+    print("Loaded %sruns with keys:"%PREFIX)
     print(runs.keys())
     return runs
 
