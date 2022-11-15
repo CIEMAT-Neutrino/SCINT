@@ -89,6 +89,8 @@ def vis_npy(run,ch,KEY,OPT):
             print("Sampling: {:.0E}".format(ANA_RUN[run][ch]["Sampling"]))
             print("Pedestal mean: {:.2E}".format(ANA_RUN[run][ch]["Ped_mean"][i]))
             print("Pedestal STD: {:.4f}".format(ANA_RUN[run][ch]["Ped_STD"][i]))
+            print("Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(ANA_RUN[run][ch]["Ped_min"][i],ANA_RUN[run][ch]["Ped_max"][i]))
+            print("Pedestal time limit: {:.4E}".format(4e-9*(min-buffer)))
             print("Max Peak Amplitude: {:.4f}".format(ANA_RUN[run][ch]["Peak_amp"][i]))
             print("Max Peak Time: {:.2E}".format(ANA_RUN[run][ch]["Peak_time"][i]*ANA_RUN[run][ch]["Sampling"]))
             print("Charge: {:.2E}\n".format(ANA_RUN[run][ch]["AVE_INT_LIMITS"][i]))
@@ -99,7 +101,32 @@ def vis_npy(run,ch,KEY,OPT):
 
     plt.ioff()
 
-def vis_ave_npy(RUN,CH,CUTS,OPT,PATH = "../data/raw"):
+def vis_ave_npy(run,ch,CUTS,OPT,PATH = "../data/raw"):
     aux_ADC=ana_runs[run][ch]["P_channel"]*((my_runs[run][ch]["ADC"].T-ana_runs[run][ch]["Ped_mean"]).T)
     my_runs[run][ch]["AvWvf"] = np.mean(aux_ADC,axis=0)
     return my_runs[run][ch]["AvWvf"]
+
+def vis_var_hist(my_run,KEY,w=1e-4):
+    plt.ion()
+    for run, ch, key in product(my_run["N_runs"],my_run["N_channels"],KEY):
+        w=abs(np.max(my_run[run][ch][key])-np.min(my_run[run][ch][key]))*w
+        data = []
+        if key == "Peak_amp":
+            data = my_run[run][ch][key]
+            max_amp = np.max(data)
+            binning = int(max_amp)+1
+        elif key == "Peak_time":
+            data = 4e-9*my_run[run][ch][key]
+            binning = int(my_run[run][ch]["NBins_wvf"]+1)
+        else:
+            data = my_run[run][ch][key]
+            data=sorted(data)
+            out_threshold= 2.0*np.std(data+[-a for a in data]) # Repeat distribution in negative axis to compute std
+            data=[i for i in data if -out_threshold<i<out_threshold]
+            binning = np.arange(min(data), max(data) + w, w)
+            if len(binning) < 100: binning = 100
+
+        plt.hist(data,binning)
+        while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
+    plt.ioff()
