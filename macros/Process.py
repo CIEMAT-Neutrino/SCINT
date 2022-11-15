@@ -15,7 +15,7 @@ POLARITY = [-1,-1,-1,-1]   #polarity
 SAMPLING = [4e-9,4e-9,4e-9,4e-9]
 LABELS   = ["SiPM","SiPM","PMT","SC"]
 
-# Start load_run 
+# Start load_run
 RUNS       = load_npy(N_runs, N_channels)
 RUNS_CALIB = load_npy(N_runs_calib, N_channels_calib)
 
