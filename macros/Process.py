@@ -16,6 +16,7 @@ N_channels_calib = [0,1,6]
 POLARITY = [-1,-1,-1,-1]   #polarity
 SAMPLING = [4e-9,4e-9,4e-9,4e-9]
 LABELS   = ["SiPM","SiPM","PMT","SC"]
+LABELS_CALIB   = ["SiPM","SiPM","SC"]
 
 # OTHER RUNS
 # PRE-PROCESS RAW
@@ -48,7 +49,7 @@ for run, ch in product(N_runs_calib,N_channels_calib):
     RUNS       = load_npy([run], [ch])
     insert_variable(RUNS,POLARITY,"P_channel")
     insert_variable(RUNS,SAMPLING,"Sampling")
-    insert_variable(RUNS,LABELS,"Label")
+    insert_variable(RUNS,LABELS_CALIB,"Label")
     compute_peak_variables(RUNS)
     compute_pedestal_variables(RUNS)
     print(RUNS.keys())
