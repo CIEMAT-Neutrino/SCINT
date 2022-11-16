@@ -1,5 +1,6 @@
 1) Histogram visualizer
-2) Add cuts to visualizer 
+    - Solve bin number / width ...
+3) Add cuts to visualizer 
   3) Variables to cut:
       - Amplitude (min,max)
       - Pedestal max amp > value (look at the histogram amp to check pedestal width)
