@@ -1,30 +1,41 @@
-#!/bin/bash
+#!/bin/usr/env bash
 
 #Script must be run from main folder or paths will be messed up
 
 #create data directory if not present
-if [ ! -d "data" ]; then
-mkdir data
+if [ ! -d "../data" ]; then
+mkdir ../data
 fi
 
 #raw data .root and .npy
-if [ ! -d "data/raw" ]; then
-mkdir data/raw
+if [ ! -d "../data/raw" ]; then
+mkdir ../data/raw
 fi
 
 #Analized data (charge, pedestal, peak...) variables
-if [ ! -d "data/ana" ]; then
-mkdir data/ana
+if [ ! -d "../data/ana" ]; then
+mkdir ../data/ana
 fi
 
 #Average wvfs 
-if [ ! -d "data/ave" ]; then
-mkdir data/ave
+if [ ! -d "../data/ave" ]; then
+mkdir ../data/ave
 fi
 
-runes de interes: 2, 10, 22, 26
+#Doconvolved wvfs 
+if [ ! -d "../data/dec" ]; then
+mkdir ../data/dec
+fi
 
-scp -r pcae146.ciemat.es:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22_2/ROOT/run02_ch* data/
-scp -r pcae146.ciemat.es:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22_2/ROOT/run10_ch* data/
-scp -r pcae146.ciemat.es:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22_2/ROOT/run22_ch* data/
-scp -r pcae146.ciemat.es:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22_2/ROOT/run26_ch* data/
+#Fitted wvfs 
+if [ ! -d "../data/fit" ]; then
+mkdir ../data/fit
+fi
+
+# runes de interes feb22_2: calib(1,2,3) laser(9,10,11) alpha(25,26,27)
+# runes de interes feb22: calib(1,2,3) laser(45,46,47) alpha(12,13,14)
+
+for n in "01" "02" "03" "12" "13" "14" "45" "46" "47";
+do
+    scp -r pcae182_outside:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22/ROOT/run${n}_ch* ../data/raw_feb22/.
+done

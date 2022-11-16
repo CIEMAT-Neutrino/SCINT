@@ -27,7 +27,7 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
     Y=A*np.exp(-(X-MEAN)**N/(2*STD**N))
     return np.log10(Y)
 
-def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
+def deconvolve(my_runs,out_runs,dec_runs,OPT={}):
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         aux = dict()
         TRIMM = 0
@@ -35,7 +35,8 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
         else: 
             KEY = "Ana_ADC"
             print("Selected default wvf key %s"%KEY)
-
+        
+        CLEAN = dec_runs[run][ch]["ADC"][0]
         for i in range(len(my_runs[run][ch][KEY])):
             # Select required runs and parameters
 
@@ -173,7 +174,7 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
                     plt.plot(X,KERNEL, label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
                     plt.plot(X,DEC,label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:green")
                 
-                # plt.axhline(0,label="# PE in deconvolved signal %f"%np.sum(DEC),c="black",alpha=0.5,ls="--")
+                plt.axhline(0,label="Total # PE in deconvolved signal %f"%np.sum(DEC),c="black",alpha=0.5,ls="--")
                 plt.axhline(0,c="black",alpha=0.5,ls="--")
                 # print("# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]))
                 
@@ -207,6 +208,7 @@ def deconvolve(my_runs,out_runs,CLEAN,OPT={}):
 
         dec_key = "Dec_"+KEY
         out_runs[run][ch][dec_key] = aux
+        # print(out_runs[run][ch][dec_key])
         print("Generated wvfs with key %s"%dec_key)
 
         

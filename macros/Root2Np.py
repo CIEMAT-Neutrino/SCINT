@@ -2,8 +2,8 @@ import sys
 sys.path.insert(0, '../')
 from lib.io_functions import root2npy
 
-RUNS=[10,22,26]
-RUNS_CALIB=[2]
+RUNS=[9,10,11,25,26,27]
+RUNS_CALIB=[1,2,3]
 
 CH=[0,1,4,6]
 CH_CALIB=[0,1,6] #4 is the PMT
