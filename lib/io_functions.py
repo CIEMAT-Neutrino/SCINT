@@ -28,6 +28,7 @@ def root2npy (in_path,out_path):
     my_dict["NBins_wvf"]=my_dict["ADC"][0].shape[0]
     my_dict["Raw_file_keys"]=f["IR02"].keys()
     my_dict["Raw_file_keys"].remove("Sampling")
+    my_dict["Raw_file_keys"].remove("ADC")
 
     print(my_dict.keys())
     np.save(out_path,my_dict)
@@ -46,20 +47,27 @@ def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
         for ch in CH:
             try:
                 channels[ch] = np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-            except:
-                channels[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-                del channels[ch]["Ana_ADC"]
+            
+            except:    
+                try:
+                    channels[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                    # del channels[ch]["Ana_ADC"]
+                    print("Selected file does not exist, loading default analysis run")
+                
+                except:
+                    channels[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                    # del channels[ch]["ADC"]
+                    print("Selected file does not exist, loading raw run")
 
         runs[run]=channels
-    print("Loaded %sruns with keys:"%PREFIX)
+    
+    print("\nLoaded %sruns with keys:"%PREFIX)
     print(runs.keys())
     return runs
 
 def delete_keys(my_runs,KEYS):
-    for run in my_runs["N_runs"]:
-        for ch in my_runs["N_channels"]:
-            for key in KEYS:
-                del my_runs[run][ch][key]
+    for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
+        del my_runs[run][ch][key]
 
 def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
     """Does exactly what it says, no RawWvfs here"""

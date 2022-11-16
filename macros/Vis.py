@@ -5,12 +5,13 @@ sys.path.insert(0, '../')
 from lib.vis_functions import vis_npy
 
 RUN = 26
-CH  = 6
+CH  = 0
 
 OPT  = {
-    "NORM":     True,
+    "NORM":     False,
     "LOGY":     False,
-    "SHOW_AVE": "AvWvf"
+    "SHOW_AVE": "AvWvf",
+    "SHOW_PARAM": False
     }
 
 vis_npy(RUN,CH,"Ana_ADC",OPT) # Input variables should be lists of integers

@@ -137,4 +137,4 @@ def calibrate(my_runs,KEY,OPT={}):
             my_runs[run][ch]["SPE_min_charge"] = popt[3] - abs(popt[5])
             # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
 
-        plt.ioff()
+    plt.ioff()
