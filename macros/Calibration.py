@@ -9,8 +9,8 @@ from lib.io_functions import load_npy,save_proccesed_variables
 from lib.wvf_functions import average_SPE_wvfs
 from lib.cal_functions import calibrate
 
-N_runs_calib     = [24,25,26]
-N_channels_calib = [6]
+N_runs_calib     = [1,2,3]
+N_channels_calib = [0,1,6]
 
 for run, ch in product(N_runs_calib,N_channels_calib):
     RUNS = load_npy([run],[ch],"Analysis_","../data/ana/")

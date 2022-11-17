@@ -27,7 +27,7 @@ def compute_pedestal_variables(my_runs,KEY="ADC"):
 
     for run in my_runs["N_runs"]:
         for ch in my_runs["N_channels"]:
-            buffer = 20
+            buffer = 50
             ped_lim = st.mode(my_runs[run][ch]["Peak_time"])[0][0]-buffer
             # print(my_runs[run][ch]["Peak_time"])
             # print(ped_lim)

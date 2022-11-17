@@ -69,7 +69,8 @@ for run, ch in product(RUNS_CALIB,CH_CALIB):
 for run, ch in product(RUNS_CALIB,CH_CALIB):
     my_runs = load_npy([run], [ch])
     
-    compute_ana_wvfs(my_runs) 
+    compute_ana_wvfs(my_runs)
+    # delete_keys(my_runs,["ADC","Peak_amp","Peak_time","Ped_lim"])
     # Run appropiate ana_functions
     compute_peak_variables(my_runs,"Ana_ADC")
     insert_variable(my_runs,[1,1,1,1],"P_channel") # Change polarity!
