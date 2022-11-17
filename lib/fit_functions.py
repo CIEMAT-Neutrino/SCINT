@@ -155,6 +155,7 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):
     param = [p,t0,sigma,a1,tau1,a2,tau2]
     
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
+        if check_key(OPT,"COLOR") == True: color = OPT["COLOR"]
         print("\n--- SECOND FIT VALUES (SLOW) ---")
         for i in range(len(initial2)):
             print("%s:\t%.2E\t%.2E"%(labels2[i],popt2[i],perr2[i]))
@@ -165,18 +166,17 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):
         plt.rcParams['figure.figsize'] = [16, 8]
         plt.subplot(1,2,1)
         plt.title("First fit to determine peak")
-        plt.plot(RAW_X,RAW,label="RAW")
+        plt.plot(RAW_X,RAW,label="RAW",c=color)
         plt.plot(RAW_X[MAX-BUFFER1:MAX+int(BUFFER1/2)],func(RAW_X[MAX-BUFFER1:MAX+int(BUFFER1/2)],*popt1),label="FIT")
         # plt.axvline(RAW_X[-buffer2],ls = "--",c = "k")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
         if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld,RAW[MAX]*1.1)
         plt.legend()
+
         plt.subplot(1,2,2)
         plt.title("Second fit with full wvf")
-        plt.plot(RAW_X,RAW,zorder=0,c="tab:blue",label="RAW")
-        # plt.plot(RAW_X[MAX-BUFFER:buffer2],func2sigma(RAW_X[MAX-BUFFER:buffer2],*param),c="tab:orange",label="FIT")
-        plt.plot(RAW_X[MAX-BUFFER1:MAX+BUFFER2],func2(RAW_X[MAX-BUFFER1:MAX+BUFFER2],*param),c="tab:orange",label="FIT")
-        # plt.plot(RAW_X,func2sigma(RAW_X,*param),c="tab:green",label="FIT_FULL_LENGHT")
+        plt.plot(RAW_X,RAW,zorder=0,label="RAW",c=color)
+        plt.plot(RAW_X[MAX-BUFFER1:MAX+BUFFER2],func2(RAW_X[MAX-BUFFER1:MAX+BUFFER2],*param),label="FIT")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
         plt.axvline(RAW_X[MAX+BUFFER2],ls = "--",c = "k")
         if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld,RAW[MAX]*1.1)
@@ -273,12 +273,12 @@ def peak_fit(FIT_RAW,RAW_X,BUFFER,OPT):
 
     return popt,perr
 
-def fit_wvfs(my_runs,signal_type,FIT_RANGE,OPT,PATH="../data/fit/"):
+def fit_wvfs(my_runs,signal_type,FIT_RANGE=[0,0],KEYS=["ADC"],OPT={}):
     plt.ion()
-    for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
+    for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
         aux = dict()
-
-        RAW = my_runs[run][ch][OPT["AVE"]]        
+        if key.startswith("Dec"): OPT["COLOR"] = "tab:red"
+        RAW = my_runs[run][ch][key]        
         RAW_X = my_runs[run][ch]["Sampling"]*np.arange(len(RAW[0]))
         # print(RAW)
         for i in range(len(RAW)):
@@ -290,8 +290,8 @@ def fit_wvfs(my_runs,signal_type,FIT_RANGE,OPT,PATH="../data/fit/"):
             aux[i] = fit
         
        
-        my_runs[run][ch][signal_type] = aux
-        aux_path=PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+        # my_runs[run][ch][signal_type] = aux
+        # aux_path=PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
         
         try:
             del my_runs[run][ch]["ADC"]

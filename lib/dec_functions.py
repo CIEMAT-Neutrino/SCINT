@@ -164,22 +164,24 @@ def deconvolve(my_runs,out_runs,dec_runs,OPT={}):
                 i_dec,f_dec = find_baseline_cuts(DEC)
                 
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
-                    plt.plot(X,SIGNAL/np.max(SIGNAL),label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
+                    plt.plot(X,SIGNAL/np.max(SIGNAL),label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue",drawstyle="steps")
                     plt.plot(X,GAUSS_SIGNAL/np.max(GAUSS_SIGNAL), label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
-                    plt.plot(X,KERNEL/np.max(KERNEL), label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
-                    plt.plot(X,DEC/np.max(DEC),label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:green")
+                    plt.plot(X,KERNEL/np.max(KERNEL), label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange",drawstyle="steps")
+                    plt.plot(X,DEC/np.max(DEC),label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:red",drawstyle="steps",lw=2.)
                 else:
-                    plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
+                    plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue",drawstyle="steps")
                     plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
-                    plt.plot(X,KERNEL, label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
-                    plt.plot(X,DEC,label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:green")
+                    plt.plot(X,KERNEL, label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange",drawstyle="steps")
+                    plt.plot(X,DEC,label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:red",drawstyle="steps",lw=2.)
                 
                 plt.axhline(0,label="Total # PE in deconvolved signal %f"%np.sum(DEC),c="black",alpha=0.5,ls="--")
                 plt.axhline(0,c="black",alpha=0.5,ls="--")
                 # print("# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]))
                 
                 plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
-                if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy()
+                if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: 
+                    plt.semilogy()
+                    plt.ylim(1e-6)
                 if check_key(OPT,"FOCUS") == True and OPT["FOCUS"] == True: 
                     plt.xlim(4e-9*np.array([np.argmax(SIGNAL)-100,np.argmax(SIGNAL)+1000]))
                     plt.ylim([np.min(SIGNAL)*1.1,np.max(DEC)*1.1])
@@ -190,9 +192,9 @@ def deconvolve(my_runs,out_runs,dec_runs,OPT={}):
                 if check_key(OPT,"SHOW_F_GSIGNAL") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_GAUSS_SIGNAL),label = "GAUSS_SIGNAL",c="blue")
                 if check_key(OPT,"SHOW_F_DET_RESPONSE") != False: plt.plot(FFT_KERNEL_X,np.abs(FFT_KERNEL),label = "DET_RESPONSE",c="tab:orange")
                 
-                if check_key(OPT,"SHOW_F_DEC") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_DEC),label = "DECONVOLUTION",c="tab:green")
+                if check_key(OPT,"SHOW_F_DEC") != False: plt.plot(FFT_SIGNAL_X,np.abs(FFT_DEC),label = "DECONVOLUTION",c="tab:red")
                 if check_key(OPT,"SHOW_F_WIENER") != False: 
-                    plt.plot(FFT_SIGNAL_X,WIENER,label = "WIENER",c="tab:red")
+                    plt.plot(FFT_SIGNAL_X,WIENER,label = "WIENER",c="tab:green")
                     plt.plot(ENV_WIENER.x[:ENV_WIENER_MIN],-1*(ENV_WIENER.y[:ENV_WIENER_MIN]-2),label = "ENV_WIENER",c="tab:pink",ls="--")
 
                 if check_key(OPT,"SHOW_F_GAUSS") != False: plt.plot(FFT_SIGNAL_X,FFT_GAUSS,label = "GAUSS",c="k",ls="--")
@@ -208,13 +210,5 @@ def deconvolve(my_runs,out_runs,dec_runs,OPT={}):
 
         dec_key = "Dec_"+KEY
         out_runs[run][ch][dec_key] = aux
-        # print(out_runs[run][ch][dec_key])
         print("Generated wvfs with key %s"%dec_key)
-
-        
-        # try:
-            # del my_runs[run][ch]["ADC"]
-        # except:
-            # print("'ADC' branch has already been deleted")
-
     return aux,X

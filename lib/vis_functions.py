@@ -8,66 +8,66 @@ import keyboard
 from .io_functions import load_npy,check_key
 from itertools import product
 
-def vis_npy(my_run,KEY,OPT):
+def vis_npy(my_run,KEYS,OPT):
     
     norm_raw = 1
     norm_ave = 1
     buffer = 100
     
-    for run, ch in product(my_run["N_runs"],my_run["N_channels"]):
-        try:
-            ANA_RUN = load_npy([run],[ch],"Analysis_","../data/ana/")
-            ANA_BOOL = True
-        except:
-            ANA_BOOL = False
-            print("Run has not been processed!")
+    # for run, ch in product(my_run["N_runs"],my_run["N_channels"]):
+    #     try:
+    #         ANA_RUN = load_npy([run],[ch],"Analysis_","../data/ana/")
+    #         ANA_BOOL = True
+    #     except:
+    #         ANA_BOOL = False
+    #         print("Run has not been processed!")
 
-        try:
-            AVE_RUN = load_npy([run],[ch],"Average_","../data/ave/")
-            ANA_BOOL = True
-        except:
-            AVE_BOOL = False
-            print("Run has not been averaged!")
+    #     try:
+    #         my_run = load_npy([run],[ch],"Average_","../data/ave/")
+    #         ANA_BOOL = True
+    #     except:
+    #         AVE_BOOL = False
+    #         print("Run has not been averaged!")
         
-        sampling = my_run[run][ch]["Sampling"]
-        sampling = 4e-9
-        try:
-            sampling = my_run[run][ch]["Sampling"]
-        except:
-            print("Showing sampling extracted from raw data")
+    #     sampling = my_run[run][ch]["Sampling"]
+    #     sampling = 4e-9
+    #     try:
+    #         sampling = my_run[run][ch]["Sampling"]
+    #     except:
+    #         print("Showing sampling extracted from raw data")
 
     plt.ion()
     next_plot = False
-    for run, ch in product(my_run["N_runs"],my_run["N_channels"]):
+    for run,ch,key in product(my_run["N_runs"],my_run["N_channels"],KEYS):
         for i in range(len(my_run[run][ch]["Ana_ADC"])):
             plt.xlabel("Time in [s]")
             plt.ylabel("ADC Counts")
             plt.grid(True, alpha = 0.7)
             
-            if (KEY == "ADC"):
-                min = np.argmin(my_run[run][ch][KEY][i])
-                RAW = my_run[run][ch][KEY][i]
-                PED = np.mean(my_run[run][ch][KEY][i][:min-buffer])
-                STD = np.std(my_run[run][ch][KEY][i][:min-buffer])
+            if (key == "ADC"):
+                min = np.argmin(my_run[run][ch][key][i])
+                RAW = my_run[run][ch][key][i]
+                PED = np.mean(my_run[run][ch][key][i][:min-buffer])
+                STD = np.std(my_run[run][ch][key][i][:min-buffer])
             
-            elif(KEY == "Ana_ADC"):
-                min = np.argmax(ANA_RUN[run][ch][KEY][i])
-                RAW = ANA_RUN[run][ch][KEY][i]
+            elif(key == "Ana_ADC"):
+                min = np.argmax(my_run[run][ch][key][i])
+                RAW = my_run[run][ch][key][i]
                 PED = 0    
-                STD = ANA_RUN[run][ch]["Ped_STD"][i]
+                STD = my_run[run][ch]["Ped_STD"][i]
 
             if OPT["NORM"] == True and OPT["NORM"] == True:
                 norm_raw = np.max(RAW)
                 RAW = RAW/np.max(RAW)
-            plt.plot(sampling*np.arange(len(RAW)),RAW,label="RAW_WVF", drawstyle = "steps")
+            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(RAW)),RAW,label="RAW_WVF",drawstyle="steps")
 
             if check_key(OPT, "SHOW_AVE") == True:   
                 try:
                     AVE_KEY = OPT["SHOW_AVE"]
-                    AVE = AVE_RUN[run][ch][AVE_KEY][0]
+                    AVE = my_run[run][ch][AVE_KEY][0]
                     if OPT["NORM"] == True and OPT["NORM"] == True:
                         AVE = AVE/np.max(AVE)
-                    plt.plot(AVE_RUN[run][ch]["Sampling"]*np.arange(len(AVE)),AVE,alpha=.5,label="AVE_WVF_%s"%AVE_KEY)             
+                    plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(AVE)),AVE,alpha=.5,label=AVE_KEY)             
 
                 except:
                     print("Run has not been averaged!")
@@ -75,7 +75,7 @@ def vis_npy(my_run,KEY,OPT):
             
             if OPT["LOGY"] == True:
                 plt.semilogy()
-            ped_lim = ANA_RUN[run][ch]["Ped_lim"]
+            ped_lim = my_run[run][ch]["Ped_lim"]
             plt.plot(my_run[run][ch]["Sampling"]*np.array([ped_lim,ped_lim]),np.array([PED+2*STD,PED-2*STD])/norm_raw,c="tab:red",lw=2.)
             plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,i),size = 14)
             plt.axhline((PED)/norm_raw,c="k",alpha=.5)
@@ -84,15 +84,15 @@ def vis_npy(my_run,KEY,OPT):
             plt.legend()
 
             if OPT["SHOW_PARAM"] == True:
-                print("Event Number {} from RUN_{} CH_{} ({})".format(i,run,ch,ANA_RUN[run][ch]["Label"]))
-                print("Sampling: {:.0E}".format(ANA_RUN[run][ch]["Sampling"]))
-                print("Pedestal mean: {:.2E}".format(ANA_RUN[run][ch]["Ped_mean"][i]))
-                print("Pedestal STD: {:.4f}".format(ANA_RUN[run][ch]["Ped_STD"][i]))
-                print("Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(ANA_RUN[run][ch]["Ped_min"][i],ANA_RUN[run][ch]["Ped_max"][i]))
+                print("Event Number {} from RUN_{} CH_{} ({})".format(i,run,ch,my_run[run][ch]["Label"]))
+                print("Sampling: {:.0E}".format(my_run[run][ch]["Sampling"]))
+                print("Pedestal mean: {:.2E}".format(my_run[run][ch]["Ped_mean"][i]))
+                print("Pedestal STD: {:.4f}".format(my_run[run][ch]["Ped_STD"][i]))
+                print("Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch]["Ped_min"][i],my_run[run][ch]["Ped_max"][i]))
                 print("Pedestal time limit: {:.4E}".format(4e-9*(min-buffer)))
-                print("Max Peak Amplitude: {:.4f}".format(ANA_RUN[run][ch]["Peak_amp"][i]))
-                print("Max Peak Time: {:.2E}".format(ANA_RUN[run][ch]["Peak_time"][i]*ANA_RUN[run][ch]["Sampling"]))
-                print("Charge: {:.2E}\n".format(ANA_RUN[run][ch]["AVE_INT_LIMITS"][i]))
+                print("Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["Peak_amp"][i]))
+                print("Max Peak Time: {:.2E}".format(my_run[run][ch]["Peak_time"][i]*my_run[run][ch]["Sampling"]))
+                print("Charge: {:.2E}\n".format(my_run[run][ch]["AVE_INT_LIMITS"][i]))
 
             print("Press q to quit or any key to continue: ")
             tecla = input()
@@ -105,6 +105,7 @@ def vis_npy(my_run,KEY,OPT):
                 pass
                 # while not plt.waitforbuttonpress(-1): pass           
             plt.clf()
+        plt.clf()
     plt.ioff()
 
 def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer

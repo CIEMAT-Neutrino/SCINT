@@ -15,7 +15,7 @@ from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
 def calibrate(my_runs,KEY,OPT={}):
     """Computes calibration hist of a collection of runs and returns gain and SPE charge limits"""
     
-    # plt.ion()
+    plt.ion()
     next_plot = False
     
     for run in my_runs["N_runs"]:
@@ -139,3 +139,4 @@ def calibrate(my_runs,KEY,OPT={}):
             # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
 
     plt.ioff()
+    plt.clf()
