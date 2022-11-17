@@ -12,27 +12,34 @@ def check_key(OPT,KEY):
     except KeyError:
         return False
 
-def root2npy (in_path,out_path):
-    DEBUG=False
-    """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
+def root2npy (RUNS,CHANNELS,in_path="../data/raw/",out_path="../data/raw/"):
+    for run, ch in product (RUNS,CHANNELS):
+        in_file  = "run"+str(run).zfill(2)+"_ch"+str(ch)+".root"
+        out_file = "run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+        DEBUG=False
+        """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
+        try:
+            f = uproot.open(in_path+in_file)
+            my_dict={}
+            print("----------------------")
+            print("Dumping file:", in_path+in_file)
+            for branch in f["IR02"].keys():
+                if DEBUG: print("dumping brach:",branch)
+                my_dict[branch]=f["IR02"][branch].array().to_numpy()
+            
+            #additional useful info
+            my_dict["NBins_wvf"]=my_dict["ADC"][0].shape[0]
+            my_dict["Raw_file_keys"]=f["IR02"].keys()
+            my_dict["Raw_file_keys"].remove("Sampling")
+            my_dict["Raw_file_keys"].remove("ADC")
 
-    f = uproot.open(in_path)
-    my_dict={}
-    print("----------------------")
-    print("Dumping file:", in_path)
-    for branch in f["IR02"].keys():
-        if DEBUG: print("dumping brach:",branch)
-        my_dict[branch]=f["IR02"][branch].array().to_numpy()
-    
-    #additional useful info
-    my_dict["NBins_wvf"]=my_dict["ADC"][0].shape[0]
-    my_dict["Raw_file_keys"]=f["IR02"].keys()
-    my_dict["Raw_file_keys"].remove("Sampling")
-    my_dict["Raw_file_keys"].remove("ADC")
+            print(my_dict.keys())
+            np.save(out_path+out_file,my_dict)
+            print("Saved data in:" , out_path+out_file)
+            print("----------------------\n")
 
-    print(my_dict.keys())
-    np.save(out_path,my_dict)
-    print("Saved data in:" , out_path)
+        except:
+            print("File %s was not foud!\n"%in_file)
 
 def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
