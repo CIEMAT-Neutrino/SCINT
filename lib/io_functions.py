@@ -37,7 +37,6 @@ def root2npy (in_path,out_path):
 def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-
     runs = dict()
     runs["N_runs"]     = RUNS
     runs["N_channels"] = CH
@@ -46,8 +45,7 @@ def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
         channels=dict()
         for ch in CH:
             try:
-                channels[ch] = np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-            
+                channels[ch] = np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
             except:    
                 try:
                     channels[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
@@ -58,9 +56,7 @@ def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
                     channels[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
                     # del channels[ch]["ADC"]
                     print("Selected file does not exist, loading raw run")
-
         runs[run]=channels
-    
     print("\nLoaded %sruns with keys:"%PREFIX)
     print(runs.keys())
     return runs
@@ -86,70 +82,6 @@ def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
             aux_path=PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
             np.save(aux_path,aux[run][ch])
             print("Saved data in:", aux_path)
-            
-# def load_analysis_npy(RUNS,CH,PATH = "../data/ana/"):
-#     """Structure: run_dict[RUN][CH][BRANCH] 
-#     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-
-#     runs=dict()
-#     runs["N_runs"]    = RUNS
-#     runs["N_channels"]= CH
-#     # runs["P_channels"]=POL
-    
-#     for run in RUNS:
-#         channels=dict()
-#         for ch in CH:
-#             channels[ch]=np.load(PATH+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-#         runs[run]=channels
-#     return runs
-
-# def load_average_npy(RUNS,CH,PATH = "../data/ave/"):
-#     """Structure: run_dict[RUN][CH][BRANCH] 
-#     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-
-#     runs=dict()
-#     runs["N_runs"]    =RUNS
-#     runs["N_channels"]=CH
-#     # runs["P_channels"]=POL
-    
-#     for run in RUNS:
-#         channels=dict()
-#         for ch in CH:
-#             channels[ch]=np.load(PATH+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-#         runs[run]=channels
-#     return runs
-
-# def load_fit_npy(RUNS,CH,PATH = "../data/fit/"):
-#     """Structure: run_dict[RUN][CH][BRANCH] 
-#     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-
-#     runs=dict()
-#     runs["N_runs"]    =RUNS
-#     runs["N_channels"]=CH
-#     # runs["P_channels"]=POL
-    
-#     for run in RUNS:
-#         channels=dict()
-#         for ch in CH:
-#             channels[ch]=np.load(PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-#         runs[run]=channels
-#     return runs
-
-# def load_deconvolution_npy(RUNS,CH,PATH = "../data/dec/"):
-#     """Structure: run_dict[RUN][CH][BRANCH] 
-#     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-
-#     runs=dict()
-#     runs["N_runs"]    =RUNS
-#     runs["N_channels"]=CH
-#     # runs["P_channels"]=POL
-    
-#     for run in RUNS:
-#         channels=dict()
-#         for ch in CH:
-#             channels[ch]=np.load(PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-#         runs[run]=channels
-#     return runs
 
 # def insert_variable(my_runs,KEYS,VAR,out_path="../data/ana/"):
 #     aux=copy.deepcopy(my_runs)
