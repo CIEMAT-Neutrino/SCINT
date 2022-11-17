@@ -29,8 +29,8 @@ def compute_pedestal_variables(my_runs,KEY="ADC"):
         for ch in my_runs["N_channels"]:
             buffer = 20
             ped_lim = st.mode(my_runs[run][ch]["Peak_time"])[0][0]-buffer
-            print(my_runs[run][ch]["Peak_time"])
-            print(ped_lim)
+            # print(my_runs[run][ch]["Peak_time"])
+            # print(ped_lim)
             my_runs[run][ch]["Ped_STD"]  = np.std (my_runs[run][ch][KEY][:,:ped_lim],axis=1)
             my_runs[run][ch]["Ped_mean"] = np.mean(my_runs[run][ch][KEY][:,:ped_lim],axis=1)
             my_runs[run][ch]["Ped_max"]  = np.max (my_runs[run][ch][KEY][:,:ped_lim],axis=1)

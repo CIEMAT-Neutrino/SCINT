@@ -39,7 +39,7 @@ def root2npy (RUNS,CHANNELS,in_path="../data/raw/",out_path="../data/raw/"):
             print("----------------------\n")
 
         except:
-            print("File %s was not foud!\n"%in_file)
+            print("--- File %s was not foud!!! \n"%in_file)
 
 def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
     """Structure: run_dict[RUN][CH][BRANCH] 
