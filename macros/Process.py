@@ -36,6 +36,7 @@ for run, ch in product(N_runs,N_channels):
     compute_ana_wvfs(RUNS) 
     # Run appropiate ana_functions
     insert_variable(RUNS,-1*np.array(POLARITY),"P_channel") # Change polarity!
+    insert_variable(RUNS,SAMPLING,"Sampling")
     compute_peak_variables(RUNS,"Ana_ADC")
     compute_pedestal_variables(RUNS,"Ana_ADC")
     delete_keys(RUNS,["ADC"])
@@ -60,6 +61,7 @@ for run, ch in product(N_runs_calib,N_channels_calib):
     compute_ana_wvfs(RUNS) 
     # Run appropiate ana_functions
     insert_variable(RUNS,-1*np.array(POLARITY),"P_channel") # Change polarity!
+    insert_variable(RUNS,SAMPLING,"Sampling")
     compute_peak_variables(RUNS,"Ana_ADC")
     compute_pedestal_variables(RUNS,"Ana_ADC")
     delete_keys(RUNS,["ADC"])
