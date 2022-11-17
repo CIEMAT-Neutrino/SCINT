@@ -5,8 +5,9 @@ sys.path.insert(0, '../')
 from lib.io_functions import *
 from lib.vis_functions import vis_npy, vis_var_hist
 
+
 run = [2]
-ch  = [6]
+ch  = [0]
 
 OPT  = {
     "NORM":     False,
@@ -17,8 +18,6 @@ OPT  = {
 
 RUN = load_npy(run,ch,"Analysis_","../data/ana/")
 
-# vis_npy(RUN,CH,"Ana_ADC",OPT) # Input variables should be lists of integers
-vis_var_hist(RUN,["AVE_INT_LIMITS"],5e-3)
-# vis_var_hist(RUN,"Peak_time")
-# vis_var_hist(RUN,"Ped_STD")
-#"Peak_amp","Peak_time","Ped_STD",
+vis_npy(RUN,"Ana_ADC",OPT) # Input variables should be lists of integers
+# vis_var_hist(RUN,["Ped_STD","AVE_INT_LIMITS"],1e-3)
+#"Peak_amp","Peak_time","Ped_STD", AVE_INT_LIMITS
