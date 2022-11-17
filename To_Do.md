@@ -12,3 +12,4 @@
 5) ¿Crear funcion de cortes (minmax, corte simultáneo) y añadir un booleano a cada waveform
 6) Las funciones cogeran las waveforms en función de los booleanos.
 7) Elegir nombres (en general) que tengan sentido y añadir unidades por cada variable calculada (para los ejes de los plots y demás)
+8) Añadir unidades a los npy
