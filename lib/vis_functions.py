@@ -94,13 +94,13 @@ def vis_npy(my_run,KEY,OPT):
                 print("Max Peak Time: {:.2E}".format(ANA_RUN[run][ch]["Peak_time"][i]*ANA_RUN[run][ch]["Sampling"]))
                 print("Charge: {:.2E}\n".format(ANA_RUN[run][ch]["AVE_INT_LIMITS"][i]))
 
-            print("Pulsa c para continuar o e para salir: ")
+            print("Press q to quit or any key to continue: ")
             tecla = input()
             if tecla == "q":
                 break
             elif tecla == "r":
-                i = i-1
-                # pass
+                i = i-2
+                pass
             else:
                 pass
                 # while not plt.waitforbuttonpress(-1): pass           
