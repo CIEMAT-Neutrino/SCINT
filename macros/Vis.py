@@ -2,16 +2,23 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib.vis_functions import vis_npy
+from lib.io_functions import *
+from lib.vis_functions import vis_npy, vis_var_hist
 
-RUN = 26
-CH  = 0
+
+run = [2]
+ch  = [0]
 
 OPT  = {
     "NORM":     False,
     "LOGY":     False,
     "SHOW_AVE": "AvWvf",
-    "SHOW_PARAM": False
+    "SHOW_PARAM": True
     }
 
-vis_npy(RUN,CH,"Ana_ADC",OPT) # Input variables should be lists of integers
+RUN = load_npy(run,ch,"Analysis_","../data/ana/")
+
+vis_npy(RUN,"Ana_ADC",OPT) # Input variables should be lists of integers
+
+# vis_var_hist(RUN,["Ped_STD","AVE_INT_LIMITS"],1e-3)
+#"Peak_amp","Peak_time","Ped_STD", AVE_INT_LIMITS

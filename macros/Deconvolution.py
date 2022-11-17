@@ -8,8 +8,8 @@ from itertools import product
 from lib.io_functions import load_npy,save_proccesed_variables
 from lib.dec_functions import deconvolve
 
-raw_run = [25,26,27]
-dec_run = [9,10,11]
+raw_run = [12,13,14]
+dec_run = [45,46,47]
 ref_run = [1,2,3]
 ana_chs = [0,1,6]
 
@@ -21,7 +21,7 @@ for i in range(len(raw_run)):
 
     OPT = {
         "KEY":"AvWvf", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
-        "NOISE_AMP": 0.05,
+        "NOISE_AMP": 10,
         # "NORM_DET_RESPONSE": True,
         "FIX_EXP":True,
         "LOGY":True,
@@ -29,12 +29,14 @@ for i in range(len(raw_run)):
         "FOCUS":False,
         "SHOW": True,
         "SHOW_F_SIGNAL":True,
+        "SHOW_F_GSIGNAL":True,
         "SHOW_F_DET_RESPONSE":True,
         "SHOW_F_GAUSS":True,
         "SHOW_F_WIENER":True,
         "SHOW_F_DEC":True,
         # "TRIMM": 0,
         # "AUTO_TRIMM":False,
+        "WIENER_BUFFER": 1200,
         "PRO_RODRIGO": False,
         # "REVERSE":False,
         # "SMOOTH": 0
@@ -49,17 +51,18 @@ for i in range(len(raw_run)):
             det_response =    light_runs[dec_run[i]][ch]["AvWvf"][0]
             dec_runs[run][ch]["ADC"] = [np.max(single_response)*det_response/np.max(det_response)]
 
+    # plt.plot(4e-9*np.arange(len(single_response)),single_response/np.max(single_response),c="green",label="Raw SPE signal")
+    # plt.plot(4e-9*np.arange(len(single_response)),single_response,c="green",label="Raw SPE signal")
+    # plt.plot(4e-9*np.arange(len(det_response)),det_response/np.max(det_response),c="red",label="Raw Laser signal")
+    # plt.plot(4e-9*np.arange(len(det_response)),det_response,c="red",label="Raw Laser signal")
+    # det_response = np.max(single_response)*det_response/np.max(det_response)
+    # plt.plot(4e-9*np.arange(len(det_response)),det_response,label="Norm Laser signal")
+
+    # plt.axhline(0,alpha=0.5,c="black",ls="--")
+    # plt.xlabel("Time in [s]");plt.ylabel("Amplitude in ADC counts")
+    # plt.legend()
+    # plt.show()
+    
     deconvolve(my_runs,my_runs,dec_runs,OPT)
     save_proccesed_variables(my_runs,"Deconvolution_","../data/dec/")
 
-# plt.plot(4e-9*np.arange(len(single_response)),single_response/np.max(single_response),c="green",label="Raw SPE signal")
-# plt.plot(4e-9*np.arange(len(single_response)),single_response,c="green",label="Raw SPE signal")
-# plt.plot(4e-9*np.arange(len(det_response)),det_response/np.max(det_response),c="red",label="Raw Laser signal")
-# plt.plot(4e-9*np.arange(len(det_response)),det_response,c="red",label="Raw Laser signal")
-# det_response = np.max(single_response)*det_response/np.max(det_response)
-# plt.plot(4e-9*np.arange(len(det_response)),det_response,label="Norm Laser signal")
-
-# plt.axhline(0,alpha=0.5,c="black",ls="--")
-# plt.xlabel("Time in [s]");plt.ylabel("Amplitude in ADC counts")
-# plt.legend()
-# plt.show()

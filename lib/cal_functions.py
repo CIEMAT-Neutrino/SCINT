@@ -15,7 +15,7 @@ from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
 def calibrate(my_runs,KEY,OPT={}):
     """Computes calibration hist of a collection of runs and returns gain and SPE charge limits"""
     
-    plt.ion()
+    # plt.ion()
     next_plot = False
     
     for run in my_runs["N_runs"]:
@@ -40,7 +40,8 @@ def calibrate(my_runs,KEY,OPT={}):
             for i in range(len(raw_array)):
                 if abs(raw_array[i]-mean) < mean+10*std:
                     array.append(raw_array[i])
-
+            # print(len(array))
+            # print(array)
             # Threshold value (for height of peaks and valleys)
             binning = int(len(array)/100)
             thresh = int(len(array)/1000)
@@ -48,7 +49,7 @@ def calibrate(my_runs,KEY,OPT={}):
             prom = 0.1
             acc = 1000
 
-            # counts, bins, bars = plt.hist(raw_amp,binning,alpha=0.75)
+            # counts, bins, bars = plt.hist(array,1000,alpha=0.75)
             # plt.show()
 
             counts, bins, bars = plt.hist(array,binning,(np.min(array)*0.5,np.max(array)),alpha=0.75)
