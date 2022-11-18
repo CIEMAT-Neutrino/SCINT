@@ -175,13 +175,17 @@ def deconvolve(my_runs,out_runs,dec_runs,OPT={}):
                     plt.plot(X,DEC,label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:red",drawstyle="steps",lw=2.)
                 
                 plt.axhline(0,label="Total # PE in deconvolved signal %f"%np.sum(DEC),c="black",alpha=0.5,ls="--")
+                print("\nDECONVOLUTION: baseline int =\t %.2f PE" %(np.sum(DEC[i_dec:f_dec])))
+                print("DECONVOLUTION: total int =\t %.2f PE\n"%np.sum(DEC))
                 plt.axhline(0,c="black",alpha=0.5,ls="--")
                 # print("# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]))
                 
                 plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
-                if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: 
+                if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
+                    if check_key(OPT,"THRLD") == True: THRLD = OPT["THRLD"]
+                    else: THRLD = 1e-6
                     plt.semilogy()
-                    plt.ylim(1e-6)
+                    plt.ylim(THRLD)
                 if check_key(OPT,"FOCUS") == True and OPT["FOCUS"] == True: 
                     plt.xlim(4e-9*np.array([np.argmax(SIGNAL)-100,np.argmax(SIGNAL)+1000]))
                     plt.ylim([np.min(SIGNAL)*1.1,np.max(DEC)*1.1])
