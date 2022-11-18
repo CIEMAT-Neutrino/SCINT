@@ -1,10 +1,10 @@
 import numpy as np
 from curve import Curve
 import matplotlib.pyplot as plt
-from .io_functions import load_analysis_npy
+
 from .io_functions import check_key
-from .wvf_functions import smooth
-from .ana_functions import find_baseline_cuts
+from .wvf_functions import smooth,find_baseline_cuts
+
 import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
@@ -27,33 +27,26 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
     Y=A*np.exp(-(X-MEAN)**N/(2*STD**N))
     return np.log10(Y)
 
-def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
-    try:
-        ana_runs = load_analysis_npy(my_runs["N_runs"],my_runs["N_channels"])
-    except:
-        print("Events have not been processed")
-    aux = dict()
+def deconvolve(my_runs,out_runs,dec_runs,OPT={}):
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-        if check_key(OPT, "AVE") == True and (OPT["AVE"] == "AvWvf" or OPT["AVE"] == "AvWvf_peak" or OPT["AVE"] == "AvWvf_threshold"): 
-            AVE = OPT["AVE"]
-            LOOP = 1
+        aux = dict()
+        TRIMM = 0
+        if check_key(OPT,"KEY") == True: KEY = OPT["KEY"]
         else: 
-            AVE = "ADC"
-            LOOP = len(my_runs[run][ch][AVE])
-            if check_key(OPT, "SINGLE") == True: LOOP = OPT["SINGLE"] 
-        for i in range(LOOP):
+            KEY = "Ana_ADC"
+            print("Selected default wvf key %s"%KEY)
+        
+        CLEAN = dec_runs[run][ch]["ADC"][0]
+        for i in range(len(my_runs[run][ch][KEY])):
             # Select required runs and parameters
-            if AVE == "ADC": 
-                try:
-                    PED = ana_runs[run][ch]["Ped_mean"][i]    
-                    POL = ana_runs[run][ch]["P_channel"]
-                    RAW = POL*(my_runs [run][ch]["ADC"][i]-PED)
-                except:
-                    PED = 0
-                    POL = 1
-                    RAW = my_runs [run][ch]["ADC"]
-            else: 
-                RAW = my_runs[run][ch][AVE]
+
+            RAW = my_runs[run][ch][KEY][i]
+            
+            # Roll signal to align wvfs
+            rollcount = 0
+            while np.argmax(RAW) < np.argmax(CLEAN):
+                RAW = np.roll(RAW,1)    
+                rollcount = rollcount + 1
 
             # Can be used for test to trimm array
             if check_key(OPT, "TRIMM") == True: TRIMM = OPT["TRIMM"]
@@ -65,13 +58,21 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 TRIMM = len(RAW)-2**(j-1)
 
             if TRIMM != 0: 
-                SIGNAL = RAW[:-TRIMM]
-                KERNEL = CLEAN[:-TRIMM]
-                # print("Array length after trimming = %i"%len(SIGNAL))
+                SIGNAL = RAW[rollcount:-TRIMM]
+                KERNEL = CLEAN[rollcount:-TRIMM]
+                # print("Array length after trimming = %i vs detector response = %i"%(len(SIGNAL),len(KERNEL)))
             
             else: 
-                SIGNAL = RAW
-                KERNEL = CLEAN
+                SIGNAL = RAW[rollcount:]
+                KERNEL = CLEAN[rollcount:]
+  
+                # print("Array length after trimming = %i vs detector response = %i"%(len(SIGNAL),len(KERNEL)))
+            
+            if len(SIGNAL) % 2 > 0:
+                SIGNAL = SIGNAL[:-1]
+            if len(KERNEL) % 2 > 0:
+                KERNEL = KERNEL[:-1]
+            
             # print(KERNEL)
             if check_key(OPT, "SMOOTH") == True:
                 if OPT["SMOOTH"] > 0:
@@ -79,22 +80,19 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 else:
                     print("Invalid value encountered in smooth")
             try:
-                STD = ana_runs[run][ch]["Ped_STD"][i]
+                STD = my_runs[run][ch]["Ped_STD"][i]
             except:
                 STD = np.std(RAW)
 
-            TIMEBIN = 4e-9
+            TIMEBIN = my_runs[run][ch]["Sampling"]
             if check_key(OPT,"TIMEBIN") == True: TIMEBIN = OPT["TIMEBIN"]    
             X = TIMEBIN*np.arange(len(SIGNAL))
-            # AMP = np.trapz(X,KERNEL)
-            # Define noise (should be imported in future iterations)
-            NOISE = STD*np.random.randn(len(SIGNAL))
-            # NOISE = np.random.randn(len(SIGNAL))
-            FFT_NOISE = np.fft.rfft(NOISE)
 
-            # Roll signal to align wvfs
-            while np.argmax(SIGNAL) < np.argmax(KERNEL):
-                SIGNAL = np.roll(SIGNAL,1)    
+            # Define noise (should be imported in future iterations)
+            NOISE_AMP = 1
+            if check_key(OPT, "NOISE_AMP") == True: NOISE_AMP = OPT["NOISE_AMP"]
+            NOISE = NOISE_AMP*STD*np.random.randn(len(SIGNAL))
+            FFT_NOISE = np.fft.rfft(NOISE)
             
             # Calculate FFT arrays
             FFT_SIGNAL = np.fft.rfft(SIGNAL)
@@ -111,7 +109,7 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             FFT_KERNEL_X = np.fft.rfftfreq(len(KERNEL),4e-9)
             
             # Interpolate wiener envelop for fit of gaussian filter
-            WIENER_BUFFER = 1500
+            WIENER_BUFFER = 800
             if check_key(OPT,"WIENER_BUFFER") == True: WIENER_BUFFER = OPT["WIENER_BUFFER"]
             WIENER_CURVE = Curve(FFT_KERNEL_X[:-WIENER_BUFFER],(-1*WIENER[:-WIENER_BUFFER])+2)
             ENV = WIENER_CURVE.envelope2(tc=1e6)
@@ -134,6 +132,9 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             
             # Generate gauss filter and filtered signal
             FFT_GAUSS = gauss(np.arange(len(FFT_SIGNAL)),*params)
+            if check_key(OPT, "PRO_RODRIGO") == True and OPT["PRO_RODRIGO"] == True:
+                FFT_GAUSS[0] = 0
+            
             FFT_GAUSS_SIGNAL = FFT_SIGNAL*FFT_GAUSS
             GAUSS_SIGNAL = np.fft.irfft(FFT_GAUSS_SIGNAL)
             
@@ -145,6 +146,9 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
             if check_key(OPT, "REVERSE") == True and OPT["REVERSE"] == True: DEC = DEC[::-1]
             DEC = np.roll(DEC,np.argmax(KERNEL)) # Roll the function to match original position
             
+            DEC_STD = np.mean(DEC[:np.argmax(DEC)-10])
+            DEC = DEC-DEC_STD
+
             #-------------------------------------------------------------------------------------------------------------------
             # Plot results: left shows process in time space; right in frequency space.
             #-------------------------------------------------------------------------------------------------------------------
@@ -158,18 +162,20 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
                 i_signal,f_signal = find_baseline_cuts(SIGNAL)
                 i_resp,f_resp = find_baseline_cuts(KERNEL)
                 i_dec,f_dec = find_baseline_cuts(DEC)
+                
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
                     plt.plot(X,SIGNAL/np.max(SIGNAL),label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
                     plt.plot(X,GAUSS_SIGNAL/np.max(GAUSS_SIGNAL), label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
                     plt.plot(X,KERNEL/np.max(KERNEL), label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
-                    plt.plot(X,DEC/np.max(DEC),label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC[i_dec:f_dec],X[i_dec:f_dec])),c="tab:green")
+                    plt.plot(X,DEC/np.max(DEC),label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:green")
                 else:
                     plt.plot(X,SIGNAL,label = "SIGNAL: int = %.4E" %(np.trapz(SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="tab:blue")
                     plt.plot(X,GAUSS_SIGNAL, label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(GAUSS_SIGNAL[i_signal:f_signal],X[i_signal:f_signal])),c="blue")
                     plt.plot(X,KERNEL, label = "DET_RESPONSE: int = %.4E" %(np.trapz(KERNEL[i_resp:f_resp],X[i_resp:f_resp])),c="tab:orange")
-                    plt.plot(X,DEC,label = "DECONVOLUTION: int = %.4E" %(np.trapz(DEC[i_dec:f_dec],X[i_dec:f_dec])),c="tab:green")
+                    plt.plot(X,DEC,label = "DECONVOLUTION: int = %.2f PE" %(np.sum(DEC[i_dec:f_dec])),c="tab:green")
                 
-                plt.axhline(0,label="# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]),c="black",alpha=0.5,ls="--")
+                plt.axhline(0,label="Total # PE in deconvolved signal %f"%np.sum(DEC),c="black",alpha=0.5,ls="--")
+                plt.axhline(0,c="black",alpha=0.5,ls="--")
                 # print("# PE in deconvolved signal %f"%np.sum(DEC[i_dec:f_dec]))
                 
                 plt.ylabel("ADC Counts");plt.xlabel("Time in [s]")
@@ -197,16 +203,18 @@ def deconvolve(my_runs,CLEAN,OPT,PATH = "../data/dec/"):
 
                 while not plt.waitforbuttonpress(-1): pass
                 plt.clf()
-            aux = DEC
+            aux[i] = DEC
         plt.ioff()
-        my_runs[run][ch]["Deconvolution"] = aux
-        aux_path=PATH+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-        
-        try:
-            del my_runs[run][ch]["ADC"]
-        except:
-            print("'ADC' branch has already been deleted")
 
-        np.save(aux_path,my_runs[run][ch])
-        print("Saved data in:" , aux_path)
+        dec_key = "Dec_"+KEY
+        out_runs[run][ch][dec_key] = aux
+        # print(out_runs[run][ch][dec_key])
+        print("Generated wvfs with key %s"%dec_key)
+
+        
+        # try:
+            # del my_runs[run][ch]["ADC"]
+        # except:
+            # print("'ADC' branch has already been deleted")
+
     return aux,X

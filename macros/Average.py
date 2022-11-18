@@ -1,20 +1,27 @@
 import sys
 sys.path.insert(0, '../')
-from lib.io_functions import load_npy
-from lib.wvf_functions import average_wvfs
 
-N_runs           = [10,22,26]     
-N_runs_calib     = [2]     
-N_channels       = [0,1,4,6]       
-N_channels_calib = [0,1,6]       
+from lib.io_functions import load_npy,delete_keys,save_proccesed_variables
+from lib.wvf_functions import average_wvfs,integrate_wvfs
+from itertools import product
 
-RUNS       = load_npy(N_runs, N_channels)
-RUNS_CALIB = load_npy(N_runs_calib, N_channels_calib) 
+# Arrays used in load_run
+RUNS    = [1,12]     
+# CH=[0,1,4,6] # SiPM1, SiPM2, PMT, XA     
+CH      = [0,1]       
 
-# average_wvfs(RUNS)
-# average_wvfs(RUNS_CALIB)
+DELETE_KEYS = ["Ana_ADC"]
+OPT  = {
+    "PRINT_KEYS":     False
+    }
 
-# integrate(RUNS,"BASELINE_INT_LIMITS")
-# integrate(RUNS_CALIB,"BASELINE_INT_LIMITS")
-# integrate(RUNS,"AVE_INT_LIMITS")
-# integrate(RUNS_CALIB,"AVE_INT_LIMITS")
+for run, ch in product(RUNS,CH):
+    # Start load_run 
+    my_runs = load_npy([run],[ch],"Analysis_","../data/ana/")
+    average_wvfs(my_runs,OPT)
+
+    integrate_wvfs(my_runs,"AVE_INT_LIMITS","AvWvf")
+    save_proccesed_variables(my_runs,"Analysis_","../data/ana/")
+    
+    delete_keys(my_runs,DELETE_KEYS)
+    save_proccesed_variables(my_runs,"Average_","../data/ave/")

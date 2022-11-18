@@ -3,3 +3,6 @@ matplotlib
 uproot
 scipy
 pynput
+awkward
+keyboard
+pyqt5
