@@ -51,9 +51,9 @@ def func3(T,P,T0,SIGMA,A1,TAU1,A2,TAU2,A3,TAU3):
 def scfunc(T,A,B,C,D,E,F):
     return (A*np.exp(-(T-C)/B)/np.power(2*np.pi,0.5)*np.exp(-D**2/(B**2)))*(1-erf(((C-T)/D+D/B)/np.power(2,0.5)))+(E*np.exp(-(T-C)/F)/np.power(2*np.pi,0.5)*np.exp(-D**2/(F**2)))*(1-erf(((C-T)/D+D/F)/np.power(2,0.5)))
 
-def sipm_fit(RAW,RAW_X,FIT_RANGE,OPT):
+def sipm_fit(RAW,RAW_X,FIT_RANGE,THRLD=1e-6,OPT={}):
     MAX = np.argmax(RAW)
-    thrld = 1e-1
+    # THRLD = 1e-4
     BUFFER1 = FIT_RANGE[0]
     BUFFER2 = FIT_RANGE[1]
 
@@ -92,7 +92,7 @@ def sipm_fit(RAW,RAW_X,FIT_RANGE,OPT):
         plt.plot(RAW_X[MAX-BUFFER1:MAX+int(BUFFER1/2)],func(RAW_X[MAX-BUFFER1:MAX+int(BUFFER1/2)],*popt1),label="FIT")
         # plt.axvline(RAW_X[-buffer2],ls = "--",c = "k")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-        if check_key(OPT,"LOGY") != False: plt.semilogy();plt.ylim(thrld,RAW[MAX]*1.1)
+        if check_key(OPT,"LOGY") != False: plt.semilogy();plt.ylim(THRLD,RAW[MAX]*1.1)
         plt.legend()
 
         plt.subplot(1,2,2)
@@ -102,7 +102,7 @@ def sipm_fit(RAW,RAW_X,FIT_RANGE,OPT):
         plt.plot(RAW_X,func3(RAW_X,*param),c="tab:green",label="FIT_FULL_LENGHT")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
         # plt.axvline(RAW_X[-buffer2],ls = "--",c = "k")
-        if check_key(OPT,"LOGY") != False: plt.semilogy();plt.ylim(thrld,RAW[MAX]*1.1)
+        if check_key(OPT,"LOGY") != False: plt.semilogy();plt.ylim(THRLD,RAW[MAX]*1.1)
         plt.legend()
 
     while not plt.waitforbuttonpress(-1): pass
@@ -111,15 +111,15 @@ def sipm_fit(RAW,RAW_X,FIT_RANGE,OPT):
     plt.ioff()
     return aux
 
-def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):        
+def scint_fit(RAW,RAW_X,FIT_RANGE,THRLD=1e-6,OPT={}):        
     next_plot = False
     MAX = np.argmax(RAW)
-    thrld = 1e-10
+    # THRLD = 1e-10
     BUFFER1 = FIT_RANGE[0]
     BUFFER2 = FIT_RANGE[1]
 
     OPT["CUT_NEGATIVE"] = True
-    popt1,perr1 = peak_fit(RAW,RAW_X,BUFFER1,OPT)
+    popt1,perr1 = peak_fit(RAW,RAW_X,BUFFER1,THRLD,OPT)
 
     # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
     p = np.mean(RAW[:MAX-BUFFER1])
@@ -128,18 +128,16 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):
     a1   = popt1[2]; a1_low   = a1*0.9;   a1_high   = a1*1.1  
     tau1 = popt1[3]; tau1_low = tau1*0.9; tau1_high = tau1*1.1  
 
-    a2 =   1e-8;   a2_low = 5e-9;   a2_high = 9e-7
-    tau2 = 8e-7; tau2_low = 1e-7; tau2_high = 5e-6
+    a2 =   2e-8;   a2_low = 6e-9;   a2_high = 9e-4
+    tau2 = 8e-7; tau2_low = 5e-7; tau2_high = 1e-6
     
     bounds2 = ([sigm_low,a1_low,tau1_low,a2_low,tau2_low],[sigm_high,a1_high,tau1_high,a2_high,tau2_high])
-    # bounds2 = ([a1_low,tau1_low,a2_low,tau2_low],[a1_high,tau1_high,a2_high,tau2_high])
     initial2 = (sigm,a1,tau1,a2,tau2)
-    # initial2 = (popt1[2],popt1[3],a2,tau2)
     labels2 = ["SIGM","AMP1","TAU1","AMP2","TAU2"]
-    # labels2 = ["AMP1","TAU1","AMP2","TAU2"]
+
     try:
         popt2, pcov2 = curve_fit(lambda T,SIGMA,A1,TAU1,A2,TAU2: logfunc2(T,p,popt1[0],SIGMA,A1,TAU1,A2,TAU2),RAW_X[MAX-BUFFER1:MAX+BUFFER2],np.log(RAW[MAX-BUFFER1:MAX+BUFFER2]),p0 = initial2, bounds = bounds2, method = "trf")
-        # popt2, pcov2 = curve_fit(lambda T,A1,TAU1,A2,TAU2: logfunc2(T,p,popt1[0],popt1[1],A1,TAU1,A2,TAU2),RAW_X[MAX-BUFFER1:MAX+BUFFER2],np.log(RAW[MAX-BUFFER1:MAX+BUFFER2]),p0 = initial2, bounds = bounds2, method = "trf")
+        # popt2, pcov2 = curve_fit(lambda T,SIGMA,A1,TAU1,A2,TAU2: func2(T,p,popt1[0],SIGMA,A1,TAU1,A2,TAU2),RAW_X[MAX-BUFFER1:MAX+BUFFER2],np.log(RAW[MAX-BUFFER1:MAX+BUFFER2]),p0 = initial2, bounds = bounds2, method = "trf")
         perr2 = np.sqrt(np.diag(pcov2))
     except:
         print("Fit could not be performed")
@@ -149,13 +147,11 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):
     t0 = popt1[0]   ; a1 = popt2[1] ; tau1 = popt2[2]
     sigma = popt2[0]; a2 = popt2[3] ; tau2 = popt2[4]
     
-    # t0 = popt1[0]   ; a1 = popt2[1] ; tau1 = popt2[2]
-    # sigma = popt2[0]; a2 = popt2[2] ; tau2 = popt2[3]
-    
     param = [p,t0,sigma,a1,tau1,a2,tau2]
     
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
         if check_key(OPT,"COLOR") == True: color = OPT["COLOR"]
+        else: color = "tab:red"
         print("\n--- SECOND FIT VALUES (SLOW) ---")
         for i in range(len(initial2)):
             print("%s:\t%.2E\t%.2E"%(labels2[i],popt2[i],perr2[i]))
@@ -170,7 +166,7 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):
         plt.plot(RAW_X[MAX-BUFFER1:MAX+int(BUFFER1/2)],func(RAW_X[MAX-BUFFER1:MAX+int(BUFFER1/2)],*popt1),label="FIT")
         # plt.axvline(RAW_X[-buffer2],ls = "--",c = "k")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-        if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld,RAW[MAX]*1.1)
+        if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(THRLD,RAW[MAX]*1.1)
         plt.legend()
 
         plt.subplot(1,2,2)
@@ -179,7 +175,7 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):
         plt.plot(RAW_X[MAX-BUFFER1:MAX+BUFFER2],func2(RAW_X[MAX-BUFFER1:MAX+BUFFER2],*param),label="FIT")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
         plt.axvline(RAW_X[MAX+BUFFER2],ls = "--",c = "k")
-        if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld,RAW[MAX]*1.1)
+        if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(THRLD,RAW[MAX]*1.1)
         plt.legend()
 
     while not plt.waitforbuttonpress(-1): pass
@@ -187,8 +183,9 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,OPT):
     aux = func2(RAW_X,*param)
     return aux
 
-def sc_fit(RAW,RAW_X,FIT_RANGE,OPT):
+def sc_fit(RAW,RAW_X,FIT_RANGE,THRLD=1e-6,OPT={}):
     # plt.ion()
+    # THRLD = 1e-10
     next_plot = False
     plt.rcParams['figure.figsize'] = [8, 8]
     FIT_RAW_X = np.arange(len(RAW))
@@ -220,7 +217,7 @@ def sc_fit(RAW,RAW_X,FIT_RANGE,OPT):
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
         if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True: 
             plt.semilogy()
-            plt.ylim(thrld,RAW[MAX]*1.1)
+            plt.ylim(THRLD,RAW[MAX]*1.1)
         plt.legend()
 
     while not plt.waitforbuttonpress(-1): pass
@@ -229,15 +226,15 @@ def sc_fit(RAW,RAW_X,FIT_RANGE,OPT):
     # print("\n")
     return aux
 
-def peak_fit(FIT_RAW,RAW_X,BUFFER,OPT):
+def peak_fit(FIT_RAW,RAW_X,BUFFER,THRLD,OPT):
     MAX = np.argmax(FIT_RAW)
     # print(FIT_RAW)
     if check_key(OPT, "CUT_NEGATIVE") == True and OPT["CUT_NEGATIVE"] == True:
         for i in range(len(FIT_RAW)):
-            if FIT_RAW[i] <= 1e-10:
-                FIT_RAW[i] = 1e-10
+            if FIT_RAW[i] <= THRLD:
+                FIT_RAW[i] = THRLD
             if np.isnan(FIT_RAW[i]):
-                FIT_RAW[i] = 1e-10
+                FIT_RAW[i] = THRLD
 
     guess_t0 = RAW_X[np.argmax(FIT_RAW)-10]
     p = np.mean(FIT_RAW[:MAX-BUFFER])
@@ -273,7 +270,7 @@ def peak_fit(FIT_RAW,RAW_X,BUFFER,OPT):
 
     return popt,perr
 
-def fit_wvfs(my_runs,signal_type,FIT_RANGE=[0,0],KEYS=["ADC"],OPT={}):
+def fit_wvfs(my_runs,signal_type,THRLD,FIT_RANGE=[0,0],KEYS=["ADC"],OPT={}):
     plt.ion()
     for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
         aux = dict()
@@ -284,13 +281,14 @@ def fit_wvfs(my_runs,signal_type,FIT_RANGE=[0,0],KEYS=["ADC"],OPT={}):
         for i in range(len(RAW)):
             print("Fitting wvf ",i)
             # print(RAW[i])
-            if signal_type == "SiPM":  fit = sipm_fit(RAW[i],RAW_X,FIT_RANGE,OPT)
-            if signal_type == "SCINT": fit = scint_fit(RAW[i],RAW_X,FIT_RANGE,OPT)
-            if signal_type == "SC":    fit = sc_fit(RAW[i],RAW_X,FIT_RANGE,OPT)
+            if check_key(OPT, "NORM") == True and OPT["NORM"] == True: RAW[i] = RAW[i]/np.max(RAW[i])
+            if signal_type == "SiPM":  fit = sipm_fit(RAW[i],RAW_X,FIT_RANGE,THRLD,OPT)
+            if signal_type == "SCINT": fit = scint_fit(RAW[i],RAW_X,FIT_RANGE,THRLD,OPT)
+            if signal_type == "SC":    fit = sc_fit(RAW[i],RAW_X,FIT_RANGE,THRLD,OPT)
             aux[i] = fit
         
        
-        # my_runs[run][ch][signal_type] = aux
+        my_runs[run][ch]["Fit_"+signal_type] = aux
         # aux_path=PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
         
         try:

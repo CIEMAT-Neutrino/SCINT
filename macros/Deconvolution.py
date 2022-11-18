@@ -11,22 +11,24 @@ from lib.dec_functions import deconvolve
 raw_run = [25,26,27]
 dec_run = [9,10,11]
 ref_run = [1,2,3]
-ana_chs = [0,1,6]
+ana_chs = [6]
 
 for i in range(len(raw_run)):
-    # my_runs     = load_npy([raw_run[i]],ana_chs,"Analysis_",     "../data/ana/") # Activate in case deconvolution of average wvf wants to be performed
-    my_runs     = load_npy([raw_run[i]],ana_chs,"Average_",      "../data/ave/") # Activate in case deconvolution of average wvf wants to be performed
+    my_runs     = load_npy([raw_run[i]],ana_chs,"Analysis_",     "../data/ana/") # Activate in case deconvolution of average wvf wants to be performed
+    # my_runs     = load_npy([raw_run[i]],ana_chs,"Average_",      "../data/ave/") # Activate in case deconvolution of average wvf wants to be performed
+    # light_runs  = load_npy([dec_run[i]],ana_chs,"Fit_",      "../data/fit/")
     light_runs  = load_npy([dec_run[i]],ana_chs,"Average_",      "../data/ave/")
     single_runs = load_npy([ref_run[i]],ana_chs,"Average_",      "../data/ave/")
     out_runs    = load_npy([raw_run[i]],ana_chs,"Deconvolution_","../data/dec/")
 
     OPT = {
-        # "KEY":"Ana_ADC", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
-        "KEY":"AvWvf", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
+        "KEY":"Ana_ADC", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
+        # "KEY":"SPE_AvWvf", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
+        # "KEY":"AvWvf", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
         "NOISE_AMP": 1,
         # "NORM_DET_RESPONSE": True,
         "FIX_EXP":True,
-        "LOGY":True,
+        "LOGY":False,
         "NORM":True,
         "FOCUS":False,
         "SHOW": True,
@@ -38,8 +40,9 @@ for i in range(len(raw_run)):
         "SHOW_F_DEC":True,
         # "TRIMM": 0,
         "AUTO_TRIMM":True,
-        # "WIENER_BUFFER": 1200,
+        # "WIENER_BUFFER": 800,
         "PRO_RODRIGO": False,
+        "THRLD": 1e-4
         }
 
     dec_runs = dict()
@@ -49,7 +52,13 @@ for i in range(len(raw_run)):
             dec_runs[run][ch] = dict()
             single_response = single_runs[ref_run[i]][ch]["SPE_AvWvf"][0]
             det_response =    light_runs[dec_run[i]][ch]["AvWvf"][0]
+            # det_response =    light_runs[dec_run[i]][ch]["Fit_SC"][0]
             dec_runs[run][ch]["ADC"] = [np.max(single_response)*det_response/np.max(det_response)]
+
+    rollcount = 0
+    while np.argmax(single_response) < np.argmax(det_response):
+        single_response = np.roll(single_response,1)    
+        rollcount = rollcount + 1
 
     # plt.plot(4e-9*np.arange(len(single_response)),single_response/np.max(single_response),c="green",label="Raw SPE signal")
     # plt.plot(4e-9*np.arange(len(single_response)),single_response,c="green",label="Raw SPE signal")
