@@ -13,33 +13,13 @@ def vis_npy(my_run,KEYS,OPT):
     norm_raw = 1
     norm_ave = 1
     buffer = 100
-    
-    # for run, ch in product(my_run["N_runs"],my_run["N_channels"]):
-    #     try:
-    #         ANA_RUN = load_npy([run],[ch],"Analysis_","../data/ana/")
-    #         ANA_BOOL = True
-    #     except:
-    #         ANA_BOOL = False
-    #         print("Run has not been processed!")
-
-    #     try:
-    #         AVE_RUN = load_npy([run],[ch],"Average_","../data/ave/")
-    #         ANA_BOOL = True
-    #     except:
-    #         AVE_BOOL = False
-    #         print("Run has not been averaged!")
-        
-    #     sampling = my_run[run][ch]["Sampling"]
-    #     sampling = 4e-9
-    #     try:
-    #         sampling = my_run[run][ch]["Sampling"]
-    #     except:
-    #         print("Showing sampling extracted from raw data")
 
     plt.ion()
     next_plot = False
+
     for run, ch, key in product(my_run["N_runs"],my_run["N_channels"],KEYS):
         counter = 0
+
         for i in range(len(my_run[run][ch]["Ana_ADC"])):
             plt.xlabel("Time in [s]")
             plt.ylabel("ADC Counts")
@@ -144,6 +124,7 @@ def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
             # data=[i for i in data if -out_threshold<i<out_threshold]
             # binning = np.arange(min(data), max(data) + w, w)
 
+
         plt.hist(data,binning) # , zorder = 2 f
         plt.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
         plt.title("Run_{} Ch_{} - {} histogram".format(run,ch,key),size = 14)
@@ -152,8 +133,3 @@ def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
         while not plt.waitforbuttonpress(-1): pass
         plt.clf()
     plt.ioff()
-
-# def vis_ave_npy(run,ch,CUTS,OPT,PATH = "../data/raw"):
-#     aux_ADC=ana_runs[run][ch]["P_channel"]*((my_runs[run][ch]["ADC"].T-ana_runs[run][ch]["Ped_mean"]).T)
-#     my_runs[run][ch]["AvWvf"] = np.mean(aux_ADC,axis=0)
-#     return my_runs[run][ch]["AvWvf"]
