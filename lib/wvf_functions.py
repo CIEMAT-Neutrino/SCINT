@@ -73,9 +73,9 @@ def average_wvfs(my_runs,threshold=50,PATH="../data/ave/"):
         # np.save(aux_path,my_runs[run][ch])
         # print("Saved data in:" , aux_path)
 
-def average_SPE_wvfs(my_runs,out_runs,INT_KEY,OPT={}):
+def average_SPE_wvfs(my_runs,out_runs,KEY,OPT={}):
 
-    for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
+    for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEY):
         
         aux_ADC = np.zeros(len(my_runs[run][ch]["Ana_ADC"][0]))
         counter = 0
@@ -86,7 +86,7 @@ def average_SPE_wvfs(my_runs,out_runs,INT_KEY,OPT={}):
         for i in range(len(my_runs[run][ch]["Ana_ADC"])):
 
             # Check charge in SPE range
-            if min_charge < my_runs[run][ch][INT_KEY][i] < max_charge:
+            if min_charge < my_runs[run][ch][key][i] < max_charge:
                 aux_ADC = aux_ADC + my_runs[run][ch]["Ana_ADC"][i]
                 counter = counter + 1    
 

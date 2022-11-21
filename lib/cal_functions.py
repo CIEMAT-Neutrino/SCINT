@@ -9,7 +9,7 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
 from itertools import product
-from .io_functions import check_key
+from .io_functions import check_key,copy_single_run
 from .vis_functions import vis_var_hist
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
 
@@ -18,59 +18,24 @@ def calibrate(my_runs,KEY,OPT={}):
     
     plt.ion()
     next_plot = False
+    idx = 0
     for run, ch, key in product(my_runs["N_runs"],my_runs["N_channels"],KEY):
+        idx = idx + 1
 
-    # for run in my_runs["N_runs"]:
-    #     for ch in my_runs["N_channels"]:
-
-        raw_array = []
-        raw_amp = []
-        max_charge = 0 
-        min_charge = 0
-
-        for i in range(len(my_runs[run][ch][key])):
-            thischarge = my_runs[run][ch][key][i]
-            thisamp = my_runs[run][ch]["Peak_amp"][i]
-            raw_array.append(thischarge)
-            raw_amp.append(thisamp)
-
-        mean = np.mean(raw_array)
-        mode = raw_array[int(len(raw_array)/2)]
-        std = np.std(raw_array)
-        array = []
-
-        for i in range(len(raw_array)):
-            if abs(raw_array[i]-mean) < mean+10*std:
-                array.append(raw_array[i])
-        # print(len(array))
-        # print(array)
         # Threshold value (for height of peaks and valleys)
-        binning = int(len(array)/100)
-        thresh = int(len(array)/1000)
+        thresh = int(len(my_runs[run][ch][key])/1000)
         wdth = 8
         prom = 0.1
         acc = 1000
 
-        # counts, bins, bars = plt.hist(array,1000,alpha=0.75)
-        # plt.show()
-
         # counts, bins, bars = plt.hist(array,binning,(np.min(array)*0.5,np.max(array)),alpha=0.75)
-        counts, bins, bars = vis_var_hist(my_runs,KEY,OPT)
-        counts = counts[0]
-        bins = counts[0]
-        bars = counts[0]
+        my_run = copy_single_run(my_runs,[run],[ch],[key])
 
-        print(counts)
-        plt.xlabel("Charge in [ADC x ns]");plt.ylabel("Counts")
-        for i in range(len(counts)):
-            if counts[i] > thresh and bins[i] > max_charge:
-                max_charge = bins[i]
-                # print(max_charge)
-            elif counts[i] > thresh and bins[i] < min_charge:
-                min_charge = bins[i]
-                # print(min_charge)
+        counts, bins, bars = vis_var_hist(my_run,KEY,w=1e-4,OPT=OPT)
+        counts = counts[0];bins = bins[0];bars = bars[0]
+        plt.hist(bins[:-1], bins, weights=counts)
 
-        x = np.linspace(min_charge,max_charge,acc)
+        x = np.linspace(bins[1],bins[-2],acc)
         y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
         y = y_intrp(x)
 
