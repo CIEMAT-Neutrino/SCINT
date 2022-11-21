@@ -51,44 +51,66 @@ def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
     for run in RUNS:
         channels=dict()
         for ch in CH:
-            try:
-                channels[ch] = np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
-            except:    
+            try:    
                 try:
-                    channels[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-                    # del channels[ch]["Ana_ADC"]
-                    print("Selected file does not exist, loading default analysis run")
-                
-                except:
-                    channels[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-                    # del channels[ch]["ADC"]
-                    print("Selected file does not exist, loading raw run")
-        runs[run]=channels
-    print("\nLoaded %sruns with keys:"%PREFIX)
-    print(runs.keys())
+                    channels[ch] = np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
+                except:    
+                    try:
+                        channels[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                        # del channels[ch]["Ana_ADC"]
+                        print("Selected file does not exist, loading default analysis run")
+                    
+                    except:
+                        channels[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                        # del channels[ch]["ADC"]
+                        print("Selected file does not exist, loading raw run")
+                runs[run]=channels
+                print("\nLoaded %sruns with keys:"%PREFIX)
+                print(runs.keys())
+                # print_keys(runs)
+
+            except FileNotFoundError:
+                print("\nRun", run, ", CH" ,ch," --> NOT LOADED (FileNotFound)")
+
     return runs
 
+def print_keys(my_runs):
+    try:
+        for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
+            print("----------------------")
+            print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
+            print("----------------------\n")
+    except:
+        KeyError
+        return print("Empty dictionary. No keys to print.")
+
 def delete_keys(my_runs,KEYS):
-    for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
-        del my_runs[run][ch][key]
+    try:
+        for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
+            del my_runs[run][ch][key]
+    except KeyError:
+        return print("Empty dictionary. No keys to delete.")
 
 def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
     """Does exactly what it says, no RawWvfs here"""
-    
-    # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-    aux=copy.deepcopy(my_runs)
-    
-    for run in aux["N_runs"]:
-        for ch in aux["N_channels"]:
-            try:
-                for key in aux[run][ch]["Raw_file_keys"]:
-                    del aux[run][ch][key]
-            except:
-                if PREFIX == "Analysis_": print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
+    try:
+        
+        # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
+        aux=copy.deepcopy(my_runs)
+        
+        for run in aux["N_runs"]:
+            for ch in aux["N_channels"]:
+                try:
+                    for key in aux[run][ch]["Raw_file_keys"]:
+                        del aux[run][ch][key]
+                except:
+                    if PREFIX == "Analysis_": print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
 
-            aux_path=PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-            np.save(aux_path,aux[run][ch])
-            print("Saved data in:", aux_path)
+                aux_path=PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+                np.save(aux_path,aux[run][ch])
+                print("Saved data in:", aux_path)
+    except KeyError: 
+        return print("Empty dictionary. Not saved.")
 
 def read_input_file(input,PATH="../input/"):
     # Using readlines()
