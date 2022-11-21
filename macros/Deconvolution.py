@@ -21,8 +21,9 @@ for i in range(len(raw_run)):
     single_runs = load_npy([ref_run[i]],ana_chs,"Average_",      "../data/ave/")
     out_runs    = load_npy([raw_run[i]],ana_chs,"Deconvolution_","../data/dec/")
 
+    KEY = ["Ana_ADC","AvWvf","Dec_ADC"] # KEY contains the 3 labels required for deconvolution KEY[0] = raw, KEY[1] = det_response and KEY[2] = deconvolution 
     OPT = {
-        "KEY":"Ana_ADC", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
+        # "KEY":"Ana_ADC", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
         # "KEY":"SPE_AvWvf", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
         # "KEY":"AvWvf", # Select key that correcponds to imported wvf runs (e.g. "Ana_ADC","AvWvf","SPE_AvWvf"...)
         "NOISE_AMP": 1,
@@ -72,6 +73,6 @@ for i in range(len(raw_run)):
     # plt.legend()
     # plt.show()
     
-    deconvolve(my_runs,my_runs,dec_runs,OPT)
+    deconvolve(my_runs,dec_runs,my_runs,KEY,OPT)
     save_proccesed_variables(my_runs,"Deconvolution_","../data/dec/")
 
