@@ -117,17 +117,20 @@ def smooth(my_run,alpha):
     my_run=unweighted_average(my_run)
     return my_run
 
-def integrate_wvfs(my_runs,TYPE,REF,PATH="../data/ana/"):  
+def integrate_wvfs(my_runs,TYPE,REF,FACTORS,RANGES,PATH="../data/ana/"):  
     # AVE_RUNS = load_average_npy(my_runs["N_runs"],my_runs["N_channels"])
-    
+    if FACTORS[0] == "ADC": FACTORS[0] = 2/16384
+    if FACTORS[0] == "Osc": FACTORS[0] = 1
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         AVE = my_runs[run][ch][REF]
         for i in range(len(AVE)):
-            i_idx,f_idx = find_baseline_cuts(AVE[i])
             # x = my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch]["Ana_ADC"][0]))
-            
             if TYPE == "AVE_INT_LIMITS":
-                my_runs[run][ch][TYPE] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)
+                i_idx,f_idx = find_baseline_cuts(AVE[i])
+                my_runs[run][ch][TYPE] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)*FACTORS[0]/FACTORS[1]*1e12
+            if TYPE == "RANGE":
+                i_idx = int(np.round(RANGES[0]/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(RANGES[1]/my_runs[run][ch]["Sampling"]))
+                my_runs[run][ch][TYPE] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)*FACTORS[0]/FACTORS[1]*1e12
         
         print("Integrated wvfs according to %s baseline integration limits"%REF)
         # aux = dict()

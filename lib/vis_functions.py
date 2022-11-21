@@ -13,53 +13,34 @@ def vis_npy(my_run,KEYS,OPT):
     norm_raw = 1
     norm_ave = 1
     buffer = 100
-    
-    # for run, ch in product(my_run["N_runs"],my_run["N_channels"]):
-    #     try:
-    #         ANA_RUN = load_npy([run],[ch],"Analysis_","../data/ana/")
-    #         ANA_BOOL = True
-    #     except:
-    #         ANA_BOOL = False
-    #         print("Run has not been processed!")
-
-    #     try:
-    #         my_run = load_npy([run],[ch],"Average_","../data/ave/")
-    #         ANA_BOOL = True
-    #     except:
-    #         AVE_BOOL = False
-    #         print("Run has not been averaged!")
-        
-    #     sampling = my_run[run][ch]["Sampling"]
-    #     sampling = 4e-9
-    #     try:
-    #         sampling = my_run[run][ch]["Sampling"]
-    #     except:
-    #         print("Showing sampling extracted from raw data")
 
     plt.ion()
     next_plot = False
-    for run,ch,key in product(my_run["N_runs"],my_run["N_channels"],KEYS):
+
+    for run, ch, key in product(my_run["N_runs"],my_run["N_channels"],KEYS):
+        counter = 0
+
         for i in range(len(my_run[run][ch]["Ana_ADC"])):
             plt.xlabel("Time in [s]")
             plt.ylabel("ADC Counts")
             plt.grid(True, alpha = 0.7)
             
             if (key == "ADC"):
-                min = np.argmin(my_run[run][ch][key][i])
-                RAW = my_run[run][ch][key][i]
-                PED = np.mean(my_run[run][ch][key][i][:min-buffer])
-                STD = np.std(my_run[run][ch][key][i][:min-buffer])
+                min = np.argmin(my_run[run][ch][key][counter])
+                RAW = my_run[run][ch][key][counter]
+                PED = np.mean(my_run[run][ch][key][counter][:min-buffer])
+                STD = np.std(my_run[run][ch][key][counter][:min-buffer])
             
             elif(key == "Ana_ADC"):
-                min = np.argmax(my_run[run][ch][key][i])
-                RAW = my_run[run][ch][key][i]
+                min = np.argmax(my_run[run][ch][key][counter])
+                RAW = my_run[run][ch][key][counter]
                 PED = 0    
-                STD = my_run[run][ch]["Ped_STD"][i]
+                STD = my_run[run][ch]["Ped_STD"][counter]
 
             if OPT["NORM"] == True and OPT["NORM"] == True:
                 norm_raw = np.max(RAW)
                 RAW = RAW/np.max(RAW)
-            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(RAW)),RAW,label="RAW_WVF",drawstyle="steps")
+            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(RAW)),RAW,label="RAW_WVF", drawstyle = "steps", alpha = 0.9)
 
             if check_key(OPT, "SHOW_AVE") == True:   
                 try:
@@ -67,52 +48,52 @@ def vis_npy(my_run,KEYS,OPT):
                     AVE = my_run[run][ch][AVE_KEY][0]
                     if OPT["NORM"] == True and OPT["NORM"] == True:
                         AVE = AVE/np.max(AVE)
-                    plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(AVE)),AVE,alpha=.5,label=AVE_KEY)             
-
+                    plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(AVE)),AVE,alpha=.5,label="AVE_WVF_%s"%AVE_KEY)             
                 except:
                     print("Run has not been averaged!")
                         
-            
             if OPT["LOGY"] == True:
                 plt.semilogy()
-            ped_lim = my_run[run][ch]["Ped_lim"]
-            plt.plot(my_run[run][ch]["Sampling"]*np.array([ped_lim,ped_lim]),np.array([PED+2*STD,PED-2*STD])/norm_raw,c="tab:red",lw=2.)
-            plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,i),size = 14)
+
+            plt.plot(my_run[run][ch]["Sampling"]*np.array([min-buffer,min-buffer]),np.array([PED+5*STD,PED-5*STD])/norm_raw,c="red",lw=2., alpha = 0.8)
+            plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,counter),size = 14)
             plt.axhline((PED)/norm_raw,c="k",alpha=.5)
-            plt.axhline((PED+STD)/norm_raw,c="k",alpha=.5,ls="--")
-            plt.axhline((PED-STD)/norm_raw,c="k",alpha=.5,ls="--")
+            plt.axhline((PED+STD)/norm_raw,c="k",alpha=.5,ls="--"); plt.axhline((PED-STD)/norm_raw,c="k",alpha=.5,ls="--")
             plt.legend()
 
             if OPT["SHOW_PARAM"] == True:
-                print("Event Number {} from RUN_{} CH_{} ({})".format(i,run,ch,my_run[run][ch]["Label"]))
+                print("Event Number {} from RUN_{} CH_{} ({})".format(counter,run,ch,my_run[run][ch]["Label"]))
                 print("Sampling: {:.0E}".format(my_run[run][ch]["Sampling"]))
-                print("Pedestal mean: {:.2E}".format(my_run[run][ch]["Ped_mean"][i]))
-                print("Pedestal STD: {:.4f}".format(my_run[run][ch]["Ped_STD"][i]))
-                print("Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch]["Ped_min"][i],my_run[run][ch]["Ped_max"][i]))
+                print("Pedestal mean: {:.2E}".format(my_run[run][ch]["Ped_mean"][counter]))
+                print("Pedestal STD: {:.4f}".format(my_run[run][ch]["Ped_STD"][counter]))
+                print("Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch]["Ped_min"][counter],my_run[run][ch]["Ped_max"][counter]))
                 print("Pedestal time limit: {:.4E}".format(4e-9*(min-buffer)))
-                print("Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["Peak_amp"][i]))
-                print("Max Peak Time: {:.2E}".format(my_run[run][ch]["Peak_time"][i]*my_run[run][ch]["Sampling"]))
-                print("Charge: {:.2E}\n".format(my_run[run][ch]["AVE_INT_LIMITS"][i]))
+                print("Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["Peak_amp"][counter]))
+                print("Max Peak Time: {:.2E}".format(my_run[run][ch]["Peak_time"][counter]*my_run[run][ch]["Sampling"]))
+                print("Charge: {:.2E}\n".format(my_run[run][ch]["AVE_INT_LIMITS"][counter]))
 
-            print("Press q to quit or any key to continue: ")
-            tecla = input()
+            tecla = input("Press q to quit, r to go back, n to choose event or any key to continue: ")
             if tecla == "q":
                 break
             elif tecla == "r":
-                i = i-2
-                pass
+                counter = counter-1
+            elif tecla == "n":
+                ev_num = int(input("Enter event number: "))
+                counter = ev_num
+                if counter > len(my_run[run][ch]["Ana_ADC"]): counter = len(my_run[run][ch]["Ana_ADC"])-1
             else:
-                pass
+                counter = counter + 1
                 # while not plt.waitforbuttonpress(-1): pass           
+            if counter == len(my_run[run][ch]["Ana_ADC"]): break
             plt.clf()
         plt.clf()
     plt.ioff()
+    plt.clf()
 
 def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
     # KEY is the variable that we want to plot
     # w is related to the bin width
     plt.ion()
-
     for run, ch, key in product(my_run["N_runs"],my_run["N_channels"],KEY):
         # w = abs(np.max(my_run[run][ch][key])-np.min(my_run[run][ch][key]))*w
         data = []
@@ -130,7 +111,7 @@ def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
             ymin = ypbot - ypad; ymax = yptop + ypad
             data = [i for i in data if ymin<i<ymax]
             w = abs(np.max(data)-np.min(data))*w
-            binning = 600 # Fixed value until better solution
+            binning = 600 # FIXED VALUE UNTIL BETTER SOLUTION
             # binning = np.arange(min(data), max(data) + w, w)
             # binning = int((np.max(data)-np.min(data)) * len(data)**(1/3) / (3.49*np.std(data)))*5 # Visto por internete
             # print(w)
@@ -143,6 +124,7 @@ def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
             # data=[i for i in data if -out_threshold<i<out_threshold]
             # binning = np.arange(min(data), max(data) + w, w)
 
+
         plt.hist(data,binning) # , zorder = 2 f
         plt.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
         plt.title("Run_{} Ch_{} - {} histogram".format(run,ch,key),size = 14)
@@ -151,8 +133,3 @@ def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
         while not plt.waitforbuttonpress(-1): pass
         plt.clf()
     plt.ioff()
-
-# def vis_ave_npy(run,ch,CUTS,OPT,PATH = "../data/raw"):
-#     aux_ADC=ana_runs[run][ch]["P_channel"]*((my_runs[run][ch]["ADC"].T-ana_runs[run][ch]["Ped_mean"]).T)
-#     my_runs[run][ch]["AvWvf"] = np.mean(aux_ADC,axis=0)
-#     return my_runs[run][ch]["AvWvf"]
