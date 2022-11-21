@@ -15,7 +15,7 @@ N_channels_calib = [0,1,6]
 for run, ch in product(N_runs_calib,N_channels_calib):
     RUNS = load_npy([run],[ch],"Analysis_","../data/ana/")
     AVE_RUNS = load_npy([run],[ch],"Average_","../data/ave/")
-    INT_KEY = "AVE_INT_LIMITS"
+    INT_KEY = ["AVE_INT_LIMITS"]
 
     OPT = {"LOGY": True}
     calibrate(RUNS,INT_KEY,OPT)

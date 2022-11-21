@@ -90,10 +90,13 @@ def vis_npy(my_run,KEYS,OPT):
     plt.ioff()
     plt.clf()
 
-def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
+def vis_var_hist(my_run,KEY,w=1e-4,OPT={}): # Histogram visualizer
     # KEY is the variable that we want to plot
     # w is related to the bin width
     plt.ion()
+    COUNTS = []
+    BINS = []
+    BARS = []
     for run, ch, key in product(my_run["N_runs"],my_run["N_channels"],KEY):
         # w = abs(np.max(my_run[run][ch][key])-np.min(my_run[run][ch][key]))*w
         data = []
@@ -125,7 +128,10 @@ def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
             # binning = np.arange(min(data), max(data) + w, w)
 
 
-        plt.hist(data,binning) # , zorder = 2 f
+        counts, bins, bars = plt.hist(data,binning) # , zorder = 2 f
+        COUNTS.append(counts)
+        BINS.append(bins)
+        BARS.append(bars)
         plt.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
         plt.title("Run_{} Ch_{} - {} histogram".format(run,ch,key),size = 14)
         plt.xticks(size = 11); plt.yticks(size = 11)
@@ -133,3 +139,4 @@ def vis_var_hist(my_run,KEY,w=1e-4): # Histogram visualizer
         while not plt.waitforbuttonpress(-1): pass
         plt.clf()
     plt.ioff()
+    return COUNTS, BINS, BARS
