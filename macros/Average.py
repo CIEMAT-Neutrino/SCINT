@@ -8,24 +8,24 @@ from itertools import product
 N_runs           = [10,22,26]     
 N_runs_calib     = [2]     
 N_channels       = [0,1,4,6]       
-N_channels_calib = [0,1,6]       
+N_channels_calib = [0]       
 
 DELETE_KEYS = ["Ana_ADC"]
 
-for run, ch in product(N_runs,N_channels):
-    # Start load_run 
-    RUNS       = load_npy([run],[ch],"Analysis_","../data/ana/")
-    average_wvfs(RUNS)
-    integrate_wvfs(RUNS,"AVE_INT_LIMITS","AvWvf")
-    save_proccesed_variables(RUNS,"Analysis_","../data/ana/")
-    delete_keys(RUNS,DELETE_KEYS)
-    save_proccesed_variables(RUNS,"Average_","../data/ave/")
+# for run, ch in product(N_runs,N_channels):
+#     # Start load_run 
+#     RUNS       = load_npy([run],[ch],"Analysis_","../data/ana/")
+#     average_wvfs(RUNS)
+#     integrate_wvfs(RUNS,"AVE_INT_LIMITS","AvWvf")
+#     save_proccesed_variables(RUNS,"Analysis_","../data/ana/")
+#     delete_keys(RUNS,DELETE_KEYS)
+#     save_proccesed_variables(RUNS,"Average_","../data/ave/")
 
 for run, ch in product(N_runs_calib,N_channels_calib):
     # Start load_run 
     RUNS_CALIB = load_npy([run], [ch],"Analysis_","../data/ana/") 
     average_wvfs(RUNS_CALIB)
-    integrate_wvfs(RUNS_CALIB,"AVE_INT_LIMITS","AvWvf")
+    integrate_wvfs(RUNS_CALIB,"AVE_INT_LIMITS","AvWvf",["ADC",250],[2.25e-6,2.7e-6])
     save_proccesed_variables(RUNS_CALIB,"Analysis_","../data/ana/")
     delete_keys(RUNS_CALIB,DELETE_KEYS)
     save_proccesed_variables(RUNS_CALIB,"Average_","../data/ave/")
