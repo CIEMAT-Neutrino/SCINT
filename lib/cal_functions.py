@@ -40,7 +40,8 @@ def calibrate(my_runs,KEY,OPT={}):
             for i in range(len(raw_array)):
                 if abs(raw_array[i]-mean) < mean+10*std:
                     array.append(raw_array[i])
-
+            # print(len(array))
+            # print(array)
             # Threshold value (for height of peaks and valleys)
             binning = int(len(array)/100)
             thresh = int(len(array)/1000)
@@ -48,7 +49,7 @@ def calibrate(my_runs,KEY,OPT={}):
             prom = 0.1
             acc = 1000
 
-            # counts, bins, bars = plt.hist(raw_amp,binning,alpha=0.75)
+            # counts, bins, bars = plt.hist(array,1000,alpha=0.75)
             # plt.show()
 
             counts, bins, bars = plt.hist(array,binning,(np.min(array)*0.5,np.max(array)),alpha=0.75)
@@ -137,4 +138,5 @@ def calibrate(my_runs,KEY,OPT={}):
             my_runs[run][ch]["SPE_min_charge"] = popt[3] - abs(popt[5])
             # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
 
-        plt.ioff()
+    plt.ioff()
+    plt.clf()

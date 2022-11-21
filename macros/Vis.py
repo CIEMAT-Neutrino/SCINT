@@ -5,10 +5,10 @@ sys.path.insert(0, '../')
 from lib.io_functions import *
 from lib.vis_functions import vis_npy, vis_var_hist
 
-
 N_runs = [2]
 N_channels  = [0]
 KEYS = ["Ana_ADC"]
+
 
 OPT  = {
     "NORM":     False,
@@ -21,4 +21,4 @@ RUN = load_npy(N_runs,N_channels,"Analysis_","../data/ana/")
 
 # vis_npy(RUN,KEYS,OPT) # Input variables should be lists of integers
 vis_var_hist(RUN,["AVE_INT_LIMITS"],1e-3)
-#"Peak_amp","Peak_time","Ped_STD", AVE_INT_LIMITS
+#"Peak_amp","Peak_time","Ped_STD", "AVE_INT_LIMITS"
