@@ -7,7 +7,6 @@ from lib.ana_functions import compute_pedestal_variables,compute_peak_variables,
 from itertools import product
 
 # Arrays used in load_run
-
 RUNS=[9,10,11,25,26,27]
 RUNS_CALIB=[1,2,3]
 
@@ -78,3 +77,4 @@ for run, ch in product(RUNS_CALIB,CH_CALIB):
     
     delete_keys(my_runs,["ADC"])
     save_proccesed_variables(my_runs,"Analysis_","../data/ana/")
+
