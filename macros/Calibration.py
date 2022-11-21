@@ -9,11 +9,12 @@ from lib.wvf_functions import average_SPE_wvfs
 from lib.cal_functions import calibrate
 
 N_runs_calib     = [2]
-N_channels_calib = [0,1,6]
+N_channels_calib = [0]
 
 RUNS = load_npy(N_runs_calib,N_channels_calib,"Analysis_","../data/ana/")
 AVE_RUNS = load_npy(N_runs_calib,N_channels_calib,"Average_","../data/ave/")
-INT_KEY = "AVE_INT_LIMITS"
+# INT_KEY = "AVE_INT_LIMITS"
+INT_KEY = "RANGE"
 
 OPT = {"LOGY": False}
 calibrate(RUNS,INT_KEY,OPT)
