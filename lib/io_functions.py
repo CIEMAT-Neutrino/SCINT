@@ -108,3 +108,18 @@ def read_input_file(input,PATH="../input/"):
                     print(line.strip(""))
         # print("Line{}: {}".format(count, line.strip()))
     print(info["CALIB_RUNS"])
+
+def copy_single_run(my_runs,RUN,CH,KEY):
+    my_run = dict()
+    my_run["N_runs"] = []
+    my_run["N_channels"] = []
+    for run, ch, key in product(RUN,CH,KEY):
+        try:
+            my_run["N_runs"].append(run)
+            my_run["N_channels"].append(ch)
+            my_run[run] = dict()
+            my_run[run][ch] = dict()
+            my_run[run][ch][key] = my_runs[run][ch][key]
+        except:
+            print(run,ch,key," combination is not found in my_runs")
+    return my_run
