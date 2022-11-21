@@ -90,22 +90,21 @@ def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
             np.save(aux_path,aux[run][ch])
             print("Saved data in:", aux_path)
 
-# def insert_variable(my_runs,KEYS,VAR,out_path="../data/ana/"):
-#     aux=copy.deepcopy(my_runs)
-#     for run in aux["N_runs"]:
-#         for ch in aux["N_channels"]:
-#             for key in KEYS:
-#                 aux[run][ch][key] = VAR[run][ch][key]
-#                 print("Added key %s to npy"%key)
-            
-#             if out_path == "../data/ana/":
-#                 aux_path=out_path+"Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-#             elif out_path == "../data/ave/":
-#                 aux_path=out_path+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-#             elif out_path == "../data/dec/":
-#                 aux_path=out_path+"Deconvolution_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-#             elif out_path == "../data/fit/":
-#                 aux_path=out_path+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-            
-#             np.save(aux_path,aux[run][ch])
-#             print("Saved data in:", aux_path)
+def read_input_file(input,PATH="../input/"):
+    # Using readlines()
+    file = open(PATH+input, 'r')
+    lines = file.readlines()
+    info = dict()
+    RUNS = ["MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS"]
+    # Strips the newline character
+    for line in lines:
+        if line.startswith("MONTH"):
+            info["MONTH"] = line.strip(" ")[1]
+        for RUN in RUNS:
+            if line.startswith(RUN):
+                info[RUN] = []
+                for i in range(len(line.strip(" ")[1])):
+                    info[RUN].append(line.strip(" ")[1].strip(",")[i])
+                    print(line.strip(""))
+        # print("Line{}: {}".format(count, line.strip()))
+    print(info["CALIB_RUNS"])
