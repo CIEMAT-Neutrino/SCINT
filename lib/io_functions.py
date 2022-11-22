@@ -90,24 +90,33 @@ def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
             np.save(aux_path,aux[run][ch])
             print("Saved data in:", aux_path)
 
-def read_input_file(input,PATH="../input/"):
+def read_input_file(input,path="../input/",debug=False):
     # Using readlines()
-    file = open(PATH+input, 'r')
+    file = open(path+input, 'r')
     lines = file.readlines()
     info = dict()
-    RUNS = ["MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS"]
+    NUMBERS = ["MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_STNRD","CHAN_CALIB","CHAN_POLAR"]
+    STRINGS = ["OV_LABEL","CHAN_LABEL"]
     # Strips the newline character
     for line in lines:
         if line.startswith("MONTH"):
-            info["MONTH"] = line.strip(" ")[1]
-        for RUN in RUNS:
-            if line.startswith(RUN):
-                info[RUN] = []
-                for i in range(len(line.strip(" ")[1])):
-                    info[RUN].append(line.strip(" ")[1].strip(",")[i])
-                    print(line.strip(""))
-        # print("Line{}: {}".format(count, line.strip()))
-    print(info["CALIB_RUNS"])
+            info["MONTH"] = line.split(" ")[1]
+        for LABEL in NUMBERS:
+            if line.startswith(LABEL):
+                info[LABEL] = []
+                numbers = line.split(" ")[1]
+                for i in numbers.split(","):
+                    info[LABEL].append(int(i))
+                    if debug: print(info[LABEL])
+        for LABEL in STRINGS:
+            if line.startswith(LABEL):
+                info[LABEL] = []
+                numbers = line.split(" ")[1]
+                for i in numbers.split(","):
+                    info[LABEL].append(i)
+                    if debug: print(info[LABEL])
+    print(info.keys())
+    return info
 
 def copy_single_run(my_runs,RUN,CH,KEY):
     my_run = dict()
