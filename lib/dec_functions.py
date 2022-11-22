@@ -27,26 +27,28 @@ def fit_gauss(X,STD,N,MEAN=0,NORM=1):
     Y=A*np.exp(-(X-MEAN)**N/(2*STD**N))
     return np.log10(Y)
 
-def deconvolve(my_runs,out_runs,dec_runs,OPT={}):
+def deconvolve(my_runs,dec_runs,out_runs,KEY=[],OPT={}):
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         aux = dict()
         TRIMM = 0
-        if check_key(OPT,"KEY") == True: KEY = OPT["KEY"]
-        else: 
-            KEY = "Ana_ADC"
-            print("Selected default wvf key %s"%KEY)
         
-        CLEAN = dec_runs[run][ch]["ADC"][0]
-        for i in range(len(my_runs[run][ch][KEY])):
+        CLEAN = dec_runs[run][ch][KEY[1]][0]
+        for i in range(len(my_runs[run][ch][KEY[0]])):
             # Select required runs and parameters
 
-            RAW = my_runs[run][ch][KEY][i]
+            RAW = my_runs[run][ch][KEY[0]][i]
             
             # Roll signal to align wvfs
             rollcount = 0
             while np.argmax(RAW) < np.argmax(CLEAN):
                 RAW = np.roll(RAW,1)    
                 rollcount = rollcount + 1
+
+            # Check if arrays have the same length
+            if len(CLEAN) < len(RAW):
+                RAW = RAW[:-(len(RAW)-len(CLEAN))]
+            if len(CLEAN) > len(RAW):
+                CLEAN = CLEAN[:-(len(CLEAN)-len(RAW))] 
 
             # Can be used for test to trimm array
             if check_key(OPT, "TRIMM") == True: TRIMM = OPT["TRIMM"]
@@ -212,7 +214,6 @@ def deconvolve(my_runs,out_runs,dec_runs,OPT={}):
             aux[i] = DEC
         plt.ioff()
 
-        dec_key = "Dec_"+KEY
-        out_runs[run][ch][dec_key] = aux
-        print("Generated wvfs with key %s"%dec_key)
-    return aux,X
+        out_runs[run][ch][KEY[2]] = aux
+        print("Generated wvfs with key %s"%KEY[2])
+    # return aux,X
