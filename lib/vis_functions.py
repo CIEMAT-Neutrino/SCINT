@@ -9,7 +9,17 @@ from .io_functions import load_npy,check_key
 from itertools import product
 
 def vis_npy(my_run,KEYS,OPT):
-    
+    """
+    This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal STD and the pedestal calc limit.
+    We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
+    VARIABLES:
+        - my_run: run(s) we want to check
+        - KEYS: choose between ADC or Ana_ADC to see RAW (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
+        - OPT: several options that can be True or False. Type: List
+            a) NORM: True if we want normalized waveforms
+            b) LOGY: True if we want logarithmic y-axis
+            c) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
+    """
     norm_raw = 1
     norm_ave = 1
     buffer = 100
@@ -90,9 +100,21 @@ def vis_npy(my_run,KEYS,OPT):
     plt.ioff()
     plt.clf()
 
-def vis_var_hist(my_run,KEY,w=1e-4,OPT={}): # Histogram visualizer
+def vis_var_hist(my_run,KEY,PERCENTILE = [0.1, 99.9], OPT={}):
+    """
+    This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
+    Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
+    It returns values of counts, bins and bars from the histogram to be used in other function.
+    VARIABLES:
+        - my_run: run(s) we want to check
+        - KEY: variables we want to plot as histograms. Type: List
+            a) Peak_amp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
+            b) Peak_time: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
+            c) Other variable: any other variable. Here we reject outliers.
+    WARNING! Maybe the binning stuff should be studied in more detail.
+    """
     # KEY is the variable that we want to plot
-    # w is related to the bin width
+    w=1e-4 # w is related to the bin width in some way
     plt.ion()
     COUNTS = []
     BINS = []
@@ -109,7 +131,7 @@ def vis_var_hist(my_run,KEY,w=1e-4,OPT={}): # Histogram visualizer
             binning = int(my_run[run][ch]["NBins_wvf"]/2)
         else:
             data = my_run[run][ch][key]
-            ypbot = np.percentile(data, 0.1); yptop = np.percentile(data, 99.9)
+            ypbot = np.percentile(data, PERCENTILE[0]); yptop = np.percentile(data, PERCENTILE[1])
             ypad = 0.2*(yptop - ypbot)
             ymin = ypbot - ypad; ymax = yptop + ypad
             data = [i for i in data if ymin<i<ymax]
