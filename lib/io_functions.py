@@ -92,7 +92,7 @@ def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
 
 def read_input_file(input,path="../input/",debug=False):
     # Using readlines()
-    file = open(path+input, 'r')
+    file = open(path+input+".txt", 'r')
     lines = file.readlines()
     info = dict()
     NUMBERS = ["MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_STNRD","CHAN_CALIB","CHAN_POLAR"]
