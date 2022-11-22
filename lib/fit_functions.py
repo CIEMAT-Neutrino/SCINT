@@ -184,8 +184,7 @@ def scint_fit(RAW,RAW_X,FIT_RANGE,THRLD=1e-6,OPT={}):
     return aux
 
 def sc_fit(RAW,RAW_X,FIT_RANGE,THRLD=1e-6,OPT={}):
-    # plt.ion()
-    # THRLD = 1e-10
+
     next_plot = False
     plt.rcParams['figure.figsize'] = [8, 8]
     FIT_RAW_X = np.arange(len(RAW))
@@ -220,8 +219,10 @@ def sc_fit(RAW,RAW_X,FIT_RANGE,THRLD=1e-6,OPT={}):
             plt.ylim(THRLD,RAW[MAX]*1.1)
         plt.legend()
 
-    while not plt.waitforbuttonpress(-1): pass
-    plt.clf()
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
+        while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
+    
     aux = scfunc(FIT_RAW_X,*popt)
     # print("\n")
     return aux
@@ -271,7 +272,7 @@ def peak_fit(FIT_RAW,RAW_X,BUFFER,THRLD,OPT):
     return popt,perr
 
 def fit_wvfs(my_runs,signal_type,THRLD,FIT_RANGE=[0,0],KEYS=["ADC"],OPT={}):
-    plt.ion()
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ion()
     for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
         aux = dict()
         if key.startswith("Dec"): OPT["COLOR"] = "tab:red"
@@ -286,15 +287,9 @@ def fit_wvfs(my_runs,signal_type,THRLD,FIT_RANGE=[0,0],KEYS=["ADC"],OPT={}):
             if signal_type == "SCINT": fit = scint_fit(RAW[i],RAW_X,FIT_RANGE,THRLD,OPT)
             if signal_type == "SC":    fit = sc_fit(RAW[i],RAW_X,FIT_RANGE,THRLD,OPT)
             aux[i] = fit
-        
-       
+         
         my_runs[run][ch]["Fit_"+signal_type] = aux
-        # aux_path=PATH+"Fit_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-        
-        try:
-            del my_runs[run][ch]["ADC"]
-        except:
-            print("'ADC' branch has already been deleted")
 
-    plt.ioff()
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ioff()
     print("\n")
+    return 
