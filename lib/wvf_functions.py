@@ -6,6 +6,11 @@ from .io_functions import check_key, print_keys
 from itertools import product
 
 def find_baseline_cuts(RAW):
+    """
+    It finds the cuts with the x-axis. It returns the index of both bins.
+    VARIABLE:
+        - RAW: the .root that you want to analize.
+    """
     MAX = np.argmax(RAW)
     i_idx = 0
     f_idx = 0
@@ -21,6 +26,13 @@ def find_baseline_cuts(RAW):
     return i_idx,f_idx
 
 def average_wvfs(my_runs,OPT={},threshold=50,PATH="../data/ave/"):
+    """
+    It calculates the average waveform of a run in three different ways:
+        - AvWvf: each event is added without centering
+        - AvWvf_peak: 
+        - AvWvf_threshold: 
+    LA VERDAD NO ENTIENDO ESTA FUNCIÓN CHICO
+    """
 
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
         try:
@@ -79,6 +91,15 @@ def average_wvfs(my_runs,OPT={},threshold=50,PATH="../data/ave/"):
             print("Empty dictionary. No average to compute.")
 
 def average_SPE_wvfs(my_runs,out_runs,KEY,OPT={}):
+    """
+    It computes the average waveform of a single photoelectron. Previously, we have to calculate the charge histogram and check the SPE charge limits.
+    This function takes those values to isolate the SPE events.
+    VARIABLES:
+        - my_runs: run(s) we want to use
+        - out_runs: indicate the .npy where we want to save the average waveform.
+        - KEY:
+        - OPT: 
+    """
 
     for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEY):
         try:
