@@ -19,21 +19,21 @@ SAMPLING       = [4e-9,4e-9,4e-9,4e-9]
 LABELS         = ["SiPM","SiPM","PMT","SC"]
 LABELS_CALIB   = ["SiPM","SiPM","SC"]
 
-# OTHER RUNS
-# PRE-PROCESS RAW
-for run, ch in product(RUNS,CH):
-    # Start load_run 
-    my_runs = load_npy([run], [ch])
+# # OTHER RUNS
+# # PRE-PROCESS RAW
+# for run, ch in product(RUNS,CH):
+#     # Start load_run 
+#     my_runs = load_npy([run], [ch])
     
-    insert_variable(my_runs,POLARITY,"P_channel")
-    insert_variable(my_runs,SAMPLING,"Sampling")
-    insert_variable(my_runs,LABELS,"Label")
+#     insert_variable(my_runs,POLARITY,"P_channel")
+#     insert_variable(my_runs,SAMPLING,"Sampling")
+#     insert_variable(my_runs,LABELS,"Label")
     
-    compute_peak_variables(my_runs)
-    compute_pedestal_variables(my_runs)
-    print(my_runs.keys())
+#     compute_peak_variables(my_runs)
+#     compute_pedestal_variables(my_runs)
+#     print(my_runs.keys())
     
-    save_proccesed_variables(my_runs,"","../data/raw/")
+#     save_proccesed_variables(my_runs,"","../data/raw/")
 
 # SECOND PROCESS - PROCESSED WAVEFORMS
 for run, ch in product(RUNS,CH):
@@ -48,21 +48,21 @@ for run, ch in product(RUNS,CH):
     delete_keys(my_runs,["ADC"])
     save_proccesed_variables(my_runs,"Analysis_","../data/ana/")
 
-# CALIBRATION RUNS
-# PRE-PROCESS RAW
-for run, ch in product(RUNS_CALIB,CH_CALIB):
-    # Start load_run 
-    my_runs = load_npy([run], [ch])
+# # CALIBRATION RUNS
+# # PRE-PROCESS RAW
+# for run, ch in product(RUNS_CALIB,CH_CALIB):
+#     # Start load_run 
+#     my_runs = load_npy([run], [ch])
 
-    insert_variable(my_runs,POLARITY,"P_channel")
-    insert_variable(my_runs,SAMPLING,"Sampling")
-    insert_variable(my_runs,LABELS_CALIB,"Label")
+#     insert_variable(my_runs,POLARITY,"P_channel")
+#     insert_variable(my_runs,SAMPLING,"Sampling")
+#     insert_variable(my_runs,LABELS_CALIB,"Label")
     
-    compute_peak_variables(my_runs)
-    compute_pedestal_variables(my_runs)
-    print(my_runs.keys())
+#     compute_peak_variables(my_runs)
+#     compute_pedestal_variables(my_runs)
+#     print(my_runs.keys())
     
-    save_proccesed_variables(my_runs,"","../data/raw/")
+#     save_proccesed_variables(my_runs,"","../data/raw/")
 
 # SECOND PROCESS - PROCESSED WAVEFORMS
 for run, ch in product(RUNS_CALIB,CH_CALIB):
