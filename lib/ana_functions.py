@@ -4,14 +4,16 @@ import sys
 
 # from .io_functions import load_npy
 from .io_functions import check_key, print_keys
+
+import matplotlib.pyplot as plt
 from scipy import stats as st
 from itertools import product
 
 def insert_variable(my_runs,var,key,debug=False):
     """Insert values for each type of signal"""
     for run,ch in product(np.array(my_runs["N_runs"]).astype(int),np.array(my_runs["N_channels"]).astype(int)):
-        i = np.where(RUNS==run)[0][0]
-        j = np.where(CHANNELS==ch)[0][0]
+        i = np.where(np.array(my_runs["N_runs"]).astype(int)==run)[0][0]
+        j = np.where(np.array(my_runs["N_channels"]).astype(int)==ch)[0][0]
 
         try:
             my_runs[run][ch][key] = var[j]
@@ -29,7 +31,7 @@ def compute_peak_variables(my_runs,range1=0,range2=0,key="ADC",debug=False):
             print("Peak variables have been computed for run %i ch %i"%(run,ch))
         except: 
             KeyError
-            if debug: print("Empty dictionary.")
+            if debug: print("*EXCEPTION: for ",run,ch,key," peak variables could not be computed")
 
 def compute_pedestal_variables(my_runs,key="ADC",debug=False):
     """Computes the pedestal variables of a collection of a run's collection in standard format"""
@@ -45,7 +47,7 @@ def compute_pedestal_variables(my_runs,key="ADC",debug=False):
             print("Pedestal variables have been computed for run %i ch %i"%(run,ch))
         except: 
             KeyError
-            if debug: print("Empty dictionary.")
+            if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
 
 def compute_ana_wvfs(my_runs,debug=False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
@@ -56,4 +58,7 @@ def compute_ana_wvfs(my_runs,debug=False):
             if debug: print_keys(my_runs)
         except: 
             KeyError
-            if debug: print("Empty dictionary.")
+            if debug: print("*EXCEPTION: for ",run,ch,key," ana wvfs could not be computed")
+        if debug:
+            plt.plot(4e-9*np.arange(len(my_runs[run][ch]["Ana_ADC"][0])),my_runs[run][ch]["Ana_ADC"][0])
+            plt.show()

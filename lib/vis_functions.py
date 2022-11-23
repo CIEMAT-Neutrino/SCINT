@@ -8,8 +8,11 @@ import keyboard
 from .io_functions import load_npy,check_key
 from itertools import product
 
-def vis_npy(my_run,KEYS,OPT):
+def vis_npy(my_run,keys,OPT):
     
+    charge_key = "AVE_INT_LIMITS"
+    if check_key(OPT, "CHARGE_KEY"): charge_key = OPT["CHARGE_KEY"]
+
     norm_raw = 1
     norm_ave = 1
     buffer = 100
@@ -17,7 +20,7 @@ def vis_npy(my_run,KEYS,OPT):
     plt.ion()
     next_plot = False
 
-    for run, ch, key in product(my_run["N_runs"],my_run["N_channels"],KEYS):
+    for run, ch, key in product(my_run["N_runs"],my_run["N_channels"],keys):
         counter = 0
 
         for i in range(len(my_run[run][ch]["Ana_ADC"])):
@@ -40,6 +43,7 @@ def vis_npy(my_run,KEYS,OPT):
             if OPT["NORM"] == True and OPT["NORM"] == True:
                 norm_raw = np.max(RAW)
                 RAW = RAW/np.max(RAW)
+            
             plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(RAW)),RAW,label="RAW_WVF", drawstyle = "steps", alpha = 0.9)
 
             if check_key(OPT, "SHOW_AVE") == True:   
@@ -63,16 +67,20 @@ def vis_npy(my_run,KEYS,OPT):
 
             if OPT["SHOW_PARAM"] == True:
                 print("Event Number {} from RUN_{} CH_{} ({})".format(counter,run,ch,my_run[run][ch]["Label"]))
-                print("Sampling: {:.0E}".format(my_run[run][ch]["Sampling"]))
-                print("Pedestal mean: {:.2E}".format(my_run[run][ch]["Ped_mean"][counter]))
-                print("Pedestal STD: {:.4f}".format(my_run[run][ch]["Ped_STD"][counter]))
-                print("Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch]["Ped_min"][counter],my_run[run][ch]["Ped_max"][counter]))
-                print("Pedestal time limit: {:.4E}".format(4e-9*(min-buffer)))
-                print("Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["Peak_amp"][counter]))
-                print("Max Peak Time: {:.2E}".format(my_run[run][ch]["Peak_time"][counter]*my_run[run][ch]["Sampling"]))
-                print("Charge: {:.2E}\n".format(my_run[run][ch]["AVE_INT_LIMITS"][counter]))
+                print("- Sampling: {:.0E}".format(my_run[run][ch]["Sampling"]))
+                print("- Pedestal mean: {:.2E}".format(my_run[run][ch]["Ped_mean"][counter]))
+                print("- Pedestal STD: {:.4f}".format(my_run[run][ch]["Ped_STD"][counter]))
+                print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch]["Ped_min"][counter],my_run[run][ch]["Ped_max"][counter]))
+                print("- Pedestal time limit: {:.4E}".format(4e-9*(min-buffer)))
+                print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["Peak_amp"][counter]))
+                print("- Max Peak Time: {:.2E}".format(my_run[run][ch]["Peak_time"][counter]*my_run[run][ch]["Sampling"]))
+                try:
+                    print("- Charge: {:.2E}\n".format(my_run[run][ch][OPT["CHARGE_KEY"]][counter]))
+                except:
+                    if check_key(OPT,"CHARGE_KEY"): print("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"])
+                    else: print("- Charge: defualt cherge key has not been computed")
 
-            tecla = input("Press q to quit, r to go back, n to choose event or any key to continue: ")
+            tecla = input("\nPress q to quit, r to go back, n to choose event or any key to continue: ")
             if tecla == "q":
                 break
             elif tecla == "r":

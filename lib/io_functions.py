@@ -86,7 +86,10 @@ def print_keys(my_runs):
 
 def delete_keys(my_runs,KEYS):
     for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
-        del my_runs[run][ch][key]
+        try:
+            del my_runs[run][ch][key]
+        except KeyError:
+            print("*EXCEPTION: ",run,ch,key," key combination is not found in my_runs")
 
 def save_proccesed_variables(my_runs,prefix="Analysis_",out_path="../data/ana/",debug=False):
     """Does exactly what it says, no RawWvfs here"""
@@ -153,6 +156,6 @@ def copy_single_run(my_runs,RUN,CH,KEY):
             my_run[run] = dict()
             my_run[run][ch] = dict()
             my_run[run][ch][key] = my_runs[run][ch][key]
-        except:
-            print(run,ch,key," combination is not found in my_runs")
+        except KeyError:
+            print(run,ch,key," key combination is not found in my_runs")
     return my_run
