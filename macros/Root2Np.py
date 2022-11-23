@@ -18,7 +18,9 @@ CH = np.append(CH,info["CHAN_STNRD"])
 
 root2npy(RUNS.astype(int),CH.astype(int),info=info)
 
-# PRE-PROCESS RAW
+""" !!! To Do: section below coud be included inside root2npy function. !!! """ 
+
+# PRE-PROCESS RAW 
 for run, ch in product(RUNS.astype(int),CH.astype(int)):
     # Start to load_runs 
     my_runs = load_npy([run],[ch])
