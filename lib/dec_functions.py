@@ -3,11 +3,32 @@ from curve import Curve
 import matplotlib.pyplot as plt
 
 from .io_functions import check_key
+from .fit_functions import func2
 from .wvf_functions import smooth,find_baseline_cuts
 
 import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
+
+def conv_func2(wvf,T0,SIGMA,TAU1,A1,TAU2,A2):
+
+    resp = func2(wvf[0],0,T0,SIGMA,A1,TAU1,A2,TAU2)
+    
+    conv = convolve(wvf[1],resp)
+    conv = conv/np.max(conv)
+    wvf_max = np.argmax(wvf[1])
+    conv_max = np.argmax(conv)
+    return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
+
+def logconv_func2(wvf,T0,SIGMA,TAU1,A1,TAU2,A2):
+    
+    resp = logfunc2(wvf[0],0,T0,SIGMA,A1,TAU1,A2,TAU2)
+
+    conv = convolve(wvf[1],resp)
+    conv = conv/np.max(conv)
+    wvf_max = np.argmax(wvf[1])
+    conv_max = np.argmax(conv)
+    return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
 
 def gauss(X,STD,N,MEAN=0,NORM=1):
     A=1
@@ -19,13 +40,7 @@ def gauss(X,STD,N,MEAN=0,NORM=1):
     return Y
 
 def fit_gauss(X,STD,N,MEAN=0,NORM=1):
-    A=1
-    if NORM=="standard":
-        A=1/(STD*np.sqrt(2*np.pi))
-    else:
-        A=NORM
-    Y=A*np.exp(-(X-MEAN)**N/(2*STD**N))
-    return np.log10(Y)
+    return np.log10(gauss(X,STD,N,MEAN=0,NORM=1))
 
 def deconvolve(my_runs,dec_runs,out_runs,KEY=[],OPT={}):
     for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
@@ -217,3 +232,97 @@ def deconvolve(my_runs,dec_runs,out_runs,KEY=[],OPT={}):
         out_runs[run][ch][KEY[2]] = aux
         print("Generated wvfs with key %s"%KEY[2])
     # return aux,X
+
+def convolve():
+    print("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n")
+
+    for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
+        aux = dict()
+    
+        for i in range(len(my_runs[run][ch][KEY[0]])):
+            # Select required runs and parameters
+
+            RAW = my_runs[run][ch][KEY[0]][i]
+
+            TIMEBIN = my_runs[run][ch]["Sampling"]
+            if check_key(OPT,"TIMEBIN") == True: TIMEBIN = OPT["TIMEBIN"]    
+            X = TIMEBIN*np.arange(len(SIGNAL))
+
+            ########################################################################
+            #_____________________CONVOLUTION_AND_FIT_PARAMETERS___________________#
+            ########################################################################
+
+            # MUON SC CONFIG
+            t_fast   = 2e-8; t_fast_low   = 1e-8; t_fast_high   = 4e-8
+            t_slow   = 1e-6; t_slow_low   = 6e-7; t_slow_high   = 5e-6
+            amp_fast = 2e-8; amp_fast_low = 1e-8; amp_fast_high = 3e-8
+            amp_slow = 5e-8; amp_slow_low = 1e-8; amp_slow_high = 9e-8
+            sigma    = 2e-8; sigma_low    = 9e-9; sigma_high    = 3e-8
+
+            # MUON SiPM CONFIG
+            t_fast   = 2e-8; t_fast_low   = 1e-8; t_fast_high   = 4e-8
+            t_slow   = 1.2e-6; t_slow_low   = 1e-6; t_slow_high   = 5e-6
+            amp_fast = 2e-8; amp_fast_low = 1e-8; amp_fast_high = 3e-8
+            amp_slow = 2e-8; amp_slow_low = 8e-9; amp_slow_high = 9e-8
+            sigma    = 2e-8; sigma_low    = 9e-9; sigma_high    = 3e-8
+
+            fit_initials = (t_fast,t_slow,amp_fast,amp_slow,sigma)
+            fit_finals = [t_fast,t_slow,amp_fast,amp_slow,sigma]
+            limits_low = [t_fast_low,t_slow_low,amp_fast_low,amp_slow_low,sigma_low]
+            limits_high = [t_fast_high,t_slow_high,amp_fast_high,amp_slow_high,sigma_high]
+            fit_limits = (limits_low,limits_high)
+
+            popt, pcov = curve_fit(conv_func2,[laser.wvf_x[:-limit],laser.wvf[:-limit]],alpha.wvf[:-limit], p0 = fit_initials, bounds = fit_limits,method="trf")
+            perr = np.sqrt(np.diag(pcov))
+            conv = conv_func2([laser.wvf_x[:-limit],laser.wvf[:-limit]],*popt)
+            func = func2(alpha.wvf_x,*popt)
+            conv_int,f_conv,i_conv = signal_int("CONV FUNC",func2(np.arange(0,alpha.wvf_x[-1],5e-10),*popt),timebin,"SiPM","ALL",th = thrld,out = True)
+
+            labels = ["TFAST","TSLOW","AFAST","ASLOW","SIGMA"]
+            print("\n--- FIT VALUES ---")
+            for i in range(len(fit_initials)):
+                fit_finals[i] = popt[i]
+                print("%s: %.2E \u00B1 %.2E"%(labels[i],popt[i],perr[i]))
+            print("------------------\n")
+
+            print("SLOW = %.2f%%"%(100*popt[3]/(popt[3]+popt[2])))
+
+            ########################################################################
+            #________________________PLOT_FIRST_RESULT_____________________________#
+            ########################################################################
+
+            # fig1, axs = plt.subplots(2, 1, sharex=True)
+
+            fig1, axs = plt.subplots(2, 1)
+            plt.title(decon_runs)
+            fig1.subplots_adjust(hspace=0.25)
+            fig1.set_figheight(6)
+            fig1.set_figwidth(6)
+
+            # axs[0] = plt.subplot2grid(shape=(1, 1), loc=(0, 0), colspan=3)
+            # axs[1] = plt.subplot2grid(shape=(1, 1), loc=(3, 0), colspan=3)
+
+            axs[0].plot(laser.wvf_x,laser.wvf,label = label_luz)
+            axs[0].plot(alpha.wvf_x,alpha.wvf,label = label_alp)
+            axs[0].plot(laser.wvf_x[:-limit],conv,label = "Fitted Convolution")
+            axs[0].axvline(laser.wvf_x[-limit],color = "grey", ls = ":")
+            axs[0].set_ylabel("Normalized Amplitude")  
+            axs[0].axhline(0,color = "grey", ls = ":")
+            axs[0].set_ylim(1e-4,np.max(alpha.wvf)*1.5)
+            axs[0].legend()
+            if logy == True:
+                axs[0].semilogy()
+                axs[1].semilogy()
+
+            axs[1].plot(alpha.wvf_x[np.argmax(alpha.wvf)-np.argmax(func):],func[:np.argmax(func)-np.argmax(alpha.wvf)],label="Convolution Func.")
+            axs[1].axhline(0,color = "grey", ls = ":")
+            axs[1].set_ylim(1e-6,10)
+            axs[1].set_xlabel("Time in [s]"); axs[1].set_ylabel("Convolution signal") 
+
+            plt.show()
+
+            # output_file.write("%.2E \t\u00B1\t %.2E\n"%(p,perr2[0]))
+            # output_file.write("%.2E \t\u00B1\t %.2E\n"%(t0,perr1[4]))
+            output_file.write("%.2E \t\u00B1\t %.2E\n"%(fit_finals[4],perr[4]))
+            output_file.write("%.2E \t\u00B1\t %.2E\n"%(fit_finals[2],perr[2]))
+            output_file.write("%.2E \t\u00B1\t %.2E\n"%(fit_finals[0],perr[0]))
