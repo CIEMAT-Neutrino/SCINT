@@ -43,18 +43,19 @@ def vis_npy(my_run,keys,OPT):
                 RAW = my_run[run][ch][key][idx]
                 PED = np.mean(my_run[run][ch][key][idx][:min-buffer])
                 STD = np.std(my_run[run][ch][key][idx][:min-buffer])
-            
+                COL = "tab:blue"
+
             elif(key == "Ana_ADC"):
-                min = np.argmax(my_run[run][ch][key][idx])
                 RAW = my_run[run][ch][key][idx]
                 PED = 0    
                 STD = my_run[run][ch]["Ped_STD"][idx]
+                COL = "tab:green"
 
             if OPT["NORM"] == True and OPT["NORM"] == True:
                 norm_raw = np.max(RAW)
                 RAW = RAW/np.max(RAW)
             
-            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(RAW)),RAW,label="RAW_WVF", drawstyle = "steps", alpha = 0.9)
+            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(RAW)),RAW,label="RAW_WVF", drawstyle = "steps", alpha = 0.9, c=COL)
             plt.plot(my_run[run][ch]["Sampling"]*np.array([my_run[run][ch]["Ped_lim"],my_run[run][ch]["Ped_lim"]]),np.array([PED+4*STD,PED-4*STD])/norm_raw,c="red",lw=2., alpha = 0.8)
 
             if check_key(OPT, "SHOW_AVE") == True:   
@@ -63,7 +64,7 @@ def vis_npy(my_run,keys,OPT):
                     AVE = my_run[run][ch][AVE_KEY][0]
                     if OPT["NORM"] == True and OPT["NORM"] == True:
                         AVE = AVE/np.max(AVE)
-                    plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(AVE)),AVE,alpha=.5,label="AVE_WVF_%s"%AVE_KEY)             
+                    plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(AVE)),AVE,alpha=.5,label="AVE_WVF_%s"%AVE_KEY,c="tab:orange")             
                 except:
                     print("Run has not been averaged!")
                         
