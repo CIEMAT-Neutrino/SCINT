@@ -127,40 +127,25 @@ def smooth(my_run,alpha):
     my_run=unweighted_average(my_run)
     return my_run
 
-def integrate_wvfs(my_runs,TYPE,REF,FACTORS,RANGES,PATH="../data/ana/"):  
-    # AVE_RUNS = load_average_npy(my_runs["N_runs"],my_runs["N_channels"])
-    try:
+def integrate_wvfs(my_runs,types,ref,FACTORS,RANGES):  
 
-        if FACTORS[0] == "ADC": FACTORS[0] = 2/16384
-        if FACTORS[0] == "Osc": FACTORS[0] = 1
-        for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
-            AVE = my_runs[run][ch][REF]
+    try:
+        if FACTORS[0] == "DAQ": FACTORS[0] = 2/16384
+        if FACTORS[0] == "OSC": FACTORS[0] = 1
+        
+        for run,ch,typ in product(my_runs["N_runs"],my_runs["N_channels"],types):
+            AVE = my_runs[run][ch][ref]
             for i in range(len(AVE)):
                 # x = my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch]["Ana_ADC"][0]))
-                if TYPE == "AVE_INT_LIMITS":
+                if typ == "Ave_Limits":
                     i_idx,f_idx = find_baseline_cuts(AVE[i])
-                    my_runs[run][ch][TYPE] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)*FACTORS[0]/FACTORS[1]*1e12
-                if TYPE == "RANGE":
+                    my_runs[run][ch]["Charge_"+typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)*FACTORS[0]/FACTORS[1]*1e12
+                if typ == "Range":
                     i_idx = int(np.round(RANGES[0]/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(RANGES[1]/my_runs[run][ch]["Sampling"]))
-                    my_runs[run][ch][TYPE] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)*FACTORS[0]/FACTORS[1]*1e12
-            
-            print("Integrated wvfs according to %s baseline integration limits"%REF)
+                    my_runs[run][ch]["Charge_"+typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["Ana_ADC"][:,i_idx:f_idx],axis=1)*FACTORS[0]/FACTORS[1]*1e12
+            print("Integrated wvfs according to %s baseline integration limits"%ref)
+    
     except KeyError:
         print("Empty dictionary. No integration to compute.")
-        # aux = dict()
-        # for i in range(len(my_runs[runAna_ADC][ch]["ADC"])):
-        #     RAW = my_runs[run][ch]["Ana_ADC"][i]
-            
-        #     if TYPE == "BASELINE_INT_LIMITS": 
-        #         INT_I,INT_F = find_baseline_cuts(RAW)
-            
-        #     elif TYPE == "AVE_INT_LIMITS":
-        #         INT_I,INT_F = i_idx,f_idx
-        #     else: 
-        #         print("INTEGRATION TYPE IS NOT DEFINED")
-        #         sys.exit()
-            
-        #     aux[i] = np.trapz(RAW[INT_I:INT_F],x=4e-9*np.arange(len(RAW[INT_I:INT_F])))
-        
-        # my_runs[run][ch][TYPE] = aux
+
     return my_runs
