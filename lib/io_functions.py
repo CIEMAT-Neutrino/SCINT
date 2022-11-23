@@ -44,7 +44,7 @@ def root2npy (RUNS,CHANNELS,in_path="../data/raw/",out_path="../data/raw/",info=
         except:
             print("--- File %s was not foud!!! \n"%in_file)
 
-def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
+def load_npy(RUNS,CH,prefix="",in_path="../data/raw/",debug=False):
     """Structure: run_dict[RUN][CH][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
     runs = dict()
@@ -56,17 +56,16 @@ def load_npy(RUNS,CH,PREFIX = "",PATH = "../data/raw/"):
         for ch in CH:
             try:    
                 try:
-                    channels[ch] = np.load(PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
+                    channels[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
                 except:    
                     try:
                         channels[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-                            print("Selected file does not exist, loading default analysis run")
-                    
+                        if debug: print("Selected file does not exist, loading default analysis run")
                     except:
                         channels[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
-                            print("Selected file does not exist, loading raw run")
+                        if debug: print("Selected file does not exist, loading raw run")
                 runs[run]=channels
-                print("\nLoaded %sruns with keys:"%PREFIX)
+                print("\nLoaded %sruns with keys:"%prefix)
                 print(runs.keys())
                 # print_keys(runs)
 
@@ -89,22 +88,19 @@ def delete_keys(my_runs,KEYS):
     for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
         del my_runs[run][ch][key]
 
-def save_proccesed_variables(my_runs,PREFIX="Analysis_",PATH="../data/ana/"):
+def save_proccesed_variables(my_runs,prefix="Analysis_",out_path="../data/ana/",debug=False):
     """Does exactly what it says, no RawWvfs here"""
-    try:
-        
-        # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-        aux=copy.deepcopy(my_runs)
-        
+    try:  
+        aux=copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
         for run in aux["N_runs"]:
             for ch in aux["N_channels"]:
                 try:
                     for key in aux[run][ch]["Raw_file_keys"]:
                         del aux[run][ch][key]
                 except:
-                    if PREFIX == "Analysis_": print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
+                    if debug: print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
 
-                aux_path=PATH+PREFIX+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+                aux_path=out_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
                 np.save(aux_path,aux[run][ch])
                 print("Saved data in:", aux_path)
     except KeyError: 
