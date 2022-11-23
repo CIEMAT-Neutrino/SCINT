@@ -19,7 +19,6 @@ CH = np.append(CH,info["CHAN_STNRD"])
 """ To-Do: Avoid using loop in this macro. Maybe "ADC" type dict can be loaded in lazy mode """
 
 # PROCESS WAVEFORMS (Run in loop to avoid memory issues)
-
 for run, ch in product(RUNS.astype(int),CH.astype(int)):
     
     my_runs = load_npy([run],[ch])
@@ -32,4 +31,8 @@ for run, ch in product(RUNS.astype(int),CH.astype(int)):
     compute_pedestal_variables(my_runs,key="Ana_ADC",debug=True)
     
     delete_keys(my_runs,["ADC"])
+
+    average_wvfs(my_runs)
+    integrate_wvfs(my_runs,["Ave_Limits"],"AvWvf",["DAQ", 250],[0,100])
+    
     save_proccesed_variables(my_runs,"Analysis_","../data/ana/")
