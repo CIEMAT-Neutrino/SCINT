@@ -8,7 +8,7 @@ import keyboard
 from .io_functions import load_npy,check_key
 from itertools import product
 
-def vis_npy(my_run,KEYS,OPT):
+def vis_npy(my_run,keys,OPT):
     """
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal STD and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -31,7 +31,7 @@ def vis_npy(my_run,KEYS,OPT):
     next_plot = False
 
     for run, ch, key in product(my_run["N_runs"],my_run["N_channels"],keys):
-        counter = 0
+        idx = 0
 
         for i in range(len(my_run[run][ch]["Ana_ADC"])):
             plt.xlabel("Time in [s]")
@@ -39,22 +39,23 @@ def vis_npy(my_run,KEYS,OPT):
             plt.grid(True, alpha = 0.7)
             
             if (key == "ADC"):
-                min = np.argmin(my_run[run][ch][key][counter])
-                RAW = my_run[run][ch][key][counter]
-                PED = np.mean(my_run[run][ch][key][counter][:min-buffer])
-                STD = np.std(my_run[run][ch][key][counter][:min-buffer])
+                min = np.argmin(my_run[run][ch][key][idx])
+                RAW = my_run[run][ch][key][idx]
+                PED = np.mean(my_run[run][ch][key][idx][:min-buffer])
+                STD = np.std(my_run[run][ch][key][idx][:min-buffer])
             
             elif(key == "Ana_ADC"):
-                min = np.argmax(my_run[run][ch][key][counter])
-                RAW = my_run[run][ch][key][counter]
+                min = np.argmax(my_run[run][ch][key][idx])
+                RAW = my_run[run][ch][key][idx]
                 PED = 0    
-                STD = my_run[run][ch]["Ped_STD"][counter]
+                STD = my_run[run][ch]["Ped_STD"][idx]
 
             if OPT["NORM"] == True and OPT["NORM"] == True:
                 norm_raw = np.max(RAW)
                 RAW = RAW/np.max(RAW)
             
             plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(RAW)),RAW,label="RAW_WVF", drawstyle = "steps", alpha = 0.9)
+            plt.plot(my_run[run][ch]["Sampling"]*np.array([my_run[run][ch]["Ped_lim"],my_run[run][ch]["Ped_lim"]]),np.array([PED+4*STD,PED-4*STD])/norm_raw,c="red",lw=2., alpha = 0.8)
 
             if check_key(OPT, "SHOW_AVE") == True:   
                 try:
@@ -69,23 +70,22 @@ def vis_npy(my_run,KEYS,OPT):
             if OPT["LOGY"] == True:
                 plt.semilogy()
 
-            plt.plot(my_run[run][ch]["Sampling"]*np.array([min-buffer,min-buffer]),np.array([PED+5*STD,PED-5*STD])/norm_raw,c="red",lw=2., alpha = 0.8)
-            plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,counter),size = 14)
+            plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,idx),size = 14)
             plt.axhline((PED)/norm_raw,c="k",alpha=.5)
             plt.axhline((PED+STD)/norm_raw,c="k",alpha=.5,ls="--"); plt.axhline((PED-STD)/norm_raw,c="k",alpha=.5,ls="--")
             plt.legend()
 
             if OPT["SHOW_PARAM"] == True:
-                print("Event Number {} from RUN_{} CH_{} ({})".format(counter,run,ch,my_run[run][ch]["Label"]))
+                print("Event Number {} from RUN_{} CH_{} ({})".format(idx,run,ch,my_run[run][ch]["Label"]))
                 print("- Sampling: {:.0E}".format(my_run[run][ch]["Sampling"]))
-                print("- Pedestal mean: {:.2E}".format(my_run[run][ch]["Ped_mean"][counter]))
-                print("- Pedestal STD: {:.4f}".format(my_run[run][ch]["Ped_STD"][counter]))
-                print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch]["Ped_min"][counter],my_run[run][ch]["Ped_max"][counter]))
-                print("- Pedestal time limit: {:.4E}".format(4e-9*(min-buffer)))
-                print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["Peak_amp"][counter]))
-                print("- Max Peak Time: {:.2E}".format(my_run[run][ch]["Peak_time"][counter]*my_run[run][ch]["Sampling"]))
+                print("- Pedestal mean: {:.2E}".format(my_run[run][ch]["Ped_mean"][idx]))
+                print("- Pedestal STD: {:.4f}".format(my_run[run][ch]["Ped_STD"][idx]))
+                print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch]["Ped_min"][idx],my_run[run][ch]["Ped_max"][idx]))
+                print("- Pedestal time limit: {:.4E}".format(my_run[run][ch]["Sampling"]*my_run[run][ch]["Ped_lim"]))
+                print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["Peak_amp"][idx]))
+                print("- Max Peak Time: {:.2E}".format(my_run[run][ch]["Peak_time"][idx]*my_run[run][ch]["Sampling"]))
                 try:
-                    print("- Charge: {:.2E}\n".format(my_run[run][ch][OPT["CHARGE_KEY"]][counter]))
+                    print("- Charge: {:.2E}\n".format(my_run[run][ch][OPT["CHARGE_KEY"]][idx]))
                 except:
                     if check_key(OPT,"CHARGE_KEY"): print("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"])
                     else: print("- Charge: defualt cherge key has not been computed")
@@ -94,15 +94,15 @@ def vis_npy(my_run,KEYS,OPT):
             if tecla == "q":
                 break
             elif tecla == "r":
-                counter = counter-1
+                idx = idx-1
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
-                counter = ev_num
-                if counter > len(my_run[run][ch]["Ana_ADC"]): counter = len(my_run[run][ch]["Ana_ADC"])-1
+                idx = ev_num
+                if idx > len(my_run[run][ch]["Ana_ADC"]): idx = len(my_run[run][ch]["Ana_ADC"])-1
             else:
-                counter = counter + 1
+                idx = idx + 1
                 # while not plt.waitforbuttonpress(-1): pass           
-            if counter == len(my_run[run][ch]["Ana_ADC"]): break
+            if idx == len(my_run[run][ch]["Ana_ADC"]): break
             plt.clf()
         plt.clf()
     plt.ioff()
