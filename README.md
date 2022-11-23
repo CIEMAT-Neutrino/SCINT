@@ -16,18 +16,16 @@ We don't want:
 1. To start run:
 
     ./scripts/setup.sh
-
     then place all your root files in data/raw folder (check copy_data.sh for ideas)
 
 2. Run the following macros from the macros folder:
     - macros/Root2Np.py
     - macros/Process.py
     - macros/Average.py
-    - macros/Calibration.py
-    
     - macros/Vis.py
+    - macros/Calibration.py (should be upgarded to notebook allowing for interactive cuts)
+    
+3. To better visualize what is happening and perform non standard analysis, there are jupyter notebooks available in notebooks/
 
-3. To better visualize what is happening, there are jupyter notebooks available in notebooks/
-
-Rodrigo & Sergio
+Rodrigo & Sergio & Andrés & Laura
 November 2022
