@@ -1,8 +1,10 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib.io_functions import load_npy,delete_keys,save_proccesed_variables
+from lib.io_functions import read_input_file,load_npy,delete_keys,save_proccesed_variables
 from lib.wvf_functions import average_wvfs,integrate_wvfs
+
+import numpy as np
 from itertools import product
 
 input_file = input("Please select input File: ")

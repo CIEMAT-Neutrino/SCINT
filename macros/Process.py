@@ -4,6 +4,7 @@ sys.path.insert(0, '../')
 import numpy as np
 from lib.io_functions  import read_input_file,load_npy,delete_keys,save_proccesed_variables
 from lib.ana_functions import compute_pedestal_variables,compute_peak_variables,compute_ana_wvfs,insert_variable
+from lib.wvf_functions import average_wvfs,integrate_wvfs
 from itertools import product
 
 input_file = input("Please select input File: ")
