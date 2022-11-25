@@ -148,7 +148,17 @@ def smooth(my_run,alpha):
     my_run=unweighted_average(my_run)
     return my_run
 
-def integrate_wvfs(my_runs,types,ref,FACTORS,RANGES):  
+def integrate_wvfs(my_runs,types,ref,FACTORS,RANGES):
+    """
+    This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
+    VARIABLES:
+        - my_runs: run(s) we want to use
+        - types: indicates the way to make the integration. Type String.
+            a) Ave_Limits: it takes the average waveform and computes the values when the average crosses the baseline
+            b) Range: it integrates in the time window specified by yourself in the vairable "RANGES"
+        - FACTORS: it takes into account the read-out system we are using (using string) and the amplification factor (int or float). Type List.
+        - RANGES: time values for the Range integration option. It should be introduced in seconds. Type List.
+    """
 
     try:
         if FACTORS[0] == "DAQ": FACTORS[0] = 2/16384
