@@ -65,6 +65,7 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
                         aux[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
                         if debug: print("Selected file does not exist, loading raw run")
                 my_runs[run] = aux
+             
                 print("\nLoaded %sruns with keys:"%prefix)
                 print(my_runs.keys())
                 # print_keys(runs)
