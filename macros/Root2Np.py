@@ -9,19 +9,19 @@ from lib.ana_functions import compute_peak_variables,compute_pedestal_variables
 input_file = input("Please select input File: ")
 info = read_input_file(input_file)
 
-RUNS = []; CH = []
-RUNS = np.append(RUNS,info["CALIB_RUNS"])
-RUNS = np.append(RUNS,info["LIGHT_RUNS"])
-RUNS = np.append(RUNS,info["ALPHA_RUNS"])
+runs = []; channels = []
+runs = np.append(runs,info["CALIB_runs"])
+runs = np.append(runs,info["LIGHT_runs"])
+runs = np.append(runs,info["ALPHA_runs"])
 
-CH = np.append(CH,info["CHAN_STNRD"])
+channels = np.append(channels,info["CHAN_STNRD"])
 
-root2npy(RUNS.astype(int),CH.astype(int),info=info)
+root2npy(runs.astype(int),channels.astype(int),info=info)
 
 """ !!! To Do: section below coud be included inside root2npy function. !!! """ 
 
 # PRE-PROCESS RAW 
-for run, ch in product(RUNS.astype(int),CH.astype(int)):
+for run, ch in product(runs.astype(int),channels.astype(int)):
     # Start to load_runs 
     my_runs = load_npy([run],[ch])
     

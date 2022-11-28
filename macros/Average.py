@@ -10,23 +10,23 @@ from itertools import product
 input_file = input("Please select input File: ")
 info = read_input_file(input_file)
 
-RUNS = []; CH = []
-RUNS = np.append(RUNS,info["CALIB_RUNS"])
-RUNS = np.append(RUNS,info["LIGHT_RUNS"])
-RUNS = np.append(RUNS,info["ALPHA_RUNS"])
+runs = []; channels = []
+runs = np.append(runs,info["CALIB_RUNS"])
+runs = np.append(runs,info["LIGHT_RUNS"])
+runs = np.append(runs,info["ALPHA_RUNS"])
 
-CH = np.append(CH,info["CHAN_STNRD"])      
+channels = np.append(channels,info["CHAN_STNRD"])      
 
-DELETE_KEYS = ["Ana_ADC"]
+delete_keys = ["AnaADC"]
 
 """ To-Do: Simple average has already been computed in Process.py here a more refined Average should be computed: e.g. SPE for CALIB RUNS... """
 
 # PROCESS WAVEFORMS (Run in loop to avoid memory issues)
-for run, ch in product(RUNS.astype(int),CH.astype(int)):
+for run, ch in product(runs.astype(int),channels.astype(int)):
     # Start load_run 
     my_runs = load_npy([run],[ch],"Analysis_","../data/ana/")
 
-    integrate_wvfs(my_runs,["Range"],"AvWvf",["DAQ", 250],[0,100])
+    integrate_wvfs(my_runs,["Range"],"AveWvf",["DAQ", 250],[0,100])
     
-    delete_keys(my_runs,DELETE_KEYS)
+    delete_keys(my_runs,delete_keys)
     save_proccesed_variables(my_runs,"Average_","../data/ave/")
