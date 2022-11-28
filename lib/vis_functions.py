@@ -180,4 +180,5 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
         while not plt.waitforbuttonpress(-1): pass
         plt.clf()
     plt.ioff()
+    plt.clf()   
     return all_counts, all_bins, all_bars
