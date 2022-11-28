@@ -19,7 +19,7 @@ def calibrate(my_runs,KEY,OPT={}):
     plt.ion()
     next_plot = False
     idx = 0
-    for run, ch, key in product(my_runs["N_runs"],my_runs["N_channels"],KEY):
+    for run, ch, key in product(my_runs["NRun"],my_runs["NChannel"],KEY):
         try:
             idx = idx + 1
 
@@ -108,10 +108,10 @@ def calibrate(my_runs,KEY,OPT={}):
                 return print_keys(my_runs)
 
             my_runs[run][ch]["Gain"] = popt[3]-abs(popt[0])
-            my_runs[run][ch]["SPE_max_charge"] = popt[3] + abs(popt[5])
+            my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
             print("SPE gauss parameters %.2E, %.2E, %.2E"%(popt[3],popt[4],popt[5]))
             # print("SPE max charge for run %i ch %i = %.2E"%(run,ch,popt[3] + abs(popt[5])))
-            my_runs[run][ch]["SPE_min_charge"] = popt[3] - abs(popt[5])
+            my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
             # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
         except KeyError:
             return print("Empty dictionary. No calibration to show.")

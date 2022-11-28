@@ -5,17 +5,17 @@ import copy
 
 from itertools import product
 
-def check_key(OPT,KEY):
+def check_key(OPT,key):
     try:
-        OPT[KEY]
+        OPT[key]
         return True    
     except KeyError:
         return False
 
-def root2npy (RUNS,CHANNELS,in_path="../data/raw/",out_path="../data/raw/",info={}):
-    for run, ch in product (RUNS.astype(int),CHANNELS.astype(int)):
-        i = np.where(RUNS==run)[0][0]
-        j = np.where(CHANNELS==ch)[0][0]
+def root2npy (runs,channels,in_path="../data/raw/",out_path="../data/raw/",info={}):
+    for run, ch in product (runs.astype(int),channels.astype(int)):
+        i = np.where(runs==run)[0][0]
+        j = np.where(channels==ch)[0][0]
 
         in_file  = "run"+str(run).zfill(2)+"_ch"+str(ch)+".root"
         out_file = "run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
@@ -31,10 +31,10 @@ def root2npy (RUNS,CHANNELS,in_path="../data/raw/",out_path="../data/raw/",info=
                 my_dict[branch]=f["IR02"][branch].array().to_numpy()
             
             # additional useful info
-            my_dict["NBins_wvf"]=my_dict["ADC"][0].shape[0]
+            my_dict["NBinsWvf"]=my_dict["ADC"][0].shape[0]
             my_dict["Sampling"] = info["SAMPLING"][0]
             my_dict["Label"] = info["CHAN_LABEL"][j]
-            my_dict["P_channel"] = info["CHAN_POLAR"][j]
+            my_dict["PChannel"] = info["CHAN_POLAR"][j]
 
             print(my_dict.keys())
             np.save(out_path+out_file,my_dict)
@@ -44,16 +44,16 @@ def root2npy (RUNS,CHANNELS,in_path="../data/raw/",out_path="../data/raw/",info=
         except:
             print("--- File %s was not foud!!! \n"%in_file)
 
-def load_npy(RUNS,CH,prefix="",in_path="../data/raw/",debug=False):
-    """Structure: run_dict[RUN][CH][BRANCH] 
+def load_npy(runs,channels,prefix="",in_path="../data/raw/",debug=False):
+    """Structure: run_dict[runs][channels][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
     runs = dict()
-    runs["N_runs"]     = RUNS
-    runs["N_channels"] = CH
+    runs["NRun"]     = runs
+    runs["NChannel"] = channels
     
-    for run in RUNS:
+    for run in runs:
         channels=dict()
-        for ch in CH:
+        for ch in channels:
             try:    
                 try:
                     channels[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
@@ -70,13 +70,13 @@ def load_npy(RUNS,CH,prefix="",in_path="../data/raw/",debug=False):
                 # print_keys(runs)
 
             except FileNotFoundError:
-                print("\nRun", run, ", CH" ,ch," --> NOT LOADED (FileNotFound)")
+                print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
 
     return runs
 
 def print_keys(my_runs):
     try:
-        for run,ch in product(my_runs["N_runs"],my_runs["N_channels"]):
+        for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
             print("----------------------")
             print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
             print("----------------------\n")
@@ -84,8 +84,8 @@ def print_keys(my_runs):
         KeyError
         return print("Empty dictionary. No keys to print.")
 
-def delete_keys(my_runs,KEYS):
-    for run,ch,key in product(my_runs["N_runs"],my_runs["N_channels"],KEYS):
+def delete_keys(my_runs,keys):
+    for run,ch,key in product(my_runs["NRun"],my_runs["NChannel"],keys):
         try:
             del my_runs[run][ch][key]
         except KeyError:
@@ -95,10 +95,10 @@ def save_proccesed_variables(my_runs,prefix="Analysis_",out_path="../data/ana/",
     """Does exactly what it says, no RawWvfs here"""
     try:  
         aux=copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-        for run in aux["N_runs"]:
-            for ch in aux["N_channels"]:
+        for run in aux["NRun"]:
+            for ch in aux["NChannel"]:
                 try:
-                    for key in aux[run][ch]["Raw_file_keys"]:
+                    for key in aux[run][ch]["RawFileKeys"]:
                         del aux[run][ch][key]
                 except:
                     if debug: print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
@@ -145,14 +145,14 @@ def read_input_file(input,path="../input/",debug=False):
     print(info.keys())
     return info
 
-def copy_single_run(my_runs,RUN,CH,KEY):
+def copy_single_run(my_runs,runs,channels,keys):
     my_run = dict()
-    my_run["N_runs"] = []
-    my_run["N_channels"] = []
-    for run, ch, key in product(RUN.astype(int),CH.astype(int),KEY):
+    my_run["NRun"] = []
+    my_run["NChannel"] = []
+    for run, ch, key in product(runs.astype(int),channels.astype(int),keys):
         try:
-            my_run["N_runs"].append(run)
-            my_run["N_channels"].append(ch)
+            my_run["NRun"].append(run)
+            my_run["NChannel"].append(ch)
             my_run[run] = dict()
             my_run[run][ch] = dict()
             my_run[run][ch][key] = my_runs[run][ch][key]
