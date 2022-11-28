@@ -70,6 +70,7 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
                         aux[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
                         if debug: print("Selected file does not exist, loading raw run")
                 my_runs[run] = aux
+
                 print("\nLoaded %sruns with keys:"%prefix)
                 print(my_runs.keys())
                 # print_keys(runs)
@@ -97,21 +98,21 @@ def delete_keys(my_runs, keys):
 
 def save_proccesed_variables(my_runs, prefix = "Analysis_", out_path = "../data/ana/", debug = False):
     """Does exactly what it says, no RawWvfs here"""
-    try:  
-        aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-        for run in aux["NRun"]:
-            for ch in aux["NChannel"]:
-                try:
-                    for key in aux[run][ch]["RawFileKeys"]:
-                        del aux[run][ch][key]
-                except:
-                    if debug: print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
+    # try:  
+    aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
+    for run in aux["NRun"]:
+        for ch in aux["NChannel"]:
+            try:
+                for key in aux[run][ch]["RawFileKeys"]:
+                    del aux[run][ch][key]
+            except:
+                if debug: print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
 
-                aux_path=out_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-                np.save(aux_path,aux[run][ch])
-                print("Saved data in:", aux_path)
-    except KeyError: 
-        return print("Empty dictionary. Not saved.")
+            aux_path=out_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+            np.save(aux_path,aux[run][ch])
+            print("Saved data in:", aux_path)
+    # except KeyError: 
+    #     return print("Empty dictionary. Not saved.")
 
 def read_input_file(input, path = "../input/", debug = False):
     # Using readlines()
