@@ -107,8 +107,8 @@ def average_SPE_wvfs(my_runs, out_runs, key, OPT={}):
             aux_ADC = np.zeros(len(my_runs[run][ch]["AnaADC"][0]))
             counter = 0
             
-            min_charge = my_runs[run][ch]["SPEMinCharge"]
-            max_charge = my_runs[run][ch]["SPEMaxCharge"]
+            min_charge = my_runs[run][ch]["MinChargeSPE"]
+            max_charge = my_runs[run][ch]["MaxChargeSPE"]
             
             for i in range(len(my_runs[run][ch]["AnaADC"])):
 
