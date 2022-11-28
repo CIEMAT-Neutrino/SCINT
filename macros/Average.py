@@ -17,7 +17,7 @@ runs = np.append(runs,info["ALPHA_RUNS"])
 
 channels = np.append(channels,info["CHAN_STNRD"])      
 
-delete_keys = ["AnaADC"]
+del_keys = ["AnaADC"]
 
 """ To-Do: Simple average has already been computed in Process.py here a more refined Average should be computed: e.g. SPE for CALIB RUNS... """
 
@@ -27,6 +27,6 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     my_runs = load_npy([run],[ch],"Analysis_","../data/ana/")
 
     integrate_wvfs(my_runs,["Range"],"AveWvf",["DAQ", 250],[0,100])
-    
-    delete_keys(my_runs,delete_keys)
+    print(my_runs[run][ch]["AnaADC"])
+    delete_keys(my_runs,del_keys)
     save_proccesed_variables(my_runs,"Average_","../data/ave/")
