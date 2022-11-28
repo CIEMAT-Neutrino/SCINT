@@ -8,7 +8,7 @@ import keyboard
 from .io_functions import load_npy,check_key
 from itertools import product
 
-def vis_npy(my_run,keys,OPT):
+def vis_npy(my_run, keys, OPT):
     """
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -108,7 +108,7 @@ def vis_npy(my_run,keys,OPT):
     plt.ioff()
     plt.clf()
 
-def vis_var_hist(my_run,keys,percentile = [0.1, 99.9], OPT={}):
+def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
     """
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.

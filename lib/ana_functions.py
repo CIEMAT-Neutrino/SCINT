@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 from scipy import stats as st
 from itertools import product
 
-def insert_variable(my_runs,var,key,debug=False):
+def insert_variable(my_runs, var, key, debug = False):
     """Insert values for each type of signal"""
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
-        i = np.where(np.array(my_runs["NRun"]).astype(int)==run)[0][0]
-        j = np.where(np.array(my_runs["NChannel"]).astype(int)==ch)[0][0]
+        i = np.where(np.array(my_runs["NRun"]).astype(int) == run)[0][0]
+        j = np.where(np.array(my_runs["NChannel"]).astype(int) == ch)[0][0]
 
         try:
             my_runs[run][ch][key] = var[j]
@@ -21,7 +21,7 @@ def insert_variable(my_runs,var,key,debug=False):
             KeyError
             if debug: print("Inserting value...")
 
-def compute_peak_variables(my_runs,range1=0,range2=0,key="ADC",debug=False):
+def compute_peak_variables(my_runs, range1 = 0, range2 = 0, key = "ADC", debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
     # to do: implement ranges 
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
@@ -33,7 +33,7 @@ def compute_peak_variables(my_runs,range1=0,range2=0,key="ADC",debug=False):
             KeyError
             if debug: print("*EXCEPTION: for ",run,ch,key," peak variables could not be computed")
 
-def compute_pedestal_variables(my_runs,key="ADC",debug=False):
+def compute_pedestal_variables(my_runs, key = "ADC", debug = False):
     """Computes the pedestal variables of a collection of a run's collection in standard format"""
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         try:
@@ -49,7 +49,7 @@ def compute_pedestal_variables(my_runs,key="ADC",debug=False):
             KeyError
             if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
 
-def compute_ana_wvfs(my_runs,debug=False):
+def compute_ana_wvfs(my_runs, debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         try:

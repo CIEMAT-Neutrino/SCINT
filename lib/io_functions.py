@@ -5,17 +5,17 @@ import copy
 
 from itertools import product
 
-def check_key(OPT,key):
+def check_key(OPT, key):
     try:
         OPT[key]
         return True    
     except KeyError:
         return False
 
-def root2npy (runs,channels,in_path="../data/raw/",out_path="../data/raw/",info={}):
+def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", info={}):
     for run, ch in product (runs.astype(int),channels.astype(int)):
-        i = np.where(runs==run)[0][0]
-        j = np.where(channels==ch)[0][0]
+        i = np.where(runs == run)[0][0]
+        j = np.where(channels == ch)[0][0]
 
         in_file  = "run"+str(run).zfill(2)+"_ch"+str(ch)+".root"
         out_file = "run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
@@ -23,7 +23,7 @@ def root2npy (runs,channels,in_path="../data/raw/",out_path="../data/raw/",info=
         """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
         try:
             f = uproot.open(in_path+in_file)
-            my_dict={}
+            my_dict = {}
             print("----------------------")
             print("Dumping file:", in_path+in_file)
             for branch in f["IR02"].keys():
@@ -31,7 +31,7 @@ def root2npy (runs,channels,in_path="../data/raw/",out_path="../data/raw/",info=
                 my_dict[branch]=f["IR02"][branch].array().to_numpy()
             
             # additional useful info
-            my_dict["NBinsWvf"]=my_dict["ADC"][0].shape[0]
+            my_dict["NBinsWvf"] = my_dict["ADC"][0].shape[0]
             my_dict["Sampling"] = info["SAMPLING"][0]
             my_dict["Label"] = info["CHAN_LABEL"][j]
             my_dict["PChannel"] = info["CHAN_POLAR"][j]
@@ -44,7 +44,7 @@ def root2npy (runs,channels,in_path="../data/raw/",out_path="../data/raw/",info=
         except:
             print("--- File %s was not foud!!! \n"%in_file)
 
-def load_npy(runs,channels,prefix="",in_path="../data/raw/",debug=False):
+def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = False):
     """Structure: run_dict[runs][channels][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
     runs = dict()
@@ -52,7 +52,7 @@ def load_npy(runs,channels,prefix="",in_path="../data/raw/",debug=False):
     runs["NChannel"] = channels
     
     for run in runs:
-        channels=dict()
+        channels = dict()
         for ch in channels:
             try:    
                 try:
@@ -76,7 +76,7 @@ def load_npy(runs,channels,prefix="",in_path="../data/raw/",debug=False):
 
 def print_keys(my_runs):
     try:
-        for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
+        for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
             print("----------------------")
             print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
             print("----------------------\n")
@@ -84,17 +84,17 @@ def print_keys(my_runs):
         KeyError
         return print("Empty dictionary. No keys to print.")
 
-def delete_keys(my_runs,keys):
-    for run,ch,key in product(my_runs["NRun"],my_runs["NChannel"],keys):
+def delete_keys(my_runs, keys):
+    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
         try:
             del my_runs[run][ch][key]
         except KeyError:
-            print("*EXCEPTION: ",run,ch,key," key combination is not found in my_runs")
+            print("*EXCEPTION: ",run, ch, key," key combination is not found in my_runs")
 
-def save_proccesed_variables(my_runs,prefix="Analysis_",out_path="../data/ana/",debug=False):
+def save_proccesed_variables(my_runs, prefix = "Analysis_", out_path = "../data/ana/", debug = False):
     """Does exactly what it says, no RawWvfs here"""
     try:  
-        aux=copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
+        aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
         for run in aux["NRun"]:
             for ch in aux["NChannel"]:
                 try:
@@ -109,7 +109,7 @@ def save_proccesed_variables(my_runs,prefix="Analysis_",out_path="../data/ana/",
     except KeyError: 
         return print("Empty dictionary. Not saved.")
 
-def read_input_file(input,path="../input/",debug=False):
+def read_input_file(input, path = "../input/", debug = False):
     # Using readlines()
     file = open(path+input+".txt", 'r')
     lines = file.readlines()
@@ -145,7 +145,7 @@ def read_input_file(input,path="../input/",debug=False):
     print(info.keys())
     return info
 
-def copy_single_run(my_runs,runs,channels,keys):
+def copy_single_run(my_runs, runs, channels, keys):
     my_run = dict()
     my_run["NRun"] = []
     my_run["NChannel"] = []

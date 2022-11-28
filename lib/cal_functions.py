@@ -13,13 +13,13 @@ from .io_functions import check_key,print_keys,copy_single_run
 from .vis_functions import vis_var_hist
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
 
-def calibrate(my_runs,KEY,OPT={}):
+def calibrate(my_runs, key, OPT={}):
     """Computes calibration hist of a collection of runs and returns gain and SPE charge limits"""
     
     plt.ion()
     next_plot = False
     idx = 0
-    for run, ch, key in product(my_runs["NRun"],my_runs["NChannel"],KEY):
+    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], key):
         try:
             idx = idx + 1
 
@@ -27,12 +27,12 @@ def calibrate(my_runs,KEY,OPT={}):
             thresh = int(len(my_runs[run][ch][key])/1000)
             wdth = 8
             prom = 0.1
-            acc = 1000
+            acc  = 1000
 
             # counts, bins, bars = plt.hist(array,binning,(np.min(array)*0.5,np.max(array)),alpha=0.75)
-            my_run = copy_single_run(my_runs,[run],[ch],[key])
+            my_run = copy_single_run(my_runs, [run], [ch], [key])
 
-            counts, bins, bars = vis_var_hist(my_run,KEY,w=1e-4,OPT=OPT)
+            counts, bins, bars = vis_var_hist(my_run, key, w=1e-4, OPT=OPT)
             counts = counts[0];bins = bins[0];bars = bars[0]
             plt.hist(bins[:-1], bins, weights=counts)
 
@@ -41,17 +41,17 @@ def calibrate(my_runs,KEY,OPT={}):
             y = y_intrp(x)
 
             # Find indices of peaks
-            peak_idx, _ = find_peaks(np.log10(y), height=np.log10(thresh), width=wdth, prominence=prom)
+            peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
 
             # Find indices of valleys (from inverting the signal)
-            valley_idx, _ = find_peaks(-np.log10(y), height=[-np.max(np.log10(counts)),-np.log10(thresh)], width=wdth, prominence=prom)
+            valley_idx, _ = find_peaks(-np.log10(y), height = [-np.max(np.log10(counts)), - np.log10(thresh)], width = wdth, prominence = prom)
 
             # Plot threshold
             plt.axhline(thresh, ls='--')
 
             # Plot peaks (red) and valleys (blue)
-            plt.plot(x[peak_idx], y[peak_idx], 'r.',lw=4)
-            plt.plot(x[valley_idx], y[valley_idx], 'b.',lw=4)
+            plt.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
+            plt.plot(x[valley_idx], y[valley_idx], 'b.', lw=4)
 
             height,center,width = [],[],[]
             initial = []
@@ -62,7 +62,7 @@ def calibrate(my_runs,KEY,OPT={}):
             
             for i in range(n_peaks):
                 x_space = np.linspace(x[peak_idx[i]],x[peak_idx[i+1]],acc)
-                step = x_space[1]-x_space[0]
+                step    = x_space[1]-x_space[0]
                 x_gauss = x_space-int(acc/2)*step
                 x_gauss = x_gauss[x_gauss >= bins[0]]
                 y_gauss = y_intrp(x_gauss)
@@ -78,7 +78,7 @@ def calibrate(my_runs,KEY,OPT={}):
                     initial.append(popt[0])
                     initial.append(popt[2])
                     # plt.plot(x_gauss,gaussian(x_gauss,*popt),ls="--",c="black",alpha=0.5,label="Gaussian fit %i"%i)
-                    plt.plot(x_gauss,gaussian(x_gauss,*popt),ls="--",c="black",alpha=0.5)
+                    plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
                 
                 except:
                     initial.append(x[peak_idx[i]])
@@ -88,11 +88,11 @@ def calibrate(my_runs,KEY,OPT={}):
 
             try:
                 # popt, pcov = curve_fit(loggaussian_train,x[:peak_idx[-1]],np.log10(y[:peak_idx[-1]]),p0=initial)
-                popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]],y[:peak_idx[-1]],p0=initial)
+                popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]], y[:peak_idx[-1]], p0=initial)
             except:
                 popt = initial
                 print("Full fit could not be performed")
-            plt.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]],*popt),label="")
+            plt.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
 
             # plt.legend()
             if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
