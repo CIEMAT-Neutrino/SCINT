@@ -150,7 +150,7 @@ def copy_single_run(my_runs, runs, channels, keys):
     my_run = dict()
     my_run["NRun"] = []
     my_run["NChannel"] = []
-    for run, ch, key in product(runs.astype(int),channels.astype(int),keys):
+    for run, ch, key in product(runs,channels,keys):
         try:
             my_run["NRun"].append(run)
             my_run["NChannel"].append(ch)
