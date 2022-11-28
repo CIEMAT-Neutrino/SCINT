@@ -29,3 +29,5 @@ We don't want:
 
 Rodrigo & Sergio & Andrés & Laura
 November 2022
+
+![alt text](https://imgflip.com/i/72cpdl)
