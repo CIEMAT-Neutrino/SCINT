@@ -29,8 +29,8 @@ def average_wvfs(my_runs, OPT={}, threshold=50, PATH="../data/ave/"):
     """
     It calculates the average waveform of a run in three different ways:
         - AveWvf: each event is added without centering
-        - AvWvfPeak: 
-        - AvWvfThreshold: 
+        - AveWvfPeak: 
+        - AveWvfThreshold: 
     LA VERDAD NO ENTIENDO ESTA FUNCIÓN CHICO
     """
 
@@ -80,8 +80,8 @@ def average_wvfs(my_runs, OPT={}, threshold=50, PATH="../data/ave/"):
             
             if check_key(OPT,"PRINT_KEYS") == True and OPT["PRINT_KEYS"] == True: print_keys(my_runs)
             
-            my_runs[run][ch]["AvWvfPeak"]      = [av_wvf_peak]
-            my_runs[run][ch]["AvWvfThreshold"] = [av_wvf_threshold]
+            my_runs[run][ch]["AveWvfPeak"]      = [av_wvf_peak]
+            my_runs[run][ch]["AveWvfThreshold"] = [av_wvf_threshold]
             # del my_runs[run][ch]["ADC"]
 
             # np.save(aux_path,my_runs[run][ch])
