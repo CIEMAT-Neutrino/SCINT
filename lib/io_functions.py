@@ -37,7 +37,7 @@ def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", i
             my_dict["NBinsWvf"] = my_dict["ADC"][0].shape[0]
             my_dict["Sampling"] = info["SAMPLING"][0]
             my_dict["Label"] = info["CHAN_LABEL"][j]
-            my_dict["PChannel"] = info["CHAN_POLAR"][j]
+            my_dict["PChannel"] = int(info["CHAN_POLAR"][j])
 
             np.save(out_path+out_file,my_dict)
             
@@ -57,19 +57,19 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
     my_runs["NChannel"] = channels
     
     for run in runs:
-        channels = dict()
+        aux = dict()
         for ch in channels:
             try:    
                 try:
-                    channels[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
+                    aux[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
                 except:    
                     try:
-                        channels[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                        aux[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
                         if debug: print("Selected file does not exist, loading default analysis run")
                     except:
-                        channels[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                        aux[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
                         if debug: print("Selected file does not exist, loading raw run")
-                my_runs[run] = channels
+                my_runs[run] = aux
                 print("\nLoaded %sruns with keys:"%prefix)
                 print(my_runs.keys())
                 # print_keys(runs)
