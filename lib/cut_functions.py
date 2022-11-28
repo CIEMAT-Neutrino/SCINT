@@ -6,9 +6,10 @@ from .io_functions import check_key,print_keys,copy_single_run
 def generate_cut_array(my_runs):
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         for key in my_runs[run][ch].keys():
-            if key.contains("ADC"):
+            if key.find("ADC") > 0:
                 ADC_key = key
-        my_runs[run][ch]["MyCuts"] = np.ones(len(ADC_key),dtype=bool)
+                print(key)
+        my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
 
 def cut_min_max(my_runs, keys, min, max):
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
