@@ -47,9 +47,9 @@ def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", i
 def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = False):
     """Structure: run_dict[runs][channels][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-    runs = dict()
-    runs["NRun"]     = runs
-    runs["NChannel"] = channels
+    my_runs = dict()
+    my_runs["NRun"]     = runs
+    my_runs["NChannel"] = channels
     
     for run in runs:
         channels = dict()
@@ -64,14 +64,13 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
                     except:
                         channels[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
                         if debug: print("Selected file does not exist, loading raw run")
-                runs[run]=channels
+                my_runs[run] = channels
                 print("\nLoaded %sruns with keys:"%prefix)
-                print(runs.keys())
+                print(my_runs.keys())
                 # print_keys(runs)
 
             except FileNotFoundError:
                 print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
-
     return runs
 
 def print_keys(my_runs):
