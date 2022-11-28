@@ -5,7 +5,7 @@ sys.path.insert(0, '../')
 from lib.io_functions import *
 from lib.vis_functions import vis_npy, vis_var_hist
 
-runs     = [2]
+runs     = [1]
 channels = [0,1]
 
 OPT  = {
