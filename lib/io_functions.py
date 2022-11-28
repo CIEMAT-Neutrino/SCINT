@@ -12,22 +12,25 @@ def check_key(OPT, key):
     except KeyError:
         return False
 
-def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", info={}):
+def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", info={}, debug=False):
     for run, ch in product (runs.astype(int),channels.astype(int)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
         in_file  = "run"+str(run).zfill(2)+"_ch"+str(ch)+".root"
         out_file = "run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-        DEBUG=False
+        
         """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
         try:
             f = uproot.open(in_path+in_file)
             my_dict = {}
-            print("----------------------")
-            print("Dumping file:", in_path+in_file)
+            
+            if debug:
+                print("----------------------")
+                print("Dumping file:", in_path+in_file)
+            
             for branch in f["IR02"].keys():
-                if DEBUG: print("dumping brach:",branch)
+                if debug: print("dumping brach:",branch)
                 my_dict[branch]=f["IR02"][branch].array().to_numpy()
             
             # additional useful info
@@ -36,10 +39,12 @@ def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", i
             my_dict["Label"] = info["CHAN_LABEL"][j]
             my_dict["PChannel"] = int(info["CHAN_POLAR"][j])
 
-            print(my_dict.keys())
             np.save(out_path+out_file,my_dict)
-            print("Saved data in:" , out_path+out_file)
-            print("----------------------\n")
+            
+            if debug:
+                print(my_dict.keys())
+                print("Saved data in:" , out_path+out_file)
+                print("----------------------\n")
 
         except:
             print("--- File %s was not foud!!! \n"%in_file)
@@ -65,14 +70,13 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
                         aux[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
                         if debug: print("Selected file does not exist, loading raw run")
                 my_runs[run] = aux
-             
+
                 print("\nLoaded %sruns with keys:"%prefix)
                 print(my_runs.keys())
                 # print_keys(runs)
 
             except FileNotFoundError:
                 print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
-
     return my_runs
 
 def print_keys(my_runs):
