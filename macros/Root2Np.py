@@ -10,9 +10,9 @@ input_file = input("Please select input File: ")
 info = read_input_file(input_file)
 
 runs = []; channels = []
-runs = np.append(runs,info["CALIB_runs"])
-runs = np.append(runs,info["LIGHT_runs"])
-runs = np.append(runs,info["ALPHA_runs"])
+runs = np.append(runs,info["CALIB_RUNS"])
+runs = np.append(runs,info["LIGHT_RUNS"])
+runs = np.append(runs,info["ALPHA_RUNS"])
 
 channels = np.append(channels,info["CHAN_STNRD"])
 
