@@ -6,15 +6,15 @@ from lib.io_functions import load_npy
 
 run = 22
 ch  = 6
-key = "Dec_Ana_ADC"
+key = "DecADC"
 
-RUNS = load_npy([run],[ch],"Deconvolution_","../data/dec/")
+my_runs = load_npy([run],[ch],"Deconvolution_","../data/dec/")
 
-# RUNS.keys()
+# my_runs.keys()
 plt.ion()
 next_plot = False
-for i in range(len(RUNS[run][ch][key])):
-    plt.plot(RUNS[run][ch]["Sampling"]*np.arange(len(RUNS[run][ch][key][i])),RUNS[run][ch][key][i],label="#PE %.2f"%np.sum(RUNS[run][ch][key][i]))
+for i in range(len(my_runs[run][ch][key])):
+    plt.plot(my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch][key][i])),my_runs[run][ch][key][i],label="#PE %.2f"%np.sum(my_runs[run][ch][key][i]))
     plt.xlabel("Time in [s]")
     plt.ylabel("Amp in a.u.")
     plt.semilogy()

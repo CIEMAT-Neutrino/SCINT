@@ -7,14 +7,13 @@ from lib.fit_functions import fit_wvfs
 # import matplotlib.pyplot as plt
 # import numpy as np
 
-N_runs     = [25,26,27]     
-N_channels = [4]       
+runs     = [25,26,27]     
+channels = [4]       
 
-RUNS = load_npy(N_runs,N_channels,"Average_","../data/ave/")
-# RUNS = load_npy(N_runs,N_channels,"Deconvolution_","../data/dec/")
+my_runs = load_npy(runs,channels,"Average_","../data/ave/")
 
-THRLD = 1e-6
-FIT_RANGE = [80,1000] # Fit range in units of array length defined left and right from the max (peak of the wvf)
+thrld = 1e-6
+range = [80,1000] # Fit range in units of array length defined left and right from the max (peak of the wvf)
 
 OPT = {
     "SHOW":True,
@@ -22,8 +21,8 @@ OPT = {
     "NORM":True
     }
 
-KEY = ["AvWvf"]
+key = ["AveWvf"]
 
-fit_wvfs(RUNS,"SCINT",THRLD,FIT_RANGE,KEY,OPT)
+fit_wvfs(my_runs,"SCINT",thrld,range,key,OPT)
 
 save_proccesed_variables(RUNS,"Fit_","../data/fit/")

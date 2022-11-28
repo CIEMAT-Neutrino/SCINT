@@ -5,22 +5,21 @@ sys.path.insert(0, '../')
 from lib.io_functions import *
 from lib.vis_functions import vis_npy, vis_var_hist
 
-N_runs = [2]
-N_channels  = [0,1]
+runs     = [2]
+channels = [0,1]
 
 OPT  = {
-    "NORM":       False,            # Runs can be displayed normalised
-    "LOGY":       False,            # Runs can be displayed in logy
-    "SHOW_AVE":   "AvWvf",          # If computed, vis will show average
-    "SHOW_PARAM": True,             # Print terminal information
-    "CHARGE_KEY": "AVE_INT_LIMTS"   # Select charge info to be displayed. Default: "AVE_INT_LIMITS" (if computed)
+    "NORM":       False,           # Runs can be displayed normalised
+    "LOGY":       False,           # Runs can be displayed in logy
+    "SHOW_AVE":   "AveWvf",        # If computed, vis will show average
+    "SHOW_PARAM": True,            # Print terminal information
+    "CHARGE_KEY": "ChargeAveRange" # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
     }
 
-# RUN = load_npy(N_runs,N_channels) # Load default from raw
-RUN = load_npy(N_runs,N_channels,"Analysis_","../data/ana/") # Load processed wvfs
-KEYS = ["Ana_ADC"] # Choose between "ADC" or "Ana_ADC depending on wich run has been loaded"
+my_runs = load_npy(runs,channels,"Analysis_","../data/ana/") # Load processed wvfs
+keys = ["AnaADC"] # Choose between "ADC" or "AnaADC depending on wich run has been loaded"
 
-vis_npy(RUN,KEYS,OPT) # Input variables should be lists of integers
+vis_npy(my_runs,keys,OPT) # Input variables should be lists of integers
 
-# vis_var_hist(RUN,["AVE_INT_LIMITS"],1e-3)
-#"Peak_amp","Peak_time","Ped_STD", "AVE_INT_LIMITS"
+# vis_var_hist(my_runs,["ChargeAveRange"],1e-3)
+#"PeakAmp","PeakTime","PedSTD","ChargeAveRange"
