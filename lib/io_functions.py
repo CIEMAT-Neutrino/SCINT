@@ -71,7 +71,7 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
 
             except FileNotFoundError:
                 print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
-    return runs
+    return my_runs
 
 def print_keys(my_runs):
     try:
