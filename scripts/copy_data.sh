@@ -39,3 +39,4 @@ fi
 
 # Write all runs inside the scp command to avoid inserting password more than once
 scp -r pcae182:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22_2/ROOT/run{"01","02","03","09","10","11","25","26","27"}_ch* ../data/raw/.
+scp -r pcae182_outside:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22_2/ROOT/run{"01","02","03","09","10","11","25","26","27"}_ch* ../data/raw/.
