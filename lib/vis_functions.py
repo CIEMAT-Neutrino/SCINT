@@ -40,6 +40,16 @@ def vis_npy(my_run, keys, OPT):
             
             if (key == "ADC"):
                 min = np.argmin(my_run[run][ch][key][idx])
+                RAW = my_run[run][ch][key][idx]
+                PED = np.mean(my_run[run][ch][key][idx][:min-buffer])
+                STD = np.std(my_run[run][ch][key][idx][:min-buffer])
+                COL = "tab:blue"
+
+            elif(key == "Ana_ADC"):
+                RAW = my_run[run][ch][key][idx]
+                PED = 0    
+                STD = my_run[run][ch]["Ped_STD"][idx]
+                COL = "tab:green"
                 raw = my_run[run][ch][key][idx]
                 ped = np.mean(my_run[run][ch][key][idx][:min-buffer])
                 std = np.std(my_run[run][ch][key][idx][:min-buffer])
