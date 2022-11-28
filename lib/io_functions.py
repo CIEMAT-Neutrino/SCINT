@@ -12,22 +12,25 @@ def check_key(OPT, key):
     except KeyError:
         return False
 
-def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", info={}):
+def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", info={}, debug=False):
     for run, ch in product (runs.astype(int),channels.astype(int)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
         in_file  = "run"+str(run).zfill(2)+"_ch"+str(ch)+".root"
         out_file = "run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-        DEBUG=False
+        
         """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
         try:
             f = uproot.open(in_path+in_file)
             my_dict = {}
-            print("----------------------")
-            print("Dumping file:", in_path+in_file)
+            
+            if debug:
+                print("----------------------")
+                print("Dumping file:", in_path+in_file)
+            
             for branch in f["IR02"].keys():
-                if DEBUG: print("dumping brach:",branch)
+                if debug: print("dumping brach:",branch)
                 my_dict[branch]=f["IR02"][branch].array().to_numpy()
             
             # additional useful info
@@ -36,10 +39,12 @@ def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", i
             my_dict["Label"] = info["CHAN_LABEL"][j]
             my_dict["PChannel"] = info["CHAN_POLAR"][j]
 
-            print(my_dict.keys())
             np.save(out_path+out_file,my_dict)
-            print("Saved data in:" , out_path+out_file)
-            print("----------------------\n")
+            
+            if debug:
+                print(my_dict.keys())
+                print("Saved data in:" , out_path+out_file)
+                print("----------------------\n")
 
         except:
             print("--- File %s was not foud!!! \n"%in_file)
@@ -47,9 +52,9 @@ def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", i
 def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = False):
     """Structure: run_dict[runs][channels][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
-    runs = dict()
-    runs["NRun"]     = runs
-    runs["NChannel"] = channels
+    my_runs = dict()
+    my_runs["NRun"]     = runs
+    my_runs["NChannel"] = channels
     
     for run in runs:
         channels = dict()
@@ -64,9 +69,9 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
                     except:
                         channels[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
                         if debug: print("Selected file does not exist, loading raw run")
-                runs[run]=channels
+                my_runs[run] = channels
                 print("\nLoaded %sruns with keys:"%prefix)
-                print(runs.keys())
+                print(my_runs.keys())
                 # print_keys(runs)
 
             except FileNotFoundError:
