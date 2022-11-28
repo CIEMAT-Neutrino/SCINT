@@ -20,7 +20,7 @@ echo "\n------------------ Testing Process.py ------------------"
 python3 ../macros/Process.py
 echo "\n------ Expected output{Saved data in: ../data/ana/Analysis_runXX_chY.npy}. Everything OK ------"
 
-# Average.py --> process waveforms and save in /data/ana/
+# Average.py --> process waveforms and save in /data/ave/
 echo "\n------------------ Testing Average.py ------------------"
 python3 ../macros/Average.py
 echo "\n------ Expected output{Saved data in: ../data/ave/Average_runXX_chY.npy}. Everything OK ------"
