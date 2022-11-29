@@ -13,13 +13,13 @@ from .io_functions import check_key,print_keys,copy_single_run
 from .vis_functions import vis_var_hist
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
 
-def calibrate(my_runs, key, OPT={}):
+def calibrate(my_runs, keys, OPT={}):
     """Computes calibration hist of a collection of runs and returns gain and SPE charge limits"""
     
     plt.ion()
     next_plot = False
     idx = 0
-    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], key):
+    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
         try:
             idx = idx + 1
 
@@ -32,9 +32,9 @@ def calibrate(my_runs, key, OPT={}):
             # counts, bins, bars = plt.hist(array,binning,(np.min(array)*0.5,np.max(array)),alpha=0.75)
             my_run = copy_single_run(my_runs, [run], [ch], [key])
 
-            counts, bins, bars = vis_var_hist(my_run, key, w=1e-4, OPT=OPT)
-            counts = counts[0];bins = bins[0];bars = bars[0]
-            plt.hist(bins[:-1], bins, weights=counts)
+            counts, bins, bars = vis_var_hist(my_run, [key], OPT=OPT)
+            counts = counts[0]; bins = bins[0]; bars = bars[0]
+            plt.hist(bins[:-1], bins, weights = counts)
 
             x = np.linspace(bins[1],bins[-2],acc)
             y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
