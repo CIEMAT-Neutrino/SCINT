@@ -32,13 +32,9 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     max_value["ChargeAveRange"] = my_runs[run][ch]["MaxChargeSPE"]
 
     generate_cut_array(my_runs)
-    # print(my_runs[run][ch]["MyCuts"])
     cut_min_max(my_runs,["ChargeAveRange"],min_value,max_value)
-    # print(my_runs[run][ch]["MyCuts"])
 
     average_wvfs(my_runs)
 
     plt.plot(my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch]["AveWvf"][0])),my_runs[run][ch]["AveWvf"][0])
     plt.show()
-    # save_proccesed_variables(my_runs,"Analysis_","../data/ana/")
-    # save_proccesed_variables(ave_runs,"Average_","../data/ave/")
