@@ -9,8 +9,9 @@ def generate_cut_array(my_runs):
     """
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         for key in my_runs[run][ch].keys():
-            if "ADC" in key:
+            if key.find("ADC") > 0:
                 ADC_key = key
+                print(key)
         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
 
 def cut_min_max(my_runs, keys, limits):
