@@ -12,7 +12,7 @@ def check_key(OPT, key):
     except KeyError:
         return False
 
-def root2npy (runs, channels, in_path="../data/raw/", out_path="../data/raw/", info={}, debug=False):
+def root2npy(runs, channels, in_path="../data/raw/", out_path="../data/raw/", info={}, debug=False):
     for run, ch in product (runs.astype(int),channels.astype(int)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
