@@ -216,4 +216,3 @@ def vis_persistence(my_run, OPT = {}):
         plt.clf()
     plt.ioff()
     plt.clf()   
-    return all_counts, all_bins, all_bars
