@@ -24,7 +24,7 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     OPT = {
         "LOGY": True,
         "PRINT_KEYS":False
-        }
+          }
 
     calibrate(my_runs,int_key,OPT)
 

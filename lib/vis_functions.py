@@ -8,6 +8,14 @@ import keyboard
 from .io_functions import load_npy,check_key
 from itertools import product
 
+import scipy
+from scipy.signal import find_peaks
+
+from .fig_config import (
+    add_grid,
+    figure_features,
+)  # <--- import customized functions
+
 def vis_npy(my_run, keys, OPT):
     """
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
@@ -26,6 +34,7 @@ def vis_npy(my_run, keys, OPT):
     norm_raw = 1
     norm_ave = 1
     buffer = 100
+    figure_features()
 
     plt.ion()
     next_plot = False
@@ -33,26 +42,19 @@ def vis_npy(my_run, keys, OPT):
     for run, ch, key in product(my_run["NRun"],my_run["NChannel"],keys):
         idx = 0
 
-        for i in range(len(my_run[run][ch]["AnaADC"])):
-            plt.xlabel("Time in [s]")
+        for i in range(len(my_run[run][ch][key])):
+            plt.xlabel("Time [s]")
             plt.ylabel("ADC Counts")
             plt.grid(True, alpha = 0.7)
+            # add_grid(ax, locations = (5, 10, 5, 10))  # <--- Add this line to every figure
+
             
             if (key == "ADC"):
                 min = np.argmin(my_run[run][ch][key][idx])
-                RAW = my_run[run][ch][key][idx]
-                PED = np.mean(my_run[run][ch][key][idx][:min-buffer])
-                STD = np.std(my_run[run][ch][key][idx][:min-buffer])
-                COL = "tab:blue"
-
-            elif(key == "Ana_ADC"):
-                RAW = my_run[run][ch][key][idx]
-                PED = 0    
-                STD = my_run[run][ch]["Ped_STD"][idx]
-                COL = "tab:green"
                 raw = my_run[run][ch][key][idx]
                 ped = np.mean(my_run[run][ch][key][idx][:min-buffer])
                 std = np.std(my_run[run][ch][key][idx][:min-buffer])
+                COL = "tab:blue"
             
             elif(key == "AnaADC"):
                 min = np.argmax(my_run[run][ch][key][idx])
@@ -66,6 +68,18 @@ def vis_npy(my_run, keys, OPT):
             
             plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(raw)),raw,label="RAW_WVF", drawstyle = "steps", alpha = 0.9)
             plt.plot(my_run[run][ch]["Sampling"]*np.array([my_run[run][ch]["PedLim"],my_run[run][ch]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw,c="red",lw=2., alpha = 0.8)
+
+            # thresh = int(len(my_run[run][ch][key])/1000)
+            thresh = int(20)
+            wdth = 4
+            prom = 0.01
+            dist  = 40
+            # peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
+            peak_idx, _ = find_peaks(raw, height = thresh, width = wdth, prominence = prom, distance=dist)
+            for i in peak_idx:
+                # print(raw[i])
+                # print(my_run[run][ch]["Sampling"]*i)
+                plt.scatter(my_run[run][ch]["Sampling"]*i,raw[i],c="tab:red")
 
             if check_key(OPT, "SHOW_AVE") == True:   
                 try:
@@ -94,6 +108,7 @@ def vis_npy(my_run, keys, OPT):
                 print("- Pedestal time limit: {:.4E}".format(my_run[run][ch]["Sampling"]*my_run[run][ch]["PedLim"]))
                 print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["PeakAmp"][idx]))
                 print("- Max Peak Time: {:.2E}".format(my_run[run][ch]["PeakTime"][idx]*my_run[run][ch]["Sampling"]))
+                print("Peak_idx", peak_idx)
                 try:
                     print("- Charge: {:.2E}\n".format(my_run[run][ch][OPT["CHARGE_KEY"]][idx]))
                 except:
@@ -108,11 +123,11 @@ def vis_npy(my_run, keys, OPT):
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
-                if idx > len(my_run[run][ch]["AnaADC"]): idx = len(my_run[run][ch]["AnaADC"])-1
+                if idx > len(my_run[run][ch][key]): idx = len(my_run[run][ch][key])-1
             else:
                 idx = idx + 1
                 # while not plt.waitforbuttonpress(-1): pass           
-            if idx == len(my_run[run][ch]["AnaADC"]): break
+            if idx == len(my_run[run][ch][key]): break
             plt.clf()
         plt.clf()
     plt.ioff()
@@ -134,6 +149,8 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
     """
     # keys is the variable that we want to plot
     w=1e-4 # w is related to the bin width in some way
+    figure_features()
+
     plt.ion()
     all_counts = []
     all_bins = []
