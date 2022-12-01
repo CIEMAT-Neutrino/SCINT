@@ -193,7 +193,7 @@ def vis_persistence(my_run, OPT = {}):
     X_data (time) and Y_data (waveforms) are deleted after the plot to save space.
     WARNING! flattening long arrays leads to MEMORY problems :/
     """
-    # keys is the variable that we want to plot
+
     plt.ion()
     for run, ch in product(my_run["NRun"],my_run["NChannel"]):
 
