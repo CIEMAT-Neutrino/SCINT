@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from itertools import product
 from .io_functions import check_key,print_keys,copy_single_run
-from .vis_functions import vis_var_hist
+from .vis_functions import *
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
 
 def generate_cut_array(my_runs):

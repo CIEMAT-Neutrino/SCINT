@@ -7,6 +7,7 @@ import keyboard
 
 from .io_functions import load_npy,check_key
 from itertools import product
+from .cut_functions import *
 
 import scipy
 from scipy.signal import find_peaks
@@ -15,6 +16,8 @@ from .fig_config import (
     add_grid,
     figure_features,
 )  # <--- import customized functions
+from matplotlib.colors import LogNorm
+from matplotlib.cm import viridis
 
 def vis_npy(my_run, keys, OPT):
     """
@@ -26,7 +29,10 @@ def vis_npy(my_run, keys, OPT):
         - OPT: several options that can be True or False. Type: List
             a) NORM: True if we want normalized waveforms
             b) LOGY: True if we want logarithmic y-axis
-            c) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
+            c) SHOW_AVE: if computed and True, it will show average
+            d) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
+            e) CHARGE_KEY: if computed and True, it will show the parametre value
+            f) PEAK_FINDER: True if we want to check how many peaks are
     """
 
     charge_key = "ChargeAveRange"
@@ -37,6 +43,8 @@ def vis_npy(my_run, keys, OPT):
     figure_features()
 
     plt.ion()
+    fig = plt.figure()
+    ax = fig.subplots()
     next_plot = False
 
     for run, ch, key in product(my_run["NRun"],my_run["NChannel"],keys):
@@ -66,20 +74,21 @@ def vis_npy(my_run, keys, OPT):
                 norm_raw = np.max(raw)
                 raw = raw/np.max(raw)
             
+            # fig = plt.figure()
+            # ax = plt.figure().subplots()
+            # if my_run[run][ch]["MyCuts"][idx] == False: idx = idx + 1; continue # To Skip Cutted events!!
+            # if my_run[run][ch]["MyCuts"][idx] == True: idx = idx + 1; continue # To Skip Cutted events!!
             plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(raw)),raw,label="RAW_WVF", drawstyle = "steps", alpha = 0.9)
             plt.plot(my_run[run][ch]["Sampling"]*np.array([my_run[run][ch]["PedLim"],my_run[run][ch]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw,c="red",lw=2., alpha = 0.8)
-
-            # thresh = int(len(my_run[run][ch][key])/1000)
-            thresh = int(20)
-            wdth = 4
-            prom = 0.01
-            dist  = 40
-            # peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
-            peak_idx, _ = find_peaks(raw, height = thresh, width = wdth, prominence = prom, distance=dist)
-            for i in peak_idx:
-                # print(raw[i])
-                # print(my_run[run][ch]["Sampling"]*i)
-                plt.scatter(my_run[run][ch]["Sampling"]*i,raw[i],c="tab:red")
+            
+            if OPT["PEAK_FINDER"]:
+                thresh = my_run[run][ch]["PedMax"][idx]
+                wdth = 4
+                prom = 0.01
+                dist  = 40
+                peak_idx, _ = find_peaks(raw, height = thresh, width = wdth, prominence = prom, distance=dist)
+                for i in peak_idx:
+                    plt.scatter(my_run[run][ch]["Sampling"]*i,raw[i],c="tab:red")
 
             if check_key(OPT, "SHOW_AVE") == True:   
                 try:
@@ -95,12 +104,23 @@ def vis_npy(my_run, keys, OPT):
                 plt.semilogy()
 
             plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,idx),size = 14)
+            cut_opt = 1
+            try:
+                if my_run[run][ch]["MyCuts"][idx] == False:
+                    if cut_opt == 1:
+                        figure_features(tex = False)
+                        plt.text(0.5,0.5, s = 'CUT', fontsize = 100, horizontalalignment='center',verticalalignment='center',
+                                transform = ax.transAxes, color = 'red', fontweight = "bold", alpha = 0.5)
+                        figure_features()
+                    elif cut_opt != 1: pass
+            except: pass
+            # plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,idx),size = 14)
             plt.axhline((ped)/norm_raw,c="k",alpha=.5)
             plt.axhline((ped+std)/norm_raw,c="k",alpha=.5,ls="--"); plt.axhline((ped-std)/norm_raw,c="k",alpha=.5,ls="--")
             plt.legend()
 
             if OPT["SHOW_PARAM"] == True:
-                print("Event Number {} from RUN_{} CH_{} ({})".format(idx,run,ch,my_run[run][ch]["Label"]))
+                print("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch,my_run[run][ch]["Label"]))
                 print("- Sampling: {:.0E}".format(my_run[run][ch]["Sampling"]))
                 print("- Pedestal mean: {:.2E}".format(my_run[run][ch]["PedMean"][idx]))
                 print("- Pedestal std: {:.4f}".format(my_run[run][ch]["PedSTD"][idx]))
@@ -108,12 +128,16 @@ def vis_npy(my_run, keys, OPT):
                 print("- Pedestal time limit: {:.4E}".format(my_run[run][ch]["Sampling"]*my_run[run][ch]["PedLim"]))
                 print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["PeakAmp"][idx]))
                 print("- Max Peak Time: {:.2E}".format(my_run[run][ch]["PeakTime"][idx]*my_run[run][ch]["Sampling"]))
-                print("Peak_idx", peak_idx)
                 try:
-                    print("- Charge: {:.2E}\n".format(my_run[run][ch][OPT["CHARGE_KEY"]][idx]))
+                    print("- Charge: {:.2E}".format(my_run[run][ch][OPT["CHARGE_KEY"]][idx]))
                 except:
                     if check_key(OPT,"CHARGE_KEY"): print("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"])
-                    else: print("- Charge: defualt charge key has not been computed")
+                    else: print("- Charge: default charge key has not been computed")
+                # if check_key(OPT, "PEAK_FINDER") == True:
+                try:
+                    print("- Peak_idx:",peak_idx*my_run[run][ch]["Sampling"])
+                except:
+                    if not check_key(OPT,"PEAK_FINDER"): print("")
 
             tecla = input("\nPress q to quit, r to go back, n to choose event or any key to continue: ")
             if tecla == "q":
@@ -123,7 +147,7 @@ def vis_npy(my_run, keys, OPT):
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
-                if idx > len(my_run[run][ch][key]): idx = len(my_run[run][ch][key])-1
+                if idx > len(my_run[run][ch][key]): idx = len(my_run[run][ch][key])-1; print('\033[1m' + "\nBe careful! There are ", idx, "in total"); print('\033[0m')
             else:
                 idx = idx + 1
                 # while not plt.waitforbuttonpress(-1): pass           
@@ -198,3 +222,35 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
         plt.clf()
     plt.ioff()
     return all_counts, all_bins, all_bars
+
+def vis_persistence(my_run, OPT = {}):
+    """
+    This function plot the PERSISTENCE histogram of the given runs&ch.
+    It perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
+    Binning is fixed (x=5000, y=1000) [study upgrade].
+    X_data (time) and Y_data (waveforms) are deleted after the plot to save space.
+    WARNING! flattening long arrays leads to MEMORY problems :/
+    """
+
+    plt.ion()
+    for run, ch in product(my_run["NRun"],my_run["NChannel"]):
+
+        generate_cut_array(my_run)
+        cut_min_max(my_run, ["PeakTime"], {"PeakTime":[my_run[run][ch]["PedLim"]-20,my_run[run][ch]["PedLim"]+50]})
+
+        data_flatten = my_run[run][ch]["AnaADC"][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() #####
+        time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch]["AnaADC"][0]))
+        time_flatten = np.array([time] * int(len(data_flatten)/len(time))).flatten()
+
+        plt.hist2d(time_flatten,data_flatten,density=True,bins=[5000,1000], cmap = viridis, norm=LogNorm())
+
+        plt.colorbar()
+        plt.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
+        plt.title("Run_{} Ch_{} - Persistence".format(run,ch),size = 14)
+        plt.xticks(size = 11); plt.yticks(size = 11)
+        plt.xlabel("Time (s)", size = 11); plt.ylabel("Counts", size = 11)
+        del data_flatten, time, time_flatten
+        while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
+    plt.ioff()
+    plt.clf()
