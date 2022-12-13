@@ -67,7 +67,7 @@ def vis_npy(my_run, keys, OPT):
                 norm_raw = np.max(raw)
                 raw = raw/np.max(raw)
             
-            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(raw)),raw,label="RAW_WVF", drawstyle = "steps", alpha = 0.9)
+            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(raw)),raw,label="RAW_WVF",ds="steps",alpha=0.9)
             plt.plot(my_run[run][ch]["Sampling"]*np.array([my_run[run][ch]["PedLim"],my_run[run][ch]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw,c="red",lw=2., alpha = 0.8)
 
             if check_key(OPT, "SHOW_AVE") == True:   

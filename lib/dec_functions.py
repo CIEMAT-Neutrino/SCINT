@@ -44,7 +44,7 @@ def fit_gauss(x, sigma, n, mean = 0, norm = 1):
 
 def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        aux = dict()
+        aux = []
         trimm = 0
         
         clean = dec_runs[run][ch][keys[1]][0]
@@ -61,8 +61,10 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
 
             # Check if arrays have the same length
             if len(clean) < len(raw):
+                print("RAW WVF IS LONGER THAN WVF TEMPLATE")
                 raw = raw[:-(len(raw)-len(clean))]
             if len(clean) > len(raw):
+                print("RAW WVF IS SHORTER THAN WVF TEMPLATE")
                 clean = clean[:-(len(clean)-len(raw))] 
 
             # Can be used for test to trimm array
@@ -117,46 +119,51 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
            
             i_kernel, f_kernel = find_baseline_cuts(kernel)
             fft_kernel = np.fft.rfft(kernel)
-            wiener = abs(fft_kernel)**2/(abs(fft_kernel)**2+abs(fft_NOISE)**2)
-            
-            # fft_kernel = np.fft.rfft(kernel/np.sum(kernel[i_kernel:f_kernel]))
+            wiener = abs(fft_kernel)**2/(abs(fft_kernel)**2+abs(fft_noise)**2)
 
             if check_key(OPT, "NORM_DET_RESPONSE") ==  True and OPT["NORM_DET_RESPONSE"] ==  True:
                 fft_kernel = (fft_kernel/np.max(fft_kernel))
             fft_kernel_X = np.fft.rfftfreq(len(kernel), 4e-9)
             
-            # Interpolate wiener envelop for fit of gaussian filter
-            wiener_buffer = 800
-            if check_key(OPT, "WIENER_BUFFER") ==  True: wiener_buffer = OPT["WIENER_BUFFER"]
-            wiener_CURVE = Curve(fft_kernel_X[:-wiener_buffer], (-1*wiener[:-wiener_buffer])+2)
-            env = wiener_CURVE.envelope2(tc = 1e6)
-            env_wiener = scipy.interpolate.interp1d(env.x,  env.y)
-            env_wiener_Y = env_wiener(fft_signal_X[:-wiener_buffer])
-            env_wiener_min = np.argmin(-1*(env_wiener_Y-2))
+            if check_key(OPT, "FILTER") == True and OPT["FILTER"] == "WIENER":
+                fft_filter_signal = fft_signal*wiener
+                filter_signal = np.fft.irfft(fft_filter_signal)
+                label = "Wiener"                
+            
+            else:
+                # Interpolate wiener envelop for fit of gaussian filter
+                wiener_buffer = 800
+                if check_key(OPT, "WIENER_BUFFER") ==  True: wiener_buffer = OPT["WIENER_BUFFER"]
+                wiener_curve = Curve(fft_kernel_X[:-wiener_buffer], (-1*wiener[:-wiener_buffer])+2)
+                env = wiener_curve.envelope2(tc = 1e6)
+                env_wiener = scipy.interpolate.interp1d(env.x,  env.y)
+                env_wiener_Y = env_wiener(fft_signal_X[:-wiener_buffer])
+                env_wiener_min = np.argmin(-1*(env_wiener_Y-2))
 
-            # Select fit parameters and perform fit to determin cut-off
-            p0 = [50, 1.999999]
-            lim = [[10, 1], [500, 8]]
-            if check_key(OPT, "FIX_EXP") ==  True and OPT["FIX_EXP"] ==  True:
-                lim = [[10, 1.99999], [2000, 2]]
+                # Select fit parameters and perform fit to determin cut-off
+                p0 = [50, 1.999999]
+                lim = [[10, 1], [500, 8]]
+                if check_key(OPT, "FIX_EXP") ==  True and OPT["FIX_EXP"] ==  True:
+                    lim = [[10, 1.99999], [2000, 2]]
+                
+                try:
+                    params, cov = curve_fit(fit_gauss,  np.arange(len(fft_signal_X))[:env_wiener_min],  np.log10(-1*(env_wiener_Y[:env_wiener_min]-2)), p0 = p0, bounds = lim)
+                except:
+                    params = p0
+                    print("FIT COULD NOT BE PERFORMED!")
+                # print("Filter strengh %f and exp %f"%(params[0], params[1]))
+                
+                # Generate gauss filter and filtered signal
+                fft_gauss = gauss(np.arange(len(fft_signal)), *params)
+                if check_key(OPT,  "PRO_RODRIGO") ==  True and OPT["PRO_RODRIGO"] ==  True:
+                    fft_gauss[0] = 0
             
-            try:
-                params, cov = curve_fit(fit_gauss,  np.arange(len(fft_signal_X))[:env_wiener_min],  np.log10(-1*(env_wiener_Y[:env_wiener_min]-2)), p0 = p0, bounds = lim)
-            except:
-                params = p0
-                print("FIT COULD NOT BE PERFORMED!")
-            # print("Filter strengh %f and exp %f"%(params[0], params[1]))
-            
-            # Generate gauss filter and filtered signal
-            fft_gauss = gauss(np.arange(len(fft_signal)), *params)
-            if check_key(OPT,  "PRO_RODRIGO") ==  True and OPT["PRO_RODRIGO"] ==  True:
-                fft_gauss[0] = 0
-            
-            fft_gauss_signal = fft_signal*fft_gauss
-            gauss_signal = np.fft.irfft(fft_gauss_signal)
+                fft_filter_signal = fft_signal*fft_gauss
+                filter_signal = np.fft.irfft(fft_filter_signal)
+                label = "Gauss"
             
             # Generate deconvoluted function
-            fft_dec = fft_gauss_signal/np.array(fft_kernel)
+            fft_dec = fft_filter_signal/np.array(fft_kernel)
             # fft_dec = np.max(fft_signal)*fft_dec/np.max(fft_dec)
             dec = np.fft.irfft(fft_dec)
             # dec = np.fft.irfft(fft_dec)/np.abs(np.trapz(kernel, X))
@@ -169,7 +176,7 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
             #-------------------------------------------------------------------------------------------------------------------
             # Plot results: left shows process in time space; right in frequency space.
             #-------------------------------------------------------------------------------------------------------------------
-            if check_key(OPT, "SHOW") ==  True and OPT["SHOW"] ==  True:
+            if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
                 plt.ion()
                 next_plot = False
                 plt.rcParams['figure.figsize'] = [16,  8]
@@ -182,12 +189,12 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
                 
                 if check_key(OPT, "NORM") ==  True and OPT["NORM"] ==  True:
                     plt.plot(X, signal/np.max(signal), label = "SIGNAL: int = %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", drawstyle = "steps")
-                    plt.plot(X, gauss_signal/np.max(gauss_signal),  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(gauss_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
+                    plt.plot(X, filter_signal/np.max(filter_signal),  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
                     plt.plot(X, kernel/np.max(kernel),  label = "DET_RESPONSE: int = %.4E" %(np.trapz(kernel[i_resp:f_resp], X[i_resp:f_resp])), c = "tab:orange", drawstyle = "steps")
                     plt.plot(X, dec/np.max(dec), label = "DECONVOLUTION: int = %.2f PE" %(np.sum(dec[i_dec:f_dec])), c = "tab:red", drawstyle = "steps", lw = 2.)
                 else:
                     plt.plot(X, signal, label = "SIGNAL: int = %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", drawstyle = "steps")
-                    plt.plot(X, gauss_signal,  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(gauss_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
+                    plt.plot(X, filter_signal,  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
                     plt.plot(X, kernel,  label = "DET_RESPONSE: int = %.4E" %(np.trapz(kernel[i_resp:f_resp], X[i_resp:f_resp])), c = "tab:orange", drawstyle = "steps")
                     plt.plot(X, dec, label = "DECONVOLUTION: int = %.2f PE" %(np.sum(dec[i_dec:f_dec])), c = "tab:red", drawstyle = "steps", lw = 2.)
                 
@@ -210,7 +217,7 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
                 
                 plt.subplot(1, 2, 2)
                 if check_key(OPT, "SHOW_F_SIGNAL") !=  False: plt.plot(fft_signal_X, np.abs(fft_signal), label = "SIGNAL", c = "tab:blue")
-                if check_key(OPT, "SHOW_F_GSIGNAL") !=  False: plt.plot(fft_signal_X, np.abs(fft_gauss_signal), label = "GAUSS_SIGNAL", c = "blue")
+                if check_key(OPT, "SHOW_F_GSIGNAL") !=  False: plt.plot(fft_signal_X, np.abs(fft_filter_signal), label = "GAUSS_SIGNAL", c = "blue")
                 if check_key(OPT, "SHOW_F_DET_RESPONSE") !=  False: plt.plot(fft_kernel_X, np.abs(fft_kernel), label = "DET_RESPONSE", c = "tab:orange")
                 
                 if check_key(OPT, "SHOW_F_DEC") !=  False: plt.plot(fft_signal_X, np.abs(fft_dec), label = "DECONVOLUTION", c = "tab:red")
@@ -226,11 +233,11 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
 
                 while not plt.waitforbuttonpress(-1): pass
                 plt.clf()
-            aux[i] = dec
+            aux.append(np.asarray(dec))
         plt.ioff()
 
-        out_runs[run][ch][keys[2]] = aux
-        print("Generated wvfs with key %s"%keys[2])
+        out_runs[run][ch][label+keys[2]] = np.asarray(aux)
+        print("Generated wvfs with key %s"%(label+keys[2]))
     # return aux, X
 
 def convolve(my_runs, keys = [], OPT = {}):
