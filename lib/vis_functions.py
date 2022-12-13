@@ -19,7 +19,7 @@ from .fig_config import (
 from matplotlib.colors import LogNorm
 from matplotlib.cm import viridis
 
-def vis_npy(my_run, keys, OPT):
+def vis_npy(my_run, keys, OPT = {}, evt_sel = -1):
     """
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -33,6 +33,7 @@ def vis_npy(my_run, keys, OPT):
             d) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
             e) CHARGE_KEY: if computed and True, it will show the parametre value
             f) PEAK_FINDER: True if we want to check how many peaks are
+        - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
     """
 
     charge_key = "ChargeAveRange"
@@ -51,11 +52,14 @@ def vis_npy(my_run, keys, OPT):
         idx = 0
 
         for i in range(len(my_run[run][ch][key])):
+            if evt_sel == 0:
+                if my_run[run][ch]["MyCuts"][idx] == False: idx = idx + 1; continue # To Skip Cutted events!!
+            elif evt_sel == 1:
+                if my_run[run][ch]["MyCuts"][idx] == True: idx = idx + 1; continue # To Get only Cutted events!!
             plt.xlabel("Time [s]")
             plt.ylabel("ADC Counts")
             plt.grid(True, alpha = 0.7)
             # add_grid(ax, locations = (5, 10, 5, 10))  # <--- Add this line to every figure
-
             
             if (key == "ADC"):
                 min = np.argmin(my_run[run][ch][key][idx])
@@ -76,9 +80,8 @@ def vis_npy(my_run, keys, OPT):
             
             # fig = plt.figure()
             # ax = plt.figure().subplots()
-            # if my_run[run][ch]["MyCuts"][idx] == False: idx = idx + 1; continue # To Skip Cutted events!!
-            # if my_run[run][ch]["MyCuts"][idx] == True: idx = idx + 1; continue # To Skip Cutted events!!
-            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(raw)),raw,label="RAW_WVF", drawstyle = "steps", alpha = 0.9)
+            
+            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(raw)),raw,label="RAW_WVF", drawstyle = "steps", alpha = 0.95)
             plt.plot(my_run[run][ch]["Sampling"]*np.array([my_run[run][ch]["PedLim"],my_run[run][ch]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw,c="red",lw=2., alpha = 0.8)
             
             if OPT["PEAK_FINDER"]:
@@ -88,7 +91,7 @@ def vis_npy(my_run, keys, OPT):
                 dist  = 40
                 peak_idx, _ = find_peaks(raw, height = thresh, width = wdth, prominence = prom, distance=dist)
                 for i in peak_idx:
-                    plt.scatter(my_run[run][ch]["Sampling"]*i,raw[i],c="tab:red")
+                    plt.scatter(my_run[run][ch]["Sampling"]*i,raw[i],c="tab:red", alpha = 0.9)
 
             if check_key(OPT, "SHOW_AVE") == True:   
                 try:

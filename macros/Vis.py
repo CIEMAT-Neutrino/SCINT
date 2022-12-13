@@ -5,8 +5,8 @@ sys.path.insert(0, '../')
 from lib.io_functions import *
 from lib.vis_functions import *
 
-runs     = [99]
-channels = [0]
+runs     = [1]
+channels = [0,1]
 
 OPT  = {
     "NORM":       False,                # Runs can be displayed normalised
@@ -14,7 +14,7 @@ OPT  = {
     "SHOW_AVE":   "AveWvfThreshold",    # If computed, vis will show average
     "SHOW_PARAM": True,                 # Print terminal information
     "CHARGE_KEY": "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
-    "PEAK_FINDER": True                 # Finds possible peaks in the window
+    "PEAK_FINDER": False                 # Finds possible peaks in the window
     }
 
 my_runs = load_npy(runs,channels,"Analysis_","../data/ana/") # Load processed wvfs
