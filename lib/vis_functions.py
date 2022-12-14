@@ -4,6 +4,7 @@ sys.path.insert(0, '../')
 import matplotlib.pyplot as plt
 import numpy as np
 import keyboard
+import math
 
 from .io_functions import load_npy,check_key
 from itertools import product
@@ -27,120 +28,137 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1):
         - my_run: run(s) we want to check
         - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
         - OPT: several options that can be True or False. Type: List
-            a) NORM: True if we want normalized waveforms
-            b) LOGY: True if we want logarithmic y-axis
-            c) SHOW_AVE: if computed and True, it will show average
-            d) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
-            e) CHARGE_KEY: if computed and True, it will show the parametre value
-            f) PEAK_FINDER: True if we want to check how many peaks are
+            a) MICRO_SEC: if True we multiply Sampling by 1e6
+            b) NORM: True if we want normalized waveforms
+            c) LOGY: True if we want logarithmic y-axis
+            d) SHOW_AVE: if computed and True, it will show average
+            e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
+            f) CHARGE_KEY: if computed and True, it will show the parametre value
+            g) PEAK_FINDER: True if we want to check how many peaks are
         - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
     """
 
     charge_key = "ChargeAveRange"
     if check_key(OPT, "CHARGE_KEY"): charge_key = OPT["CHARGE_KEY"]
-    norm_raw = 1
     norm_ave = 1
     buffer = 100
     figure_features()
 
     plt.ion()
-    fig = plt.figure()
-    ax = fig.subplots()
-    next_plot = False
+    ch_list = my_run["NChannel"]
+    nch = len(my_run["NChannel"])
+    axs = []
+    if nch < 4:
+        fig, ax = plt.subplots(nch ,1, figsize = (10,8))
+        if nch == 1: axs.append(ax)
+        else: axs = ax
+    else:
+        fig, ax = plt.subplots(2, math.ceil(nch/2), figsize = (10,8))
+        axs = ax.T.flatten()
 
-    for run, ch, key in product(my_run["NRun"],my_run["NChannel"],keys):
+    for run, key in product(my_run["NRun"],keys):
         idx = 0
-
-        for i in range(len(my_run[run][ch][key])):
-            if evt_sel == 0:
-                if my_run[run][ch]["MyCuts"][idx] == False: idx = idx + 1; continue # To Skip Cutted events!!
-            elif evt_sel == 1:
-                if my_run[run][ch]["MyCuts"][idx] == True: idx = idx + 1; continue # To Get only Cutted events!!
-            plt.xlabel("Time [s]")
-            plt.ylabel("ADC Counts")
-            plt.grid(True, alpha = 0.7)
-            # add_grid(ax, locations = (5, 10, 5, 10))  # <--- Add this line to every figure
-            
-            if (key == "ADC"):
-                min = np.argmin(my_run[run][ch][key][idx])
-                raw = my_run[run][ch][key][idx]
-                ped = np.mean(my_run[run][ch][key][idx][:min-buffer])
-                std = np.std(my_run[run][ch][key][idx][:min-buffer])
-                COL = "tab:blue"
-            
-            elif(key == "AnaADC"):
-                min = np.argmax(my_run[run][ch][key][idx])
-                raw = my_run[run][ch][key][idx]
-                ped = 0    
-                std = my_run[run][ch]["PedSTD"][idx]
-
-            if OPT["NORM"] == True and OPT["NORM"] == True:
-                norm_raw = np.max(raw)
-                raw = raw/np.max(raw)
-            
-            # fig = plt.figure()
-            # ax = plt.figure().subplots()
-            
-            plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(raw)),raw,label="RAW_WVF", drawstyle = "steps", alpha = 0.95)
-            plt.plot(my_run[run][ch]["Sampling"]*np.array([my_run[run][ch]["PedLim"],my_run[run][ch]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw,c="red",lw=2., alpha = 0.8)
-            
-            if OPT["PEAK_FINDER"]:
-                thresh = my_run[run][ch]["PedMax"][idx]
-                wdth = 4
-                prom = 0.01
-                dist  = 40
-                peak_idx, _ = find_peaks(raw, height = thresh, width = wdth, prominence = prom, distance=dist)
-                for i in peak_idx:
-                    plt.scatter(my_run[run][ch]["Sampling"]*i,raw[i],c="tab:red", alpha = 0.9)
-
-            if check_key(OPT, "SHOW_AVE") == True:   
-                try:
-                    ave_key = OPT["SHOW_AVE"]
-                    ave = my_run[run][ch][ave_key][0]
-                    if OPT["NORM"] == True and OPT["NORM"] == True:
-                        ave = ave/np.max(ave)
-                    plt.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                except:
-                    print("Run has not been averaged!")
-                        
-            if OPT["LOGY"] == True:
-                plt.semilogy()
-
-            plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,idx),size = 14)
-            cut_opt = 1
+        for i in range(len(my_run[run][ch_list[0]][key])):
             try:
-                if my_run[run][ch]["MyCuts"][idx] == False:
-                    if cut_opt == 1:
-                        figure_features(tex = False)
-                        plt.text(0.5,0.5, s = 'CUT', fontsize = 100, horizontalalignment='center',verticalalignment='center',
-                                transform = ax.transAxes, color = 'red', fontweight = "bold", alpha = 0.5)
-                        figure_features()
-                    elif cut_opt != 1: pass
+                skip = 0
+                for ch in ch_list:
+                    if evt_sel == 0 and my_run[run][ch]["MyCuts"][idx] == False: skip = 1; break # To Skip Cutted events!!
+                    if evt_sel == 1 and my_run[run][ch]["MyCuts"][idx] == True: skip = 1; break # To Get only Cutted events!!
+                if skip == 1: idx = idx +1; continue
             except: pass
-            # plt.title("Run_{} Ch_{} - Event Number {}".format(run,ch,idx),size = 14)
-            plt.axhline((ped)/norm_raw,c="k",alpha=.5)
-            plt.axhline((ped+std)/norm_raw,c="k",alpha=.5,ls="--"); plt.axhline((ped-std)/norm_raw,c="k",alpha=.5,ls="--")
-            plt.legend()
+            
+            fig.supxlabel(r'Time [s]')
+            fig.supylabel("ADC Counts")
+            fig.tight_layout(h_pad=2) # We avoid small vertical space between plots
+            min = []
+            raw = []
+            norm_raw = [1]*nch # Generates a list with the norm correction for std bar
+            for j in range(nch):
+                if (key == "ADC"):
+                    min.append(np.argmin(my_run[run][ch_list[j]][key][idx]))
+                    raw.append(my_run[run][ch_list[j]][key][idx])
+                    ped = np.mean(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
+                    std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
+                
+                if(key == "AnaADC"):
+                    min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
+                    raw.append(my_run[run][ch_list[j]][key][idx])
+                    ped = 0
+                    std = my_run[run][ch_list[j]]["PedSTD"][idx]
 
-            if OPT["SHOW_PARAM"] == True:
-                print("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch,my_run[run][ch]["Label"]))
-                print("- Sampling: {:.0E}".format(my_run[run][ch]["Sampling"]))
-                print("- Pedestal mean: {:.2E}".format(my_run[run][ch]["PedMean"][idx]))
-                print("- Pedestal std: {:.4f}".format(my_run[run][ch]["PedSTD"][idx]))
-                print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch]["PedMin"][idx],my_run[run][ch]["PedMax"][idx]))
-                print("- Pedestal time limit: {:.4E}".format(my_run[run][ch]["Sampling"]*my_run[run][ch]["PedLim"]))
-                print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch]["PeakAmp"][idx]))
-                print("- Max Peak Time: {:.2E}".format(my_run[run][ch]["PeakTime"][idx]*my_run[run][ch]["Sampling"]))
+                if OPT["NORM"] == True and OPT["NORM"] == True:
+                    norm_raw[j] = (np.max(raw[j]))
+                    raw[j] = raw[j]/np.max(raw[j])
+
+                sampling = my_run[run][ch_list[j]]["Sampling"] # To reset the sampling to its initial value (could be improved)
+                if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
+                    fig.supxlabel(r'Time [$\mu$s]')
+                    my_run[run][ch_list[j]]["Sampling"] = my_run[run][ch_list[j]]["Sampling"]*1e6
+                
+                if OPT["LOGY"] == True:
+                    axs[j].semilogy()
+                    std = 0 # It is ugly if we see this line in log plots
+
+                axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95)
+                axs[j].grid(True, alpha = 0.7)
+                axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]]["PedLim"],my_run[run][ch_list[j]]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
+                axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
+                axs[j].set_title("Run {} - Ch {} - Event Number {}".format(run,ch_list[j],idx),size = 14)
+                axs[j].xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
+
+            
+                if check_key(OPT, "SHOW_AVE") == True:   
+                    try:
+                        ave_key = OPT["SHOW_AVE"]
+                        ave = my_run[run][ch_list[j]][ave_key][0]
+                        if OPT["NORM"] == True and OPT["NORM"] == True:
+                            ave = ave/np.max(ave)
+                        axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
+                    except:
+                        print("Run has not been averaged!")
+
+                if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
+                    axs[j].legend()
+
+                if OPT["PEAK_FINDER"]:
+                    # These parameters must be modified according to the run...
+                    thresh = my_run[run][ch_list[j]]["PedMax"][idx]
+                    wdth = 4
+                    prom = 0.01
+                    dist  = 40
+                    peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
+                    for p in peak_idx:
+                        axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
+
                 try:
-                    print("- Charge: {:.2E}".format(my_run[run][ch][OPT["CHARGE_KEY"]][idx]))
-                except:
-                    if check_key(OPT,"CHARGE_KEY"): print("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"])
-                    else: print("- Charge: default charge key has not been computed")
-                # if check_key(OPT, "PEAK_FINDER") == True:
-                try:
-                    print("- Peak_idx:",peak_idx*my_run[run][ch]["Sampling"])
-                except:
-                    if not check_key(OPT,"PEAK_FINDER"): print("")
+                    if my_run[run][ch_list[j]]["MyCuts"][idx] == False:
+                        figure_features(tex = False)
+                        axs[j].text(0.5,0.5, s = 'CUT', fontsize = 100, horizontalalignment='center',verticalalignment='center',
+                                    transform = axs[j].transAxes, color = 'red', fontweight = "bold", alpha = 0.5)
+                        figure_features()
+                except: pass
+
+                if OPT["SHOW_PARAM"] == True:
+                    print('\033[1m' + "\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]) + '\033[0m')
+                    print("- Sampling: {:.0E}".format(sampling))
+                    print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]]["PedMean"][idx]))
+                    print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]]["PedSTD"][idx]))
+                    print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch_list[j]]["PedMin"][idx],my_run[run][ch_list[j]]["PedMax"][idx]))
+                    print("- Pedestal time limit: {:.4E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]]["PedLim"]))
+                    print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch_list[j]]["PeakAmp"][idx]))
+                    print("- Max Peak Time: {:.2E}".format(my_run[run][ch_list[j]]["PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
+                    try:
+                        print("- Charge: {:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
+                    except:
+                        if check_key(OPT,"CHARGE_KEY"): print("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"])
+                        else: print("- Charge: default charge key has not been computed")
+                    try:
+                        print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
+                    except:
+                        if not check_key(OPT,"PEAK_FINDER"): print("")
+                my_run[run][ch_list[j]]["Sampling"] = sampling
+                
 
             tecla = input("\nPress q to quit, r to go back, n to choose event or any key to continue: ")
             if tecla == "q":
@@ -150,13 +168,12 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1):
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
-                if idx > len(my_run[run][ch][key]): idx = len(my_run[run][ch][key])-1; print('\033[1m' + "\nBe careful! There are ", idx, "in total"); print('\033[0m')
+                if idx > len(my_run[run][ch_list[j]][key]): idx = len(my_run[run][ch_list[j]][key])-1; print('\033[1m' + "\nBe careful! There are ", idx, "in total"); print('\033[0m')
             else:
                 idx = idx + 1
-                # while not plt.waitforbuttonpress(-1): pass           
-            if idx == len(my_run[run][ch][key]): break
-            plt.clf()
-        plt.clf()
+            if idx == len(my_run[run][ch_list[j]][key]): break
+            [axs[j].clear() for j in range (nch)]
+        [axs[j].clear() for j in range (nch)]
     plt.ioff()
     plt.clf()
 
