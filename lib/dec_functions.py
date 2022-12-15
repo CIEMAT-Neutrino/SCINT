@@ -108,9 +108,9 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
             X = timebin*np.arange(len(signal))
 
             # Define noise (should be imported in future iterations)
-            noise_amp = 1
+            noise_amp = 0.5
             if check_key(OPT,  "NOISE_AMP") ==  True: noise_amp = OPT["NOISE_AMP"]
-            noise = noise_amp*std*np.random.randn(len(signal))
+            noise = np.random.normal(0,noise_amp*np.max(kernel),size=len(signal))
             fft_noise = np.fft.rfft(noise)
             
             # Calculate fft arrays
@@ -128,7 +128,10 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
             if check_key(OPT, "FILTER") == True and OPT["FILTER"] == "WIENER":
                 fft_filter_signal = fft_signal*wiener
                 filter_signal = np.fft.irfft(fft_filter_signal)
-                label = "Wiener"                
+                label = "Wiener"    
+                
+                # Generate deconvoluted function
+                fft_dec = fft_filter_signal/np.array(fft_kernel)   
             
             else:
                 # Interpolate wiener envelop for fit of gaussian filter
@@ -162,16 +165,16 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
                 filter_signal = np.fft.irfft(fft_filter_signal)
                 label = "Gauss"
             
-            # Generate deconvoluted function
-            fft_dec = fft_filter_signal/np.array(fft_kernel)
-            # fft_dec = np.max(fft_signal)*fft_dec/np.max(fft_dec)
+                # Generate deconvoluted function
+                fft_dec = fft_filter_signal/np.array(fft_kernel)
+
             dec = np.fft.irfft(fft_dec)
             # dec = np.fft.irfft(fft_dec)/np.abs(np.trapz(kernel, X))
             if check_key(OPT, "REVERSE") ==  True and OPT["REVERSE"] ==  True: dec = dec[::-1]
             dec = np.roll(dec, np.argmax(kernel)) # Roll the function to match original position
             
-            dec_std = np.mean(dec[:np.argmax(dec)-10])
-            dec = dec-dec_std
+            # dec_std = np.mean(dec[:np.argmax(dec)-20])
+            # dec = dec-dec_std
 
             #-------------------------------------------------------------------------------------------------------------------
             # Plot results: left shows process in time space; right in frequency space.
@@ -233,7 +236,7 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
 
                 while not plt.waitforbuttonpress(-1): pass
                 plt.clf()
-            aux.append(np.asarray(dec))
+            aux.append(dec)
         plt.ioff()
 
         out_runs[run][ch][label+keys[2]] = np.asarray(aux)
