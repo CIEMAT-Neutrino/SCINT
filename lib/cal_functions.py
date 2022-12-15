@@ -93,7 +93,7 @@ def calibrate(my_runs, keys, OPT={}):
                 popt = initial
                 print("Full fit could not be performed")
             plt.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
-
+            plt.grid(True)
             # plt.legend()
             if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
                 plt.semilogy()
