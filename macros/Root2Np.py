@@ -29,5 +29,4 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     compute_peak_variables(my_runs)
     compute_pedestal_variables(my_runs)
     print(my_runs.keys())
-    
     save_proccesed_variables(my_runs,"","../data/raw/")
