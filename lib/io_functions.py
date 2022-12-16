@@ -55,7 +55,7 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
     my_runs = dict()
     my_runs["NRun"]     = runs
     my_runs["NChannel"] = channels
-    
+    # try: (aqúi había un try pero que no me cuadra la indentación, pero hará falta para el excetp de despu
     for run in runs:
         aux = dict()
         for ch in channels:
@@ -74,9 +74,8 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
                 print("\nLoaded %sruns with keys:"%prefix)
                 print(my_runs.keys())
                 # print_keys(runs)
-
-            except FileNotFoundError:
-                print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
+    except FileNotFoundError:
+        print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
     return my_runs
 
 def print_keys(my_runs):
