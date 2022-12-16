@@ -17,8 +17,9 @@ def generate_cut_array(my_runs):
     """
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         for key in my_runs[run][ch].keys():
-            if "ADC" in key:
+            if key.find("ADC") > 0:
                 ADC_key = key
+                print(key)
         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
@@ -77,7 +78,19 @@ def cut_min_max_sim(my_runs, keys, limits):
 #         ymin = ypbot - ypad; ymax = yptop + ypad
 #         data = [i for i in data if ymin<i<ymax]
 
-        
-
-
-
+def cut_std(my_runs, keys, limits):
+    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
+        data = my_runs[run][ch][key]
+        ypbot = np.percentile(data, 0.1); yptop = np.percentile(data, 0.99)
+        ypad = 0.2*(yptop - ypbot)
+        ymin = ypbot - ypad; ymax = yptop + ypad
+        data = [i for i in data if ymin<i<ymax]
+        for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
+            if check_key(my_runs[run][ch], "MyCuts") == True:
+                if check_key(my_runs[run][ch], key) == True:
+                    for i in range(len(my_runs[run][ch][key])):
+                        if limits[key][0] <= my_runs[run][ch][key][i] <= limits[key][1]:
+                            continue
+                        else: my_runs[run][ch]["MyCuts"][i] = False
+                else: print(key," does not exist in my_runs!")
+            else: print("Run generate_cut_array")

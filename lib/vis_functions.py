@@ -2,11 +2,14 @@ import sys
 sys.path.insert(0, '../')
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+from matplotlib.cm import viridis
 import numpy as np
 import keyboard
 import math
 
 from .io_functions import load_npy,check_key
+from .cut_functions import *
 from itertools import product
 from .cut_functions import *
 
@@ -274,3 +277,4 @@ def vis_persistence(my_run, OPT = {}):
         plt.clf()
     plt.ioff()
     plt.clf()
+
