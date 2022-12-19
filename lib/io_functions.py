@@ -46,7 +46,7 @@ def root2npy(runs, channels, in_path="../data/raw/", out_path="../data/raw/", in
                 print("Saved data in:" , out_path+out_file)
                 print("----------------------\n")
 
-        except:
+        except FileNotFoundError:
             print("--- File %s was not foud!!! \n"%in_file)
 
 def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = False):
@@ -84,8 +84,7 @@ def print_keys(my_runs):
             print("----------------------")
             print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
             print("----------------------\n")
-    except:
-        KeyError
+    except KeyError:
         return print("Empty dictionary. No keys to print.")
 
 def delete_keys(my_runs, keys):
