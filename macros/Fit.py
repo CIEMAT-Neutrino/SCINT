@@ -16,13 +16,13 @@ thrld = 1e-6
 range = [80,1000] # Fit range in units of array length defined left and right from the max (peak of the wvf)
 
 OPT = {
-    "SHOW":True,
-    "LOGY":True,
-    "NORM":True
-    }
+        "SHOW":True,
+        "LOGY":True,
+        "NORM":True
+      }
 
 key = ["AveWvf"]
 
 fit_wvfs(my_runs,"SCINT",thrld,range,key,OPT)
 
-save_proccesed_variables(RUNS,"Fit_","../data/fit/")
+save_proccesed_variables(my_runs,"Fit_","../data/fit/")

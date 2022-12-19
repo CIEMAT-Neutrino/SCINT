@@ -18,15 +18,15 @@ channels = [int(c) for c in input_channels.split(",")]
 #channels = [0,1,4,6]
 
 OPT  = {
-    "MICRO_SEC":   True,
-    "NORM":        False,                # Runs can be displayed normalised
-    "LOGY":        False,                # Runs can be displayed in logy
-    "SHOW_AVE":    "AveWvfThreshold",    # If computed, vis will show average
-    "SHOW_PARAM":  True,                 # Print terminal information
-    "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
-    "PEAK_FINDER": False,                 # Finds possible peaks in the window
-    "LEGEND":      False
-    }
+        "MICRO_SEC":   True,
+        "NORM":        False,                # Runs can be displayed normalised
+        "LOGY":        False,                # Runs can be displayed in logy
+        "SHOW_AVE":    "AveWvfThreshold",    # If computed, vis will show average
+        "SHOW_PARAM":  True,                 # Print terminal information
+        "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
+        "PEAK_FINDER": False,                 # Finds possible peaks in the window
+        "LEGEND":      False
+       }
 
 my_runs = load_npy(runs,channels,"Analysis_","../data/ana/") # Load processed wvfs
 # my_runs = load_npy(runs,channels,"","../data/raw/") # Load processed wvfs
