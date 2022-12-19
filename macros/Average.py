@@ -27,5 +27,5 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     my_runs = load_npy([run],[ch],"Analysis_","../data/ana/")
 
     integrate_wvfs(my_runs,["Range"],"AveWvf",["DAQ", 250],[0,100])
-    delete_key(my_runs,del_key)
+    delete_keys(my_runs,del_key)
     save_proccesed_variables(my_runs,"Average_","../data/ave/")
