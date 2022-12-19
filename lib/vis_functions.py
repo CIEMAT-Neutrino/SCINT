@@ -99,7 +99,7 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1):
                     axs[j].semilogy()
                     std = 0 # It is ugly if we see this line in log plots
 
-                axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95)
+                axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
                 axs[j].grid(True, alpha = 0.7)
                 axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]]["PedLim"],my_run[run][ch_list[j]]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                 axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
@@ -157,10 +157,9 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1):
                         print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
                     except:
                         if not check_key(OPT,"PEAK_FINDER"): print("")
-                my_run[run][ch_list[j]]["Sampling"] = sampling
-                
+                my_run[run][ch_list[j]]["Sampling"] = sampling    
 
-            tecla = input("\nPress q to quit, r to go back, n to choose event or any key to continue: ")
+            tecla = input("\nPress q to quit, p to save plot, r to go back, n to choose event or any key to continue: ")
             if tecla == "q":
                 break
             elif tecla == "r":
@@ -169,6 +168,9 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1):
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
                 if idx > len(my_run[run][ch_list[j]][key]): idx = len(my_run[run][ch_list[j]][key])-1; print('\033[1m' + "\nBe careful! There are ", idx, "in total"); print('\033[0m')
+            elif tecla == "p":
+                fig.savefig('run{}_evt{}.png'.format(run,idx), dpi = 500)
+                idx = idx+1
             else:
                 idx = idx + 1
             if idx == len(my_run[run][ch_list[j]][key]): break
