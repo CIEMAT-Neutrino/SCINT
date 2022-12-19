@@ -25,9 +25,7 @@ add_grid(ax, locations=(0.5, 1, 1, 2))  # <--- Add this line to every figure
 
 ax.plot(x, f_1, c="royalblue", label="$f_1(x) = x$")
 ax.plot(x, f_2, "o-", ms=6, markevery=8, c="coral", label="$f_2(x) = x^2$")
-ax.plot(
-    x, f_3, "s-", ms=6, markevery=8, c="mediumseagreen", label="$f_3(x) = x^3$"
-)
+ax.plot(x, f_3, "s-", ms=6, markevery=8, c="mediumseagreen", label="$f_3(x) = x^3$")
 
 ax.legend()
 
