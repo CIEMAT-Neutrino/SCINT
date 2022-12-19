@@ -74,8 +74,8 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
                 print("\nLoaded %sruns with keys:"%prefix)
                 print(my_runs.keys())
                 # print_keys(runs)
-    except FileNotFoundError:
-        print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
+            except FileNotFoundError:
+                print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
     return my_runs
 
 def print_keys(my_runs):
