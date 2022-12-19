@@ -11,7 +11,7 @@ from lib.dec_functions import deconvolve
 raw_runs = [25,26,27]
 dec_runs = [9,10,11]
 ref_runs = [1,2,3]
-ana_ch =   [6]
+ana_ch   = [6]
 
 for i in range(len(raw_run)):
     my_runs     = load_npy([raw_runs[i]],ana_ch,"Analysis_",     "../data/ana/") # Activate in case deconvolution of average wvf wants to be performed
@@ -24,28 +24,28 @@ for i in range(len(raw_run)):
     keys = ["AnaADC","AveWvf","DecADC"] # keys contains the 3 labels required for deconvolution keys[0] = raw, keys[1] = det_response and keys[2] = deconvolution 
     
     OPT = {
-        # "KEY":"AnaADC", # Select key that correcponds to imported wvf runs (e.g. "AnaADC","AveWvf","SPEAveWvf"...)
-        # "KEY":"SPEAveWvf", # Select key that correcponds to imported wvf runs (e.g. "AnaADC","AveWvf","SPEAveWvf"...)
-        # "KEY":"AveWvf", # Select key that correcponds to imported wvf runs (e.g. "AnaADC","AveWvf","SPEAveWvf"...)
-        "NOISE_AMP": 1,
-        # "NORM_DET_RESPONSE": True,
-        "FIX_EXP":True,
-        "LOGY":False,
-        "NORM":True,
-        "FOCUS":False,
-        "SHOW": True,
-        "SHOW_F_SIGNAL":True,
-        "SHOW_F_GSIGNAL":True,
-        "SHOW_F_DET_RESPONSE":True,
-        "SHOW_F_GAUSS":True,
-        "SHOW_F_WIENER":True,
-        "SHOW_F_DEC":True,
-        # "TRIMM": 0,
-        "AUTO_TRIMM":True,
-        # "WIENER_BUFFER": 800,
-        "PRO_RODRIGO": False,
-        "THRLD": 1e-4
-        }
+            # "KEY":"AnaADC", # Select key that correcponds to imported wvf runs (e.g. "AnaADC","AveWvf","SPEAveWvf"...)
+            # "KEY":"SPEAveWvf", # Select key that correcponds to imported wvf runs (e.g. "AnaADC","AveWvf","SPEAveWvf"...)
+            # "KEY":"AveWvf", # Select key that correcponds to imported wvf runs (e.g. "AnaADC","AveWvf","SPEAveWvf"...)
+            "NOISE_AMP": 1,
+            # "NORM_DET_RESPONSE": True,
+            "FIX_EXP":True,
+            "LOGY":False,
+            "NORM":True,
+            "FOCUS":False,
+            "SHOW": True,
+            "SHOW_F_SIGNAL":True,
+            "SHOW_F_GSIGNAL":True,
+            "SHOW_F_DET_RESPONSE":True,
+            "SHOW_F_GAUSS":True,
+            "SHOW_F_WIENER":True,
+            "SHOW_F_DEC":True,
+            # "TRIMM": 0,
+            "AUTO_TRIMM":True,
+            # "WIENER_BUFFER": 800,
+            "PRO_RODRIGO": False,
+            "THRLD": 1e-4
+           }
 
     dec_runs = dict()
     for run in (my_runs["NRun"]):
