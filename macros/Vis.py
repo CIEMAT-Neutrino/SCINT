@@ -7,6 +7,7 @@ from lib.vis_functions import *
 from lib.cut_functions import *
 from lib.persitence import persistence_npy
 
+
 input_runs = input("Please select RUNS (separated with commas): ")
 runs = [int(r) for r in input_runs.split(",")]
 
