@@ -25,7 +25,7 @@ def find_baseline_cuts(raw):
             break
     return i_idx,f_idx
 
-def average_wvfs(my_runs, OPT={}, threshold=50, PATH="../data/ave/"):
+def average_wvfs(my_runs, threshold=50, OPT={}):
     """
     It calculates the average waveform of a run in three different ways:
         - AveWvf: each event is added without centering
@@ -36,13 +36,23 @@ def average_wvfs(my_runs, OPT={}, threshold=50, PATH="../data/ave/"):
 
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
         try:
-            
             # No centering
+            aux_ADC = np.zeros(len(my_runs[run][ch]["AnaADC"][0]))
+            counter = 0
+            if check_key(my_runs[run][ch], "MyCuts") == True:
+                for i in range(len(my_runs[run][ch]["AnaADC"])):
+                    if my_runs[run][ch]["MyCuts"][i] == True:
+                        aux_ADC = aux_ADC + my_runs[run][ch]["AnaADC"][i]
+                        counter = counter +1
+                    else: continue
+            else:
+                for i in range(len(my_runs[run][ch]["AnaADC"])):
+                    aux_ADC = aux_ADC + my_runs[run][ch]["AnaADC"][i]
+                    counter = counter +1
+
+            my_runs[run][ch]["AveWvf"] = [aux_ADC/counter]
+            
             aux_ADC = my_runs[run][ch]["AnaADC"]
-            my_runs[run][ch]["AveWvf"] = [np.mean(aux_ADC,axis=0)]
-            
-            # aux_path=PATH+"Average_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
-            
             # centering
             bin_ref          = np.argmax(aux_ADC[0]) #using the first peak as reference
             # bin_ref         = int(len(aux_ADC[0])/15) #10% of time window
@@ -107,8 +117,8 @@ def average_SPE_wvfs(my_runs, out_runs, key, OPT={}):
             aux_ADC = np.zeros(len(my_runs[run][ch]["AnaADC"][0]))
             counter = 0
             
-            min_charge = my_runs[run][ch]["SPEMinCharge"]
-            max_charge = my_runs[run][ch]["SPEMaxCharge"]
+            min_charge = my_runs[run][ch]["MinChargeSPE"]
+            max_charge = my_runs[run][ch]["MaxChargeSPE"]
             
             for i in range(len(my_runs[run][ch]["AnaADC"])):
 

@@ -5,9 +5,16 @@ sys.path.insert(0, '../')
 from lib.io_functions import *
 from lib.vis_functions import *
 from lib.cut_functions import *
+from lib.persitence import persistence_npy
 
-runs     = [26]
-channels = [0,1,4,6]
+input_runs = input("Please select RUNS (separated with commas): ")
+runs = [int(r) for r in input_runs.split(",")]
+
+input_channels = input("Please select CHANNELS (separated with commas): ")
+channels = [int(c) for c in input_channels.split(",")]
+
+#runs     = [26] # COmo la gente normal
+#channels = [0,1,4,6]
 
 OPT  = {
     "MICRO_SEC":   True,
