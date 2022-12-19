@@ -24,7 +24,7 @@ def insert_variable(my_runs, var, key, debug = False):
 def compute_peak_variables(my_runs, range1 = 0, range2 = 0, key = "ADC", debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
     # to do: implement ranges 
-    for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+    for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             my_runs[run][ch]["PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch]["PChannel"],axis=1)
             my_runs[run][ch]["PeakTime"] = np.argmax (my_runs[run][ch][key][:,:]*my_runs[run][ch]["PChannel"],axis=1)
