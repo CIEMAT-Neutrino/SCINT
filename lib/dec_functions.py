@@ -1,8 +1,8 @@
 import numpy as np
-from curve import Curve
 import matplotlib.pyplot as plt
+from curve import Curve
 
-from .io_functions import check_key
+from .io_functions  import check_key
 from .fit_functions import func2
 from .wvf_functions import smooth, find_baseline_cuts
 

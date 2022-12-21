@@ -37,8 +37,9 @@ def compute_pedestal_variables(my_runs, key = "ADC", debug = False):
     """Computes the pedestal variables of a collection of a run's collection in standard format"""
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         try:
-            buffer = 50
+            buffer = 200
             ped_lim = st.mode(my_runs[run][ch]["PeakTime"])[0][0]-buffer
+            if ped_lim < 0: ped_lim = 50
             my_runs[run][ch]["PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch]["PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch]["PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
- #include <cstdio>
+#include <cstdio>
 
 int IntInput(string input = "config_file.txt", string key = "TEST")
 {
@@ -157,4 +157,3 @@ std::vector<double> DoubleVectorInput(string input = "config_file.txt",  string 
   for (double n:double_vector) cout << "Vector element:" << n << endl; // check vector elements
   return double_vector;
 }
-

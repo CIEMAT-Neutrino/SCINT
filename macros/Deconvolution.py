@@ -11,7 +11,9 @@ from lib.dec_functions import deconvolve
 raw_runs = [25,26,27]
 dec_runs = [9,10,11]
 ref_runs = [1,2,3]
+
 ana_ch =   [0,1,6]
+
 
 for i in range(len(raw_runs)):
     my_runs     = load_npy([raw_runs[i]],ana_ch,"Average_",      "../data/ave/") # Activate in case deconvolution of average wvf wants to be performed
