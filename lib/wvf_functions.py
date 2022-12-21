@@ -170,6 +170,7 @@ def integrate_wvfs(my_runs, types, ref, factors, ranges):
         - types: indicates the way to make the integration. Type String.
             a) ChargeAveRange: it takes the average waveform and computes the values when the average crosses the baseline
             b) ChargeRange: it integrates in the time window specified by yourself in the vairable "ranges"
+        - ref: STRING for key used as integration reference.
         - factors: it takes into account the read-out system we are using (using string) and the amplification factor (int or float). Type List.
         - ranges: time values for the Range integration option. It should be introduced in seconds. Type List.
     """

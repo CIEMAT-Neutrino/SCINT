@@ -85,8 +85,8 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
                         if debug: print("Selected file does not exist, loading raw run")
                 my_runs[run] = aux
 
-                print("\nLoaded %sruns with keys:"%prefix)
-                print(my_runs.keys())
+                print("\nLoaded %srun with keys:"%prefix,my_runs.keys())
+                print("-----------------------------------------------")
                 # print_keys(runs)
             except FileNotFoundError:
                 print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
@@ -174,8 +174,10 @@ def read_input_file(input, path = "../input/", debug = False):
                 for i in numbers.split(","):
                     info[LABEL].append(i)
                     if debug: print(info[LABEL])
+    print("\n")
     print(info.keys())
-    
+    print("\n")
+
     return info
 
 def copy_single_run(my_runs, runs, channels, keys):

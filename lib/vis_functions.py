@@ -72,7 +72,7 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
                     if evt_sel == 1 and my_run[run][ch]["MyCuts"][idx] == True: skip = 1; break # To Get only Cutted events!!
                 if skip == 1: idx = idx +1; continue
             except: pass
-            
+
             fig.supxlabel(r'Time [s]')
             fig.supylabel("ADC Counts")
             min = []
@@ -210,6 +210,7 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
                 my_run[run][ch_list[j]]["Sampling"] = sampling    
 
             tecla = input("\nPress q to quit, p to save plot, r to go back, n to choose event or any key to continue: ")
+
             if tecla == "q":
                 break
             elif tecla == "r":
