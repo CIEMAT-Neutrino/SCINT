@@ -29,7 +29,7 @@ for i in range(len(raw_runs)):
         # "NORM_DET_RESPONSE": True,
         "FIX_EXP":True,
         "LOGY":True,
-        "NORM":True,
+        "NORM":False,
         "FOCUS":False,
         "SHOW": True,
         "SHOW_F_SIGNAL":True,
@@ -42,7 +42,8 @@ for i in range(len(raw_runs)):
         "AUTO_TRIMM":False,
         # "WIENER_BUFFER": 800,
         "PRO_RODRIGO": False,
-        "THRLD": 1e-4
+        "THRLD": 1e-4,
+        "CONVERT_ADC": True
         }
 
     dec_run = dict()
