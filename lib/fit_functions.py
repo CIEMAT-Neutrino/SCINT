@@ -69,7 +69,7 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     buffer2 = fit_range[1]
 
     OPT["CUT_NEGATIVE"] = True
-    popt1, perr1 = peak_fit(raw, raw_x, buffer1, OPT)
+    popt1, perr1 = peak_fit(raw, raw_x, buffer1, thrld=thrld, OPT=OPT)
 
     p  = np.mean(raw[:max-buffer1])
     a1 = 2e-5; a1_low = 1e-8;  a1_high = 9e-2                    
@@ -116,8 +116,8 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
         if check_key(OPT, "LOGY") != False: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
         plt.legend()
 
-    while not plt.waitforbuttonpress(-1): pass
-    plt.clf()
+        while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
     aux = func3(raw_x, *param)
     plt.ioff()
     return aux,param
@@ -242,7 +242,7 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     # print("\n")
     return aux,popt
 
-def peak_fit(fit_raw, raw_x, buffer, thrld, OPT):
+def peak_fit(fit_raw, raw_x, buffer, thrld, OPT={}):
     """ DOC """
 
     max = np.argmax(fit_raw)
