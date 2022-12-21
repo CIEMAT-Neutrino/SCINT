@@ -22,8 +22,8 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     int_key = ["ChargeAveRange"]
 
     OPT = {
-        "LOGY": True,
-        "PRINT_KEYS":False
+          "LOGY": True,
+          "PRINT_KEYS":False
           }
 
     calibrate(my_runs,int_key,OPT)
