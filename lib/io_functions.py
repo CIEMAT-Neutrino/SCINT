@@ -7,7 +7,7 @@ from itertools import product
 
 def check_key(OPT, key):
     """ 
-    Checks if the given key is introduced in the dictionary OPT.
+    Checks if the given key is included in the dictionary OPT.
     \n Returns a bool. (True if it finds the key)
     """
 
