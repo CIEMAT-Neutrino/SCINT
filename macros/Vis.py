@@ -12,8 +12,8 @@ from lib.cut_functions import *
 # input_channels = input("Please select CHANNELS (separated with commas): ")
 # channels = [int(c) for c in input_channels.split(",")]
 
-runs     = [26] # COmo la gente normal
-channels = [0,1]
+runs     = [2] # COmo la gente normal
+channels = [0]
 
 OPT  = {
     "MICRO_SEC":   True,
@@ -33,9 +33,14 @@ keys = ["AnaADC"] # Choose between "ADC" or "AnaADC depending on wich run has be
 
 generate_cut_array(my_runs)
 # cut_min_max(my_runs, ["PeakAmp"], {"PeakAmp": [600,10600]})
-vis_npy(my_runs,keys,OPT,-1) # Input variables should be lists of integers
+# vis_npy(my_runs,keys,OPT,-1) # Input variables should be lists of integers
 
 # vis_var_hist(my_runs,["PeakAmp"],[0.1,99.9])
+vis_two_var_hist(my_runs,["PeakAmp", "ChargeAveRange"], [0.1,99.9], True)
 #"PeakAmp","PeakTime","PedSTD","ChargeAveRange"
 
 # vis_persistence(my_runs)
+
+
+### Aux for Cuts!
+# cut_lin_rel(my_runs, ["PeakAmp", "ChargeAveRange"], [0,500], [-10,20])
