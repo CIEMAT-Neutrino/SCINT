@@ -6,6 +6,11 @@ import copy
 from itertools import product
 
 def check_key(OPT, key):
+    """ 
+    Checks if the given key is introduced in the dictionary OPT.
+    \n Returns a bool. (True if it finds the key)
+    """
+
     try:
         OPT[key]
         return True    
@@ -13,6 +18,13 @@ def check_key(OPT, key):
         return False
 
 def root2npy(runs, channels, in_path="../data/raw/", out_path="../data/raw/", info={}, debug=False):
+    """
+    Dumper from .root format to npy tuples. 
+    Input are root input file path and npy outputfile as strings. 
+    \n Depends on uproot, awkward and numpy. 
+    \n Size increases x2 times. 
+    """
+
     for run, ch in product (runs.astype(int),channels.astype(int)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
@@ -20,7 +32,6 @@ def root2npy(runs, channels, in_path="../data/raw/", out_path="../data/raw/", in
         in_file  = "run"+str(run).zfill(2)+"_ch"+str(ch)+".root"
         out_file = "run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
         
-        """Dumper from .root format to npy tuples. Input are root input file path and npy outputfile as strings. \n Depends on uproot, awkward and numpy. \n Size increases x2 times. """
         try:
             f = uproot.open(in_path+in_file)
             my_dict = {}
@@ -46,12 +57,15 @@ def root2npy(runs, channels, in_path="../data/raw/", out_path="../data/raw/", in
                 print("Saved data in:" , out_path+out_file)
                 print("----------------------\n")
 
-        except:
+        except FileNotFoundError:
             print("--- File %s was not foud!!! \n"%in_file)
 
 def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = False):
-    """Structure: run_dict[runs][channels][BRANCH] 
-    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels"""
+    """
+    Structure: run_dict[runs][channels][BRANCH] 
+    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
+    """
+
     my_runs = dict()
     my_runs["NRun"]     = runs
     my_runs["NChannel"] = channels
@@ -79,16 +93,23 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
     return my_runs
 
 def print_keys(my_runs):
+    """
+    Prints the keys of the run_dict which can be accesed with run_dict[runs][channels][BRANCH] 
+    """
+
     try:
         for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
             print("----------------------")
             print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
             print("----------------------\n")
-    except:
-        KeyError
+    except KeyError:
         return print("Empty dictionary. No keys to print.")
 
 def delete_keys(my_runs, keys):
+    """
+    Delete the keys list introduced as 2nd variable
+    """
+
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
         try:
             del my_runs[run][ch][key]
@@ -96,7 +117,10 @@ def delete_keys(my_runs, keys):
             print("*EXCEPTION: ",run, ch, key," key combination is not found in my_runs")
 
 def save_proccesed_variables(my_runs, prefix = "Analysis_", out_path = "../data/ana/", debug = False):
-    """Does exactly what it says, no RawWvfs here"""
+    """
+    Does exactly what it says, no RawWvfs here
+    """
+
     # try:  
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
     for run in aux["NRun"]:
@@ -114,6 +138,10 @@ def save_proccesed_variables(my_runs, prefix = "Analysis_", out_path = "../data/
     #     return print("Empty dictionary. Not saved.")
 
 def read_input_file(input, path = "../input/", debug = False):
+    """
+    Obtain the information stored in a .txt input file to load the runs and channels needed.
+    """
+
     # Using readlines()
     file = open(path+input+".txt", 'r')
     lines = file.readlines()
@@ -147,6 +175,7 @@ def read_input_file(input, path = "../input/", debug = False):
                     info[LABEL].append(i)
                     if debug: print(info[LABEL])
     print(info.keys())
+    
     return info
 
 def copy_single_run(my_runs, runs, channels, keys):

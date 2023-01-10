@@ -11,6 +11,7 @@ def find_baseline_cuts(raw):
     VARIABLE:
         - raw: the .root that you want to analize.
     """
+
     max   = np.argmax(raw)
     i_idx = 0
     f_idx = 0
@@ -31,7 +32,7 @@ def average_wvfs(my_runs, threshold=50, OPT={}):
         - AveWvf: each event is added without centering
         - AveWvfPeak: 
         - AveWvfThreshold: 
-    LA VERDAD NO ENTIENDO ESTA FUNCIÓN CHICO
+    LA VERDAD NO ENTIENDO ESTA FUNCIÓN CHICO (Ask Rodrigo)
     """
 
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
