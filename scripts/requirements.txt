@@ -6,3 +6,4 @@ pynput
 awkward
 keyboard
 pyqt5
+shapely
