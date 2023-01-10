@@ -41,6 +41,5 @@ vis_two_var_hist(my_runs,["PeakAmp", "ChargeAveRange"], [0.1,99.9], True)
 
 # vis_persistence(my_runs)
 
-
 ### Aux for Cuts!
 # cut_lin_rel(my_runs, ["PeakAmp", "ChargeAveRange"], [0,500], [-10,20])

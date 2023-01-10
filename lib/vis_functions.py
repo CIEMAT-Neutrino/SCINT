@@ -10,8 +10,8 @@ import math
 
 from .io_functions import load_npy,check_key
 from .cut_functions import *
-from itertools import product
 from .cut_functions import *
+from itertools import product
 
 import scipy
 from scipy.signal import find_peaks
@@ -20,8 +20,6 @@ from .fig_config import (
     add_grid,
     figure_features,
 )  # <--- import customized functions
-from matplotlib.colors import LogNorm
-from matplotlib.cm import viridis
 
 def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
     """
@@ -247,6 +245,7 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
         - percentile: percentile used for outliers removal
     WARNING! Maybe the binning stuff should be studied in more detail.
     """
+    
     # keys is the variable that we want to plot
     w=1e-4 # w is related to the bin width in some way
     figure_features()
