@@ -23,7 +23,7 @@ def figure_features(tex=True, font="serif", dpi=300):
             "savefig.dpi": dpi,
             "savefig.format": "png",
             "axes.titlesize": 16,
-            "axes.labelsize": 18,
+            "axes.labelsize": 16,
             "axes.axisbelow": True,
             "xtick.direction": "in",
             "ytick.direction": "in",
