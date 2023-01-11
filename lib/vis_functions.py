@@ -249,7 +249,7 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
     # keys is the variable that we want to plot
     w=1e-4 # w is related to the bin width in some way
     figure_features()
-
+    # matplotlib.rc('figure', figsize=(9, 6))
     plt.ion()
     all_counts = []
     all_bins = []
@@ -297,28 +297,39 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
     return all_counts, all_bins, all_bars
 
 def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = False, OPT = {}):
+    """
+    This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
+    It plots values below and above the indicated percetiles, but values are not removed from data.
+    VARIABLES:
+        - my_run: run(s) we want to check
+        - keys: variables we want to plot as histograms. Type: List
+        - percentile: percentile used for outliers removal
+        - select_range: if we still have many outliers we can select the ranges in x and y axis.
+    """
     figure_features()
     plt.ion()
     for run, ch in product(my_run["NRun"],my_run["NChannel"]):
         x_data = my_run[run][ch][keys[0]]; y_data = my_run[run][ch][keys[1]]
+        # Calculate range with percentiles for x-axis
         x_ypbot = np.percentile(x_data, percentile[0]); x_yptop = np.percentile(x_data, percentile[1])
         x_ypad = 0.2*(x_yptop - x_ypbot)
         x_ymin = x_ypbot - x_ypad; x_ymax = x_yptop + x_ypad
-        # x_data = [i for i in x_data if x_ymin < i < x_ymax]
-
+        # Calculate range with percentiles for y-axis
         y_ypbot = np.percentile(y_data, percentile[0]); y_yptop = np.percentile(y_data, percentile[1])
         y_ypad = 0.2*(y_yptop - y_ypbot)
         y_ymin = y_ypbot - y_ypad; y_ymax = y_yptop + y_ypad
-        # y_data = [i for i in y_data if y_ymin < i < y_ymax]
 
         plt.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+        plt.grid("both")
+        plt.xlabel(keys[0]); plt.ylabel(keys[1])
         if select_range:
             x1 = int(input("xmin: ")); x2 = int(input("xmax: "))
             y1 = int(input("ymin: ")); y2 = int(input("ymax: "))
             plt.clf()
             plt.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
+            plt.grid("both")
+            plt.xlabel(keys[0]); plt.ylabel(keys[1])
         while not plt.waitforbuttonpress(-1): pass
-
     plt.ioff()
     plt.clf()
 
