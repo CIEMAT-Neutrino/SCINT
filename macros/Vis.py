@@ -36,7 +36,7 @@ generate_cut_array(my_runs)
 # vis_npy(my_runs,keys,OPT,-1) # Input variables should be lists of integers
 
 # vis_var_hist(my_runs,["PeakAmp"],[0.1,99.9])
-vis_two_var_hist(my_runs,["PeakAmp", "ChargeAveRange"], [0.1,99.9], True)
+vis_two_var_hist(my_runs,["PeakTime", "PeakAmp"], [0.1,99.9])
 #"PeakAmp","PeakTime","PedSTD","ChargeAveRange"
 
 # vis_persistence(my_runs)
