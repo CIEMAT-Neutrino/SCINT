@@ -63,3 +63,20 @@ def compute_ana_wvfs(my_runs, debug = False):
         if debug:
             plt.plot(4e-9*np.arange(len(my_runs[run][ch]["AnaADC"][0])),my_runs[run][ch]["AnaADC"][0])
             plt.show()
+
+def get_units(my_runs, debug = False):
+    for run, ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+        keys = my_runs[run][ch].keys()
+        aux_dic = {}
+        for key in keys:
+            if "Amp" in key or "Ped" in key or "ADC" in key:
+                aux_dic[key] = "ADC"
+            elif "Time" in key or "Sampling" in key:
+                aux_dic[key] = "s"
+            elif "Charge" in key:
+                aux_dic[key] = "pC"
+            else:
+                aux_dic[key] = "a.u."
+        my_runs[run][ch]["Units"] = aux_dic
+    
+
