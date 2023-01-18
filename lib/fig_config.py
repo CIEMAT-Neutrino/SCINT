@@ -15,7 +15,7 @@ def figure_features(tex=True, font="serif", dpi=300):
             "font.family": font,
             "font.weight": "bold",
             "text.usetex": tex,
-            "figure.subplot.top": 0.95,
+            "figure.subplot.top": 0.92,
             "figure.subplot.right": 0.95,
             "figure.subplot.left": 0.10,
             "figure.subplot.bottom": 0.12,
@@ -35,12 +35,13 @@ def figure_features(tex=True, font="serif", dpi=300):
             "ytick.minor.pad": 7.5,
             "ytick.major.size": 5,
             "ytick.minor.size": 2.25,
-            "xtick.labelsize": 16,
-            "ytick.labelsize": 16,
+            "xtick.labelsize": 15,
+            "ytick.labelsize": 15,
             "legend.fontsize": 12,
             "legend.framealpha": 1,
             "figure.titlesize": 18,
             "lines.linewidth": 2,
+            "figure.constrained_layout.use": True
         }
     )
 

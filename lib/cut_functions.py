@@ -10,8 +10,9 @@ import matplotlib.pyplot as plt
 
 from itertools import product
 from .io_functions import check_key,print_keys,copy_single_run
-from .vis_functions import *
+from .vis_functions import vis_two_var_hist
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
+from .fig_config import*
 
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
@@ -107,23 +108,20 @@ def cut_lin_rel(my_runs, keys):
     VARIABLES:
         - keys: a LIST of variables you want to plot and cut
     """
+    plt.ion() # If we want to use the terminal we must turn on this line
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == True:
                 for j in range(len(keys)):
                     if check_key(my_runs[run][ch], keys[j]) == True:
                         continue
-                    else: print("IAAA"); break
+                    else: print("IAAA ERROR"); break
                 figure_features()
-                
-                matplotlib.rc('figure', figsize=(9, 6))
-                plt.scatter(my_runs[run][ch][keys[0]], my_runs[run] [ch][keys[1]], s = 15)
-                plt.grid("both")
-                plt.xlabel(keys[0]); plt.ylabel(keys[1])
-                coords = plt.ginput(100)
+                fig, ax = vis_two_var_hist(my_runs,run,ch,[keys[0],keys[1]], [0.1,99.9], OPT = {"Show": False})
+                coords = fig.ginput(100)
                 polygon = Polygon(coords)
                 n_points = len(coords)
                 print(n_points)
-                print("Nº evt totales", len(my_runs[run][ch]["MyCuts"]))
+                print("Nº total events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
                 x_coords = []; y_coords = []; 
                 for k in range(n_points): x_coords.append(coords[k][0])
                 for k in range(n_points): y_coords.append(coords[k][1])
@@ -133,20 +131,24 @@ def cut_lin_rel(my_runs, keys):
                         delta_y = y_coords[0] - y_coords[i]; delta_x = x_coords[0] - x_coords[i]
                         m_values.append(delta_y / delta_x)
                         n_values.append(y_coords[i] - m_values[i] * x_coords[i])
-                        x_aux = np.linspace(x_coords[i], x_coords[0], 1000); y_aux = x_aux*m_values[i] + n_values[i]
-                        plt.plot(x_aux, y_aux, "k--", alpha = 0.6)
+                        x_aux = np.linspace(x_coords[i], x_coords[0], 500); y_aux = x_aux*m_values[i] + n_values[i]
+                        ax.plot(x_aux, y_aux, "k--", alpha = 0.6)
                     else:
                         delta_y = y_coords[i+1] - y_coords[i]; delta_x = x_coords[i+1] - x_coords[i]
                         m_values.append(delta_y / delta_x)
                         n_values.append(y_coords[i] - m_values[i] * x_coords[i])
-                        x_aux = np.linspace(x_coords[i], x_coords[i+1], 1000); y_aux = x_aux*m_values[i] + n_values[i]
-                        plt.plot(x_aux, y_aux, "k--", alpha = 0.6)
+                        x_aux = np.linspace(x_coords[i], x_coords[i+1], 500); y_aux = x_aux*m_values[i] + n_values[i]
+                        ax.plot(x_aux, y_aux, "k--", alpha = 0.6)
                 for i in range(len(my_runs[run][ch][keys[0]])):
                     point = Point(my_runs[run][ch][keys[0]][i], my_runs[run][ch][keys[1]][i])
                     if  polygon.contains(point): my_runs[run][ch]["MyCuts"][i] = True
                     else: my_runs[run][ch]["MyCuts"][i] = False
 
-                plt.scatter(my_runs[run][ch][keys[0]][my_runs[run][ch]["MyCuts"] == False],my_runs[run][ch][keys[1]][my_runs[run][ch]["MyCuts"] == False], c = "red", s = 15)
-                print("Nº cortados ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
-                plt.show()
+                ax.scatter(my_runs[run][ch][keys[0]][my_runs[run][ch]["MyCuts"] == False],my_runs[run][ch][keys[1]][my_runs[run][ch]["MyCuts"] == False], c = "red", s = 2)
+                print("Nº events after cuts: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
         else: print("Run generate_cut_array")
+        while not fig.waitforbuttonpress(-1): pass
+        plt.clf()
+        plt.ioff()
+    plt.ioff() # If we want to use the terminal we must turn on this line
+    plt.clf()
