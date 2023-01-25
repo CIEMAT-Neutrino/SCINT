@@ -14,23 +14,23 @@
 
 ## CYTHON TO DO LIST (NEW)
 - [ ] Memoria
-- [x] NOMBRES variables/funciones
+- [x] ~~NOMBRES variables/funciones~~
     - FUNCIONES Y ARGUMENTOS → PYTHON NOTATION
       my_runs: low_case + “_” binding
     - KEYS → C++ notation
     - SPECIAL DICTIONARIES
         - OPT: visualization Options + CHECK KEY
         - CUT: cortes
-- [x] Documentar funciones
-- [x] Cortes
-- [x] Visualizador
-- [x] Check merge main (dictadura)  → script rutina para check nada roto
-- [x] Lectura datos + binario → meter antiguas macros 
+- [x] ~~Documentar funciones~~
+- [x] ~~Cortes~~
+- [x] ~~Visualizador~~
+- [x] ~~Check merge main (dictadura)  → script rutina para check nada roto~~
+- [x] ~~Lectura datos + binario → meter antiguas macros~~
 - [ ] Lectura datos ¿nueva forma sin pasar por .root?
 - [ ] Estructura fija. Separar cositas
 - [ ] Colores comunes
-- [x] Load cargue la siguiente run si encuentra alguna que no existe
-- [x] txt de entrada con las runes para no modificar las runes
+- [x] ~~Load cargue la siguiente run si encuentra alguna que no existe~~
+- [x] ~~txt de entrada con las runes para no modificar las runes~~
 - [ ] Chequear si las variables se sobreescriben bien
 - [ ] librerías (Sergio?)
 - [ ] mejorar (Sergio?)
