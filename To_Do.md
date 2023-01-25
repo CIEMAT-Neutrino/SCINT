@@ -14,14 +14,14 @@
 
 ## CYTHON TO DO LIST (NEW)
 - [ ] Memoria
-- [ ] NOMBRES variables/funciones
+- [x] NOMBRES variables/funciones
     - FUNCIONES Y ARGUMENTOS → PYTHON NOTATION
       my_runs: low_case + “_” binding
     - KEYS → C++ notation
     - SPECIAL DICTIONARIES
         - OPT: visualization Options + CHECK KEY
         - CUT: cortes
-- [ ] Documentar funciones
+- [x] Documentar funciones
 - [x] Cortes
 - [x] Visualizador
 - [x] Check merge main (dictadura)  → script rutina para check nada roto
