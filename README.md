@@ -44,7 +44,8 @@ We don't want:
     
 3. To better visualize what is happening and perform non standard analysis, there are jupyter notebooks available in notebooks/
 
-:book: Access the [DOCUMENTATION](https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS/blob/main/To_Do.md) for more information :book:
+:book: :page_with_curl: Access the [DOCUMENTATION](https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS/blob/main/To_Do.md) for more information :page_with_curl: :book:
+
 Rodrigo & Sergio & Andrés & Laura
 November 2022
 
