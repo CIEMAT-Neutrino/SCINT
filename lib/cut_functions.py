@@ -145,7 +145,7 @@ def cut_lin_rel(my_runs, keys):
                     else: my_runs[run][ch]["MyCuts"][i] = False
 
                 ax.scatter(my_runs[run][ch][keys[0]][my_runs[run][ch]["MyCuts"] == False],my_runs[run][ch][keys[1]][my_runs[run][ch]["MyCuts"] == False], c = "red", s = 2)
-                print("Nº events after cuts: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+                print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
         else: print("Run generate_cut_array")
         while not fig.waitforbuttonpress(-1): pass
         plt.clf()
