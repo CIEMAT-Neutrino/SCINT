@@ -1,0 +1,18 @@
+# Do not use spaces " " except between KEYWORD and input variables
+# If input variables are a list, use "," as a separator
+
+MONTH: MASSIVE
+
+SAMPLING: 4e-9 
+
+OV_LABEL: OV35
+
+MUONS_RUNS: -99
+LIGHT_RUNS: -99
+ALPHA_RUNS: -99
+CALIB_RUNS: 7
+
+CHAN_LABEL: SC
+CHAN_STNRD: 1
+CHAN_CALIB: 1
+CHAN_POLAR: -1

@@ -9,7 +9,7 @@ import keyboard
 import math
 
 from .io_functions import load_npy,check_key
-# from .cut_functions import cut_min_max, generate_cut_array
+# from .cut_functions import generate_cut_array
 from itertools import product
 
 import scipy
@@ -251,10 +251,12 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
     all_bars = []
     for run, ch, key in product(my_run["NRun"],my_run["NChannel"],keys):
         aux_data = []
-        for i in range(len(my_run[run][ch]["MyCuts"])):
-            if my_run[run][ch]["MyCuts"][i] == False: continue
-            else:
-                aux_data.append(my_run[run][ch][key][i])
+        try:
+            for i in range(len(my_run[run][ch]["MyCuts"])):
+                if my_run[run][ch]["MyCuts"][i] == False: continue
+                else:
+                    aux_data.append(my_run[run][ch][key][i])
+        except: print("Run generate_cut_array!"); break
         data = []
         if key == "PeakAmp":
             data = aux_data
@@ -289,7 +291,7 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
         fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
         fig.supxlabel(key+" ("+my_run[run][ch]["Units"][key]+")"); fig.supylabel("Counts")
         while not plt.waitforbuttonpress(-1): pass
-        plt.clf()
+    plt.clf()
     plt.ioff()
     return all_counts, all_bins, all_bars
 
