@@ -9,7 +9,9 @@ from lib.io_functions import load_npy,save_proccesed_variables, read_input_file
 from lib.wvf_functions import average_SPE_wvfs
 from lib.cal_functions import calibrate
 
-input_file = input("Please select input File: ")
+if sys.argv[1]: input_file = sys.argv[1]
+else          : input_file = input("Please select input File: ")
+
 info = read_input_file(input_file)
 
 runs = []; channels = []

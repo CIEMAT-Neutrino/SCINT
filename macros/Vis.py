@@ -7,14 +7,18 @@ from lib.vis_functions import *
 from lib.cut_functions import *
 # from lib.persitence import persistence_npy
 
-# input_runs = input("Please select RUNS (separated with commas): ")
-# runs = [int(r) for r in input_runs.split(",")]
+#Se pueden poner la primera entrada las runs y la segunda los canales para no cambiar la macro
+if sys.argv[1]: input_runs = sys.argv[1]
+else          : input_runs = input("Please select RUNS (separated with commas): ")
+if sys.argv[2]: input_channels = sys.argv[2]
+else          : input_channels = input("Please select CHANNELS (separated with commas): ")
 
-# input_channels = input("Please select CHANNELS (separated with commas): ")
-# channels = [int(c) for c in input_channels.split(",")]
+runs     = [int(r) for r in input_runs.split(",")]
+channels = [int(c) for c in input_channels.split(",")]
 
-runs     = [26] # COmo la gente normal
-channels = [0,1]
+
+# runs     = [26] # COmo la gente normal
+# channels = [0,1]
 
 OPT  = {
     "MICRO_SEC":   True,
