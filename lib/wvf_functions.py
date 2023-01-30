@@ -135,30 +135,30 @@ def average_SPE_wvfs(my_runs, out_runs, key, OPT={}):
     """
 
     for run,ch,key in product(my_runs["NRun"], my_runs["NChannel"], key):
-        try:
+        # try:
         
-            aux_ADC = np.zeros(len(my_runs[run][ch]["AnaADC"][0]))
-            counter = 0
-            
-            min_charge = my_runs[run][ch]["MinChargeSPE"]
-            max_charge = my_runs[run][ch]["MaxChargeSPE"]
-            
-            for i in range(len(my_runs[run][ch]["AnaADC"])):
+        aux_ADC = np.zeros(len(my_runs[run][ch]["AnaADC"][0]))
+        counter = 0
+        
+        min_charge = my_runs[run][ch]["MinChargeSPE"]
+        max_charge = my_runs[run][ch]["MaxChargeSPE"]
+        
+        for i in range(len(my_runs[run][ch]["AnaADC"])):
 
-                # Check charge in SPE range
-                if min_charge < my_runs[run][ch][key][i] < max_charge:
-                    aux_ADC = aux_ADC + my_runs[run][ch]["AnaADC"][i]
-                    counter = counter + 1    
+            # Check charge in SPE range
+            if min_charge < my_runs[run][ch][key][i] < max_charge:
+                aux_ADC = aux_ADC + my_runs[run][ch]["AnaADC"][i]
+                counter = counter + 1    
 
-            out_runs[run][ch]["SPEAvWvf"] = [aux_ADC/counter]
+        out_runs[run][ch]["SPEAvWvf"] = [aux_ADC/counter]
+        
+        if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
+            plt.plot(4e-9*np.arange(len(out_runs[run][ch]["SPEAvWvf"])),out_runs[run][ch]["SPEAvWvf"])
+            plt.show()
+        if check_key(OPT,"PRINT_KEYS") == True and OPT["PRINT_KEYS"] == True: print_keys(my_runs)
             
-            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
-                plt.plot(4e-9*np.arange(len(out_runs[run][ch]["SPEAvWvf"])),out_runs[run][ch]["SPEAvWvf"])
-                plt.show()
-            if check_key(OPT,"PRINT_KEYS") == True and OPT["PRINT_KEYS"] == True: print_keys(my_runs)
-            
-        except KeyError:
-            print("Empty dictionary. No average_SPE to compute.")
+        # except KeyError:
+        #     print("Empty dictionary. No average_SPE to compute.")
 
 def expo_average(my_run, alpha):
     """ DOC """
