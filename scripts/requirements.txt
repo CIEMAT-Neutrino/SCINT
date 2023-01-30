@@ -8,4 +8,3 @@ keyboard
 pyqt5
 shapely
 curve
-
