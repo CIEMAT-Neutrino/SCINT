@@ -23,7 +23,8 @@ def calibrate(my_runs, keys, OPT={}):
     plt.ion()
     next_plot = False
     idx = 0
-    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
+
+    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
         try:
             idx = idx + 1
 
@@ -33,14 +34,15 @@ def calibrate(my_runs, keys, OPT={}):
             prom = 0.5
             acc  = 1000
 
-            # my_run = copy_single_run(my_runs, [run], [ch], [key])
+            OPT["SHOW"] = False
             counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
+            plt.close()
+            fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
 
-            fig, ax = plt.subplots(1,1, figsize = (8,6))
-            add_grid(ax)
+            add_grid(ax_cal)
             counts = counts[0]; bins = bins[0]; bars = bars[0]
-            ax.hist(bins[:-1], bins, weights = counts)
-            fig.supxlabel(key+" ("+my_runs[run][ch]["Units"][key]+")"); fig.supylabel("Counts")
+            ax_cal.hist(bins[:-1], bins, weights = counts)
+            fig_cal.supxlabel(key+" ("+my_runs[run][ch]["Units"][key]+")"); fig_cal.supylabel("Counts")
 
             # Create linear interpolation between bins to search peaks in these variables
             x = np.linspace(bins[1],bins[-2],acc)
@@ -57,9 +59,9 @@ def calibrate(my_runs, keys, OPT={}):
             valley_idx, _ = find_peaks(-y, height = [-np.max(counts), -thresh], width = wdth)
             
             # Plot threshold, peaks (red) and valleys (blue)
-            ax.axhline(thresh, ls='--')
-            ax.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
-            ax.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
+            ax_cal.axhline(thresh, ls='--')
+            ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
+            ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
 
             height,center,width = [],[],[]
             initial = []
@@ -85,7 +87,7 @@ def calibrate(my_runs, keys, OPT={}):
                     initial.append(popt[1])
                     initial.append(popt[0])
                     initial.append(popt[2])
-                    ax.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
+                    ax_cal.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
                 
                 except:
                     initial.append(x[peak_idx[i]])
@@ -99,15 +101,15 @@ def calibrate(my_runs, keys, OPT={}):
             except:
                 popt = initial
                 print("Full fit could not be performed")
-            ax.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
+            ax_cal.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
             # plt.legend()
             if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
-                ax.semilogy()
+                ax_cal.semilogy()
             
             # plt.ylim(thresh*0.9,np.max(counts)*1.1)
             # plt.xlim(x[peak_idx[0]]-abs(wdth*(bins[0]-bins[1])),x[peak_idx[-1]]*1.1)
-            
-            while not plt.waitforbuttonpress(-1): pass
+            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
+                while not plt.waitforbuttonpress(-1): pass
 
             plt.clf()
             if check_key(OPT,"PRINT_KEYS") == True and OPT["PRINT_KEYS"] == True:
@@ -121,5 +123,6 @@ def calibrate(my_runs, keys, OPT={}):
             # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
         except KeyError:
             return print("Empty dictionary. No calibration to show.")
-    plt.ioff()
+    # plt.ioff()
     plt.clf()
+    plt.close()
