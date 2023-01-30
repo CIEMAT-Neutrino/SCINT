@@ -7,7 +7,9 @@ from lib.wvf_functions import average_wvfs,integrate_wvfs
 import numpy as np
 from itertools import product
 
-input_file = input("Please select input File: ")
+if sys.argv[1]: input_file = sys.argv[1]
+else          : input_file = input("Please select input File: ")
+
 info = read_input_file(input_file)
 
 runs = []; channels = []

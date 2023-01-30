@@ -12,8 +12,14 @@ from lib.fig_config import*
 # input_runs = input("Please select RU NS (separated with commas): ")
 # runs = [int(r) for r in input_runs.split(",")]
 
-# input_channels = input("Please select CHANNELS (separated with commas): ")
-# channels = [int(c) for c in input_channels.split(",")]
+#Se pueden poner la primera entrada las runs y la segunda los canales para no cambiar la macro
+if sys.argv[1]: input_runs = sys.argv[1]
+else          : input_runs = input("Please select RUNS (separated with commas): ")
+if sys.argv[2]: input_channels = sys.argv[2]
+else          : input_channels = input("Please select CHANNELS (separated with commas): ")
+
+runs     = [int(r) for r in input_runs.split(",")]
+channels = [int(c) for c in input_channels.split(",")]
 
 runs     = [2] # COmo la gente normal
 channels = [0,1,6,6]
