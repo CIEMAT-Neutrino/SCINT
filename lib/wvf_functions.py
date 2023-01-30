@@ -26,6 +26,28 @@ def find_baseline_cuts(raw):
             break
     return i_idx,f_idx
 
+def find_amp_decrease(raw,thrld):
+    """
+    It finds bin where the amp has fallen above a certain threshold relative to the main peak. It returns the index of both bins.
+    VARIABLE:
+        - raw: the np array that you want to analize.
+        - thrld: the relative amp that you want to analize.
+    """
+
+    max   = np.argmax(raw)
+    i_idx = 0
+    f_idx = 0
+    
+    for j in range(len(raw[max:])):
+        if raw[max+j] < np.max(raw)*thrld:
+            f_idx = max+j
+            break
+    for j in range(len(raw[:max])):
+        if raw[max-j] < np.max(raw)*thrld:
+            i_idx = max-j+1
+            break
+    return i_idx,f_idx
+
 def average_wvfs(my_runs, threshold=50, OPT={}):
     """
     It calculates the average waveform of a run in three different ways:
@@ -170,6 +192,7 @@ def integrate_wvfs(my_runs, types, ref, factors, ranges):
         - types: indicates the way to make the integration. Type String.
             a) ChargeAveRange: it takes the average waveform and computes the values when the average crosses the baseline
             b) ChargeRange: it integrates in the time window specified by yourself in the vairable "ranges"
+        - ref: STRING for key used as integration reference.
         - factors: it takes into account the read-out system we are using (using string) and the amplification factor (int or float). Type List.
         - ranges: time values for the Range integration option. It should be introduced in seconds. Type List.
     """

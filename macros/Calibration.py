@@ -11,8 +11,10 @@ from lib.wvf_functions import average_SPE_wvfs
 from lib.cal_functions import calibrate
 from lib.cut_functions import *
 
-# input_file = input("Please select input File: ")
-info = read_input_file("TEST")
+if sys.argv[1]: input_file = sys.argv[1]
+else          : input_file = input("Please select input File: ")
+
+info = read_input_file(input_file)
 
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])

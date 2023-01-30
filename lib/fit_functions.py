@@ -1,13 +1,15 @@
+import math
 import numpy as np
 import scipy as sc
 import matplotlib.pyplot as plt
 
 from scipy.optimize import curve_fit
 from scipy.special import erf
-
 from .io_functions import load_npy, check_key
-
 from itertools import product
+
+def gauss(x,a,x0,sigma):
+    return a/(sigma*math.sqrt(2*math.pi))*np.exp(-0.5*np.power((x-x0)/sigma,2))
 
 def gaussian_train(x, *params):
     """ DOC """
@@ -59,7 +61,7 @@ def func3(t, p, t0, sigma, a1, tau1, a2, tau2, a3, tau3):
 
 def scfunc(t, a, b, c, d, e, f):
     """ DOC """
-    return (a*np.exp(-(t-c)/b)/np.power(2*np.pi, 0.5)*np.exp(-d**2/(b**2)))*(1-erf(((c-t)/d+d/b)/np.power(2, 0.5)))+(e*np.exp(-(t-c)/f)/np.power(2*np.pi, 0.5)*np.exp(-d**2/(f**2)))*(1-erf(((c-t)/d+d/f)/np.power(2, 0.5)))
+    return (a*np.exp(-(t-c)/b)/np.power(2*np.pi, 0.5)*np.exp(-d**2/(b**2)))*(1-erf(((c-t)/d+d/b)/np.power(2, 0.5))) + (e*np.exp(-(t-c)/f)/np.power(2*np.pi, 0.5)*np.exp(-d**2/(f**2)))*(1-erf(((c-t)/d+d/f)/np.power(2, 0.5)))
 
 def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     """ DOC """
@@ -69,7 +71,7 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     buffer2 = fit_range[1]
 
     OPT["CUT_NEGATIVE"] = True
-    popt1, perr1 = peak_fit(raw, raw_x, buffer1, OPT)
+    popt1, perr1 = peak_fit(raw, raw_x, buffer1, thrld=thrld, OPT=OPT)
 
     p  = np.mean(raw[:max-buffer1])
     a1 = 2e-5; a1_low = 1e-8;  a1_high = 9e-2                    
@@ -95,6 +97,7 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
             print("%s: \t%.2E \u00B1 %.2E"%(labels2[i], popt[i], perr2[i]))
         print("--------------------------------\n")
 
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
         # CHECK FIRST FIT
         plt.rcParams['figure.figsize'] = [16, 8]
         plt.subplot(1, 2, 1)
@@ -115,14 +118,15 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
         # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
         if check_key(OPT, "LOGY") != False: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
         plt.legend()
+        
+        if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
+            while not plt.waitforbuttonpress(-1): pass
+            plt.clf()
 
-    while not plt.waitforbuttonpress(-1): pass
-    plt.clf()
     aux = func3(raw_x, *param)
-    plt.ioff()
-    return aux
+    return aux,param
 
-def scint_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):       
+def scint_fit(raw, raw_x, fit_range, thrld=1e-6, sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-9,OPT={}):       
     """ DOC """
 
     next_plot = False
@@ -132,7 +136,7 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     buffer2 = fit_range[1]
 
     OPT["CUT_NEGATIVE"] = True
-    popt1, perr1 = peak_fit(raw, raw_x, buffer1, thrld, OPT)
+    popt1, perr1 = peak_fit(raw, raw_x, buffer1, thrld, sigma, a_fast, a_slow, OPT)
 
     # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
     p = np.mean(raw[:max-buffer1])
@@ -141,8 +145,8 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     a1   = popt1[2]; a1_low   = a1*0.9;   a1_high   = a1*1.1  
     tau1 = popt1[3]; tau1_low = tau1*0.9; tau1_high = tau1*1.1  
 
-    a2   = 2e-8;   a2_low = 6e-9;   a2_high = 9e-4
-    tau2 = 8e-7; tau2_low = 5e-7; tau2_high = 1e-6
+    a2 = a_slow;   a2_low = a_slow*1e-2; a2_high = a_slow*1e2
+    tau2 = 1.4e-6; tau2_low = 1.2e-6;    tau2_high = 1.6e-6
     
     bounds2  = ([sigm_low, a1_low, tau1_low, a2_low, tau2_low], [sigm_high, a1_high, tau1_high, a2_high, tau2_high])
     initial2 = (sigm, a1, tau1, a2, tau2)
@@ -162,7 +166,7 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     
     param = [p, t0, sigma, a1, tau1, a2, tau2]
     
-    if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
+    if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
         if check_key(OPT, "COLOR") == True: color = OPT["COLOR"]
         else: color = "tab:red"
         print("\n--- SECOND FIT VALUES (SLOW) ---")
@@ -170,6 +174,7 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
             print("%s:\t%.2E\t%.2E"%(labels2[i], popt2[i], perr2[i]))
         print("--------------------------------\n")
 
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:    
         # print("SHOW key not included in OPT")
         # CHECK FIRST FIT
         plt.rcParams['figure.figsize'] = [16, 8]
@@ -191,57 +196,58 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
         if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
         plt.legend()
 
-    while not plt.waitforbuttonpress(-1): pass
-    plt.clf()
+        while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
+    
     aux = func2(raw_x, *param)
-    return aux
+    return aux,param
 
 def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     """ DOC """
-
+    # Prepare plot vis
     next_plot = False
     plt.rcParams['figure.figsize'] = [8, 8]
-    FIT_RAW_X = np.arange(len(raw))
-    max = np.argmax(raw)
+    
+    raw_x = np.arange(len(raw))
 
     # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
     t0 = np.argmax(raw)
+    
     initial = (1500, 150, t0, 8, -700, 300)
     # bounds = ([-200, 10, t0*0.1, 1, -1500, 10], [10000, 3000, t0*10, 20, 1500, 1000])
     labels = ["AMP", "tau1", "T0", "sigma", "AMP2", "tau2"]
 
     try:
-        popt, pcov = curve_fit(scfunc, FIT_RAW_X, raw, p0 = initial, method = "trf")
+        popt, pcov = curve_fit(scfunc, raw_x[fit_range[0]:fit_range[1]], raw[fit_range[0]:fit_range[1]], p0 = initial, method = "trf")
         perr = np.sqrt(np.diag(pcov))
     except:
         print("Fit did not succeed")
         popt = initial
         perr = np.zeros(len(initial))
 
-    if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
+    if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
         print("\n--- FIT VALUES (SLOW) ---")
         for i in range(len(initial)):
             print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
         print("--------------------------------\n")
 
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
         plt.title("Fit with full wvf")
         plt.plot(raw_x, raw, zorder=0, c="tab:blue", label="raw")
-        plt.plot(raw_x, scfunc(FIT_RAW_X, *popt), "tab:orange", label="FIT")
+        plt.plot(raw_x, scfunc(raw_x, *popt), "tab:orange", label="FIT")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
         if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: 
             plt.semilogy()
-            plt.ylim(thrld, raw[max]*1.1)
+            plt.ylim(thrld, raw[t0]*1.1)
         plt.legend()
-
-    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
         while not plt.waitforbuttonpress(-1): pass
         plt.clf()
     
-    aux = scfunc(FIT_RAW_X, *popt)
+    aux = scfunc(raw_x, *popt)
     # print("\n")
-    return aux
+    return aux,popt
 
-def peak_fit(fit_raw, raw_x, buffer, thrld, OPT):
+def peak_fit(fit_raw, raw_x, buffer, thrld, sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-9, OPT={}):
     """ DOC """
 
     max = np.argmax(fit_raw)
@@ -258,9 +264,9 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, OPT):
 
     t0 = guess_t0; t0_low = guess_t0*0.02; t0_high = guess_t0*50
     
-    sigma = 1e-8; sigma_low = 6e-9; sigma_high = 9e-6
-    a1    = 5e-8;    a1_low = 1e-9;    a1_high = 9e-6                    
-    tau1  = 1e-8;  tau1_low = 6e-9;  tau1_high = 1e-6
+    sigma_low = sigma*1e-2;  sigma_high = sigma*1e2
+    a1    = a_fast; a1_low = a_fast*1e-2; a1_high = a_fast*1e2                    
+    tau1  = 9e-9;   tau1_low = 6e-9;       tau1_high  = 1e-8
 
     bounds  = ([t0_low, sigma_low, a1_low, tau1_low], [t0_high, sigma_high, a1_high, tau1_high])
     initial = (t0, sigma, a1, tau1)
@@ -276,7 +282,7 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, OPT):
         perr = np.zeros(len(initial))
 
     # PRINT FIRST FIT VALUE
-    if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
+    if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
         print("\n--- FISRT FIT VALUES (FAST) ---")
         for i in range(len(initial)):
             print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
@@ -287,11 +293,11 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, OPT):
 
     return popt, perr
 
-def fit_wvfs(my_runs, signal_type, thrld, fit_range=[0, 0], KEYS=["ADC"], OPT={}):
+def fit_wvfs(my_runs, signal_type, thrld, fit_range=[0,0], sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-9, in_key=["ADC"], out_key="", OPT={}):
     """ DOC """
 
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ion()
-    for run, ch, key in product(my_runs["N_runs"], my_runs["N_channels"], KEYS):
+    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], in_key):
         aux = dict()
         if key.startswith("Dec"): OPT["COLOR"] = "tab:red"
         raw = my_runs[run][ch][key]        
@@ -301,13 +307,13 @@ def fit_wvfs(my_runs, signal_type, thrld, fit_range=[0, 0], KEYS=["ADC"], OPT={}
             print("Fitting wvf ", i)
             # print(raw[i])
             if check_key(OPT, "NORM") == True and OPT["NORM"] == True: raw[i] = raw[i]/np.max(raw[i])
-            if signal_type == "SiPM":  fit = sipm_fit(raw[i], raw_x, fit_range, thrld, OPT)
-            if signal_type == "SCINT": fit = scint_fit(raw[i], raw_x, fit_range, thrld, OPT)
-            if signal_type == "SC":    fit = sc_fit(raw[i], raw_x, fit_range, thrld, OPT)
+            if signal_type == "SiPM":  fit,popt = sipm_fit(raw[i], raw_x, fit_range, thrld, OPT)
+            if signal_type == "Scint": fit,popt = scint_fit(raw[i], raw_x, fit_range, thrld, sigma, a_fast, a_slow,OPT)
+            if signal_type == "SC":    fit,popt = sc_fit(raw[i], raw_x, fit_range, thrld, OPT)
             aux[i] = fit
          
-        my_runs[run][ch]["Fit_"+signal_type] = aux
+        my_runs[run][ch]["Fit"+signal_type+out_key] = aux
 
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ioff()
     print("\n")
-    return 
+    return popt

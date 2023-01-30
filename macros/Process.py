@@ -7,15 +7,16 @@ from lib.ana_functions import compute_pedestal_variables,compute_peak_variables,
 from lib.wvf_functions import average_wvfs,integrate_wvfs
 from itertools import product
 
-input_file = input("Please select input File: ")
+if sys.argv[1]: input_file = sys.argv[1]
+else          : input_file = input("Please select input File: ")
+
 info = read_input_file(input_file)
 
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
 runs = np.append(runs,info["LIGHT_RUNS"])
 runs = np.append(runs,info["ALPHA_RUNS"])
-runs = np.append(runs,info["MUONS_RUNS"])
-
+# runs = np.append(runs,info["MUONS_RUNS"])
 
 channels = np.append(channels,info["CHAN_STNRD"])
 
@@ -27,10 +28,10 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     my_runs = load_npy([run],[ch])
     compute_ana_wvfs(my_runs,debug=False)
 
-    delete_keys(my_runs,['PeakAmp', 'PeakTime', 'PedSTD', 'PedMean', 'PedMax', 'PedMin', 'PedLim','PChannel']) # Delete raw peak and pedestal variables
-    insert_variable(my_runs,[1,1,1,1],"PChannel") # Change polarity!
+    delete_keys(my_runs,['PeakAmp', 'PeakTime', 'PedSTD', 'PedMean', 'PedMax', 'PedMin', 'PedLim','PChannel'])  # Delete raw peak and pedestal variables
+    insert_variable(my_runs,[1,1,1,1],"PChannel")                                                               # Change polarity!
     
-    compute_peak_variables(my_runs,key="AnaADC")
+    compute_peak_variables(my_runs,key="AnaADC")                                                                # Compute new peak variables
     compute_pedestal_variables(my_runs,key="AnaADC",debug=True)
     
     delete_keys(my_runs,["ADC"])
