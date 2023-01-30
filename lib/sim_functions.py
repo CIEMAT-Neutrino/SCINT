@@ -20,3 +20,12 @@ def rand_scint_times(n, fast = 6e-9, slow = 1.4e-6, ratio = 0.23):
     array = fast + (aux > (ratio)) * np.random.exponential(scale = fast, size = n) + (aux < (ratio)) * np.random.exponential(scale = slow, size = n)
     array = np.sort(array)
     return array
+
+def larsoft_template(time_in_us,fPeakTime,fVoltageToADC,fMaxAmplitude,fFrontTime,fBackTime):    
+    template = []
+    for i in time_in_us:
+        if (i < fPeakTime):
+            template.append(fVoltageToADC*fMaxAmplitude*np.exp((i - fPeakTime)/fFrontTime))
+        else:
+            template.append(fVoltageToADC*fMaxAmplitude*np.exp(-(i - fPeakTime)/fBackTime))
+    return np.asarray(template)
