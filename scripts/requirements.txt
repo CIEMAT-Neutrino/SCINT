@@ -1,7 +1,7 @@
 numpy
 matplotlib
 uproot
-scipy
+scipy 
 pynput
 awkward
 keyboard

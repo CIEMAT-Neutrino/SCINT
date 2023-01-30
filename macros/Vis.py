@@ -22,11 +22,14 @@ else          : input_channels = input("Please select CHANNELS (separated with c
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 
+# runs     = [2] # COmo la gente normal
+# channels = [0,1,6,6]
+
 OPT  = {
     "MICRO_SEC":   True,
     "NORM":        False,                # Runs can be displayed normalised (True/False)
     "LOGY":        False,                # Runs can be displayed in logy (True/False)
-    "SHOW_AVE":    "SPEAveWvf",          # If computed, vis will show average (AveWvf,SPEAveWvf,etc.)
+    "SHOW_AVE":    "SPEAvWvf",          # If computed, vis will show average (AveWvf,SPEAveWvf,etc.)
     "SHOW_PARAM":  True,                 # Print terminal information (True/False)
     "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False)

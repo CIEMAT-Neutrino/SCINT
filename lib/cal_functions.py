@@ -34,7 +34,6 @@ def calibrate(my_runs, keys, OPT={}):
             prom = 0.5
             acc  = 1000
 
-            OPT["SHOW"] = False
             counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
             plt.close()
             fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
