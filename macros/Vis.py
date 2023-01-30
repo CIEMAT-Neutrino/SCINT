@@ -21,8 +21,8 @@ else          : input_channels = input("Please select CHANNELS (separated with c
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 
-runs     = [2] # COmo la gente normal
-channels = [0,1,6,6]
+# runs     = [2] # COmo la gente normal
+# channels = [0,1,6,6]
 
 OPT  = {
     "MICRO_SEC":   True,

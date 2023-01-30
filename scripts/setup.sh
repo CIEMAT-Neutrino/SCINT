@@ -32,4 +32,5 @@ if [ ! -d "../data/dec" ]; then
 mkdir ../data/dec
 fi
 
-pip3 install -r requirements.txt
+pip3 install     -r requirements.txt
+sudo apt install <requirementsTeX.txt
