@@ -9,8 +9,7 @@ import keyboard
 import math
 
 from .io_functions import load_npy,check_key
-from .cut_functions import *
-from .cut_functions import *
+# from .cut_functions import generate_cut_array
 from itertools import product
 
 import scipy
@@ -104,7 +103,7 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
                     if OPT["LOGY"] == True:
                         axs[j].semilogy()
                         std = 0 # It is ugly if we see this line in log plots
-                    fig.tight_layout(h_pad=2) # We avoid small vertical space between plots            
+                    # fig.tight_layout(h_pad=2) # If we want more space betweeb subplots. We avoid small vertical space between plots            
                     axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
                     axs[j].grid(True, alpha = 0.7)
                     axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]]["PedLim"],my_run[run][ch_list[j]]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
@@ -246,36 +245,35 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
         - percentile: percentile used for outliers removal
     WARNING! Maybe the binning stuff should be studied in more detail.
     """
-    
-    # keys is the variable that we want to plot
-    w=1e-4 # w is related to the bin width in some way
     figure_features()
-
     plt.ion()
     all_counts = []
     all_bins = []
     all_bars = []
     for run, ch, key in product(my_run["NRun"],my_run["NChannel"],keys):
-        # w = abs(np.max(my_run[run][ch][key])-np.min(my_run[run][ch][key]))*w
+        aux_data = []
+        try:
+            for i in range(len(my_run[run][ch]["MyCuts"])):
+                if my_run[run][ch]["MyCuts"][i] == False: continue
+                else:
+                    aux_data.append(my_run[run][ch][key][i])
+        except: print("Run generate_cut_array!"); break
         data = []
         if key == "PeakAmp":
-            data = my_run[run][ch][key]
+            data = aux_data
             max_amp = np.max(data)
             binning = int(max_amp)+1
         elif key == "PeakTime":
-            data = my_run[run][ch]["Sampling"]*my_run[run][ch][key]
+            data = my_run[run][ch]["Sampling"]*aux_data
             binning = int(my_run[run][ch]["NBinsWvf"]/2)
         else:
-            data = my_run[run][ch][key]
+            data = aux_data
             ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
             ypad = 0.2*(yptop - ypbot)
             ymin = ypbot - ypad; ymax = yptop + ypad
             data = [i for i in data if ymin<i<ymax]
-            w = abs(np.max(data)-np.min(data))*w
             binning = 600 # FIXED VALUE UNTIL BETTER SOLUTION
-            # binning = np.arange(min(data), max(data) + w, w)
             # binning = int((np.max(data)-np.min(data)) * len(data)**(1/3) / (3.49*np.std(data)))*5 # Visto por internete
-            # print(w)
             # print(len(binning))
             # if len(binning) < 100: binning = 100
             # if len(binning) > 2000: binning = 1000
@@ -284,20 +282,63 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
             # out_threshold= 2.0*np.std(data+[-a for a in data]) # Repeat distribution in negative axis to compute std
             # data=[i for i in data if -out_threshold<i<out_threshold]
             # binning = np.arange(min(data), max(data) + w, w)
-
-
-        counts, bins, bars = plt.hist(data,binning) # , zorder = 2 f
+        fig, ax = plt.subplots(1,1, figsize = (8,6))
+        add_grid(ax)
+        # ax.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
+        counts, bins, bars = ax.hist(data,binning) # , zorder = 2 f
         all_counts.append(counts)
         all_bins.append(bins)
         all_bars.append(bars)
-        plt.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
-        plt.title("Run_{} Ch_{} - {} histogram".format(run,ch,key),size = 14)
-        plt.xticks(size = 11); plt.yticks(size = 11)
-        plt.xlabel(key+" (Units)", size = 11); plt.ylabel("Counts", size = 11)
+        fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
+        fig.supxlabel(key+" ("+my_run[run][ch]["Units"][key]+")"); fig.supylabel("Counts")
         while not plt.waitforbuttonpress(-1): pass
-        plt.clf()
+    plt.clf()
     plt.ioff()
     return all_counts, all_bins, all_bars
+
+def vis_two_var_hist(my_run,run,ch, keys, percentile = [0.1, 99.9], select_range = False, OPT = {"Show": True}):
+    """
+    This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
+    It plots values below and above the indicated percetiles, but values are not removed from data.
+    VARIABLES:
+        - my_run: run(s) we want to check
+        - keys: variables we want to plot as histograms. Type: List
+        - percentile: percentile used for outliers removal
+        - select_range: if we still have many outliers we can select the ranges in x and y axis.
+    """
+    figure_features()
+    x_data = []; y_data = []
+    for i in range(len(my_run[run][ch]["MyCuts"])):
+        if my_run[run][ch]["MyCuts"][i] == False: continue
+        else:
+            x_data.append(my_run[run][ch][keys[0]][i]); y_data.append(my_run[run][ch][keys[1]][i])
+    # Calculate range with percentiles for x-axis
+    x_ypbot = np.percentile(x_data, percentile[0]); x_yptop = np.percentile(x_data, percentile[1])
+    x_ypad = 0.2*(x_yptop - x_ypbot)
+    x_ymin = x_ypbot - x_ypad; x_ymax = x_yptop + x_ypad
+    # Calculate range with percentiles for y-axis
+    y_ypbot = np.percentile(y_data, percentile[0]); y_yptop = np.percentile(y_data, percentile[1])
+    y_ypad = 0.2*(y_yptop - y_ypbot)
+    y_ymin = y_ypbot - y_ypad; y_ymax = y_yptop + y_ypad
+
+    fig, ax = plt.subplots(1,1, figsize = (8,6))
+    if "Time" in keys[0]:
+        ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+    else: ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+    ax.grid("both")
+    fig.supxlabel(keys[0]+" ("+my_run[run][ch]["Units"][keys[0]]+")"); fig.supylabel(keys[1]+" ("+my_run[run][ch]["Units"][keys[1]]+")")
+    fig.suptitle("Run_{} Ch_{} - {} vs {} histogram".format(run,ch,keys[0],keys[1]))
+    if select_range:
+        x1 = int(input("xmin: ")); x2 = int(input("xmax: "))
+        y1 = int(input("ymin: ")); y2 = int(input("ymax: "))
+        # plt.clf()
+        ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
+        ax.grid("both")
+        fig.supxlabel(keys[0]); fig.supylabel(keys[1])
+    if OPT["Show"] == True: plt.show()
+    # else: break
+    # while not fig.waitforbuttonpress(-1): pass
+    return fig, ax
 
 def vis_persistence(my_run, OPT = {}):
     """
