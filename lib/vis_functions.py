@@ -282,16 +282,17 @@ def vis_var_hist(my_run, keys, percentile = [0.1, 99.9], OPT = {}):
             # out_threshold= 2.0*np.std(data+[-a for a in data]) # Repeat distribution in negative axis to compute std
             # data=[i for i in data if -out_threshold<i<out_threshold]
             # binning = np.arange(min(data), max(data) + w, w)
-        fig, ax = plt.subplots(1,1, figsize = (8,6))
-        add_grid(ax)
-        # ax.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
-        counts, bins, bars = ax.hist(data,binning) # , zorder = 2 f
-        all_counts.append(counts)
-        all_bins.append(bins)
-        all_bars.append(bars)
-        fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
-        fig.supxlabel(key+" ("+my_run[run][ch]["Units"][key]+")"); fig.supylabel("Counts")
-        while not plt.waitforbuttonpress(-1): pass
+            fig, ax = plt.subplots(1,1, figsize = (8,6))
+            add_grid(ax)
+            # ax.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
+            counts, bins, bars = ax.hist(data,binning) # , zorder = 2 f
+            all_counts.append(counts)
+            all_bins.append(bins)
+            all_bars.append(bars)
+            fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
+            fig.supxlabel(key+" ("+my_run[run][ch]["Units"][key]+")"); fig.supylabel("Counts")
+            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
+                while not plt.waitforbuttonpress(-1): pass
     plt.clf()
     plt.ioff()
     return all_counts, all_bins, all_bars
