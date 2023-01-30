@@ -97,6 +97,7 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
             print("%s: \t%.2E \u00B1 %.2E"%(labels2[i], popt[i], perr2[i]))
         print("--------------------------------\n")
 
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
         # CHECK FIRST FIT
         plt.rcParams['figure.figsize'] = [16, 8]
         plt.subplot(1, 2, 1)
@@ -123,7 +124,6 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
             plt.clf()
 
     aux = func3(raw_x, *param)
-    plt.ioff()
     return aux,param
 
 def scint_fit(raw, raw_x, fit_range, thrld=1e-6, sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-9,OPT={}):       
@@ -174,6 +174,7 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, sigma = 1e-8, a_fast = 1e-8, a_
             print("%s:\t%.2E\t%.2E"%(labels2[i], popt2[i], perr2[i]))
         print("--------------------------------\n")
 
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:    
         # print("SHOW key not included in OPT")
         # CHECK FIRST FIT
         plt.rcParams['figure.figsize'] = [16, 8]
@@ -195,10 +196,9 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, sigma = 1e-8, a_fast = 1e-8, a_
         if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
         plt.legend()
 
-    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
         while not plt.waitforbuttonpress(-1): pass
         plt.clf()
-
+    
     aux = func2(raw_x, *param)
     return aux,param
 
