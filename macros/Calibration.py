@@ -38,7 +38,7 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
       print("Run ", run, "Channel ", ch)
       calibrate(my_runs,int_key,OPT)
 
-
+      average_SPE_wvfs(my_runs,my_runs,int_key)
       average_SPE_wvfs(my_runs,ave_runs,int_key)
       save_proccesed_variables(my_runs,"Analysis_","../data/ana/")
       save_proccesed_variables(ave_runs,"Average_","../data/ave/")
