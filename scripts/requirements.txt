@@ -1,11 +1,10 @@
 numpy
 matplotlib
 uproot
-scipy
+scipy 
 pynput
 awkward
 keyboard
 pyqt5
 shapely
 curve
-
