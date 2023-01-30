@@ -11,28 +11,28 @@ echo "\n"
 
 # Root2Np.py --> loads .root + save into /data/raw/*.npy + pre-process
 echo "\n------------------ Testing Root2Np.py ------------------"
-python3 ../macros/Root2Np.py
+python3 ../macros/Root2Np.py MergeDebug
 echo "\n------ Expected output{Saved data in: ../data/raw/runXX_chY.npy}. Everything OK ------"
 
 
 #Process.py --> process waveforms and save in /data/ana/
 echo "\n------------------ Testing Process.py ------------------"
-python3 ../macros/Process.py
+python3 ../macros/Process.py MergeDebug
 echo "\n------ Expected output{Saved data in: ../data/ana/Analysis_runXX_chY.npy}. Everything OK ------"
 
 # Average.py --> process waveforms and save in /data/ave/
 echo "\n------------------ Testing Average.py ------------------"
-python3 ../macros/Average.py
+python3 ../macros/Average.py MergeDebug
 echo "\n------ Expected output{Saved data in: ../data/ave/Average_runXX_chY.npy}. Everything OK ------"
 
 
 #Calibration.py --> calibrate (calibration runs)
 echo "\n------------------ Testing Calibration.py ------------------"
-python3 ../macros/Calibration.py
+python3 ../macros/Calibration.py MergeDebug
 echo "\n------ Expected output{PLOT + SPE gauss parameters X Y Z; Saved data in: ../data/ana/Analysis_runXX_chY.npy; Saved data in: ../data/ave/Average_runXX_chY.npy}. Everything OK ------"
 
 
 #Vis.py --> visualize event by event the selected runs&channels
 echo "\n------------------ Testing Vis.py ------------------"
-python3 ../macros/Vis.py
+python3 ../macros/Vis.py 1 0,6
 echo "\n------ Expected output{PLOT}. Everything OK ------"
