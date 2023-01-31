@@ -75,13 +75,13 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
         for ch in channels:
             try:    
                 try:
-                    aux[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()           
+                    aux[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npz",allow_pickle=True)["arr_0"]           
                 except:    
                     try:
-                        aux[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                        aux[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npz",allow_pickle=True)["arr_0"]
                         if debug: print("Selected file does not exist, loading default analysis run")
                     except:
-                        aux[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()
+                        aux[ch] = np.load("../data/raw/run"+str(run).zfill(2)+"_ch"+str(ch)+".npz",allow_pickle=True)["arr_0"]
                         if debug: print("Selected file does not exist, loading raw run")
                 my_runs[run] = aux
 
@@ -131,7 +131,7 @@ def save_proccesed_variables(my_runs, prefix = "Analysis_", out_path = "../data/
             except:
                 if debug: print("Original raw branches have already been deleted for run %i ch %i"%(run,ch))
 
-            aux_path=out_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"
+            aux_path=out_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npz"
             np.save(aux_path,aux[run][ch])
             print("Saved data in:", aux_path)
     # except KeyError: 
