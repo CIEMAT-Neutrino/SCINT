@@ -153,7 +153,7 @@ def average_SPE_wvfs(my_runs, out_runs, key, OPT={}):
         out_runs[run][ch]["SPEAvWvf"] = [aux_ADC/counter]
         
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
-            plt.plot(4e-9*np.arange(len(out_runs[run][ch]["SPEAvWvf"])),out_runs[run][ch]["SPEAvWvf"])
+            plt.plot(4e-9*np.arange(len(out_runs[run][ch]["SPEAveWvf"])),out_runs[run][ch]["SPEAveWvf"])
             plt.show()
         if check_key(OPT,"PRINT_KEYS") == True and OPT["PRINT_KEYS"] == True: print_keys(my_runs)
             
