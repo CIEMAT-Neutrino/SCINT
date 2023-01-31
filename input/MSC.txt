@@ -1,6 +1,7 @@
 # Do not use spaces " " except between KEYWORD and input variables
 # If input variables are a list, use "," as a separator
 
+RAW_DATA: ROOT
 MONTH: MASSIVE
 
 SAMPLING: 4e-9 

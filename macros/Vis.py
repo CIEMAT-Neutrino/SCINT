@@ -19,6 +19,10 @@ else          : input_runs = input("Please select RUNS (separated with commas): 
 if sys.argv[2]: input_channels = sys.argv[2]
 else          : input_channels = input("Please select CHANNELS (separated with commas): ")
 
+
+input_file = input("Please select input File: ")
+info = read_input_file(input_file)
+
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 
@@ -36,7 +40,10 @@ OPT  = {
     "LEGEND":      False                 # Shows plot legend (True/False)
     }
 
-my_runs = load_npy(runs,channels,"Analysis_","../data/ana/") # Load processed wvfs
+# my_runs = load_npy(runs,channels,"Analysis_","../data/ana/") # Load processed wvfs
+
+my_runs = load_npy(runs,channels,preset="ALL",info=info,compressed=True)
+
 print(my_runs[runs[0]][channels[0]].keys())
 get_units(my_runs)
 generate_cut_array(my_runs)
