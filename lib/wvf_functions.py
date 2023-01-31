@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .io_functions import check_key, print_keys
+from .io_functions import check_key
 from itertools import product
 
 def find_baseline_cuts(raw):
