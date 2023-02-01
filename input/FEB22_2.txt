@@ -1,6 +1,7 @@
 # Do not use spaces " " except between KEYWORD and input variables
 # If input variables are a list, use "," as a separator
 
+RAW_DATA: ROOT
 MONTH: FEB22_2
 
 SAMPLING: 4e-9 
@@ -12,7 +13,7 @@ LIGHT_RUNS: 9,10,11
 ALPHA_RUNS: 25,26,27
 CALIB_RUNS: 1,2,3
 
-CHAN_LABEL: SiPM0,SiPM1,PMT,SC
-CHAN_STNRD: 0,1,4,6
+CHAN_LABEL: SiPM0,SiPM1,SC
+CHAN_STNRD: 0,1,6
 CHAN_CALIB: 0,1,6
-CHAN_POLAR: -1,-1,-1,-1
+CHAN_POLAR: -1,-1,-1

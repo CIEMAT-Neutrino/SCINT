@@ -11,21 +11,25 @@ if sys.argv[1]: input_file = sys.argv[1]
 else          : input_file = input("Please select input File: ")
 
 info = read_input_file(input_file)
-
+# chmod o=rwx */*.npz
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
-runs = np.append(runs,info["LIGHT_RUNS"])
-runs = np.append(runs,info["ALPHA_RUNS"])
+# runs = np.append(runs,info["LIGHT_RUNS"])
+# runs = np.append(runs,info["ALPHA_RUNS"])
 # runs = np.append(runs,info["MUONS_RUNS"])
 
 channels = np.append(channels,info["CHAN_STNRD"])
 
 """ To-Do: Avoid using loop in this macro. Maybe "ADC" type dict can be loaded in lazy mode """
+raw = ["ADC", "NBinsWvf", "Sampling", "Label", "PChannel"]
 
 # PROCESS WAVEFORMS (Run in loop to avoid memory issues)
 for run, ch in product(runs.astype(int),channels.astype(int)):
     
-    my_runs = load_npy([run],[ch])
+    # my_runs = load_npy([run],[ch],branches="ALL", info=info, compressed=True)
+    my_runs = load_npy([run],[ch],preset="ALL",info=info,compressed=True)
+
+    print(my_runs[run][ch].keys())
     compute_ana_wvfs(my_runs,debug=False)
 
     delete_keys(my_runs,['PeakAmp', 'PeakTime', 'PedSTD', 'PedMean', 'PedMax', 'PedMin', 'PedLim','PChannel'])  # Delete raw peak and pedestal variables
@@ -39,4 +43,4 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     average_wvfs(my_runs)
     integrate_wvfs(my_runs,["ChargeAveRange"],"AveWvf",["DAQ", 250],[0,100])
     
-    save_proccesed_variables(my_runs,"Analysis_","../data/ana/")
+    save_proccesed_variables(my_runs,"ALL",info=info, force=True)
