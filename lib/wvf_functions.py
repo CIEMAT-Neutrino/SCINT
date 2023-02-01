@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from scipy import stats as st
 from .io_functions import check_key
-from .cut_functions import generate_cut_array
+from .ana_functions import generate_cut_array
 from itertools import product
 
 def find_baseline_cuts(raw):

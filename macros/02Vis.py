@@ -1,4 +1,10 @@
-# cd to /lib and run -> python3 Vis.py
+# ---------------------------------------------------------------------------------------------------------------------- #
+#  =========================================== RUN:$ python3 02Vis.py 0 0,1,2 ========================================== #
+# This macro will show the individual EVENTS of the introduced runs and channels to see if everything is working fine    #
+# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
+# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
+# ---------------------------------------------------------------------------------------------------------------------- #
+
 import sys
 sys.path.insert(0, '../')
 
@@ -10,15 +16,15 @@ from lib.cut_functions import*
 from lib.fig_config import*
 
 ##### INPUT RUNS AND OPTIONS #####
-# input_runs = input("Please select RUNS (separated with commas): ")
-# runs = [int(r) for r in input_runs.split(",")]
+try:
+    input_runs = sys.argv[1]
+except IndexError:
+    input_runs = input("Please select RUNS (separated with commas): ")
 
-#Se pueden poner la primera entrada las runs y la segunda los canales para no cambiar la macro
-if sys.argv[1]: input_runs = sys.argv[1]
-else          : input_runs = input("Please select RUNS (separated with commas): ")
-
-if sys.argv[2]: input_channels = sys.argv[2]
-else          : input_channels = input("Please select CHANNELS (separated with commas): ")
+try:
+    input_channels = sys.argv[2]
+except IndexError:
+    input_channels = input("Please select CHANNELS (separated with commas): ")
 
 
 input_file = input("Please select input File: ")
@@ -40,9 +46,6 @@ OPT  = {
 ###################################
 
 ##### LOAD RUNS #####
-my_runs = load_npy(runs,channels,"Analysis_","../data/ana/") # Load processed wvfs
-# my_runs = load_npy(runs,channels,"Analysis_","../data/ana/") # Load processed wvfs
-
 my_runs = load_npy(runs,channels,preset="ALL",info=info,compressed=True)
 
 print(my_runs[runs[0]][channels[0]].keys())
