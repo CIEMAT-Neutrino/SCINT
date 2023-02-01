@@ -23,7 +23,6 @@ def insert_variable(my_runs, var, key, debug = False):
 
 def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
-    # to do: implement ranges 
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
@@ -35,9 +34,9 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
 
 def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
     """Computes the pedestal variables of a collection of a run's collection in standard format"""
-    for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+    for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
-            ped_lim = st.mode(my_runs[run][ch]["PeakTime"])[0][0]-buffer
+            ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"])[0][0]-buffer
             if ped_lim < 0: ped_lim = 50
             my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
@@ -52,13 +51,13 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
 def compute_ana_wvfs(my_runs, debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
-        try:
-            my_runs[run][ch]["ADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
-            print("Analysis wvfs have been computed for run %i ch %i"%(run,ch))
-            if debug: print_keys(my_runs)
-        except: 
-            KeyError
-            if debug: print("*EXCEPTION: for ",run,ch," ana wvfs could not be computed")
+        # try:
+        my_runs[run][ch]["ADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
+        print("Analysis wvfs have been computed for run %i ch %i"%(run,ch))
+        if debug: print_keys(my_runs)
+        # except: 
+        #     KeyError
+        #     if debug: print("*EXCEPTION: for ",run,ch," ana wvfs could not be computed")
         if debug:
             plt.plot(4e-9*np.arange(len(my_runs[run][ch]["ADC"][0])),my_runs[run][ch]["ADC"][0])
             plt.show()

@@ -36,25 +36,25 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     
     compute_peak_variables(my_runs,key="RawADC",label="Raw")
     compute_pedestal_variables(my_runs,key="RawADC",label="Raw")
-    save_proccesed_variables(my_runs,"RAW",info=info, force=False)
+    print(my_runs[run][ch].keys())
+    delete_keys(my_runs,["RawADC"]) # Delete previous peak and pedestal variables
+    save_proccesed_variables(my_runs,"ALL",info=info, force=True)
 
 
 # PROCESS WAVEFORMS (Run in loop to avoid memory issues)
 for run, ch in product(runs.astype(int),channels.astype(int)):
     
-    my_runs = load_npy([run],[ch],preset="ALL",info=info,compressed=True)
-
+    my_runs = load_npy([run],[ch],preset="RAW",info=info,compressed=True)
+    print(my_runs[run][ch].keys())
     compute_ana_wvfs(my_runs,debug=False)
 
-    delete_keys(my_runs,['RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','PChannel'])  # Delete raw peak and pedestal variables
-    insert_variable(my_runs,np.ones(len(channels)),"PChannel")                                                  # Change polarity!
+    insert_variable(my_runs,np.ones(len(channels)),"PChannel") # Change polarity!
     
-    compute_peak_variables(my_runs,key="ADC")                                                                   # Compute new peak variables
-    compute_pedestal_variables(my_runs,key="ADC",debug=False)
+    compute_peak_variables(my_runs,key="ADC") # Compute new peak variables
+    compute_pedestal_variables(my_runs,key="ADC",debug=False) # Compute new ped variables
     
-    delete_keys(my_runs,["RawADC"])
-
-    average_wvfs(my_runs)
-    integrate_wvfs(my_runs,["ChargeAveRange"],"AveWvf",["DAQ", 250],[0,100])
+    average_wvfs(my_runs,threshold=5) # Compute average wvfs
+    integrate_wvfs(my_runs,["ChargeAveRange"],"AveWvf",["DAQ", 250],[0,100]) # Compute charge according to selected average wvf ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
     
-    save_proccesed_variables(my_runs,"ANA",info=info, force=True)
+    delete_keys(my_runs,["RawADC",'RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','RawPChannel']) # Delete branches to avoid overwritting
+    save_proccesed_variables(my_runs,"ALL",info=info, force=True)
