@@ -1,4 +1,10 @@
-# cd to /lib and run -> python3 Vis.py
+# ---------------------------------------------------------------------------------------------------------------------- #
+#  ========================================= RUN:$ python3 02VisEvent.py 0 0,1,2 ======================================= #
+# This macro will show the individual EVENTS of the introduced runs and channels to see if everything is working fine    #
+# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
+# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
+# ---------------------------------------------------------------------------------------------------------------------- #
+
 import sys
 sys.path.insert(0, '../')
 
@@ -10,22 +16,21 @@ from lib.cut_functions import*
 from lib.fig_config import*
 
 ##### INPUT RUNS AND OPTIONS #####
-# input_runs = input("Please select RUNS (separated with commas): ")
-# runs = [int(r) for r in input_runs.split(",")]
+try:
+    input_runs = sys.argv[1]
+except IndexError:
+    input_runs = input("Please select RUNS (separated with commas): ")
 
-#Se pueden poner la primera entrada las runs y la segunda los canales para no cambiar la macro
-if sys.argv[1]: input_runs = sys.argv[1]
-else          : input_runs = input("Please select RUNS (separated with commas): ")
-
-if sys.argv[2]: input_channels = sys.argv[2]
-else          : input_channels = input("Please select CHANNELS (separated with commas): ")
-
-
-input_file = input("Please select input File: ")
-info = read_input_file(input_file)
+try:
+    input_channels = sys.argv[2]
+except IndexError:
+    input_channels = input("Please select CHANNELS (separated with commas): ")
 
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
+
+input_file = input("Please select input File: ")
+info = read_input_file(input_file)
 
 OPT  = {
     "MICRO_SEC":   True,
@@ -47,20 +52,6 @@ print(my_runs[runs[0]][channels[0]].keys())
 get_units(my_runs)
 generate_cut_array(my_runs)
 #####################
-
-##### CUTS #####
-# cut_min_max(my_runs, ["PeakAmp"], {"PeakAmp": [18,1000]})
-# cut_min_max_sim(my_runs, ["PeakAmp", "ChargeAveRange"], {"PeakAmp": [30,45], "ChargeAveRange": [1.2, 2]})
-# cut_lin_rel(my_runs, ["PeakAmp", "ChargeAveRange"])
-################
-
-##### HISTOGRAMS #####
-# for r in runs:
-#     for c in channels:
-#         vis_var_hist(my_runs, r, c, "PeakAmp", [0.1,99.9], OPT = {"Show": True})
-#         vis_var_hist(my_runs, r, c, "ChargeAveRange",[0.1,99.9], {"Show": True})
-#         vis_two_var_hist(my_runs, r, c, ["PeakAmp", "ChargeAveRange"], OPT = {"Show": True})
-######################
 
 ##### EVENT VISUALIZER #####
 vis_npy(my_runs, ["RawADC"],OPT,-1) # Input variables should be lists of integers
