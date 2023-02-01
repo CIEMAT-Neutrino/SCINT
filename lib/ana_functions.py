@@ -61,16 +61,12 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
 def compute_ana_wvfs(my_runs, debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
-        # try:
+
         my_runs[run][ch]["ADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
         print("Analysis wvfs have been computed for run %i ch %i"%(run,ch))
         if debug: print_keys(my_runs)
-        # except: 
-        #     KeyError
-        #     if debug: print("*EXCEPTION: for ",run,ch," ana wvfs could not be computed")
-        if debug:
-            plt.plot(4e-9*np.arange(len(my_runs[run][ch]["ADC"][0])),my_runs[run][ch]["ADC"][0])
-            plt.show()
+
+        del my_runs[run][ch]["RawADC"] # After ADC is computed, delete RawADC from memory
 
 def get_units(my_runs, debug = False):
     for run, ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
