@@ -31,8 +31,8 @@ OPT  = {
     "MICRO_SEC":   True,
     "NORM":        False,                # Runs can be displayed normalised (True/False)
     "LOGY":        False,                # Runs can be displayed in logy (True/False)
-    "SHOW_AVE":    "",                   # If computed, vis will show average (AveWvf,SPEAveWvf,etc.)
-    # "SHOW_AVE":    "AveWvf",             # If computed, vis will show average (AveWvf,SPEAveWvf,etc.)
+    # "SHOW_AVE":    "",                   # If computed, vis will show average (AveWvf,SPEAveWvf,etc.)
+    "SHOW_AVE":    "AveWvf",             # If computed, vis will show average (AveWvf,SPEAveWvf,etc.)
     "SHOW_PARAM":  True,                 # Print terminal information (True/False)
     "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False)
@@ -41,12 +41,13 @@ OPT  = {
 ###################################
 
 ##### LOAD RUNS #####
-my_runs = load_npy(runs,channels,preset="ALL",info=info,compressed=True)
-
+my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True)
 print(my_runs[runs[0]][channels[0]].keys())
-get_units(my_runs)
-generate_cut_array(my_runs)
 #####################
+
+##### EVENT VISUALIZER #####
+vis_npy(my_runs, ["ADC"],OPT,-1) # Input variables should be lists of integers
+############################
 
 ##### CUTS #####
 # cut_min_max(my_runs, ["PeakAmp"], {"PeakAmp": [18,1000]})
@@ -62,6 +63,3 @@ generate_cut_array(my_runs)
 #         vis_two_var_hist(my_runs, r, c, ["PeakAmp", "ChargeAveRange"], OPT = {"Show": True})
 ######################
 
-##### EVENT VISUALIZER #####
-vis_npy(my_runs, ["RawADC"],OPT,-1) # Input variables should be lists of integers
-############################
