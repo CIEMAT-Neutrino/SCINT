@@ -2,7 +2,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from scipy import stats as st
 from .io_functions import check_key
+from .cut_functions import generate_cut_array
 from itertools import product
 
 def find_baseline_cuts(raw):
@@ -48,7 +50,7 @@ def find_amp_decrease(raw,thrld):
             break
     return i_idx,f_idx
 
-def average_wvfs(my_runs, threshold=50, OPT={}):
+def average_wvfs(my_runs, threshold=5, cut_label="", OPT={}):
     """
     It calculates the average waveform of a run in three different ways:
         - AveWvf: each event is added without centering
@@ -59,66 +61,28 @@ def average_wvfs(my_runs, threshold=50, OPT={}):
 
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
         try:
-            # No centering
-            aux_ADC = np.zeros(len(my_runs[run][ch]["AnaADC"][0]))
-            counter = 0
             if check_key(my_runs[run][ch], "MyCuts") == True:
-                for i in range(len(my_runs[run][ch]["AnaADC"])):
-                    if my_runs[run][ch]["MyCuts"][i] == True:
-                        aux_ADC = aux_ADC + my_runs[run][ch]["AnaADC"][i]
-                        counter = counter +1
-                    else: continue
+                print("Calculating average wvf with cuts")
             else:
-                for i in range(len(my_runs[run][ch]["AnaADC"])):
-                    aux_ADC = aux_ADC + my_runs[run][ch]["AnaADC"][i]
-                    counter = counter +1
+                generate_cut_array(my_runs)
+                cut_label = ""
 
-            my_runs[run][ch]["AveWvf"] = [aux_ADC/counter]
+            mean_ana_ADC = np.mean(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=0)
+            my_runs[run][ch]["AveWvf"+cut_label] = [mean_ana_ADC]
             
-            aux_ADC = my_runs[run][ch]["AnaADC"]
-            # centering
-            bin_ref          = np.argmax(aux_ADC[0]) #using the first peak as reference
-            # bin_ref         = int(len(aux_ADC[0])/15) #10% of time window
-            av_wvf_peak      = np.zeros(aux_ADC[0].shape)
-            av_wvf_threshold = np.zeros(aux_ADC[0].shape)
+            aux_ADC = my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]
+            
+            # # centering peak
+            # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1)) #using the mode peak as reference
+            # bin_max_peak = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1) 
+            
+            # my_runs[run][ch]["AveWvfPeak"+cut_label] = np.roll(aux_ADC, bin_ref_peak - bin_max_peak,axis=1)
 
-            n_wvs   = len(aux_ADC)
-            n_bins  = len(aux_ADC[0])
+            # # centering thld
+            # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1)) #using the mode peak as reference
+            # bin_max_thld = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1) 
             
-            for wvf in aux_ADC:
-                
-                bin_peak          = np.argmax(wvf)
-                
-                try:
-                    bin_threshold = np.argwhere(wvf>threshold)[0][0]
-                except:
-                    #no good value found;
-                    bin_threshold = n_bins
-
-                # Peak centering
-                if bin_ref < bin_peak:
-                    av_wvf_peak[:bin_ref]                    += (wvf[(bin_peak-bin_ref):bin_peak]/n_wvs);
-                    av_wvf_peak[bin_ref:-(bin_peak-bin_ref)] += (wvf[bin_peak:]/n_wvs);
-                else:
-                    av_wvf_peak[(bin_ref-bin_peak):bin_ref]  += (wvf[:bin_peak]/n_wvs);
-                    av_wvf_peak[bin_ref:-1]                  += (wvf[bin_peak:-(bin_ref-bin_peak+1)]/n_wvs);
-                
-                # threshold centering
-                if bin_ref<bin_threshold:
-                    av_wvf_threshold[:bin_ref]               += (wvf[(bin_threshold-bin_ref):bin_threshold]/n_wvs);
-                    av_wvf_threshold[bin_ref:-(bin_threshold-bin_ref)]  += (wvf[bin_threshold:]/n_wvs);
-                else:
-                    av_wvf_threshold[(bin_ref-bin_threshold):bin_ref]   += (wvf[:bin_threshold]/n_wvs);
-                    av_wvf_threshold[bin_ref:-1]             += (wvf[bin_threshold:-(bin_ref-bin_threshold+1)]/n_wvs);
-            
-            if check_key(OPT,"PRINT_KEYS") == True and OPT["PRINT_KEYS"] == True: print_keys(my_runs)
-            
-            my_runs[run][ch]["AveWvfPeak"]      = [av_wvf_peak]
-            my_runs[run][ch]["AveWvfThreshold"] = [av_wvf_threshold]
-            # del my_runs[run][ch]["ADC"]
-
-            # np.save(aux_path,my_runs[run][ch])
-            # print("Saved data in:" , aux_path)
+            # my_runs[run][ch]["AveWvfThreshold"+cut_label] = np.roll(aux_ADC, bin_ref_thld - bin_max_thld,axis=1)
 
         except KeyError:
             print("Empty dictionary. No average to compute.")
@@ -207,10 +171,10 @@ def integrate_wvfs(my_runs, types, ref, factors, ranges):
                 # x = my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch]["AnaADC"][0]))
                 if typ == "ChargeAveRange":
                     i_idx,f_idx = find_baseline_cuts(ave[i])
-                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["AnaADC"][:,i_idx:f_idx],axis=1)*factors[0]/factors[1]*1e12
+                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1)*factors[0]/factors[1]*1e12
                 if typ == "ChargeRange":
                     i_idx = int(np.round(ranges[0]/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(ranges[1]/my_runs[run][ch]["Sampling"]))
-                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["AnaADC"][:,i_idx:f_idx],axis=1)*factors[0]/factors[1]*1e12
+                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1)*factors[0]/factors[1]*1e12
             print("Integrated wvfs according to %s baseline integration limits"%ref)
     
     except KeyError:
