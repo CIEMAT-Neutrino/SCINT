@@ -21,8 +21,8 @@ else          : input_file = input("Please select input File: ")
 info = read_input_file(input_file)
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
-# runs = np.append(runs,info["LIGHT_RUNS"])
-# runs = np.append(runs,info["ALPHA_RUNS"])
+runs = np.append(runs,info["LIGHT_RUNS"])
+runs = np.append(runs,info["ALPHA_RUNS"])
 # runs = np.append(runs,info["MUONS_RUNS"])
 
 channels = np.append(channels,info["CHAN_STNRD"])
@@ -34,30 +34,27 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     # Start to load_runs 
     my_runs = load_npy([run],[ch],preset="RAW",info=info,compressed=True)
     
-    compute_peak_variables(my_runs)
-    compute_pedestal_variables(my_runs)
-    print(my_runs.keys())
+    compute_peak_variables(my_runs,key="RawADC",label="Raw")
+    compute_pedestal_variables(my_runs,key="RawADC",label="Raw")
+    print(my_runs[run][ch].keys())
+    delete_keys(my_runs,["RawADC"]) # Delete previous peak and pedestal variables
     save_proccesed_variables(my_runs,"ALL",info=info, force=True)
 
 
 # PROCESS WAVEFORMS (Run in loop to avoid memory issues)
 for run, ch in product(runs.astype(int),channels.astype(int)):
     
-    # my_runs = load_npy([run],[ch],branches="ALL", info=info, compressed=True)
-    my_runs = load_npy([run],[ch],preset="ALL",info=info,compressed=True)
-
+    my_runs = load_npy([run],[ch],preset="RAW",info=info,compressed=True)
     print(my_runs[run][ch].keys())
     compute_ana_wvfs(my_runs,debug=False)
 
-    delete_keys(my_runs,['PeakAmp', 'PeakTime', 'PedSTD', 'PedMean', 'PedMax', 'PedMin', 'PedLim','PChannel'])  # Delete raw peak and pedestal variables
-    insert_variable(my_runs,[1,1,1,1],"PChannel")                                                               # Change polarity!
+    insert_variable(my_runs,np.ones(len(channels)),"PChannel") # Change polarity!
     
-    compute_peak_variables(my_runs,key="AnaADC")                                                                # Compute new peak variables
-    compute_pedestal_variables(my_runs,key="AnaADC",debug=True)
+    compute_peak_variables(my_runs,key="ADC") # Compute new peak variables
+    compute_pedestal_variables(my_runs,key="ADC",debug=False) # Compute new ped variables
     
-    delete_keys(my_runs,["ADC"])
-
-    average_wvfs(my_runs)
-    integrate_wvfs(my_runs,["ChargeAveRange"],"AveWvf",["DAQ", 250],[0,100])
+    average_wvfs(my_runs,threshold=5) # Compute average wvfs
+    integrate_wvfs(my_runs,["ChargeAveRange"],"AveWvf",["DAQ", 250],[0,100]) # Compute charge according to selected average wvf ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
     
+    delete_keys(my_runs,["RawADC",'RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','RawPChannel']) # Delete branches to avoid overwritting
     save_proccesed_variables(my_runs,"ALL",info=info, force=True)
