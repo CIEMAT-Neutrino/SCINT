@@ -50,13 +50,12 @@ def find_amp_decrease(raw,thrld):
             break
     return i_idx,f_idx
 
-def average_wvfs(my_runs, threshold=5, cut_label="", OPT={}):
+def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
     """
     It calculates the average waveform of a run in three different ways:
         - AveWvf: each event is added without centering
         - AveWvfPeak: 
         - AveWvfThreshold: 
-    LA VERDAD NO ENTIENDO ESTA FUNCIÓN CHICO (Ask Rodrigo)
     """
 
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -66,63 +65,28 @@ def average_wvfs(my_runs, threshold=5, cut_label="", OPT={}):
             else:
                 generate_cut_array(my_runs)
                 cut_label = ""
+            
+            # centering none
+            if centering == "NONE":
+                mean_ana_ADC = np.mean(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=0)
+                my_runs[run][ch]["AveWvf"+cut_label] = [mean_ana_ADC]
+            
+            # centering peak
+            if centering == "PEAK":
+                aux_ADC = my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]
+                bin_ref_peak = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1)) #using the mode peak as reference
+                bin_max_peak = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1) 
+                my_runs[run][ch]["AveWvfPeak"+cut_label] = np.roll(aux_ADC, bin_ref_peak[0] - bin_max_peak,axis=1)
 
-            mean_ana_ADC = np.mean(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=0)
-            my_runs[run][ch]["AveWvf"+cut_label] = [mean_ana_ADC]
-            
-            aux_ADC = my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]
-            
-            # # centering peak
-            # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1)) #using the mode peak as reference
-            # bin_max_peak = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1) 
-            
-            # my_runs[run][ch]["AveWvfPeak"+cut_label] = np.roll(aux_ADC, bin_ref_peak - bin_max_peak,axis=1)
-
-            # # centering thld
-            # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1)) #using the mode peak as reference
-            # bin_max_thld = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1) 
-            
-            # my_runs[run][ch]["AveWvfThreshold"+cut_label] = np.roll(aux_ADC, bin_ref_thld - bin_max_thld,axis=1)
+            # centering thld
+            if centering == "THRESHOLD":
+                if threshold == 0: threshold = np.max(mean_ana_ADC)/2
+                bin_ref_thld = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1)) #using the mode peak as reference
+                bin_max_thld = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1) 
+                my_runs[run][ch]["AveWvfThreshold"+cut_label] = np.roll(aux_ADC, bin_ref_thld[0] - bin_max_thld,axis=1)
 
         except KeyError:
             print("Empty dictionary. No average to compute.")
-
-def average_SPE_wvfs(my_runs, out_runs, key, OPT={}):
-    """
-    It computes the average waveform of a single photoelectron. Previously, we have to calculate the charge histogram and check the SPE charge limits.
-    This function takes those values to isolate the SPE events.
-    VARIABLES:
-        - my_runs: run(s) we want to use
-        - out_runs: indicate the .npy where we want to save the average waveform.
-        - key:
-        - OPT: 
-    """
-
-    for run,ch,key in product(my_runs["NRun"], my_runs["NChannel"], key):
-        # try:
-        
-        aux_ADC = np.zeros(len(my_runs[run][ch]["AnaADC"][0]))
-        counter = 0
-        
-        min_charge = my_runs[run][ch]["MinChargeSPE"]
-        max_charge = my_runs[run][ch]["MaxChargeSPE"]
-        
-        for i in range(len(my_runs[run][ch]["AnaADC"])):
-
-            # Check charge in SPE range
-            if min_charge < my_runs[run][ch][key][i] < max_charge:
-                aux_ADC = aux_ADC + my_runs[run][ch]["AnaADC"][i]
-                counter = counter + 1    
-
-        out_runs[run][ch]["SPEAvWvf"] = [aux_ADC/counter]
-        
-        if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
-            plt.plot(4e-9*np.arange(len(out_runs[run][ch]["SPEAveWvf"])),out_runs[run][ch]["SPEAveWvf"])
-            plt.show()
-        if check_key(OPT,"PRINT_KEYS") == True and OPT["PRINT_KEYS"] == True: print_keys(my_runs)
-            
-        # except KeyError:
-        #     print("Empty dictionary. No average_SPE to compute.")
 
 def expo_average(my_run, alpha):
     """ DOC """
