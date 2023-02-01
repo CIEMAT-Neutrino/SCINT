@@ -12,6 +12,7 @@ from itertools import product
 from .io_functions import check_key,print_keys
 from .vis_functions import vis_var_hist
 from .fit_functions import gaussian,gaussian_train, loggaussian, loggaussian_train
+from .ana_functions import generate_cut_array, get_units
 
 from .fig_config import (
     add_grid,
@@ -19,12 +20,17 @@ from .fig_config import (
 
 def calibrate(my_runs, keys, OPT={}):
     """Computes calibration hist of a collection of runs and returns gain and SPE charge limits"""
-    
+
     plt.ion()
     next_plot = False
     idx = 0
-
+    save_calibration=[]
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
+        if check_key(my_runs[run][ch], "MyCuts") == False:
+            generate_cut_array(my_runs)
+        if check_key(my_runs[run][ch], "Units") == False:
+            get_units(my_runs)
+        
         try:
             idx = idx + 1
 
@@ -34,7 +40,7 @@ def calibrate(my_runs, keys, OPT={}):
             prom = 0.5
             acc  = 1000
 
-            counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
+            counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
             plt.close()
             fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
 
@@ -120,8 +126,12 @@ def calibrate(my_runs, keys, OPT={}):
             # print("SPE max charge for run %i ch %i = %.2E"%(run,ch,popt[3] + abs(popt[5])))
             my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
             # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
+            save_calibration.append(popt)
         except KeyError:
-            return print("Empty dictionary. No calibration to show.")
+            print("Empty dictionary. No calibration to show.")
+    
     # plt.ioff()
     plt.clf()
     plt.close()
+    
+    return save_calibration

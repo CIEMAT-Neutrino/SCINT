@@ -11,21 +11,12 @@ import matplotlib.pyplot as plt
 from itertools import product
 from .io_functions import check_key,print_keys,copy_single_run
 from .vis_functions import vis_two_var_hist
+from .ana_functions import generate_cut_array
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
 from .fig_config import*
 
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-
-def generate_cut_array(my_runs):
-    """
-    This function generates an array of bool = True with length = NEvts. If cuts are applied and then you run this function, it resets the cuts.
-    """
-    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
-        for key in my_runs[run][ch].keys():
-            if key.find("ADC") > 0:
-                ADC_key = key
-        my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
     """
