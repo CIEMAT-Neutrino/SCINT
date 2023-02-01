@@ -3,7 +3,7 @@ import copy
 import sys
 
 # from .io_functions import load_npy
-from .io_functions import check_key
+from .io_functions import check_key, print_keys
 
 import matplotlib.pyplot as plt
 from scipy import stats as st
@@ -20,6 +20,16 @@ def insert_variable(my_runs, var, key, debug = False):
         except: 
             KeyError
             if debug: print("Inserting value...")
+
+def generate_cut_array(my_runs):
+    """
+    This function generates an array of bool = True with length = NEvts. If cuts are applied and then you run this function, it resets the cuts.
+    """
+    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
+        for key in my_runs[run][ch].keys():
+            if key.find("ADC") > 0:
+                ADC_key = key
+        my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
 
 def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""

@@ -9,7 +9,7 @@ import keyboard
 import math
 
 from .io_functions import load_npy,check_key
-# from .cut_functions import generate_cut_array
+from .ana_functions import generate_cut_array
 from itertools import product
 
 import scipy
@@ -228,7 +228,7 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
         except: axs.clear()
         plt.close()
 
-def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"Show": True}):
+def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}):
     """
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
@@ -247,12 +247,15 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"Show": 
     all_bins = []
     all_bars = []
     aux_data = []
-    try:
-        for i in range(len(my_run[run][ch]["MyCuts"])):
-            if my_run[run][ch]["MyCuts"][i] == False: continue
-            else:
-                aux_data.append(my_run[run][ch][key][i])
-    except: print("Run generate_cut_array!");
+    if check_key(my_run[run][ch], "MyCuts") == False:
+        generate_cut_array(my_run)
+
+    for i in range(len(my_run[run][ch]["MyCuts"])):
+        if my_run[run][ch]["MyCuts"][i] == False: continue
+        else:
+            aux_data.append(my_run[run][ch][key][i])
+    # except: print("Run generate_cut_array!")
+
     plt.ion()
     data = []
     if key == "PeakAmp":
@@ -279,13 +282,13 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"Show": 
     all_bars.append(bars)
     fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
     fig.supxlabel(key+" ("+my_run[run][ch]["Units"][key]+")"); fig.supylabel("Counts")
-    if check_key(OPT,"Show") == True and OPT["Show"] == True:
+    if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
         plt.show()
         while not plt.waitforbuttonpress(-1): pass
     plt.close()
     return all_counts, all_bins, all_bars
 
-def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_range = False, OPT = {"Show": True}):
+def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_range = False,OPT={}):
     """
     This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     It plots values below and above the indicated percetiles, but values are not removed from data.
@@ -323,7 +326,7 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
         ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
         ax.grid("both")
         fig.supxlabel(keys[0]); fig.supylabel(keys[1])
-    if OPT["Show"] == True: 
+    if OPT["SHOW"] == True: 
         plt.show(); 
         while not plt.waitforbuttonpress(-1): pass    
     return fig, ax
