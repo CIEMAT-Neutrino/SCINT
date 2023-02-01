@@ -43,6 +43,7 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     compute_peak_variables(my_runs,key="ADC") # Compute new peak variables
     compute_pedestal_variables(my_runs,key="ADC",debug=False) # Compute new ped variables
     
+    print(my_runs[run][ch].keys())
     average_wvfs(my_runs,centering="NONE") # Compute average wvfs
     # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
     # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!

@@ -20,7 +20,7 @@ from .fig_config import (
     figure_features,
 )
 
-def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
+def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
     """
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -83,13 +83,15 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = np.mean(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
-                
+                    label = "Raw"
+
                 if(key == "ADC"):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = 0
                     std = my_run[run][ch_list[j]]["PedSTD"][idx]
-
+                    label = ""
+                    
                 if OPT["NORM"] == True and OPT["NORM"] == True:
                     norm_raw[j] = (np.max(raw[j]))
                     raw[j] = raw[j]/np.max(raw[j])
@@ -106,7 +108,7 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
                     # fig.tight_layout(h_pad=2) # If we want more space betweeb subplots. We avoid small vertical space between plots            
                     axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
                     axs[j].grid(True, alpha = 0.7)
-                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]]["PedLim"],my_run[run][ch_list[j]]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                     axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
                     axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
                     axs[j].set_title("Run {} - Ch {} - Event Number {}".format(run,ch_list[j],idx),size = 14)
@@ -150,7 +152,7 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
                         std = 0 # It is ugly if we see this line in log plots
                     axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]))
                     axs.grid(True, alpha = 0.7)
-                    axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]]["PedLim"],my_run[run][ch_list[j]]["PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                     axs.set_title("Run {} - Event Number {}".format(run,idx),size = 14)
                     axs.xaxis.offsetText.set_fontsize(14)
                     
@@ -189,12 +191,12 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
                 if OPT["SHOW_PARAM"] == True:
                     print('\033[1m' + "\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]) + '\033[0m')
                     print("- Sampling: {:.0E}".format(sampling))
-                    print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]]["PedMean"][idx]))
-                    print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]]["PedSTD"][idx]))
-                    print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch_list[j]]["PedMin"][idx],my_run[run][ch_list[j]]["PedMax"][idx]))
-                    print("- Pedestal time limit: {:.4E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]]["PedLim"]))
-                    print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch_list[j]]["PeakAmp"][idx]))
-                    print("- Max Peak Time: {:.2E}".format(my_run[run][ch_list[j]]["PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
+                    print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]][label+"PedMean"][idx]))
+                    print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]][label+"PedSTD"][idx]))
+                    print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch_list[j]][label+"PedMin"][idx],my_run[run][ch_list[j]][label+"PedMax"][idx]))
+                    print("- Pedestal time limit: {:.4E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PedLim"]))
+                    print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch_list[j]][label+"PeakAmp"][idx]))
+                    print("- Max Peak Time: {:.2E}".format(my_run[run][ch_list[j]][label+"PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
                     try:
                         print("- Charge: {:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
                     except:

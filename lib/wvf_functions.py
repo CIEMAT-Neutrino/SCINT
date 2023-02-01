@@ -76,14 +76,14 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
                 aux_ADC = my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]
                 bin_ref_peak = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1)) #using the mode peak as reference
                 bin_max_peak = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1) 
-                my_runs[run][ch]["AveWvfPeak"+cut_label] = np.roll(aux_ADC, bin_ref_peak[0] - bin_max_peak,axis=1)
+                my_runs[run][ch]["AveWvfPeak"+cut_label] = np.roll(aux_ADC, bin_max_peak - bin_ref_peak[0],axis=1)
 
             # centering thld
             if centering == "THRESHOLD":
                 if threshold == 0: threshold = np.max(mean_ana_ADC)/2
                 bin_ref_thld = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1)) #using the mode peak as reference
                 bin_max_thld = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1) 
-                my_runs[run][ch]["AveWvfThreshold"+cut_label] = np.roll(aux_ADC, bin_ref_thld[0] - bin_max_thld,axis=1)
+                my_runs[run][ch]["AveWvfThreshold"+cut_label] = np.roll(aux_ADC, bin_max_thld - bin_ref_thld[0],axis=1)
 
         except KeyError:
             print("Empty dictionary. No average to compute.")
