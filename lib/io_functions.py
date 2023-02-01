@@ -231,7 +231,7 @@ def delete_keys(my_runs, keys):
 #************************** LOAD/SAVE NPY **********************************#
 #===========================================================================#   
 
-def load_npy(runs, channels, preset="ALL", branch_list = [], info={}, debug = False, compressed=True):
+def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False, compressed=True):
     """
     Structure: run_dict[runs][channels][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
@@ -254,10 +254,10 @@ def load_npy(runs, channels, preset="ALL", branch_list = [], info={}, debug = Fa
                 branch_list = os.listdir(path+in_folder)
 
             elif preset == "ANA":
-                key_list = os.listdir(path+in_folder)
-                for key in key_list:
-                    if key.startswith("Raw"): key_list.remove(key) 
-
+                branch_list = os.listdir(path+in_folder)
+                for key in branch_list:
+                    if key.startswith("Raw"): branch_list.remove(key) 
+                
             elif preset == "RAW":
                 branch_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean","RawPedMax","RawPedMin","RawPedLim", "RawPChannel"]
             
@@ -275,7 +275,7 @@ def load_npy(runs, channels, preset="ALL", branch_list = [], info={}, debug = Fa
             print("-> DONE!\n")
     return my_runs
 
-def save_proccesed_variables(my_runs, branches = "ALL", info={}, force=False, debug = False, compressed=True):
+def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, force=False, debug = False, compressed=True):
     """
     Does exactly what it says, no RawWvfs here
     """
@@ -289,17 +289,17 @@ def save_proccesed_variables(my_runs, branches = "ALL", info={}, force=False, de
             files=os.listdir(path+out_folder)
             
             if branches == "ALL":
-                key_list = aux[run][ch].keys()
+                branch_list = aux[run][ch].keys()
             
             elif branches == "ANA":
-                key_list = os.listdir(path+out_folder)
-                for key in key_list:
-                    if key.startswith("Raw"): key_list.remove(key)   
+                branch_list = os.listdir(path+out_folder)
+                for key in branch_list:
+                    if key.startswith("Raw"): branch_list.remove(key)   
 
             elif branches == "RAW":
-                key_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean", "RawPedMax", "RawPedMin", "RawPedLim", "RawPChannel"]    
+                branch_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean", "RawPedMax", "RawPedMin", "RawPedLim", "RawPChannel"]    
             
-            for key in key_list:
+            for key in branch_list:
                 if key+".npz" in files and force == False:
                     print(key)
                     print(files)

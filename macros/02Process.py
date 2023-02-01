@@ -31,18 +31,6 @@ channels = np.append(channels,info["CHAN_STNRD"])
 
 """ To-Do: Avoid using loop in this macro. Maybe "ADC" type dict can be loaded in lazy mode """
 
-# PRE-PROCESS RAW #
-for run, ch in product(runs.astype(int),channels.astype(int)):
-    # Start to load_runs 
-    my_runs = load_npy([run],[ch],preset="RAW",info=info,compressed=True)
-    
-    compute_peak_variables(my_runs,key="RawADC",label="Raw")
-    compute_pedestal_variables(my_runs,key="RawADC",label="Raw")
-    print(my_runs[run][ch].keys())
-    delete_keys(my_runs,["RawADC"]) # Delete previous peak and pedestal variables
-    save_proccesed_variables(my_runs,"ALL",info=info, force=True)
-
-
 # PROCESS WAVEFORMS (Run in loop to avoid memory issues)
 for run, ch in product(runs.astype(int),channels.astype(int)):
     
@@ -55,8 +43,11 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     compute_peak_variables(my_runs,key="ADC") # Compute new peak variables
     compute_pedestal_variables(my_runs,key="ADC",debug=False) # Compute new ped variables
     
-    average_wvfs(my_runs,threshold=5) # Compute average wvfs
+    average_wvfs(my_runs,centering="NONE") # Compute average wvfs
+    # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
+    # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
     integrate_wvfs(my_runs,["ChargeAveRange"],"AveWvf",["DAQ", 250],[0,100]) # Compute charge according to selected average wvf ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
     
     delete_keys(my_runs,["RawADC",'RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','RawPChannel']) # Delete branches to avoid overwritting
     save_proccesed_variables(my_runs,"ALL",info=info, force=True)
+    del my_runs
