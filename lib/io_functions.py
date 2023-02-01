@@ -231,7 +231,7 @@ def delete_keys(my_runs, keys):
 #************************** LOAD/SAVE NPY **********************************#
 #===========================================================================#   
 
-def load_npy(runs, channels, preset="ALL", branch_list = [], info={}, debug = False, compressed=True):
+def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False, compressed=True):
     """
     Structure: run_dict[runs][channels][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
@@ -257,7 +257,8 @@ def load_npy(runs, channels, preset="ALL", branch_list = [], info={}, debug = Fa
                 key_list = os.listdir(path+in_folder)
                 for key in key_list:
                     if key.startswith("Raw"): key_list.remove(key) 
-
+                branch_list = key_list
+                
             elif preset == "RAW":
                 branch_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean","RawPedMax","RawPedMin","RawPedLim", "RawPChannel"]
             
