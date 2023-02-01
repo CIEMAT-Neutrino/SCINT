@@ -3,7 +3,7 @@ import copy
 import sys
 
 # from .io_functions import load_npy
-from .io_functions import check_key, print_keys
+from .io_functions import check_key
 
 import matplotlib.pyplot as plt
 from scipy import stats as st
