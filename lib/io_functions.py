@@ -75,7 +75,8 @@ def load_npy(runs, channels, prefix = "", in_path = "../data/raw/", debug = Fals
         for ch in channels:
             try:    
                 try:
-                    aux[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npz",allow_pickle=True)["arr_0"]           
+                    # aux[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npz",allow_pickle=True)["arr_0"]           
+                    aux[ch] = np.load(in_path+prefix+"run"+str(run).zfill(2)+"_ch"+str(ch)+".npy",allow_pickle=True).item()          
                 except:    
                     try:
                         aux[ch] = np.load("../data/ana/Analysis_run"+str(run).zfill(2)+"_ch"+str(ch)+".npz",allow_pickle=True)["arr_0"]

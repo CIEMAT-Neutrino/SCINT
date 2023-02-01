@@ -25,7 +25,6 @@ def generate_cut_array(my_runs):
         for key in my_runs[run][ch].keys():
             if key.find("ADC") > 0:
                 ADC_key = key
-                # print(key)
         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
@@ -76,39 +75,13 @@ def cut_min_max_sim(my_runs, keys, limits):
                     else: print(keys," does not exist in my_runs!")
         else: print("Run generate_cut_array")
 
-# def cut_std(my_runs, keys, limits):
-#     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
-#         data = my_runs[run][ch][key]
-#         ypbot = np.percentile(data, 0.1); yptop = np.percentile(data, 0.99)
-#         ypad = 0.2*(yptop - ypbot)
-#         ymin = ypbot - ypad; ymax = yptop + ypad
-#         data = [i for i in data if ymin<i<ymax]
-
-# def cut_std(my_runs, keys, limits):
-#     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
-#         data = my_runs[run][ch][key]
-#         ypbot = np.percentile(data, 0.1); yptop = np.percentile(data, 0.99)
-#         ypad = 0.2*(yptop - ypbot)
-#         ymin = ypbot - ypad; ymax = yptop + ypad
-#         data = [i for i in data if ymin<i<ymax]
-#         for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
-#             if check_key(my_runs[run][ch], "MyCuts") == True:
-#                 if check_key(my_runs[run][ch], key) == True:
-#                     for i in range(len(my_runs[run][ch][key])):
-#                         if limits[key][0] <= my_runs[run][ch][key][i] <= limits[key][1]:
-#                             continue
-#                         else: my_runs[run][ch]["MyCuts"][i] = False
-#                 else: print(key," does not exist in my_runs!")
-#             else: print("Run generate_cut_array")
-
 def cut_lin_rel(my_runs, keys):
     """
     This is a function to cut manually with a polygonal figure on two variables. You can do any polygonal figure (avoid strange figures with crossed lines).
-    With "left click" you choose vertexes, with "right click" you delete the last vertex and with "middle click" you finish the figure.
+    "Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
     VARIABLES:
         - keys: a LIST of variables you want to plot and cut
     """
-    plt.ion() # If we want to use the terminal we must turn on this line
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == True:
                 for j in range(len(keys)):
@@ -117,7 +90,7 @@ def cut_lin_rel(my_runs, keys):
                     else: print("IAAA ERROR"); break
                 figure_features()
                 fig, ax = vis_two_var_hist(my_runs,run,ch,[keys[0],keys[1]], [0.1,99.9], OPT = {"Show": False})
-                coords = fig.ginput(100)
+                coords = fig.ginput(100, timeout=60)
                 polygon = Polygon(coords)
                 n_points = len(coords)
                 print(n_points)
@@ -148,7 +121,11 @@ def cut_lin_rel(my_runs, keys):
                 print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
         else: print("Run generate_cut_array")
         while not fig.waitforbuttonpress(-1): pass
-        plt.clf()
-        plt.ioff()
-    plt.ioff() # If we want to use the terminal we must turn on this line
-    plt.clf()
+
+# def cut_std(my_runs, keys, limits):
+#     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
+#         data = my_runs[run][ch][key]
+#         ypbot = np.percentile(data, 0.1); yptop = np.percentile(data, 0.99)
+#         ypad = 0.2*(yptop - ypbot)
+#         ymin = ypbot - ypad; ymax = yptop + ypad
+#         data = [i for i in data if ymin<i<ymax]
