@@ -100,10 +100,12 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
                 my_dict[branch]=f["IR02"][branch].array().to_numpy()
             
             # additional useful info
-            my_dict["NBinsWvf"] = my_dict["ADC"][0].shape[0]
+            my_dict["RawADC"] = my_dict["ADC"]
+            del my_dict["ADC"]
+            my_dict["NBinsWvf"] = my_dict["RawADC"][0].shape[0]
             my_dict["Sampling"] = info["SAMPLING"][0]
             my_dict["Label"] = info["CHAN_LABEL"][j]
-            my_dict["PChannel"] = int(info["CHAN_POLAR"][j])
+            my_dict["RawPChannel"] = int(info["CHAN_POLAR"][j])
 
             np.save(out_path+out_file,my_dict)
             
@@ -115,7 +117,7 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
         except FileNotFoundError:
             print("--- File %s was not foud!!! \n"%in_file)
 
-def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_lines=6):
+def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_lines=6, force=False):
     """
     Dumper from binary format to npy tuples. 
     Input are binary input file path and npy outputfile as strings. 
@@ -139,31 +141,38 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
         header     = np.fromfile(in_path+in_file, dtype='I')[:6] #read first event header
         NSamples   = int(header[0]/2-header_lines*2)
         Event_size = header_lines*2+NSamples
-        data       = np.fromfile(in_path+in_file, dtype='H');
-        N_Events   = int( data.shape[0]/Event_size );
+        data       = np.fromfile(in_path+in_file, dtype='H')
+        N_Events   = int( data.shape[0]/Event_size )
 
         if debug:
+            print("#####################################################################")
             print("Header:",header)
             print("Waveform Samples:",NSamples)
             print("Event_size(wvf+header):",Event_size)
             print("N_Events:",N_Events)
+            print("#####################################################################\n")
             
         #reshape everything, delete unused header
         ADC = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
         
-        branches = ["ADC", "NBinsWvf", "Sampling", "Label", "PChannel"]
+        branches = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPChannel"]
         content  = [ADC, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
         files=os.listdir(out_path+out_folder)
 
         for i, branch in enumerate(branches):
             try:
-                if branch+".npz" in files:
+                if branch+".npz" in files and force == True:
                     print("File (%s.npz) alredy exists. OVERWRITTEN"%branch)
                     os.remove(out_path+out_folder+branch+".npz") 
                     np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
                     if not compressed:
                         os.remove(out_path+out_folder+branch+".npy") 
                         np.save(out_path+out_folder+branch+".npy", content[i])
+                
+                elif branch+".npz" in files and force == False:
+                    print("File (%s.npz) alredy exists."%branch)
+                    continue
+
                 else:
                     np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
                     if not compressed:
@@ -226,6 +235,7 @@ def load_npy(runs, channels, preset="ALL", branch_list = [], info={}, debug = Fa
     """
     Structure: run_dict[runs][channels][BRANCH] 
     \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
+    \n Presets can be used to only load a subset of desired branches. ALL is default.
     """
 
     path = "../data/"+info["MONTH"][0]+"/npy/"
@@ -242,19 +252,27 @@ def load_npy(runs, channels, preset="ALL", branch_list = [], info={}, debug = Fa
 
             if preset == "ALL":
                 branch_list = os.listdir(path+in_folder)
-            elif preset == "RAW":
-                branch_list = ["ADC", "NBinsWvf", "Sampling", "Label", "PChannel"]
 
+            elif preset == "ANA":
+                key_list = os.listdir(path+in_folder)
+                for key in key_list:
+                    if key.startswith("Raw"): key_list.remove(key) 
+
+            elif preset == "RAW":
+                branch_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean","RawPedMax","RawPedMin","RawPedLim", "RawPChannel"]
+            
+            print("\nLoading run %i ch %i with keys:"%(run,ch),branch_list)
             for branch in branch_list:   
                 try:
                     my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]           
                     if not compressed:
                         my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
 
-                    print("\nLoaded %s run with keys:"%branch,my_runs.keys())
-                    print("-----------------------------------------------")
+                    if debug: print("\nLoaded %s run with keys:"%branch,my_runs.keys())
+                    if debug: print("-----------------------------------------------")
                     # print_keys(runs)
                 except FileNotFoundError: print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
+            print("-> DONE!\n")
     return my_runs
 
 def save_proccesed_variables(my_runs, branches = "ALL", info={}, force=False, debug = False, compressed=True):
@@ -273,8 +291,13 @@ def save_proccesed_variables(my_runs, branches = "ALL", info={}, force=False, de
             if branches == "ALL":
                 key_list = aux[run][ch].keys()
             
+            elif branches == "ANA":
+                key_list = os.listdir(path+out_folder)
+                for key in key_list:
+                    if key.startswith("Raw"): key_list.remove(key)   
+
             elif branches == "RAW":
-                key_list = ["ADC", "NBinsWvf", "Sampling", "Label", "PChannel"]    
+                key_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean", "RawPedMax", "RawPedMin", "RawPedLim", "RawPChannel"]    
             
             for key in key_list:
                 if key+".npz" in files and force == False:
@@ -292,7 +315,8 @@ def save_proccesed_variables(my_runs, branches = "ALL", info={}, force=False, de
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                     if not compressed:
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
-
+    del my_runs
+    
 #DEPREACTED??#
 def copy_single_run(my_runs, runs, channels, keys):
     my_run = dict()

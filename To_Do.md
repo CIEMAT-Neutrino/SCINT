@@ -72,7 +72,3 @@ EXTRAS PARA CUANDO TODO FUNCIONE BIEN
 - [ ] Las funciones cogeran las waveforms en función de los booleanos.
 - [ ] Elegir nombres (en general) que tengan sentido y añadir unidades por cada variable calculada (para los ejes de los plots y demás)
 - [ ] Añadir unidades a los npy y solucionar lo de los labels
-
-
-
-

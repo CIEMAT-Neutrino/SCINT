@@ -78,13 +78,13 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
             raw = []
             norm_raw = [1]*nch # Generates a list with the norm correction for std bar
             for j in range(nch):
-                if (key == "ADC"):
+                if (key == "RawADC"):
                     min.append(np.argmin(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = np.mean(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                 
-                if(key == "AnaADC"):
+                if(key == "ADC"):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = 0
@@ -224,7 +224,7 @@ def vis_npy(my_run, keys, OPT = {}, evt_sel = -1, same_plot = False):
             if idx == len(my_run[run][ch_list[j]][key]): break
             try: [axs[j].clear() for j in range (nch)]
             except: axs.clear()
-        try: [axs[j].clear() for j in range (nch)];
+        try: [axs[j].clear() for j in range (nch)]
         except: axs.clear()
         plt.close()
 
