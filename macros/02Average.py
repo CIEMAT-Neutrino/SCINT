@@ -1,3 +1,11 @@
+# ---------------------------------------------------------------------------------------------------------------------- #
+#  =========================================== RUN:$ python3 02Average.py TEST ========================================= #
+# This macro will compute an AVERAGE WAVEFORM and a CHARGE computed with the points where the average reaches baseline   #
+# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
+# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
+# ---------------------------------------------------------------------------------------------------------------------- #
+
+#Falta hacer todos los imports con el mismo fichero#
 import sys
 sys.path.insert(0, '../')
 

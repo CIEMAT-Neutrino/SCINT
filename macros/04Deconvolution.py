@@ -1,3 +1,10 @@
+# ---------------------------------------------------------------------------------------------------------------------- #
+#  ======================================== RUN:$ python3 04Deconvolution.py TEST ====================================== #
+# This macro will    #
+# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
+# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
+# ---------------------------------------------------------------------------------------------------------------------- #
+
 import sys
 sys.path.insert(0, '../')
 

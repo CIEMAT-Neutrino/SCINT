@@ -1,3 +1,11 @@
+# ---------------------------------------------------------------------------------------------------------------------- #
+#  =========================================== RUN:$ python3 01Process.py TEST ========================================= #
+# This macro will process peak/pedestal variables (PRE-PROCESS) and save the AnaADC with the new baseline/polarity ...   #
+# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
+# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
+# ---------------------------------------------------------------------------------------------------------------------- #
+
+#Falta hacer todos los imports con el mismo fichero#
 import sys
 sys.path.insert(0, '../')
 
@@ -11,7 +19,6 @@ if sys.argv[1]: input_file = sys.argv[1]
 else          : input_file = input("Please select input File: ")
 
 info = read_input_file(input_file)
-# chmod o=rwx */*.npz
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
 # runs = np.append(runs,info["LIGHT_RUNS"])
@@ -21,7 +28,17 @@ runs = np.append(runs,info["CALIB_RUNS"])
 channels = np.append(channels,info["CHAN_STNRD"])
 
 """ To-Do: Avoid using loop in this macro. Maybe "ADC" type dict can be loaded in lazy mode """
-raw = ["ADC", "NBinsWvf", "Sampling", "Label", "PChannel"]
+
+# PRE-PROCESS RAW #
+for run, ch in product(runs.astype(int),channels.astype(int)):
+    # Start to load_runs 
+    my_runs = load_npy([run],[ch],preset="RAW",info=info,compressed=True)
+    
+    compute_peak_variables(my_runs)
+    compute_pedestal_variables(my_runs)
+    print(my_runs.keys())
+    save_proccesed_variables(my_runs,"ALL",info=info, force=True)
+
 
 # PROCESS WAVEFORMS (Run in loop to avoid memory issues)
 for run, ch in product(runs.astype(int),channels.astype(int)):
