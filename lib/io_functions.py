@@ -288,15 +288,15 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             files=os.listdir(path+out_folder)
             
-            if branches == "ALL":
+            if preset == "ALL":
                 branch_list = aux[run][ch].keys()
             
-            elif branches == "ANA":
+            elif preset == "ANA":
                 branch_list = os.listdir(path+out_folder)
                 for key in branch_list:
                     if key.startswith("Raw"): branch_list.remove(key)   
 
-            elif branches == "RAW":
+            elif preset == "RAW":
                 branch_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean", "RawPedMax", "RawPedMin", "RawPedLim", "RawPChannel"]    
             
             for key in branch_list:

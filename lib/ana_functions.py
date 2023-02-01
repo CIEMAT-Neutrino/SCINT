@@ -21,15 +21,18 @@ def insert_variable(my_runs, var, key, debug = False):
             KeyError
             if debug: print("Inserting value...")
 
-def generate_cut_array(my_runs):
+def generate_cut_array(my_runs,debug=False):
     """
     This function generates an array of bool = True with length = NEvts. If cuts are applied and then you run this function, it resets the cuts.
     """
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
+        if debug: print("Keys in my_run before generating cut array: ",my_runs[run][ch].keys())
         for key in my_runs[run][ch].keys():
-            if key.find("ADC") > 0:
+            if debug: print("Output of find function for key: ",key,key.find("ADC"))
+            if key.find("ADC") == 0:
                 ADC_key = key
         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
+        if debug: print("Keys in my_run after generating cut array: ",my_runs[run][ch].keys())
 
 def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""

@@ -10,11 +10,12 @@ sys.path.insert(0, '../')
 
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 from itertools import product
 
 from lib.io_functions import load_npy,save_proccesed_variables, read_input_file
 from lib.ana_functions import get_units
-from lib.wvf_functions import average_SPE_wvfs
+from lib.wvf_functions import average_wvfs
 from lib.cal_functions import calibrate
 from lib.cut_functions import *
 
@@ -31,7 +32,7 @@ channels = np.append(channels,info["CHAN_STNRD"])
 counter = 0
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
-    my_runs = load_npy([run],[ch],branch_list=["AnaADC","ChargeAveRange"],info=info,compressed=True)#preset="ANA"
+    my_runs = load_npy([run],[ch],branch_list=["ADC","ChargeAveRange"],info=info,compressed=True)#preset="ANA"
 
     print(my_runs[run][ch].keys())
 
@@ -44,9 +45,15 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
 
     print("Run ", run, "Channel ", ch)
     save_calibration = calibrate(my_runs,int_key,OPT)
-    # print(save_calibration[0])
+    SPE_min_charge = save_calibration[0][3]-save_calibration[0][5]
+    SPE_max_charge = save_calibration[0][3]+save_calibration[0][5]
+    cut_min_max(my_runs, int_key, limits = {int_key[0]: [SPE_min_charge,SPE_max_charge]})
+
+    average_wvfs(my_runs,centering="NONE",cut_label="SPE")
 
     #### SAVING RESULTS TXT #### WORK IN PROGRESS --> new function to clear macro (Laura)
+    if not os.path.exists("../fit_data/"):
+        os.makedirs("../fit_data/")
     with open("../fit_data/gain_ch%i.txt"%ch, 'a+') as f:
         if counter == 0:
             f.write("RUN\tPEAK\tMU\tDMU\tSIG\tDSIG\tGAIN\tDGAIN\tSN0\tDSN0\tSN1\tDSN1\tSN2\tDSN2\n")
@@ -56,12 +63,4 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
         f.write(str(save_calibration[0][-1])+"\n")
     counter += 1
 
-
-#   generate_cut_array(my_runs)
-#   get_units(my_runs)
-    # cut_lin_rel(my_runs, ["PeakAmp", "ChargeAveRange"])
-
-    # average_SPE_wvfs(my_runs,my_runs,int_key)
-    # average_SPE_wvfs(my_runs,ave_runs,int_key)
-    # save_proccesed_variables(my_runs,"Analysis_","../data/ana/")
-    # save_proccesed_variables(ave_runs,"Average_","../data/ave/")
+    save_proccesed_variables(my_runs,info=info,branch_list=["AveWvfSPE"])

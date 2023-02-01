@@ -17,9 +17,10 @@ from itertools import product
 from lib.io_functions import read_input_file,root2npy,binary2npy,load_npy,save_proccesed_variables
 from lib.ana_functions import compute_peak_variables,compute_pedestal_variables
 
-
-if sys.argv[1]: input_file = sys.argv[1]
-else          : input_file = input("Please select input File: ")
+try:
+    input_file = sys.argv[1]
+except IndexError:
+    input_file = input("Please select input File: ")
 
 info = read_input_file(input_file)
 
@@ -40,4 +41,4 @@ channels = np.append(channels,info["CHAN_STNRD"])
 
 if info["RAW_DATA"][0] == "DAT":
     print("----- Taking a .dat file as input data -----")
-    binary2npy(runs.astype(int),channels.astype(int),info=info,compressed=True,force=True)
+    binary2npy(runs.astype(int),channels.astype(int),info=info,compressed=True,force=False)
