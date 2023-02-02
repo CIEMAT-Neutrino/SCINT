@@ -1,4 +1,3 @@
-from itertools import product
 import numpy as np
 import pandas as pd
 
@@ -36,7 +35,7 @@ def save_Bin2Npz_compressed(file_in,file_out):
     np.savez_compressed(file_out,data_npy)
 
 
-def save_Run_Bin2Npz(Run,Channel,in_path="data/raw/",out_path="data/raw/") :
+def save_Run_Bin2Npz(Run,Channel,in_path="../data/raw/",out_path="../data/raw/") :
     """Run is an int, channel is an int array. In/out paths are strings."""
     for ch in Channel:
         inchan =in_path+"run"+str(Run).zfill(2)+"/wave"+str(ch)+".dat"
