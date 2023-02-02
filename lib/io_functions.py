@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import uproot
 import copy
+import stat
 
 from itertools import product
 
@@ -136,6 +137,8 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
 
         try:
             os.mkdir(out_path+out_folder)
+            os.chmod(out_path+out_folder, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
         except FileExistsError: print("DATA STRUCTURE ALREADY EXISTS") 
 
         header     = np.fromfile(in_path+in_file, dtype='I')[:6] #read first event header
@@ -165,9 +168,13 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
                     print("File (%s.npz) alredy exists. OVERWRITTEN"%branch)
                     os.remove(out_path+out_folder+branch+".npz") 
                     np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
+                    os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
                     if not compressed:
                         os.remove(out_path+out_folder+branch+".npy") 
                         np.save(out_path+out_folder+branch+".npy", content[i])
+                        os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
                 
                 elif branch+".npz" in files and force == False:
                     print("File (%s.npz) alredy exists."%branch)
@@ -175,8 +182,11 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
 
                 else:
                     np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
+                    os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
                     if not compressed:
                         np.save(out_path+out_folder+branch+".npy", content[i])
+                        os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
                 if debug:
                     print(branch)
@@ -227,9 +237,28 @@ def delete_keys(my_runs, keys):
         except KeyError:
             print("*EXCEPTION: ",run, ch, key," key combination is not found in my_runs")   
 
+def get_preset_list(path, in_folder, preset, debug = False):
+    if preset == "ALL":
+        branch_list = os.listdir(path+in_folder)
+
+    if preset == "ANA":
+        branch_list = os.listdir(path+in_folder); aux = []
+        for key in branch_list:
+            if not "Raw" in key: aux.append(key)
+        branch_list = aux
+
+    if preset == "RAW":
+        branch_list = os.listdir(path+in_folder); aux = ["NBinsWvf", "Sampling", "Label"]
+        for key in branch_list:
+            if "Raw" in key: aux.append(key)
+        branch_list = aux
+
+    if debug: print("\nPreset branch_list:", branch_list)
+    return branch_list
+
 #===========================================================================#
 #************************** LOAD/SAVE NPY **********************************#
-#===========================================================================#   
+#===========================================================================# 
 
 def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False, compressed=True):
     """
@@ -249,19 +278,8 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
         for ch in channels:
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
+            branch_list = get_preset_list(path, in_folder, preset, debug)
 
-            if preset == "ALL":
-                branch_list = os.listdir(path+in_folder)
-
-            elif preset == "ANA":
-                branch_list = os.listdir(path+in_folder)
-                for key in branch_list:
-                    if key.startswith("Raw"): branch_list.remove(key) 
-                
-            elif preset == "RAW":
-                branch_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean","RawPedMax","RawPedMin","RawPedLim", "RawPChannel"]
-            
-            print("\nLoading run %i ch %i with keys:"%(run,ch),branch_list)
             for branch in branch_list:   
                 try:
                     my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]           
@@ -270,7 +288,6 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
 
                     if debug: print("\nLoaded %s run with keys:"%branch,my_runs.keys())
                     if debug: print("-----------------------------------------------")
-                    # print_keys(runs)
                 except FileNotFoundError: print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
             print("-> DONE!\n")
     return my_runs
@@ -287,18 +304,8 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
         for ch in aux["NChannel"]:
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             files=os.listdir(path+out_folder)
-            
-            if preset == "ALL":
-                branch_list = aux[run][ch].keys()
-            
-            elif preset == "ANA":
-                branch_list = os.listdir(path+out_folder)
-                for key in branch_list:
-                    if key.startswith("Raw"): branch_list.remove(key)   
+            branch_list = get_preset_list(path, out_folder, preset, debug)
 
-            elif preset == "RAW":
-                branch_list = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPeakAmp", "RawPeakTime", "RawPedSTD", "RawPedMean", "RawPedMax", "RawPedMin", "RawPedLim", "RawPChannel"]    
-            
             for key in branch_list:
                 if key+".npz" in files and force == False:
                     print(key)
@@ -307,14 +314,19 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                     continue
                 if key+".npz" in files and force == True:
                     print("File (%s.npz) OVERWRITTEN "%key)
-                    os.remove(path+out_folder+key+".npz") 
+                    os.remove(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
+                    os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
                 else:
                     print("Saving NEW file: %s.npz"%key)
                     print(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
+                    os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
                     if not compressed:
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
+                        os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     del my_runs
     
 #DEPREACTED??#

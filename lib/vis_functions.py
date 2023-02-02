@@ -92,7 +92,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     std = my_run[run][ch_list[j]]["PedSTD"][idx]
                     label = ""
                     
-                if OPT["NORM"] == True and OPT["NORM"] == True:
+                if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
                     norm_raw[j] = (np.max(raw[j]))
                     raw[j] = raw[j]/np.max(raw[j])
 
@@ -102,15 +102,18 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     my_run[run][ch_list[j]]["Sampling"] = my_run[run][ch_list[j]]["Sampling"]*1e6
 
                 if same_plot == False:
-                    if OPT["LOGY"] == True:
+                    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
                         axs[j].semilogy()
                         std = 0 # It is ugly if we see this line in log plots
                     # fig.tight_layout(h_pad=2) # If we want more space betweeb subplots. We avoid small vertical space between plots            
                     axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
                     axs[j].grid(True, alpha = 0.7)
-                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
-                    axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
-                    axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
+                    try:
+                        axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                        axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
+                        axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
+                    except KeyError:
+                        print("Run preprocess please!")
                     axs[j].set_title("Run {} - Ch {} - Event Number {}".format(run,ch_list[j],idx),size = 14)
                     axs[j].xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
                     
@@ -127,7 +130,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
                         axs[j].legend()
 
-                    if OPT["PEAK_FINDER"]:
+                    if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
                         thresh = my_run[run][ch_list[j]]["PedMax"][idx]
                         wdth = 4
@@ -147,12 +150,15 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     except: pass
                 
                 else:
-                    if OPT["LOGY"] == True:
+                    if check_key(OPT, "LOGY") == True and OPT["LOGY"]:
                         axs.semilogy()
                         std = 0 # It is ugly if we see this line in log plots
                     axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]))
                     axs.grid(True, alpha = 0.7)
-                    axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    try:
+                        axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    except KeyError:
+                        print("Run preprocess please!")
                     axs.set_title("Run {} - Event Number {}".format(run,idx),size = 14)
                     axs.xaxis.offsetText.set_fontsize(14)
                     
@@ -169,7 +175,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
                         axs.legend()
 
-                    if OPT["PEAK_FINDER"]:
+                    if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
                         thresh = my_run[run][ch_list[j]]["PedMax"][idx]
                         wdth = 4
@@ -188,7 +194,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                             figure_features()
                     except: pass
                     
-                if OPT["SHOW_PARAM"] == True:
+                if check_key(OPT, "SHOW_PARAM") == True and OPT["SHOW_PARAM"]:
                     print('\033[1m' + "\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]) + '\033[0m')
                     print("- Sampling: {:.0E}".format(sampling))
                     print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]][label+"PedMean"][idx]))

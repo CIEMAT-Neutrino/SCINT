@@ -1,19 +1,19 @@
 # Do not use spaces " " except between KEYWORD and input variables
 # If input variables are a list, use "," as a separator
 
-RAW_DATA: ROOT
-MONTH: FEB22_2
+RAW_DATA: DAT
+MONTH: Feb22_2
 
 SAMPLING: 4e-9 
 
-OV_LABEL: OV2
+OV_LABEL: OV1
 
-MUONS_RUNS: -99
-LIGHT_RUNS: -99
-ALPHA_RUNS: -99
-CALIB_RUNS: 99
+MUONS_RUNS: 29
+LIGHT_RUNS: 9
+ALPHA_RUNS: 25
+CALIB_RUNS: 1
 
-CHAN_LABEL: SiPM0,SC
+CHAN_LABEL: SiPM0
 CHAN_STNRD: 0
 CHAN_CALIB: 0
-CHAN_POLAR: -1,-1
+CHAN_POLAR: -1
