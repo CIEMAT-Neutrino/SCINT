@@ -9,30 +9,36 @@ echo "\n We recommend to use the input/MergeDebug.txt file to try the macros bef
 echo "\n----------------------------------------------------------------------------------------------"
 echo "\n"
 
-# Root2Np.py --> loads .root + save into /data/raw/*.npy + pre-process
+# 00Raw2Np.py --> loads raw data + save into /data/MONTH/npy/
 echo "\n------------------ Testing Root2Np.py ------------------"
-python3 ../macros/Root2Np.py MergeDebug
+python3 ../macros/00Raw2Np.py MergeDebug
 echo "\n------ Expected output{Saved data in: ../data/raw/runXX_chY.npy}. Everything OK ------"
 
 
-#Process.py --> process waveforms and save in /data/ana/
+#01PreProcess.py --> pre-process raw waveforms and save PEDESTAL/PEAK variables
 echo "\n------------------ Testing Process.py ------------------"
-python3 ../macros/Process.py MergeDebug
+python3 ../macros/01PreProcess.py MergeDebug
 echo "\n------ Expected output{Saved data in: ../data/ana/Analysis_runXX_chY.npy}. Everything OK ------"
 
-# Average.py --> process waveforms and save in /data/ave/
+# 02Process.py --> process wvfs with raw pedesatal/peak info to get the ANA wvf with BASELINE/PCH changed
 echo "\n------------------ Testing Average.py ------------------"
-python3 ../macros/Average.py MergeDebug
+python3 ../macros/02Process.py MergeDebug
 echo "\n------ Expected output{Saved data in: ../data/ave/Average_runXX_chY.npy}. Everything OK ------"
 
 
-#Calibration.py --> calibrate (calibration runs)
+#03Calibration.py --> calibrate (calibration runs) and obtain gain values in txt
 echo "\n------------------ Testing Calibration.py ------------------"
-python3 ../macros/Calibration.py MergeDebug
+python3 ../macros/03Calibration.py MergeDebug
 echo "\n------ Expected output{PLOT + SPE gauss parameters X Y Z; Saved data in: ../data/ana/Analysis_runXX_chY.npy; Saved data in: ../data/ave/Average_runXX_chY.npy}. Everything OK ------"
 
 
-#Vis.py --> visualize event by event the selected runs&channels
+#0XVisTests.py --> visualize event by event the selected runs&channels
 echo "\n------------------ Testing Vis.py ------------------"
-python3 ../macros/Vis.py 1 0,6
+python3 ../macros/0XVisTests.py 1 0,6
+echo "\n------ Expected output{PLOT}. Everything OK ------"
+
+
+#04Decovolution.py --> perform deconvolution
+echo "\n------------------ Testing Vis.py ------------------"
+python3 ../macros/04Decovolution.py MergeDebug
 echo "\n------ Expected output{PLOT}. Everything OK ------"

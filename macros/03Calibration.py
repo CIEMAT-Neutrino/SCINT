@@ -5,19 +5,21 @@
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
-import sys
+import sys, os
 sys.path.insert(0, '../')
 
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 from itertools import product
 
-from lib.io_functions import load_npy,save_proccesed_variables, read_input_file
+from lib.header        import print_header
+from lib.io_functions  import load_npy,save_proccesed_variables, read_input_file
 from lib.ana_functions import get_units
 from lib.wvf_functions import average_wvfs
 from lib.cal_functions import calibrate
 from lib.cut_functions import *
+
+print_header()
 
 try:
     input_file = sys.argv[1]
@@ -45,11 +47,6 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
 
     print("Run ", run, "Channel ", ch)
     save_calibration = calibrate(my_runs,int_key,OPT)
-    SPE_min_charge = save_calibration[0][3]-save_calibration[0][5]
-    SPE_max_charge = save_calibration[0][3]+save_calibration[0][5]
-    cut_min_max(my_runs, int_key, limits = {int_key[0]: [SPE_min_charge,SPE_max_charge]})
-
-    average_wvfs(my_runs,centering="NONE",cut_label="SPE")
 
     #### SAVING RESULTS TXT #### WORK IN PROGRESS --> new function to clear macro (Laura)
     if not os.path.exists("../fit_data/"):
@@ -64,3 +61,9 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     counter += 1
 
     save_proccesed_variables(my_runs,info=info,branch_list=["AveWvfSPE"])
+
+    # SPE_min_charge = save_calibration[0][3]-save_calibration[0][5]
+    # SPE_max_charge = save_calibration[0][3]+save_calibration[0][5]
+    # cut_min_max(my_runs, int_key, limits = {int_key[0]: [SPE_min_charge,SPE_max_charge]})
+
+    # average_wvfs(my_runs,centering="NONE",cut_label="SPE")

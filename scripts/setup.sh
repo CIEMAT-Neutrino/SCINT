@@ -7,6 +7,10 @@ if [ ! -d "../data" ]; then
 mkdir ../data
 fi
 
+if [ ! -d "../fit_data" ]; then
+mkdir ../fit_data
+fi
+
 pip3 install     -r requirements.txt
 sudo apt install <requirementsTeX.txt
 
