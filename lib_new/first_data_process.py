@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-
+import gc #garbage collector interface
 
 def Bin2Npz_ADC(FileName,header_lines=6):
     """Dumps ADC binary .dat file with given header lines(6) and wvf size defined in header. \n
@@ -33,13 +33,15 @@ def save_Bin2Npz_compressed(file_in,file_out):
     """Self-explainatory. Computation time x10 slower than un-compresed, size x3 times smaller"""
     data_npy=Bin2Npz_ADC(file_in)
     np.savez_compressed(file_out,data_npy)
+    
+    del data_npy #free memory
+    gc.collect()
 
-
-def save_Run_Bin2Npz(Run,Channel,in_path="../data/raw/",out_path="../data/raw/") :
+def save_Run_Bin2Npz(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",out_name="RawADC") :
     """Run is an int, channel is an int array. In/out paths are strings."""
     for ch in Channel:
         inchan =in_path+"run"+str(Run).zfill(2)+"/wave"+str(ch)+".dat"
-        outchan=out_path+"run"+str(Run).zfill(2)+"/RawADC"+str(ch)  
+        outchan=out_path+"run"+str(Run).zfill(2)+"/"+out_name+"_ch"+str(ch)  
         
         print("-----------------")
         print("Dumping: ",inchan," to: ",outchan+".npz")
