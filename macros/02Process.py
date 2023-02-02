@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
-#  =========================================== RUN:$ python3 01Process.py TEST ========================================= #
+#  =========================================== RUN:$ python3 02Process.py TEST ========================================= #
 # This macro will process peak/pedestal variables (PRE-PROCESS) and save the AnaADC with the new baseline/polarity ...   #
 # Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
@@ -8,12 +8,15 @@
 #Falta hacer todos los imports con el mismo fichero#
 import sys
 sys.path.insert(0, '../')
-
 import numpy as np
+from itertools import product
+
+from lib.header        import print_header
 from lib.io_functions  import read_input_file,load_npy,delete_keys,save_proccesed_variables
 from lib.ana_functions import compute_pedestal_variables,compute_peak_variables,compute_ana_wvfs,insert_variable
 from lib.wvf_functions import average_wvfs,integrate_wvfs
-from itertools import product
+
+print_header()
 
 try:
     input_file = sys.argv[1]

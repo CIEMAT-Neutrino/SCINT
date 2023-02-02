@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
-#  ========================================= RUN:$ python3 02VisEvent.py 0 0,1,2 ======================================= #
+#  ========================================= RUN:$ python3 0XVisTests.py 0 0,1,2 ======================================= #
 # This macro will show the individual EVENTS of the introduced runs and channels to see if everything is working fine    #
 # Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
@@ -8,12 +8,14 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib.io_functions import *
+from lib.header        import print_header
+from lib.io_functions  import *
 from lib.ana_functions import *
-
 from lib.vis_functions import*
 from lib.cut_functions import*
-from lib.fig_config import*
+from lib.fig_config    import*
+
+print_header()
 
 ##### INPUT RUNS AND OPTIONS #####
 try:
@@ -51,8 +53,8 @@ print(my_runs[runs[0]][channels[0]].keys())
 #####################
 
 ##### EVENT VISUALIZER #####
-<<<<<<<< HEAD:macros/0XVis.py
-vis_npy(my_runs, ["ADC"],OPT,-1) # Input variables should be lists of integers
+vis_npy(my_runs, ["RawADC"],OPT,-1) # Input variables should be lists of integers
+vis_npy(my_runs, ["ADC"],OPT,-1)    # Input variables should be lists of integers
 ############################
 
 ##### CUTS #####
@@ -68,8 +70,3 @@ vis_npy(my_runs, ["ADC"],OPT,-1) # Input variables should be lists of integers
 #         vis_var_hist(my_runs, r, c, "ChargeAveRange",[0.1,99.9], {"Show": True})
 #         vis_two_var_hist(my_runs, r, c, ["PeakAmp", "ChargeAveRange"], OPT = {"Show": True})
 ######################
-
-========
-vis_npy(my_runs, ["RawADC"],OPT,-1) # Input variables should be lists of integers
-############################
->>>>>>>> bd564285e3e9a2990d20fa4a12249a3fe576e6e6:macros/02VisEvent.py
