@@ -43,7 +43,7 @@ def DumpBin2Npz(Run,Channel,in_path="data/raw/",out_path="data/raw/") :
         outchan=out_path+"run"+str(Run).zfill(2)+"/RawADC"+str(ch)  
         
         print("-----------------")
-        print("Dumping: ",inchan," to: ",outchan)
+        print("Dumping: ",inchan," to: ",outchan+".npz")
         print("-----------------")
         bin2npy_compressed(inchan,outchan)
 
@@ -52,5 +52,4 @@ def Bin2Npz_excel(excel_file_path=""):
     df = pd.read_excel(excel_file_path, sheet_name='Sheet1')
     df['Channel']=df['Channel'].apply(lambda x: list(map(int,x.split(",")))) #excell only allows one value per cell, convert string to array of channels
 
-    # branches = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPChannel"]
     df.apply(lambda x: DumpBin2Npz(x["Run"],x["Channel"]),axis=1);
