@@ -19,21 +19,18 @@ print_header()
 
 ##### INPUT RUNS AND OPTIONS #####
 try:
-    input_runs = sys.argv[1]
+    input_folder = sys.argv[1]
+    input_runs = sys.argv[2]
+    input_channels = sys.argv[3]
 except IndexError:
+    input_folder = input("Please select FOLDER (e.g Feb22_2): ")
     input_runs = input("Please select RUNS (separated with commas): ")
-
-try:
-    input_channels = sys.argv[2]
-except IndexError:
     input_channels = input("Please select CHANNELS (separated with commas): ")
 
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 
-input_file = input("Please select input File: ")
-info = read_input_file(input_file)
-
+info = {"MONTH": [input_folder]}
 OPT  = {
     "MICRO_SEC":   True,
     "NORM":        False,                # Runs can be displayed normalised (True/False)
@@ -48,12 +45,13 @@ OPT  = {
 ###################################
 
 ##### LOAD RUNS #####
+# my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True)
 my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True)
 print(my_runs[runs[0]][channels[0]].keys())
 #####################
 
 ##### EVENT VISUALIZER #####
-vis_npy(my_runs, ["RawADC"],OPT,-1) # Input variables should be lists of integers
+# vis_npy(my_runs, ["RawADC"],OPT,-1) # Input variables should be lists of integers
 vis_npy(my_runs, ["ADC"],OPT,-1)    # Input variables should be lists of integers
 ############################
 

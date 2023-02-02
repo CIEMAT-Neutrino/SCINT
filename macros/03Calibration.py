@@ -16,7 +16,7 @@ from lib.header        import print_header
 from lib.io_functions  import load_npy,save_proccesed_variables, read_input_file
 from lib.ana_functions import get_units
 from lib.wvf_functions import average_wvfs
-from lib.cal_functions import calibrate
+from lib.cal_functions import calibrate, compute_cal_parameters, calibration_txt
 from lib.cut_functions import *
 
 print_header()
@@ -31,7 +31,6 @@ info = read_input_file(input_file)
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
 channels = np.append(channels,info["CHAN_STNRD"])      
-counter = 0
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
     my_runs = load_npy([run],[ch],branch_list=["ADC","ChargeAveRange"],info=info,compressed=True)#preset="ANA"
@@ -45,25 +44,18 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
         "SHOW": True
         }
 
+    ## Calibration ##
     print("Run ", run, "Channel ", ch)
-    save_calibration = calibrate(my_runs,int_key,OPT)
-
-    #### SAVING RESULTS TXT #### WORK IN PROGRESS --> new function to clear macro (Laura)
-    if not os.path.exists("../fit_data/"):
-        os.makedirs("../fit_data/")
-    with open("../fit_data/gain_ch%i.txt"%ch, 'a+') as f:
-        if counter == 0:
-            f.write("RUN\tPEAK\tMU\tDMU\tSIG\tDSIG\tGAIN\tDGAIN\tSN0\tDSN0\tSN1\tDSN1\tSN2\tDSN2\n")
-        f.write(str(int(run))+"\t")
-        for value in range(len(save_calibration[0])-1): 
-            f.write(str(save_calibration[0][value])+"\t")
-        f.write(str(save_calibration[0][-1])+"\n")
-    counter += 1
+    popt, pcov, perr = calibrate(my_runs,int_key,OPT)
+    
+    ## Calibration parameters = mu,height,sigma,gain,sn0,sn1,sn2 ##
+    save_calibration = compute_cal_parameters(popt, pcov)
+    calibration_txt(run, ch, info=info, array_parameters=save_calibration)
+    
+    ## SPE Average Waveform ##
+    SPE_min_charge = popt[3]-popt[5]
+    SPE_max_charge = popt[3]+popt[5]
+    cut_min_max(my_runs, int_key, limits = {int_key[0]: [SPE_min_charge,SPE_max_charge]})
+    average_wvfs(my_runs,centering="NONE",cut_label="SPE")
 
     save_proccesed_variables(my_runs,info=info,branch_list=["AveWvfSPE"])
-
-    # SPE_min_charge = save_calibration[0][3]-save_calibration[0][5]
-    # SPE_max_charge = save_calibration[0][3]+save_calibration[0][5]
-    # cut_min_max(my_runs, int_key, limits = {int_key[0]: [SPE_min_charge,SPE_max_charge]})
-
-    # average_wvfs(my_runs,centering="NONE",cut_label="SPE")
