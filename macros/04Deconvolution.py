@@ -12,8 +12,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import product
 
-from lib.io_functions import load_npy,save_proccesed_variables
+from lib.header        import print_header
+from lib.io_functions  import load_npy,save_proccesed_variables
 from lib.dec_functions import deconvolve
+
+print_header()
 
 raw_runs = [25,26,27]
 dec_runs = [9,10,11]
