@@ -47,7 +47,7 @@ def calibrate(my_runs, keys, OPT={}):
             add_grid(ax_cal)
             counts = counts[0]; bins = bins[0]; bars = bars[0]
             ax_cal.hist(bins[:-1], bins, weights = counts)
-            fig_cal.supxlabel(key+" ("+my_runs[run][ch]["Units"][key]+")"); fig_cal.supylabel("Counts")
+            fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["Units"][key]+")"); fig_cal.supylabel("Counts")
 
             # Create linear interpolation between bins to search peaks in these variables
             x = np.linspace(bins[1],bins[-2],acc)
