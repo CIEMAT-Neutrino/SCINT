@@ -51,6 +51,6 @@ def save_Run_Bin2Npz(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",
 def Bin2Npz_excel(excel_file_path="",sheet='Sheet1'):
     """Calls the dumping function using a excel table with the data runs of our"""
     df = pd.read_excel(excel_file_path, sheet_name=sheet)
-    df['Channel']=df['Channel'].apply(lambda x: list(map(int,x.split(",")))) #excell only allows one value per cell, convert channels from string to array of ints
+    df['Channels']=df['Channels'].apply(lambda x: list(map(int,x.split(",")))) #excell only allows one value per cell, convert channels from string to array of ints
 
     df.apply(lambda x: save_Run_Bin2Npz(x["Run"],x["Channel"]),axis=1);
