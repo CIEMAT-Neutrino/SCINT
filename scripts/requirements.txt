@@ -8,3 +8,5 @@ keyboard
 pyqt5
 shapely
 curve
+pandas
+openpyxl
