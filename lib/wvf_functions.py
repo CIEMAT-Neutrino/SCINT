@@ -145,7 +145,7 @@ def integrate_wvfs(my_runs, types, ref, factors, ranges):
                 if typ == "ChargeAveRange":
                     i_idx,f_idx = find_baseline_cuts(ave[i])
                     my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1)*factors[0]/factors[1]*1e12
-                if typ == "ChargeRange":
+                if typ.startswith("ChargeRange"):
                     i_idx = int(np.round(ranges[0]/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(ranges[1]/my_runs[run][ch]["Sampling"]))
                     my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1)*factors[0]/factors[1]*1e12
             print("Integrated wvfs according to %s baseline integration limits"%ref)
