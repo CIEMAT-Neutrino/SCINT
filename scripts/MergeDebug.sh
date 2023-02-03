@@ -12,24 +12,24 @@ echo "\n"
 # 00Raw2Np.py --> loads raw data + save into /data/MONTH/npy/
 echo "\n------------------ Testing Root2Np.py ------------------"
 python3 ../macros/00Raw2Np.py MergeDebug
-echo "\n------ Expected output{Saved data in: ../data/raw/runXX_chY.npy}. Everything OK ------"
+echo "\n------ Expected output{Saved data in: ../data/MONTH/npy/runXX_chY/RAW_NAME_BRANCH.npy}. Everything OK ------"
 
 
 #01PreProcess.py --> pre-process raw waveforms and save PEDESTAL/PEAK variables
 echo "\n------------------ Testing Process.py ------------------"
 python3 ../macros/01PreProcess.py MergeDebug
-echo "\n------ Expected output{Saved data in: ../data/ana/Analysis_runXX_chY.npy}. Everything OK ------"
+echo "\n------ Expected output{Saved data in: ../data/MONTH/npy/runXX_chY/NAME_BRANCH.npy}. Everything OK ------"
 
 # 02Process.py --> process wvfs with raw pedesatal/peak info to get the ANA wvf with BASELINE/PCH changed
 echo "\n------------------ Testing Average.py ------------------"
 python3 ../macros/02Process.py MergeDebug
-echo "\n------ Expected output{Saved data in: ../data/ave/Average_runXX_chY.npy}. Everything OK ------"
+echo "\n------ Expected output{Saved data in: ../data/MONTH/npy/runXX_chY/ANA_NAME_BRANCH.npy}. Everything OK ------"
 
 
 #03Calibration.py --> calibrate (calibration runs) and obtain gain values in txt
 echo "\n------------------ Testing Calibration.py ------------------"
 python3 ../macros/03Calibration.py MergeDebug
-echo "\n------ Expected output{PLOT + SPE gauss parameters X Y Z; Saved data in: ../data/ana/Analysis_runXX_chY.npy; Saved data in: ../data/ave/Average_runXX_chY.npy}. Everything OK ------"
+echo "\n------ Expected output{FIT_PLOT + SPE gauss parameters X Y Z + ../fit_data/gain_chX.txt}. Everything OK ------"
 
 
 #0XVisTests.py --> visualize event by event the selected runs&channels
