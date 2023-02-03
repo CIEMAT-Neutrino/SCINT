@@ -220,9 +220,9 @@ def print_keys(my_runs):
 
     try:
         for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-            print("----------------------")
+            print("------------------------------------------------------------------------------------------------------------------------------------------------------")
             print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
-            print("----------------------\n")
+            print("------------------------------------------------------------------------------------------------------------------------------------------------------\n")
     except KeyError:
         return print("Empty dictionary. No keys to print.")
 
@@ -237,18 +237,39 @@ def delete_keys(my_runs, keys):
         except KeyError:
             print("*EXCEPTION: ",run, ch, key," key combination is not found in my_runs")   
 
-def get_preset_list(path, in_folder, preset, debug = False):
-    if preset == "ALL":
-        branch_list = os.listdir(path+in_folder)
+def get_preset_list(my_run, path, folder, preset, option, debug = False):
+    """
+    Return as output presets lists for load/save npy files.
+    Variables:
+        my_run: my_runs[run][ch]
+        path: saving path
+        folder: saving in/out folder
+        preset: 
+            (a) "ALL": all the existing keys/branches
+            (b) "ANA": Only Ana keys/branches (removing RAW info)
+            (c) "RAW": Only Raw information i.e loaded from Raw2Np + Raw* keys
+        option:
+            (a) "LOAD": takes the os.listdir(path+folder) as brach_list (IN)
+            (b) "SAVE": takes the my_run.keys() as branch list (OUT)
+    """
 
-    if preset == "ANA":
-        branch_list = os.listdir(path+in_folder); aux = []
+    dict_option = dict()
+    dict_option["LOAD"] = os.listdir(path+folder)
+    dict_option["SAVE"] = my_run.keys()
+
+    if preset == "ALL":
+        branch_list = dict_option[option]
+
+    elif preset == "ANA":
+        branch_list = dict_option[option]
+        aux = []
         for key in branch_list:
             if not "Raw" in key: aux.append(key)
         branch_list = aux
 
-    if preset == "RAW":
-        branch_list = os.listdir(path+in_folder); aux = ["NBinsWvf", "Sampling", "Label"]
+    elif preset == "RAW":
+        branch_list = dict_option[option]
+        aux = ["NBinsWvf", "Sampling", "Label"]
         for key in branch_list:
             if "Raw" in key: aux.append(key)
         branch_list = aux
@@ -278,7 +299,8 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
         for ch in channels:
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
-            branch_list = get_preset_list(path, in_folder, preset, debug)
+            if not branch_list:
+                branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug)
 
             for branch in branch_list:   
                 try:
@@ -304,15 +326,16 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
         for ch in aux["NChannel"]:
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             files=os.listdir(path+out_folder)
-            branch_list = get_preset_list(path, out_folder, preset, debug)
+            if not branch_list:
+               branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
 
             for key in branch_list:
+                key = key.replace(".npz","")
+
                 if key+".npz" in files and force == False:
-                    print(key)
-                    print(files)
                     print("File (%s.npz) alredy exists"%key)
                     continue
-                if key+".npz" in files and force == True:
+                elif key+".npz" in files and force == True:
                     print("File (%s.npz) OVERWRITTEN "%key)
                     os.remove(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
