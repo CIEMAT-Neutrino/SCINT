@@ -12,7 +12,7 @@ import numpy as np
 from itertools import product
 
 from lib.header        import print_header
-from lib.io_functions  import read_input_file,load_npy,delete_keys,save_proccesed_variables
+from lib.io_functions  import read_input_file,load_npy,delete_keys,save_proccesed_variables, print_keys
 from lib.ana_functions import compute_pedestal_variables,compute_peak_variables,compute_ana_wvfs,insert_variable
 from lib.wvf_functions import average_wvfs,integrate_wvfs
 
@@ -25,9 +25,9 @@ except IndexError:
 
 info = read_input_file(input_file)
 runs = []; channels = []
-# runs = np.append(runs,info["CALIB_RUNS"])
-runs = np.append(runs,info["LIGHT_RUNS"])
-runs = np.append(runs,info["ALPHA_RUNS"])
+runs = np.append(runs,info["CALIB_RUNS"])
+# runs = np.append(runs,info["LIGHT_RUNS"])
+# runs = np.append(runs,info["ALPHA_RUNS"])
 # runs = np.append(runs,info["MUONS_RUNS"])
 
 channels = np.append(channels,info["CHAN_STNRD"])
@@ -38,18 +38,16 @@ channels = np.append(channels,info["CHAN_STNRD"])
 for run, ch in product(runs.astype(int),channels.astype(int)):
     
     my_runs = load_npy([run],[ch],preset="RAW",info=info,compressed=True)
-    print(my_runs[run][ch].keys())
     compute_ana_wvfs(my_runs,debug=False)
 
     insert_variable(my_runs,np.ones(len(channels)),"PChannel") # Change polarity!
+    compute_peak_variables(my_runs,key="ADC")                  # Compute new peak variables
+    compute_pedestal_variables(my_runs,key="ADC",debug=False)  # Compute new ped variables
     
-    compute_peak_variables(my_runs,key="ADC") # Compute new peak variables
-    compute_pedestal_variables(my_runs,key="ADC",debug=False) # Compute new ped variables
-    
-    print(my_runs[run][ch].keys())
-    average_wvfs(my_runs,centering="NONE") # Compute average wvfs
-    # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
-    # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
+    print_keys(my_runs)
+    average_wvfs(my_runs,centering="NONE")                     # Compute average wvfs
+    # # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
+    # # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
     integrate_wvfs(my_runs,["ChargeAveRange"],"AveWvf",["DAQ", 250],[0,100]) # Compute charge according to selected average wvf ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
     
     delete_keys(my_runs,["RawADC",'RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','RawPChannel']) # Delete branches to avoid overwritting
