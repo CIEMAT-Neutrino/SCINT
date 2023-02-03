@@ -7,14 +7,17 @@ import sys
 sys.path.insert(0, '../')
 
 
-def open_run_var(run_path,var_name,channels):
+def open_run_var(run_path,var_name,channels,compressed=True):
 
     run_var=dict();
     
     for ch in channels:
+        
         full_path = run_path+var_name+"_ch"+str(ch)+".npz"
+        if not compressed: full_path = run_path+var_name+"_ch"+str(ch)+".npy"
+        
         run_var[ch]=np.load(full_path ,allow_pickle=True,mmap_mode='r') ["arr_0"]
-    
+
     return run_var;
 
 def open_run_properties(run,excel_file_path="",sheet='Sheet1'):
@@ -28,7 +31,7 @@ def open_run_properties(run,excel_file_path="",sheet='Sheet1'):
     Returns:
         Dictionary with run properties: polarity, type of run, thresholds, aprox duration... etc can be computed here
     """
-    df = pd.read_excel(excel_file_path, sheet_name=sheet)
+    df = pd.read_excel(excel_file_path, sheet_name=sheet,engine='openpyxl')
     df['Channels'] = df['Channels'].apply(lambda x: list(map(int,x.split(",")))) #excell only allows one value per cell, convert channels from string to array of ints
     df['Polarity'] = df['Polarity'].apply(lambda x: list(map(int,x.split(","))))
     props=df.loc[df['Run'] == run].to_dict(orient='records')[0]
@@ -37,12 +40,14 @@ def open_run_properties(run,excel_file_path="",sheet='Sheet1'):
     
     return props
 
-def save_run_var(run_var,run_path,var_name):
+def save_run_var(run_var,run_path,var_name,compressed=True):
     channels=run_var.keys()
 
     print("----------")
     for ch in channels:
         full_path = run_path+var_name+"_ch"+str(ch)+".npz"
+        if not compressed: full_path = run_path+var_name+"_ch"+str(ch)+".npy"
+        
         print("Saving: ",var_name," channel:",ch, " ,in:",full_path)
         np.savez_compressed(full_path,run_var[ch])
 
