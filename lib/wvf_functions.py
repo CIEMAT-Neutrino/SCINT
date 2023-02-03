@@ -69,7 +69,7 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
             buffer = 100  
             mean_ana_ADC = np.mean(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=0)
             aux_ADC = my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]
-            bin_ref_peak = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1)) #using the mode peak as reference
+            bin_ref_peak = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) #using the mode peak as reference
             bin_ref_peak = bin_ref_peak[0][0]
             
             # centering none
@@ -87,7 +87,7 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
             # centering thld
             if centering == "THRESHOLD":
                 if threshold == 0: threshold = np.max(mean_ana_ADC)/2
-                bin_ref_thld = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1)) #using the mode peak as reference
+                bin_ref_thld = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), keepdims=True) #using the mode peak as reference
                 bin_max_thld = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
                 bin_max_peak = bin_max_thld + bin_ref_thld - buffer
                 for ii in range(len(aux_ADC)):
