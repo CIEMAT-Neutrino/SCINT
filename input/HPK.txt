@@ -2,7 +2,7 @@
 # If input variables are a list, use "," as a separator
 
 RAW_DATA: ROOT
-MONTH: FEB22_2
+MONTH: Feb22_2
 
 SAMPLING: 4e-9 
 

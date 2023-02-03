@@ -33,9 +33,9 @@ runs = np.append(runs,info["CALIB_RUNS"])
 channels = np.append(channels,info["CHAN_STNRD"])      
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
-    my_runs = load_npy([run],[ch],branch_list=["ADC","ChargeAveRange"],info=info,compressed=True)#preset="ANA"
+    my_runs = load_npy([run],[ch], branch_list=["ADC","ChargeAveRange"], info=info,compressed=True)#preset="ANA"
 
-    print(my_runs[run][ch].keys())
+    print_keys(my_runs)
 
     int_key = ["ChargeAveRange"]
     OPT = {
