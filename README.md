@@ -64,7 +64,6 @@ We don't want:
 3. To better visualize what is happening and perform non standard analysis, there are jupyter notebooks available in notebooks/
 
 
-
 Rodrigo & Sergio & Andrés & Laura
 November 2022
 

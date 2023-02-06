@@ -34,7 +34,7 @@ echo "\n------ Expected output{FIT_PLOT + SPE gauss parameters X Y Z + ../fit_da
 
 #0XVisTests.py --> visualize event by event the selected runs&channels
 echo "\n------------------ Testing Vis.py ------------------"
-python3 ../macros/0XVisTests.py 1 0,6
+python3 ../macros/0XVisTests.py MergeDebug 1 0,6
 echo "\n------ Expected output{PLOT}. Everything OK ------"
 
 
