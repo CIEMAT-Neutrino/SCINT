@@ -121,7 +121,7 @@ def smooth(my_run, alpha):
     my_run = unweighted_average(my_run)
     return my_run
 
-def integrate_wvfs(my_runs, types, ref, factors, ranges):
+def integrate_wvfs(my_runs, types, ref, ranges, info = {}):
     """
     This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
     VARIABLES:
@@ -135,19 +135,20 @@ def integrate_wvfs(my_runs, types, ref, factors, ranges):
     """
 
     try:
-        if factors[0] == "DAQ": factors[0] = 2 / 16384
-        if factors[0] == "OSC": factors[0] = 1
-        
+        conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
+        channels = []; channels = np.append(channels,info["CHAN_STNRD"])
+        ch_amp = dict(zip(channels,info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
+
         for run,ch,typ in product(my_runs["NRun"], my_runs["NChannel"], types):
             ave = my_runs[run][ch][ref]
             for i in range(len(ave)):
                 # x = my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch]["AnaADC"][0]))
                 if typ == "ChargeAveRange":
                     i_idx,f_idx = find_baseline_cuts(ave[i])
-                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1)*factors[0]/factors[1]*1e12
+                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
                 if typ.startswith("ChargeRange"):
                     i_idx = int(np.round(ranges[0]/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(ranges[1]/my_runs[run][ch]["Sampling"]))
-                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1)*factors[0]/factors[1]*1e12
+                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
             print("Integrated wvfs according to %s baseline integration limits"%ref)
     
     except KeyError:
