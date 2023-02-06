@@ -1,5 +1,7 @@
 # CYTHON_TOOLS
 
+:book: :page_with_curl: Access the [DOCUMENTATION](https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS/wiki) for more information :page_with_curl: :book:
+
 :construction: 
 Work in progress (check [TO DO LIST](https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS/blob/main/To_Do.md))
 :construction:
@@ -32,49 +34,35 @@ We don't want:
     ./scripts/setup.sh 
     ```
     
-    Then place all your root files in data/raw folder (check copy_data.sh for ideas and run)
-    ```
-    ./scripts/copy_data.sh
-    ```
+    Then place all your root files in data/MONTH/raw folder (check copy_data.sh for ideas and run)
     
     There is a MergeDebug script where there have been defined the actions to be checked in order to commit the changes to the GitHub repository, making sure everything works as before the changes. (check it for ideas on how to run the scripts)
-    ```
-    sh ../scripts/MergeDebug.sh
-    ```
+
 
 2. Run the following macros FROM the macros folder:
-    ```
-    cd macros
-    ```
+
     - macros/00Raw2Np.py
-    ```
-    python 3 00Raw2Np.py MergeDebug
-    ```
 
     - macros/01PreProcess.py
-    ```
-    python 3 01PreProcess.py MergeDebug
-    ```
-
+    
     - macros/02PreProcess.py
-    ```
-    python 3 02Process.py MergeDebug
-    ```
 
     - macros/03Calibration.py
-    ```
-    python 3 03Calibration.py MergeDebug
-    ```
 
     - macros/0XVisEvent.py or macros/0XVisTests.py (whenever you want! (once you pre-process))
-    ```
+  
+```
+    cd macros
+    python 3 00Raw2Np.py MergeDebug
+    python 3 01PreProcess.py MergeDebug 
+    python 3 02Process.py MergeDebug
+    python 3 03Calibration.py MergeDebug
     python 3 0XVisEvent.py MergeDebug 1 0,1
-    ```
+```
 
     
 3. To better visualize what is happening and perform non standard analysis, there are jupyter notebooks available in notebooks/
 
-:book: :page_with_curl: Access the [DOCUMENTATION](https://CIEMAT-Neutrino.github.io/CYTHON_TOOLS/blob/laura/documentation/index.html) for more information :page_with_curl: :book:
 
 Rodrigo & Sergio & Andrés & Laura
 November 2022
