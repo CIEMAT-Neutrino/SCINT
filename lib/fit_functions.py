@@ -1,18 +1,9 @@
-import math
-import numpy as np
-import scipy as sc
-import matplotlib.pyplot as plt
-
-from scipy.optimize import curve_fit
-from scipy.special import erf
-from .io_functions import load_npy, check_key
-from itertools import product
+from .imports import *
 
 def gauss(x,a,x0,sigma):
     return a/(sigma*math.sqrt(2*math.pi))*np.exp(-0.5*np.power((x-x0)/sigma,2))
 
 def gaussian_train(x, *params):
-    """ DOC """
     y = np.zeros_like(x)
     for i in range(0, len(params), 3):
         ctr = params[i]
@@ -22,7 +13,6 @@ def gaussian_train(x, *params):
     return y
 
 def loggaussian_train(x, *params):
-    """ DOC """
     y = np.zeros_like(x)
     for i in range(0, len(params), 3):
         ctr = params[i]
@@ -32,36 +22,108 @@ def loggaussian_train(x, *params):
     return np.log10(y)
 
 def gaussian(x, height, center, width):
-    """ DOC """
     return height * np.exp(-(x - center)**2/(2 * width**2))
 
 def loggaussian(x, height, center, width):
-    """ DOC """
     return np.log10(gaussian(x, height, center, width))
 
 def func(t, t0, sigma, a, tau):
-    """ DOC """
     return (2 * a/tau)*np.exp((sigma/(np.sqrt(2)*tau))**2-(np.array(t)-t0)/tau)*(1-erf((sigma**2-tau*(np.array(t)-t0))/(np.sqrt(2)*sigma*tau)))
 
 def func2(t, p, t0, sigma, a1, tau1, a2, tau2):
-    """ DOC """
     return p + func(t, t0, sigma, a1, tau1) + func(t, t0, sigma, a2, tau2)
 
 def logfunc2(t, p, t0, sigma, a1, tau1, a2, tau2):
-    """ DOC """
     return np.log(p + func(t, t0, sigma, a1, tau1) + func(t, t0, sigma, a2, tau2))
 
 def logfunc3(t, p, t0, sigma, a1, tau1, a2, tau2, a3, tau3):
-    """ DOC """
     return np.log(p + func(t, t0, sigma, a1, tau1) + func(t, t0, sigma, a2, tau2) + func(t, t0, sigma, a3, tau3))
 
 def func3(t, p, t0, sigma, a1, tau1, a2, tau2, a3, tau3):
-    """ DOC """
     return p + func(t, t0, sigma, a1, tau1) + func(t, t0, sigma, a2, tau2) + func(t, t0, sigma, a3, tau3)
 
 def scfunc(t, a, b, c, d, e, f):
-    """ DOC """
     return (a*np.exp(-(t-c)/b)/np.power(2*np.pi, 0.5)*np.exp(-d**2/(b**2)))*(1-erf(((c-t)/d+d/b)/np.power(2, 0.5))) + (e*np.exp(-(t-c)/f)/np.power(2*np.pi, 0.5)*np.exp(-d**2/(f**2)))*(1-erf(((c-t)/d+d/f)/np.power(2, 0.5)))
+
+def charge_fit(my_runs, keys, OPT={}):
+    """Computes charge hist of a collection of runs and returns the central value and sigma of the gaussian fitted distribution"""
+
+    plt.ion()
+    next_plot = False
+    idx = 0
+    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
+        
+        if check_key(my_runs[run][ch], "MyCuts") == False:
+            generate_cut_array(my_runs)
+        if check_key(my_runs[run][ch], "Units") == False:
+            get_units(my_runs)
+        
+        try:
+            idx = idx + 1
+
+            # Threshold value (for height of peaks and valleys)
+            thresh = int(len(my_runs[run][ch][key])/1000)
+            wdth = 10
+            prom = 0.5
+            acc  = 1000
+
+            counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
+            plt.close()
+
+            # New Figure with the fit
+            fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
+
+            add_grid(ax_cal)
+            counts = counts[0]; bins = bins[0]; bars = bars[0]
+            ax_cal.hist(bins[:-1], bins, weights = counts)
+            fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["Units"][key]+")"); fig_cal.supylabel("Counts")
+
+            # Create linear interpolation between bins to search peaks in these variables
+            x = np.linspace(bins[1],bins[-2],acc)
+            y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
+            y = y_intrp(x)
+            # plt.plot(x,y)
+
+            print("\n...Fitting to a gaussian...")
+
+            # Find indices of peaks
+            peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+            peak_idx1 = peak_idx[0] + 50
+            
+            x_space = np.linspace(x[peak_idx[0]], x[peak_idx1], acc) #Array with values between the x_coord of 2 consecutives peaks
+            step    = x_space[1]-x_space[0]
+            x_gauss = x_space-int(acc/2)*step
+            x_gauss = x_gauss[x_gauss >= bins[0]]
+            y_gauss = y_intrp(x_gauss)
+
+            try:
+                popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[peak_idx[0]],x[peak_idx1],abs(wdth*(bins[0]-bins[1]))])
+                perr = np.sqrt(np.diag(pcov))
+
+            except:
+                print("Peak could not be fitted")
+
+            ax_cal.plot(x,gaussian(x, *popt), label="")
+            # plt.legend()
+
+            if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
+                ax_cal.semilogy()
+            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
+                while not plt.waitforbuttonpress(-1): pass
+
+            plt.clf()
+            if check_key(OPT,"PRINT_KEYS") == True and OPT["PRINT_KEYS"] == True:
+                return print_keys(my_runs)
+
+            
+        except KeyError:
+            print("Empty dictionary. No calibration to show.")
+    
+    # plt.ioff()
+    plt.clf()
+    plt.close()
+    
+    return popt, pcov, perr
 
 def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     """ DOC """
@@ -283,7 +345,7 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma = 1e-8, a_fast = 1e-8, a_slow 
 
     # PRINT FIRST FIT VALUE
     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-        print("\n--- FISRT FIT VALUES (FAST) ---")
+        print("\n--- FIRST FIT VALUES (FAST) ---")
         for i in range(len(initial)):
             print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
         print("-------------------------------")

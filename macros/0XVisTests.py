@@ -19,12 +19,12 @@ print_header()
 
 ##### INPUT RUNS AND OPTIONS #####
 try:
-    input_folder = sys.argv[1]
-    input_runs = sys.argv[2]
+    input_folder   = sys.argv[1]
+    input_runs     = sys.argv[2]
     input_channels = sys.argv[3]
 except IndexError:
-    input_folder = input("Please select FOLDER (e.g Feb22_2): ")
-    input_runs = input("Please select RUNS (separated with commas): ")
+    input_folder   = input("Please select FOLDER (e.g Feb22_2): ")
+    input_runs     = input("Please select RUNS (separated with commas): ")
     input_channels = input("Please select CHANNELS (separated with commas): ")
 
 runs     = [int(r) for r in input_runs.split(",")]

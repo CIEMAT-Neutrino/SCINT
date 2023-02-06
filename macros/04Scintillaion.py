@@ -1,6 +1,6 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
-#  ========================================= RUN:$ python3 03Calibration.py TEST ======================================= #
-# This macro will compute a CALIBRATION histogram where the peaks for the PED/1PE/2PE... are FITTED to obtain the GAIN   #
+#  ======================================== RUN:$ python3 04Scintillation.py TEST ====================================== #
+# This macro will   #
 # Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
@@ -15,10 +15,11 @@ except IndexError:
     input_file = input("Please select input File: ")
 
 info = read_input_file(input_file)
-
 runs = []; channels = []
-runs = np.append(runs,info["CALIB_RUNS"])
-channels = np.append(channels,info["CHAN_STNRD"])      
+runs = np.append(runs,info["ALPHA_RUNS"])
+# runs = np.append(runs,info["MUONS_RUNS"])
+
+channels = np.append(channels,info["CHAN_STNRD"])
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
     my_runs = load_npy([run],[ch], branch_list=["ADC","ChargeAveRange"], info=info,compressed=True)#preset="ANA"
@@ -31,16 +32,8 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
         "SHOW": True
         }
 
-    ## Calibration ##
+    ## Integrated charge (scintillation runs) ##
     print("Run ", run, "Channel ", ch)
-    popt, pcov, perr = calibrate(my_runs,int_key,OPT)
-    ## Calibration parameters = mu,height,sigma,gain,sn0,sn1,sn2 ##
-    calibration_txt(run, ch, popt, pcov, filename="gain",info=info)
-    
-    ## SPE Average Waveform ##
-    SPE_min_charge = popt[3]-popt[5]
-    SPE_max_charge = popt[3]+popt[5]
-    cut_min_max(my_runs, int_key, limits = {int_key[0]: [SPE_min_charge,SPE_max_charge]})
-    average_wvfs(my_runs,centering="NONE",cut_label="SPE")
-
-    save_proccesed_variables(my_runs,info=info,branch_list=["AveWvfSPE"])
+    popt, pcov, perr = charge_fit(my_runs,int_key,OPT)
+    ## Charge parameters = mu,height,sigma,nevents ##
+    scintillation_txt(run, ch, popt, pcov, filename="pC", info=info) #JSON --> mapa runes (posibilidad)
