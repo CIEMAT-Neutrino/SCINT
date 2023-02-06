@@ -19,7 +19,7 @@ runs = np.append(runs,info["CALIB_RUNS"])
 channels = np.append(channels,info["CHAN_STNRD"])      
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
-    my_runs = load_npy([run],[ch], branch_list=["ADC","ChargeAveRange"], info=info,compressed=True)#preset="ANA"
+    my_runs = load_npy([run],[ch], branch_list=["ADC","ChargeAveRange","PedLim","Sampling"], info=info,compressed=True)#preset="ANA"
     print_keys(my_runs)
 
     int_key = ["ChargeAveRange"]
@@ -28,6 +28,9 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
         "PRINT_KEYS":False,
         "SHOW": True
         }
+
+    ## Persistence Plot ##
+    # vis_persistence(my_runs)
 
     ## Calibration ##
     print("Run ", run, "Channel ", ch)
