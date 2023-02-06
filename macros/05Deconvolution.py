@@ -1,21 +1,12 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
-#  ======================================== RUN:$ python3 04Deconvolution.py TEST ====================================== #
+#  ======================================== RUN:$ python3 05Deconvolution.py TEST ====================================== #
 # This macro will    #
 # Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
-import sys
-sys.path.insert(0, '../')
-
-import numpy as np
-import matplotlib.pyplot as plt
-from itertools import product
-
-from lib.header        import print_header
-from lib.io_functions  import load_npy,save_proccesed_variables
-from lib.dec_functions import deconvolve
-
+import sys; sys.path.insert(0, '../')
+from lib import *
 print_header()
 
 raw_runs = [25,26,27]

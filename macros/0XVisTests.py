@@ -5,17 +5,7 @@
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
-import sys
-sys.path.insert(0, '../')
-
-from lib.header        import print_header
-from lib.io_functions  import *
-from lib.ana_functions import *
-from lib.vis_functions import*
-from lib.cut_functions import*
-from lib.fig_config    import*
-
-print_header()
+import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 ##### INPUT RUNS AND OPTIONS #####
 try:

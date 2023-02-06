@@ -1,6 +1,3 @@
-import sys
-sys.path.insert(0, '../')
-
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from matplotlib.cm import viridis
@@ -379,4 +376,3 @@ def vis_persistence(my_run, OPT = {}):
         plt.clf()
     plt.ioff()
     plt.clf()
-
