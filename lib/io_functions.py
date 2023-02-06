@@ -4,7 +4,6 @@ import numpy as np
 import uproot
 import copy
 import stat
-
 from itertools import product
 
 #===========================================================================#
@@ -66,6 +65,38 @@ def read_input_file(input, path = "../input/", debug = False):
     print("\n")
 
     return info
+
+def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], path = "../fit_data/", not_saved=[1]):
+    """General function to write a txt file with the outputs obtained.
+        \n The file name is defined by the given "filename" variable + _chX. 
+        \n If the file existed previously it appends the new fit values (it save the run for each introduced row)
+        \n By default we dont save the height of the fitted gaussian in the txt.
+    """
+    
+    fitted_peaks = len(output)
+    par_list = list(range(len(output[0])))
+    for p in not_saved:
+            par_list.remove(p) #removing parameters before saving in txt (height by default)
+
+
+    confirmation = input("\nConfirmation to save in"+path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n) ?"%ch)
+    if "y" in confirmation:
+        print("\n----------- Saving -----------")
+
+        if not os.path.exists(path+filename+"_ch%i.txt"%ch): #HEADER#
+            with open(path+filename+"_ch%i.txt"%ch, 'a+') as f:
+                f.write("\t".join(header_list)+"\n")
+
+        with open(path+filename+"_ch%i.txt"%ch, 'a+') as f:
+            for i in np.arange(fitted_peaks):
+                if fitted_peaks != 1: aux_label = str(i)+"\t"
+                if fitted_peaks == 1: aux_label = ""
+                f.write(str(int(run))+"\t"+info["OV_LABEL"][0]+"\t"+aux_label) #OVLABEL no funciona bien
+                for k in par_list:
+                    if any (k == t for t in extra_tab): # if k == 3: # for calibration format
+                        f.write("\t")
+                    f.write(str(output[i][k][0]) +"\t" + str(output[i][k][1])+"\t")
+                f.write(str(output[i][-1][0]) +"\t" + str(output[i][-1][1])+"\n")
 
 #===========================================================================#
 #************************* RAW TO NUMPY ************************************#

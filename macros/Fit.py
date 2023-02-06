@@ -1,11 +1,4 @@
-import sys
-sys.path.insert(0, '../')
-
-from lib.io_functions import load_npy,save_proccesed_variables
-from lib.fit_functions import fit_wvfs
-
-# import matplotlib.pyplot as plt
-# import numpy as np
+import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 runs     = [25,26,27]     
 channels = [4]       
