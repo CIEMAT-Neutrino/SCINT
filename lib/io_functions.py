@@ -20,9 +20,9 @@ def read_input_file(input, path = "../input/", debug = False):
     file = open(path+input+".txt", 'r')
     lines = file.readlines()
     info = dict()
-    NUMBERS = ["MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_STNRD","CHAN_CALIB","CHAN_POLAR"]
+    NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_STNRD","CHAN_CALIB","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING"]
-    STRINGS = ["MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL"]
+    STRINGS = ["TYPE","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL"]
     # Strips the newline character
     for line in lines:
         for LABEL in DOUBLES:
