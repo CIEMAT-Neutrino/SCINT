@@ -1,13 +1,10 @@
+import sys, copy
 import numpy as np
-import copy
-import sys
-
-# from .io_functions import load_npy
-from .io_functions import check_key, print_keys
-
 import matplotlib.pyplot as plt
-from scipy import stats as st
+from scipy     import stats as st
 from itertools import product
+
+from .io_functions import check_key, print_keys
 
 def insert_variable(my_runs, var, key, debug = False):
     """Insert values for each type of signal"""

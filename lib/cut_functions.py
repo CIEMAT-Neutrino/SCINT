@@ -2,21 +2,16 @@ import numpy as np
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
-
 from itertools import product
-from .io_functions import check_key,print_keys,copy_single_run
+from shapely.geometry         import Point
+from shapely.geometry.polygon import Polygon
 
-import matplotlib.pyplot as plt
-
-from itertools import product
-from .io_functions import check_key,print_keys,copy_single_run
+from .io_functions  import check_key,print_keys,copy_single_run
 from .vis_functions import vis_two_var_hist
 from .ana_functions import generate_cut_array
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
-from .fig_config import*
+from .fig_config    import*
 
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
     """

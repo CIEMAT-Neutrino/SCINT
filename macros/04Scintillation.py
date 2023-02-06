@@ -1,13 +1,13 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
 #  ======================================== RUN:$ python3 04Scintillation.py TEST ====================================== #
-# This macro will   #
+# This macro load the "ChargeAveRange" computed in 02Process for the scintillation runs and plot the charge histogram    #
+# The histogram is fitted to a Gaussian and the results can be stored in a txt in ../fit_data/filename_chX.txt           #
+# TO DO --> plot histograms/fit same plot + Scintillation profiles with fits (tau_slow etc)                              #
 # Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
-import sys; sys.path.insert(0, '../')
-from lib import *
-print_header()
+import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 try:
     input_file = sys.argv[1]
