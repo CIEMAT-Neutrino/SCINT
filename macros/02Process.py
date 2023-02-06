@@ -5,18 +5,7 @@
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
-#Falta hacer todos los imports con el mismo fichero#
-import sys
-sys.path.insert(0, '../')
-import numpy as np
-from itertools import product
-
-from lib.header        import print_header
-from lib.io_functions  import read_input_file,load_npy,delete_keys,save_proccesed_variables, print_keys
-from lib.ana_functions import compute_pedestal_variables,compute_peak_variables,compute_ana_wvfs,insert_variable
-from lib.wvf_functions import average_wvfs,integrate_wvfs
-
-print_header()
+import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 try:
     input_file = sys.argv[1]

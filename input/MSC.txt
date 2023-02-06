@@ -1,10 +1,20 @@
 # Do not use spaces " " except between KEYWORD and input variables
 # If input variables are a list, use "," as a separator
 
+########################
+####   DAQ INFO     ####
+########################
+TYPE: ADC
+MODEL: 5725S
+BITS: 16384
+DYNAMIC_RANGE: 2
+SAMPLING: 4e-9
+
+########################
+####   RUNS INFO    ####
+########################
 RAW_DATA: ROOT
 MONTH: MASSIVE
-
-SAMPLING: 4e-9 
 
 OV_LABEL: OV35
 
@@ -17,3 +27,4 @@ CHAN_LABEL: SC
 CHAN_STNRD: 1
 CHAN_CALIB: 1
 CHAN_POLAR: -1
+CHAN_AMPLI: 1030

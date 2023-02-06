@@ -8,17 +8,7 @@
 #   data/MONTH/npy/runXX_chYY with npz created. (npz_names=keys of the my_runs dict in the macros' workflow)             #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
-#Falta hacer todos los imports con el mismo fichero#
-import sys
-sys.path.insert(0, '../')
-import numpy as np
-from itertools import product
-
-from lib.header        import print_header
-from lib.io_functions  import read_input_file,root2npy,binary2npy,load_npy,save_proccesed_variables
-from lib.ana_functions import compute_peak_variables,compute_pedestal_variables
-
-print_header()
+import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 try:
     input_file = sys.argv[1]
