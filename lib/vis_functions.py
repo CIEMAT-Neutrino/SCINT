@@ -9,7 +9,7 @@ import keyboard
 import math
 
 from .io_functions import load_npy,check_key
-from .ana_functions import generate_cut_array
+from .ana_functions import generate_cut_array, get_units
 from itertools import product
 
 import scipy
@@ -68,7 +68,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                 skip = 0
                 for ch in ch_list:
                     if evt_sel == 0 and my_run[run][ch]["MyCuts"][idx] == False: skip = 1; break # To Skip Cutted events!!
-                    if evt_sel == 1 and my_run[run][ch]["MyCuts"][idx] == True: skip = 1; break # To Get only Cutted events!!
+                    if evt_sel == 1 and my_run[run][ch]["MyCuts"][idx] == True:  skip = 1; break # To Get only Cutted events!!
                 if skip == 1: idx = idx +1; continue
             except: pass
 
@@ -255,8 +255,11 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     all_bins = []
     all_bars = []
     aux_data = []
+    
     if check_key(my_run[run][ch], "MyCuts") == False:
         generate_cut_array(my_run)
+    if check_key(my_run[run][ch], "Units") == False:
+        get_units(my_run)
 
     for i in range(len(my_run[run][ch]["MyCuts"])):
         if my_run[run][ch]["MyCuts"][i] == False: continue
@@ -308,6 +311,12 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
     """
     figure_features()
     x_data = []; y_data = []
+
+    if check_key(my_run[run][ch], "MyCuts") == False:
+        generate_cut_array(my_run)
+    if check_key(my_run[run][ch], "Units") == False:
+        get_units(my_run)
+
     for i in range(len(my_run[run][ch]["MyCuts"])):
         if my_run[run][ch]["MyCuts"][i] == False: continue
         else:

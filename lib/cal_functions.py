@@ -1,20 +1,4 @@
-import os
-import numpy as np
-import scipy
-from scipy.signal import find_peaks
-from scipy.optimize import curve_fit
-from itertools import product
-import matplotlib.pyplot as plt
-# import copy
-
-from .io_functions  import check_key,print_keys
-from .vis_functions import vis_var_hist
-from .fit_functions import gaussian,gaussian_train, loggaussian, loggaussian_train
-from .ana_functions import generate_cut_array, get_units
-
-from .fig_config import (
-    add_grid,
-    figure_features)  # <--- import customized functions
+from .imports import *
 
 def calibrate(my_runs, keys, OPT={}):
     """Computes calibration hist of a collection of runs and returns gain and SPE charge limits"""
@@ -138,28 +122,25 @@ def calibrate(my_runs, keys, OPT={}):
     
     return popt, pcov, perr
 
-
-def compute_cal_parameters(popt, pcov):
+def calibration_txt(run, ch, popt, pcov, filename, info):
     """Computes calibration parameters for each peak.
        \n Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
        \n It returns an array of arrays: 
        save_calibration = [ [[mu,dmu],[height,dheight],[height,dheight],[sigma,dsigma],
                             [gain,dgain],[sn0,dsn0],[sn1,dsn1],[sn2,dsn2]], [PEAK 1], [PEAK 2],...]
+       \nSave in a txt the calibration parameters to be exported directly.
+       \nTakes as input an array of arrays with the computed parameters (see compute_cal_parameters())
     """
-    
+
     cal_parameters = []
     perr = np.sqrt(np.diag(pcov))    #error for each variable
     fitted_peaks = int(len(popt)/3)  #three parameters fitted for each peak
     for i in np.arange(fitted_peaks): 
-        # print("\nPeak:", i)
         mu     = [popt[(i+0)+2*i], perr[(i+0)+2*i]]  # mu +- dmu
-        height = [popt[(i+1)+2*i], perr[(i+1)+2*i]] # height +- dheight (not saving in txt by default)
+        height = [popt[(i+1)+2*i], perr[(i+1)+2*i]]  # height +- dheight (not saving in txt by default)
         sigma  = [popt[(i+2)+2*i], perr[(i+2)+2*i]]  # sigma +- dsigma
         cal_parameters.append([mu,height,sigma])
         copy_cal = cal_parameters
-        # print("MU +- DMU:",         save_calibration[i][0])
-        # print("HEIGHT +- DHEIGHT:", save_calibration[i][1])
-        # print("SIGMA +- DSIGMA:",   save_calibration[i][2])
 
     for i in np.arange(fitted_peaks): #distances between peaks
         if i == fitted_peaks-1:
@@ -182,38 +163,73 @@ def compute_cal_parameters(popt, pcov):
 
         cal_parameters[i].append([gain, dgain]); 
         cal_parameters[i].append([sn0, dsn0]);cal_parameters[i].append([sn1, dsn1]);cal_parameters[i].append([sn2, dsn2])
-    return cal_parameters
 
-
-def calibration_txt(run, ch, info, array_parameters):
-    """Save in a txt the calibration parameters to be exported directly.
-       Takes as input an array of arrays with the computed parameters (see compute_cal_parameters())
-    """
-
-    fitted_peaks = len(array_parameters)
+    fitted_peaks = len(cal_parameters)
     for i in np.arange(fitted_peaks): #three parameters fitted for each peak
                 print("\nPeak:", i)
-                print("MU +- DMU:",         array_parameters[i][0])
-                print("HEIGHT +- DHEIGHT:", array_parameters[i][1])
-                print("SIGMA +- DSIGMA:",   array_parameters[i][2])
-                print("GAIN +- DGAIN:",     array_parameters[i][3])
-                print("SN0 +- DSN0:",       array_parameters[i][4])
-                print("SN1 +- DSN1:",       array_parameters[i][5])
-                print("SN2 +- DSN2:",       array_parameters[i][6])
+                print("MU +- DMU:",         ['{:.2E}'.format(item) for item in cal_parameters[i][0]])
+                print("HEIGHT +- DHEIGHT:", ['{:.2E}'.format(item) for item in cal_parameters[i][1]])
+                print("SIGMA +- DSIGMA:",   ['{:.2E}'.format(item) for item in cal_parameters[i][2]])
+                print("GAIN +- DGAIN",      ['{:.2E}'.format(item) for item in cal_parameters[i][3]])
+                print("SN0 +- DSN0",        ['{:.2E}'.format(item) for item in cal_parameters[i][4]])
+                print("SN1 +- DSN1",        ['{:.2E}'.format(item) for item in cal_parameters[i][5]])
+                print("SN2 +- DSN2",        ['{:.2E}'.format(item) for item in cal_parameters[i][6]])
     
-    confirmation = input("Confirmation to save in ../fit_data/gain_ch%i.txt the printed parameters (except HEIGHT) (y/n) ?"%ch)
+    write_output_file(run, ch, cal_parameters, filename, info, header_list=["RUN","MU","DMU","SIG","DSIG","NEVENTS","DNEVENTS"], extra_tab=[3])
+
+def scintillation_txt(run, ch, popt, pcov, filename, info):
+    """Computes charge parameters.
+        \n Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
+        \n It returns an array of arrays: 
+            save_scintillation = [ [[mu,dmu],[height,dheight],[sigma,dsigma], [nevents,dnevents]] ]
+        \nSave in a txt the calibration parameters to be exported directly.
+        \nTakes as input an array of arrays with the computed parameters (see compute_charge_parameters())
+    """
+    charge_parameters = []
+    perr = np.sqrt(np.diag(pcov))  #error for each variable
+
+    mu       = [popt[0], perr[0]]  # mu +- dmu
+    height   = [popt[1], perr[1]]  # height +- dheight (not saving in txt by default)
+    sigma    = [popt[2], perr[2]]  # sigma +- dsigma
+    nevents  = [popt[2], perr[2]]  # nevents/s +- dnevents/s
+    charge_parameters.append([mu,height,sigma,nevents])
+
+    print("MU +- DMU:",               ['{:.2f}'.format(item) for item in charge_parameters[0][0]])
+    print("HEIGHT +- DHEIGHT:",       ['{:.2f}'.format(item) for item in charge_parameters[0][1]])
+    print("SIGMA +- DSIGMA:",         ['{:.2f}'.format(item) for item in charge_parameters[0][2]])
+    print("NEVENTS/s +- DNEVENTS/s:(HAY QUE CALCULARLO BIEN)", ['{:.2f}'.format(item) for item in charge_parameters[0][3]])
+    
+    write_output_file(run, ch, charge_parameters, filename, info, header_list=["RUN","MU","DMU","SIG","DSIG","NEVENTS","DNEVENTS"])
+    
+
+def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], path = "../fit_data/", not_saved=[1]):
+    """General function to write a txt file with the outputs obtained.
+        \n The file name is defined by the given "filename" variable + _chX. 
+        \n If the file existed previously it appends the new fit values (it save the run for each introduced row)
+        \n By default we dont save the height of the fitted gaussian in the txt.
+    """
+    
+    fitted_peaks = len(output)
+    par_list = list(range(len(output[0])))
+    for p in not_saved:
+            par_list.remove(p) #removing parameters before saving in txt (height by default)
+
+
+    confirmation = input("\nConfirmation to save in"+path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n) ?"%ch)
     if "y" in confirmation:
-        header_list = ["RUN","OV","PEAK","MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"]
-        if not os.path.exists("../fit_data/gain_ch%i.txt"%ch): #HEADER#
-            with open("../fit_data/gain_ch%i.txt"%ch, 'a+') as f:
+        print("\n----------- Saving -----------")
+
+        if not os.path.exists(path+filename+"_ch%i.txt"%ch): #HEADER#
+            with open(path+filename+"_ch%i.txt"%ch, 'a+') as f:
                 f.write("\t".join(header_list)+"\n")
 
-        with open("../fit_data/gain_ch%i.txt"%ch, 'a+') as f:
-            for i in np.arange(fitted_peaks): #three parameters fitted for each peak
-            
-                f.write(str(int(run))+"\t"+info["OV_LABEL"][0]+"\t"+str(i)+"\t") #OVLABEL no funciona bien
-                for k in [0,2,3,4,5]:
-                    if k == 3:
+        with open(path+filename+"_ch%i.txt"%ch, 'a+') as f:
+            for i in np.arange(fitted_peaks):
+                if fitted_peaks != 1: aux_label = str(i)+"\t"
+                if fitted_peaks == 1: aux_label = ""
+                f.write(str(int(run))+"\t"+info["OV_LABEL"][0]+"\t"+aux_label) #OVLABEL no funciona bien
+                for k in par_list:
+                    if any (k == t for t in extra_tab): # if k == 3: # for calibration format
                         f.write("\t")
-                    f.write(str(array_parameters[i][k][0]) +"\t" + str(array_parameters[i][k][1])+"\t")
-                f.write(str(array_parameters[i][-1][0]) +"\t" + str(array_parameters[i][6][1])+"\n")
+                    f.write(str(output[i][k][0]) +"\t" + str(output[i][k][1])+"\t")
+                f.write(str(output[i][-1][0]) +"\t" + str(output[i][-1][1])+"\n")
