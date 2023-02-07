@@ -41,7 +41,7 @@ print(my_runs[runs[0]][channels[0]].keys())
 
 ##### EVENT VISUALIZER #####
 # vis_npy(my_runs, ["RawADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input variables should be lists of integers
-vis_npy(my_runs, ["ADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input variables should be lists of integers
+# vis_npy(my_runs, ["ADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input variables should be lists of integers
 #####################
 
 ##### CUTS #####
@@ -51,9 +51,9 @@ vis_npy(my_runs, ["ADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input va
 ################
 
 ##### HISTOGRAMS #####
-# for r in runs:
-#     for c in channels:
-#         vis_var_hist(my_runs, r, c, "PeakAmp", [0.1,99.9], OPT = {"Show": True})
-#         vis_var_hist(my_runs, r, c, "ChargeAveRange",[0.1,99.9], {"Show": True})
-#         vis_two_var_hist(my_runs, r, c, ["PeakAmp", "ChargeAveRange"], OPT = {"Show": True})
+for r in runs:
+    for c in channels:
+#         vis_var_hist(my_runs, r, c, "PeakAmp", [0.1,99.9], OPT = {"SHOW": True})
+#         vis_var_hist(my_runs, r, c, "ChargeAveRange",[0.1,99.9], {"SHOW": True})
+        vis_two_var_hist(my_runs, r, c, ["PeakAmp", "ChargeAveRange"], OPT = {"SHOW": True})
 ######################

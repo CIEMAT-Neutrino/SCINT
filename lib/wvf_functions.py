@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 from scipy import stats as st
 from .io_functions import check_key
-from .ana_functions import generate_cut_array
+from .ana_functions import generate_cut_array, get_units
 from itertools import product
 
 def find_baseline_cuts(raw):
@@ -64,6 +64,8 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
             else:
                 generate_cut_array(my_runs)
                 cut_label = ""
+            if check_key(my_runs[run][ch], "Units") == False:
+                get_units(my_runs)
 
             buffer = 100  
             mean_ana_ADC = np.mean(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=0)
