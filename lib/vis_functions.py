@@ -233,6 +233,86 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
         except: axs.clear()
         plt.close()
 
+def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
+    """
+    This function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
+    VARIABLES:
+        - my_run: run(s) we want to check
+        - KEYS: waveform to plot (AveWvf, AveWvdSPE, ...). Type: List
+        - OPT: several options that can be True or False.  Type: List
+            a) MICRO_SEC: if True we multiply Sampling by 1e6
+            b) NORM: True if we want normalized waveforms
+            c) LOGY: True if we want logarithmic y-axis
+        - compare: 
+            a) "RUNS" to get a plot for each channel and the selected runs. Type: String
+            b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
+    """
+
+    charge_key = "ChargeAveRange"
+    if check_key(OPT, "CHARGE_KEY"): charge_key = OPT["CHARGE_KEY"]
+    norm_ave = 1
+    buffer = 100
+    figure_features()
+
+    r_list = my_run["NRun"]
+    nr = len(my_run["NRun"])
+    ch_list = my_run["NChannel"]
+    nch = len(my_run["NChannel"])
+    axs = []
+    
+    if compare == "CHANNELS":
+        a_list = r_list 
+        b_list = ch_list 
+    if compare == "RUNS":
+        a_list = ch_list 
+        b_list = r_list 
+
+    for a, key in product(a_list, keys):
+        if compare == "CHANNELS": run = a
+        if compare == "RUNS":      ch = a
+
+        plt.ion()
+        fig, ax = plt.subplots(1 ,1, figsize = (8,6))
+        axs = ax
+
+        fig.supxlabel(r'Time [s]')
+        fig.supylabel("ADC Counts")
+        norm_raw = [1]*nch # Generates a list with the norm correction for std bar
+
+        for b in b_list:
+            if compare == "CHANNELS": ch = b; label = "Channel {} ({})".format(ch,my_run[run][ch]["Label"]); title = "Average Waveform - Run {}".format(run)
+            if compare == "RUNS":    run = b; label = "Run {}".format(run); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"])
+
+            ave = my_run[run][ch][key][0]
+            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
+                ave = ave/np.max(ave)
+            sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
+            if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
+                fig.supxlabel(r'Time [$\mu$s]')
+                my_run[run][ch]["Sampling"] = my_run[run][ch]["Sampling"]*1e6
+            
+
+            axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label)
+        axs.grid(True, alpha = 0.7)
+        axs.set_title(title,size = 14)
+        axs.xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
+        if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
+            axs.legend()
+       
+        tecla      = input("\nPress q to quit, p to save plot and any key to continue: ")
+        if tecla   == "q":
+            break 
+        elif tecla == "p":
+            fig.savefig('AveWvf_Ch{}.png'.format(ch), dpi = 500)
+            ch = ch+1
+        else:
+            ch = ch+1
+        if ch == len(ch_list): break
+        try: [axs[ch].clear() for ch in range (nch)]
+        except: axs.clear()
+        
+        plt.close()   
+
 def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}):
     """
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
