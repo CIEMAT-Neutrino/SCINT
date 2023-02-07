@@ -28,3 +28,11 @@ CHAN_STNRD: 5
 CHAN_CALIB: 5
 CHAN_POLAR: -1,-1
 CHAN_AMPLI: 250,1030
+
+########################
+####  CHARGE INFO   ####
+########################
+TYPE: ChargeAveRange,ChargeRange
+REF: AveWvf
+I_RANGE: 2.25e-6
+F_RANGE: 2.8e-6
