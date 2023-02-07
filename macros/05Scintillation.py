@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
-#  ======================================== RUN:$ python3 04Scintillation.py TEST ====================================== #
+#  ======================================== RUN:$ python3 05Scintillation.py TEST ====================================== #
 # This macro allow us to visualize average waveforms comparing ch or runs with vis_compare_wvf.                          #
 # It also loads the "ChargeAveRange" computed in 02Process for the scintillation runs and plot the charge histogram      #
 # The histogram is fitted to a Gaussian and the results can be stored in a txt in ../fit_data/filename_chX.txt           #
@@ -34,6 +34,7 @@ OPT = {
 ## Visualize average waveforms by runs/channels ##
 my_runs = load_npy(runs.astype(int),channels.astype(int),branch_list=["Label","Sampling","AveWvf"],info=info,compressed=True) #Remember to LOAD your wvf
 vis_compare_wvf(my_runs, ["AveWvf"], compare="RUNS", OPT=OPT)
+# FITTING --> tau slow etc Look fit_wvfs(my_runs,"SCINT",thrld,range,key,OPT)
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
     my_runs = load_npy([run],[ch], branch_list=["ADC","ChargeAveRange","AveWvf"], info=info,compressed=True) #preset="ANA"
@@ -43,5 +44,5 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     print("Run ", run, "Channel ", ch)
     popt, pcov, perr = charge_fit(my_runs,int_key,OPT)
     scintillation_txt(run, ch, popt, pcov, filename="pC", info=info) ## Charge parameters = mu,height,sigma,nevents ## 
-    
+    ### Repetir fits
     #JSON --> mapa runes (posibilidad)

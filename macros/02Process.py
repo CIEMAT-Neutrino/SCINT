@@ -35,9 +35,6 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     
     print_keys(my_runs)
     average_wvfs(my_runs,centering="NONE")                     # Compute average wvfs
-    # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
-    # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
-    integrate_wvfs(my_runs, info = info) # Compute charge according to selected average wvf ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
 
     delete_keys(my_runs,["RawADC",'RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','RawPChannel']) # Delete branches to avoid overwritting
     save_proccesed_variables(my_runs,"ALL",info=info, force=True)
