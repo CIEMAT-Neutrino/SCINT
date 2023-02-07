@@ -4,7 +4,7 @@
 ########################
 ####   DAQ INFO     ####
 ########################
-TYPE: ADC
+DAQ: ADC
 MODEL: 5725S
 BITS: 16384
 DYNAMIC_RANGE: 2
@@ -21,10 +21,18 @@ OV_LABEL: OV1,OV2,OV3
 MUONS_RUNS: 29
 LIGHT_RUNS: 9,10,11
 ALPHA_RUNS: 25,26,27
-CALIB_RUNS: 1
+CALIB_RUNS: 1,2,3
 
 CHAN_LABEL: SiPM0,SiPM1,SC
 CHAN_STNRD: 0,1,6
 CHAN_CALIB: 0,1,6
 CHAN_POLAR: -1,-1,1
 CHAN_AMPLI: 250,250,1030
+
+########################
+####  CHARGE INFO   ####
+########################
+TYPE: ChargeAveRange,ChargeRange
+REF: AveWvf
+I_RANGE: 2.25e-6
+F_RANGE: 2.8e-6
