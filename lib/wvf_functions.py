@@ -121,36 +121,48 @@ def smooth(my_run, alpha):
     my_run = unweighted_average(my_run)
     return my_run
 
-def integrate_wvfs(my_runs, types, ref, ranges, info = {}):
+def integrate_wvfs(my_runs, info = {}, key = "ADC"):
     """
     This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
     VARIABLES:
         - my_runs: run(s) we want to use
-        - types: indicates the way to make the integration. Type String.
-            a) ChargeAveRange: it takes the average waveform and computes the values when the average crosses the baseline
-            b) ChargeRange: it integrates in the time window specified by yourself in the vairable "ranges"
-        - ref: STRING for key used as integration reference.
-        - ranges: time values for the Range integration option. It should be introduced in seconds. Type List.
-        - info: input information from .txt with DAQ characteristics
+        - info: input information from .txt with DAQ characteristics and Charge Information.
+        - key: waveform we want to integrate
+    In txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
+    If I_RANGE = -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
+    If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
+    I_RANGE must have same length than F_RANGE!
     """
 
     try:
         conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
         channels = []; channels = np.append(channels,info["CHAN_STNRD"])
         ch_amp = dict(zip(channels,info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
-
-        for run,ch,typ in product(my_runs["NRun"], my_runs["NChannel"], types):
-            ave = my_runs[run][ch][ref]
+        i_range = info["I_RANGE"] # Get initial time(s) to start the integration
+        f_range = info["F_RANGE"] # Get final time(s) to finish the integration
+        
+        for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
+            ave = my_runs[run][ch][ref] # Load the reference average waveform
+            my_runs[run][ch]["ChargeRangeInfo"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             for i in range(len(ave)):
-                # x = my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch]["AnaADC"][0]))
                 if typ == "ChargeAveRange":
                     i_idx,f_idx = find_baseline_cuts(ave[i])
-                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
-                if typ.startswith("ChargeRange"):
-                    i_idx = int(np.round(ranges[0]/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(ranges[1]/my_runs[run][ch]["Sampling"]))
-                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch]["ADC"][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
-            print("Integrated wvfs according to %s baseline integration limits"%ref)
-    
+                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
+            if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
+            if typ.startswith("ChargeRange"):
+                for j in range(len(f_range)):
+                    my_runs[run][ch][typ+str(j)] = []
+                    if i_range[j] == -1: # Integration with fixed ranges
+                        t0 = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"]
+                        tf = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"] + f_range[j]
+                    else: # Integration with custom ranges
+                        t0 = i_range[j]; tf = f_range[j]
+                    i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
+                    my_runs[run][ch][typ+str(j)]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
+                    
+                    new_key = {typ+str(j): [t0,tf]}
+                    my_runs[run][ch]["ChargeRangeInfo"].update(new_key) # Update the dictionary
+            print("Integrated wvfs according to %s baseline integration limits"%info["REF"][0])
     except KeyError:
         print("Empty dictionary. No integration to compute.")
 
