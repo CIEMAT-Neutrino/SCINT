@@ -1,5 +1,7 @@
 import numpy             as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
+from matplotlib.cm     import viridis
 import scipy
 from scipy.signal   import find_peaks
 from scipy.optimize import curve_fit
@@ -9,7 +11,40 @@ from .io_functions  import check_key,print_keys, write_output_file
 from .vis_functions import vis_var_hist
 from .fit_functions import gaussian,gaussian_train, loggaussian, loggaussian_train
 from .ana_functions import generate_cut_array, get_units
+from .cut_functions import cut_min_max
 from .fig_config    import *
+
+def vis_persistence(my_run, OPT = {}):
+    """
+    This function plot the PERSISTENCE histogram of the given runs&ch.
+    It perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
+    Binning is fixed (x=5000, y=1000) [study upgrade].
+    X_data (time) and Y_data (waveforms) are deleted after the plot to save space.
+    WARNING! flattening long arrays leads to MEMORY problems :/
+    """
+
+    plt.ion()
+    for run, ch in product(my_run["NRun"],my_run["NChannel"]):
+
+        generate_cut_array(my_run)
+        cut_min_max(my_run, ["PeakTime"], {"PeakTime":[my_run[run][ch]["PedLim"]-20,my_run[run][ch]["PedLim"]+50]})
+
+        data_flatten = my_run[run][ch]["ADC"][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() #####
+        time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch]["ADC"][0]))
+        time_flatten = np.array([time] * int(len(data_flatten)/len(time))).flatten()
+
+        plt.hist2d(time_flatten,data_flatten,density=True,bins=[5000,1000], cmap = viridis, norm=LogNorm())
+
+        plt.colorbar()
+        plt.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
+        plt.title("Run_{} Ch_{} - Persistence".format(run,ch),size = 14)
+        plt.xticks(size = 11); plt.yticks(size = 11)
+        plt.xlabel("Time (s)", size = 11); plt.ylabel("Counts", size = 11)
+        del data_flatten, time, time_flatten
+        while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
+    plt.ioff()
+    plt.clf()
 
 def calibrate(my_runs, keys, OPT={}):
     """Computes calibration hist of a collection of runs and returns gain and SPE charge limits"""
