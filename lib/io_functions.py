@@ -137,6 +137,7 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
             my_dict["NBinsWvf"] = my_dict["RawADC"][0].shape[0]
             my_dict["Sampling"] = info["SAMPLING"][0]
             my_dict["Label"] = info["CHAN_LABEL"][j]
+            my_dict["OV_Label"] = info["OV_LABEL"][i]
             my_dict["RawPChannel"] = int(info["CHAN_POLAR"][j])
 
             np.save(out_path+out_file,my_dict)
@@ -189,8 +190,8 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
         #reshape everything, delete unused header
         ADC = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
         
-        branches = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPChannel"]
-        content  = [ADC, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
+        branches = ["RawADC", "NBinsWvf", "Sampling", "Label", "OV_Label", "RawPChannel"]
+        content  = [ADC, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], info["OV_LABEL"][i], int(info["CHAN_POLAR"][j])]
         files=os.listdir(out_path+out_folder)
 
         for i, branch in enumerate(branches):
@@ -300,7 +301,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     elif preset == "RAW":
         branch_list = dict_option[option]
-        aux = ["NBinsWvf", "Sampling", "Label"]
+        aux = ["NBinsWvf", "Sampling", "Label","OV_Label"]
         for key in branch_list:
             if "Raw" in key: aux.append(key)
         branch_list = aux

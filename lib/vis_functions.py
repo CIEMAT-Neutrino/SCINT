@@ -36,11 +36,11 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
         - same_plot: True if we want to plot different channels in the SAME plot
     """
 
+    figure_features()
     charge_key = "ChargeAveRange"
     if check_key(OPT, "CHARGE_KEY"): charge_key = OPT["CHARGE_KEY"]
     norm_ave = 1
     buffer = 100
-    figure_features()
 
     ch_list = my_run["NChannel"]
     nch = len(my_run["NChannel"])
@@ -248,14 +248,9 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
             b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     """
 
-    charge_key = "ChargeAveRange"
-    if check_key(OPT, "CHARGE_KEY"): charge_key = OPT["CHARGE_KEY"]
-    norm_ave = 1
-    buffer = 100
     figure_features()
 
     r_list = my_run["NRun"]
-    nr = len(my_run["NRun"])
     ch_list = my_run["NChannel"]
     nch = len(my_run["NChannel"])
     axs = []
@@ -290,7 +285,6 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
             if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
                 fig.supxlabel(r'Time [$\mu$s]')
                 my_run[run][ch]["Sampling"] = my_run[run][ch]["Sampling"]*1e6
-            
 
             axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label)
         axs.grid(True, alpha = 0.7)
@@ -331,18 +325,13 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     all_counts = []
     all_bins = []
     all_bars = []
-    aux_data = []
-    
+    # aux_data = []
+
     if check_key(my_run[run][ch], "MyCuts") == False:
         generate_cut_array(my_run)
     if check_key(my_run[run][ch], "Units") == False:
         get_units(my_run)
-
-    for i in range(len(my_run[run][ch]["MyCuts"])):
-        if my_run[run][ch]["MyCuts"][i] == False: continue
-        else:
-            aux_data.append(my_run[run][ch][key][i])
-    # except: print("Run generate_cut_array!")
+    aux_data = my_run[run][ch][key][my_run[run][ch]["MyCuts"] == True]
 
     plt.ion()
     data = []
@@ -370,13 +359,14 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     all_bars.append(bars)
     fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
     fig.supxlabel(key+" ("+my_run[run][ch]["Units"][key]+")"); fig.supylabel("Counts")
+    
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
         plt.show()
         while not plt.waitforbuttonpress(-1): pass
     plt.close()
     return all_counts, all_bins, all_bars
 
-def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_range = False,OPT={}):
+def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_range = False, OPT={}):
     """
     This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     It plots values below and above the indicated percetiles, but values are not removed from data.
@@ -393,11 +383,8 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
         generate_cut_array(my_run)
     if check_key(my_run[run][ch], "Units") == False:
         get_units(my_run)
+    x_data = my_run[run][ch][keys[0]][my_run[run][ch]["MyCuts"] == True]; y_data = my_run[run][ch][keys[1]][my_run[run][ch]["MyCuts"] == True]
 
-    for i in range(len(my_run[run][ch]["MyCuts"])):
-        if my_run[run][ch]["MyCuts"][i] == False: continue
-        else:
-            x_data.append(my_run[run][ch][keys[0]][i]); y_data.append(my_run[run][ch][keys[1]][i])
     # Calculate range with percentiles for x-axis
     x_ypbot = np.percentile(x_data, percentile[0]); x_yptop = np.percentile(x_data, percentile[1])
     x_ypad = 0.2*(x_yptop - x_ypbot)
@@ -420,7 +407,8 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
         ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
         ax.grid("both")
         fig.supxlabel(keys[0]); fig.supylabel(keys[1])
-    if OPT["SHOW"] == True: 
+
+    if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
         plt.show(); 
         while not plt.waitforbuttonpress(-1): pass    
     return fig, ax
