@@ -26,7 +26,6 @@ runs = np.append(runs,info["MUONS_RUNS"])
 channels = np.append(channels,info["CHAN_STNRD"])
 
 # From the input txt file you can choose the extension of your input file
-
 # NEEDS UPDATE!
 # if info["RAW_DATA"][0] == "ROOT":
 #     print("----- Taking a .root file as input data -----")
