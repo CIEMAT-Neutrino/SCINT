@@ -21,8 +21,8 @@ def read_input_file(input, path = "../input/", debug = False):
     lines = file.readlines()
     info = dict()
     NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_STNRD","CHAN_CALIB","CHAN_POLAR","CHAN_AMPLI"]
-    DOUBLES = ["SAMPLING"]
-    STRINGS = ["TYPE","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL"]
+    DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
+    STRINGS = ["DAQ","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","TYPE","REF"]
     # Strips the newline character
     for line in lines:
         for LABEL in DOUBLES:
