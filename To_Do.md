@@ -1,34 +1,29 @@
-## OBJETIVOS
-- [ ] Estudiar detector
-    - [ ] Ganancia → Calibración → {CORTES + AJUSTES GAUSSIANOS}
-    - [ ] Análisis de datos (procesado RAW)
-    - [ ] Caracterización → Fits efectivos, X-talk
-
-- [ ] Estudios física
-    - [ ] Deconvolución de señales
-    - [ ] Fits de física
-    - [ ] Simulaciones MC
-
-- [ ] Estudios electrónica
-
-
-## CYTHON TO DO LIST (NEW)
+## CYTHON TO DO LIST
 
 ------ CYTHON WORKSHOP II ------
+
+- [ ] Las cargas que se calculan de nuevo se sobrescriben tal y como esta ahora mismo. hay que pensar como organizar eso. (lo de que no se vea el diccionario es una kk)
+- [ ] Falta por implementar que se pueda repetir el fit y le puedas dar valores de entrada por ejemplo (calib/scintill)
+- [ ] En la de scintillation hay que poner que rango de cargas de los que hay calculados quieres usar/fittear o lo que sea
+- [ ] El fit del perfil de centelleo para sacar la tau_slow etc
+- [ ] Documentar algunas cosas que faltan en las funciones + Wiki (subir los gifs :) )
+- [ ] Mejorar los output por terminal
+- [ ] (Extra: Calibracion pmt, DC)
+- [ ] ColorStyle
 
 - [ ] QUITAR BUCLES (cambiar for por vectores)
     - [ ] Problema con el procesado de WFS: procesarlas run a run i.e hacer una macro que ejecute python3 ... para cada run y no pete
     - [ ] El resto sin bucle (poner un WARNING?)
     - [ ] INDEXADO para quitar los bucles en los cortes
-- [ ] Añadir al ppio de las funciones una comprobacion de si existen cortes generados y aplicarlos en las funciones que vengan despues. No queremos guardar una branch con los cortes
-- [ ] Comprobar ganancias FEB22_2 (testear que los resultados son compatibles con las otras macros)
+- [x] ~~Añadir al ppio de las funciones una comprobacion de si existen cortes generados y aplicarlos en las funciones que vengan despues.~~
+- [ ]  No queremos guardar una branch con los cortes --> Ahora se esta guardando
+- [x] ~~Comprobar ganancias FEB22_2 (testear que los resultados son compatibles con las otras macros)~~
 - [ ] TESTS para las medidas XA-SBND 
-- [ ] Imports desde un .py comun
-- [ ] No pasar por los .root :)
-- [ ] Cambiar estructura a carpeta (run00_ch00) con .npy (Ana/Dec/Fit) que serian las ramas del root + info extra que vamos añadiendo. Hay que cambiar os prefijos para que sean el nombre de los .npy. Puedes cargas las ramas que elijas. Kind of solve memory problem
+- [x] ~~Imports desde un .py comun~~
+- [x] ~~No pasar por los .root :)~~
+- [x] ~~Cambiar estructura a carpeta (run00_ch00) con .npy (Ana/Dec/Fit) que serian las ramas del root + info extra que vamos añadiendo. Hay que cambiar os prefijos para que sean el nombre de los .npy. Puedes cargas las ramas que elijas. Kind of solve memory problem~~
 - [ ] Libreria de fit: no saca el chi2; hay que cambiarla o ver como añadirlo
-persistencia no funciona
-- [ ] HANDS-ON
+- [x] ~~persistencia no funciona~~
 
 EXTRAS PARA CUANDO TODO FUNCIONE BIEN
 - [ ] Cabeceras {ADC, Osciloscopio}
