@@ -16,23 +16,18 @@ def gauss(x,a,x0,sigma):
 def gaussian_train(x, *params):
     y = np.zeros_like(x)
     for i in range(0, len(params), 3):
-        ctr = params[i]
-        amp = params[i+1]
-        wid = params[i+2]
-        y   = y + amp * np.exp( -((x - ctr)/wid)**2)
+        center = params[i]
+        height = params[i+1]
+        width = params[i+2]
+        y   = y + gaussian(x, height, center, width)
     return y
 
 def loggaussian_train(x, *params):
-    y = np.zeros_like(x)
-    for i in range(0, len(params), 3):
-        ctr = params[i]
-        amp = params[i+1]
-        wid = params[i+2]
-        y   = y + amp * np.exp( -((x - ctr)/wid)**2)
+    y = gaussian_train(x, *params)
     return np.log10(y)
 
 def gaussian(x, height, center, width):
-    return height * np.exp(-(x - center)**2/(2 * width**2))
+    return height * np.exp(-0.5*((x - center)/width)**2)
 
 def loggaussian(x, height, center, width):
     return np.log10(gaussian(x, height, center, width))
