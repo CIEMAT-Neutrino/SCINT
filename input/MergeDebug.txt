@@ -34,5 +34,5 @@ CHAN_AMPLI: 250,1030
 ########################
 TYPE: ChargeAveRange,ChargeRange
 REF: AveWvf
-I_RANGE: 2.25e-6
-F_RANGE: 2.8e-6
+I_RANGE: -1
+F_RANGE: 8
