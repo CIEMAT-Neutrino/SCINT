@@ -6,6 +6,7 @@
 - [ ] Falta por implementar que se pueda repetir el fit y le puedas dar valores de entrada por ejemplo (calib/scintill)
 - [ ] En la de scintillation hay que poner que rango de cargas de los que hay calculados quieres usar/fittear o lo que sea
 - [ ] El fit del perfil de centelleo para sacar la tau_slow etc
+- [ ] Calcular NEvents/s 
 - [ ] Documentar algunas cosas que faltan en las funciones + Wiki (subir los gifs :) )
 - [ ] Mejorar los output por terminal
 - [ ] (Extra: Calibracion pmt, DC)
