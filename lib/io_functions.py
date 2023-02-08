@@ -66,7 +66,7 @@ def read_input_file(input, path = "../input/", debug = False):
 
     return info
 
-def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], path = "../fit_data/", not_saved=[1]):
+def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1], path = "../fit_data/"):
     """General function to write a txt file with the outputs obtained.
         \n The file name is defined by the given "filename" variable + _chX. 
         \n If the file existed previously it appends the new fit values (it save the run for each introduced row)
@@ -92,7 +92,7 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
                 if fitted_peaks != 1: aux_label = str(i)+"\t"
                 if fitted_peaks == 1: aux_label = ""
                 f.write(str(int(run))+"\t"+info["OV_LABEL"][0]+"\t"+aux_label) #OVLABEL no funciona bien
-                for k in par_list:
+                for k in par_list[:len(par_list)-1]: #save all the parameter list except last element to include \n after it
                     if any (k == t for t in extra_tab): # if k == 3: # for calibration format
                         f.write("\t")
                     f.write(str(output[i][k][0]) +"\t" + str(output[i][k][1])+"\t")
