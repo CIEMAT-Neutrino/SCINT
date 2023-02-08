@@ -221,7 +221,7 @@ def calibration_txt(run, ch, popt, pcov, filename, info):
                 print("SN1 +- DSN1",        ['{:.2E}'.format(item) for item in cal_parameters[i][5]])
                 print("SN2 +- DSN2",        ['{:.2E}'.format(item) for item in cal_parameters[i][6]])
     
-    write_output_file(run, ch, cal_parameters, filename, info, header_list=["RUN","MU","DMU","SIG","DSIG","NEVENTS","DNEVENTS"], extra_tab=[3])
+    write_output_file(run, ch, cal_parameters, filename, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"], extra_tab=[3])
 
 def scintillation_txt(run, ch, popt, pcov, filename, info):
     """Computes charge parameters.
@@ -234,11 +234,14 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
     charge_parameters = []
     perr = np.sqrt(np.diag(pcov))  #error for each variable
 
-    mu       = [popt[0], perr[0]]  # mu +- dmu
-    height   = [popt[1], perr[1]]  # height +- dheight (not saving in txt by default)
+    mu       = [popt[1], perr[1]]  # mu +- dmu
+    height   = [popt[0], perr[0]]  # height +- dheight (not saving in txt by default)
     sigma    = [popt[2], perr[2]]  # sigma +- dsigma
-    nevents  = [popt[2], perr[2]]  # nevents/s +- dnevents/s
+    nevents  = [popt[2], perr[2]]  # nevents/s +- dnevents/s #HACER BIEN#
     charge_parameters.append([mu,height,sigma,nevents])
+    
+    print(len(charge_parameters))
+    print(charge_parameters[0])
 
     print("MU +- DMU:",               ['{:.2f}'.format(item) for item in charge_parameters[0][0]])
     print("HEIGHT +- DHEIGHT:",       ['{:.2f}'.format(item) for item in charge_parameters[0][1]])
