@@ -4,10 +4,11 @@ from matplotlib.cm import viridis
 import numpy as np
 import keyboard
 import math
+from itertools import product
 
 from .io_functions import load_npy,check_key
 from .ana_functions import generate_cut_array, get_units
-from itertools import product
+from .fit_functions import scint_fit, fit_wvfs
 
 import scipy
 from scipy.signal import find_peaks
@@ -177,7 +178,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                         thresh = my_run[run][ch_list[j]]["PedMax"][idx]
                         wdth = 4
                         prom = 0.01
-                        dist  = 40
+                        dist = 40
                         axs.axhline(thresh,c="k", alpha=.6, ls = "dotted")
                         peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
                         for p in peak_idx:
@@ -279,14 +280,25 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
             if compare == "RUNS":    run = b; label = "Run {}".format(run); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"])
 
             ave = my_run[run][ch][key][0]
-            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
-                ave = ave/np.max(ave)
+            norm_ave = np.max(ave)
             sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
+            thrld = 1e-6
             if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
                 fig.supxlabel(r'Time [$\mu$s]')
                 my_run[run][ch]["Sampling"] = my_run[run][ch]["Sampling"]*1e6
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
+                axs.semilogy()
+            if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
+                fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[key])
+            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
+                ave = ave/norm_ave
+                axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label+" (Raw)")
+                axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
+                axs.set_ylim(thrld, ave[np.argmax(ave)]*2)
 
-            axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label)
+            axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave*norm_ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label+" (Raw)")
+            axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit*norm_ave, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
+
         axs.grid(True, alpha = 0.7)
         axs.set_title(title,size = 14)
         axs.xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
