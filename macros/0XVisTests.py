@@ -36,6 +36,7 @@ OPT  = {
 ##### LOAD RUNS #####
 # my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True)
 my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True)
+# my_runs = load_npy(runs,channels,preset="CUTS",info=info,compressed=True) # Fast load (no ADC)
 print(my_runs[runs[0]][channels[0]].keys())
 #####################
 
@@ -45,7 +46,7 @@ print(my_runs[runs[0]][channels[0]].keys())
 #####################
 
 ##### CUTS #####
-# cut_min_max(my_runs, ["PeakAmp"], {"PeakAmp": [18,1000]})
+# cut_min_max(my_runs, ["PedMax"], {"PedMax": [-99,14]})
 # cut_min_max_sim(my_runs, ["PeakAmp", "ChargeAveRange"], {"PeakAmp": [30,45], "ChargeAveRange": [1.2, 2]})
 # cut_lin_rel(my_runs, ["PeakAmp", "ChargeAveRange"])
 ################
@@ -53,7 +54,7 @@ print(my_runs[runs[0]][channels[0]].keys())
 ##### HISTOGRAMS #####
 for r in runs:
     for c in channels:
-#         vis_var_hist(my_runs, r, c, "PeakAmp", [0.1,99.9], OPT = {"SHOW": True})
+        vis_var_hist(my_runs, r, c, "RawPedMean", [0.1,99.9], OPT = {"SHOW": True})
 #         vis_var_hist(my_runs, r, c, "ChargeAveRange",[0.1,99.9], {"SHOW": True})
-        vis_two_var_hist(my_runs, r, c, ["PeakAmp", "ChargeAveRange"], OPT = {"SHOW": True})
+        # vis_two_var_hist(my_runs, r, c, ["PedMax", "PedAmp"], OPT = {"SHOW": True})
 ######################

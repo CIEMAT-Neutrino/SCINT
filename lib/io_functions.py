@@ -320,6 +320,13 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Charge" in key: aux.append(key)
         branch_list = aux
 
+    elif preset == "CUTS":
+        branch_list = dict_option[option]
+        aux = ["NBinsWvf", "Sampling", "Label"]
+        for key in branch_list:
+            if not "ADC" in key: aux.append(key)
+        branch_list = aux
+
     if debug: print("\nPreset branch_list:", branch_list)
     return branch_list
 
@@ -350,7 +357,10 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
 
             for branch in branch_list:   
                 try:
-                    my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]           
+                    if "Dict" in branch:
+                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()    
+                    else:
+                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
                     if not compressed:
                         my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
 
