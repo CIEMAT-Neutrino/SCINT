@@ -172,28 +172,33 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
 
         except FileExistsError: print("DATA STRUCTURE ALREADY EXISTS") 
 
-        header     = np.fromfile(in_path+in_file, dtype='I')[:6] #read first event header
-        print(header)
+        headers    = np.fromfile(in_path+in_file, dtype='I') #read first event header
+        header     = headers[:6] #read first event header
+        
         NSamples   = int(header[0]/2-header_lines*2)
         Event_size = header_lines*2+NSamples
         data       = np.fromfile(in_path+in_file, dtype='H')
         N_Events   = int( data.shape[0]/Event_size )
-        TimeStamp  = (header[5]+header[4]*np.power(2,32)) * 8e-9 #Unidades de TriggerTimeStamp * 8e-9
-        print(TimeStamp)
+
+        #reshape everything, delete unused header
+        ADC       = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
+        headers   = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
+        
+        TIMESTAMP = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
+            
+        branches = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]
+        content  = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
+        files    = os.listdir(out_path+out_folder)
+
         if debug:
             print("#####################################################################")
             print("Header:",header)
             print("Waveform Samples:",NSamples)
             print("Event_size(wvf+header):",Event_size)
             print("N_Events:",N_Events)
+            print("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" )
+            print("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" )
             print("#####################################################################\n")
-            
-        #reshape everything, delete unused header
-        ADC = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
-        
-        branches = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPChannel"]
-        content  = [ADC, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
-        files=os.listdir(out_path+out_folder)
 
         for i, branch in enumerate(branches):
             try:

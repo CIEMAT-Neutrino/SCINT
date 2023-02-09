@@ -40,12 +40,12 @@ OPT = {
 # FITTING --> tau slow etc Look fit_wvfs(my_runs,"SCINT",thrld,range,key,OPT)
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
-    my_runs = load_npy([run],[ch], branch_list=["ADC","ChargeAveRange","AveWvf"], info=info,compressed=True) #preset="ANA"
+    my_runs = load_npy([run],[ch], branch_list=["ADC","TimeStamp","Sampling","ChargeAveRange","AveWvf"], info=info,compressed=True) #preset="ANA"
     print_keys(my_runs)
 
-    ## Integrated charge (scintillation runs) ##
+    # ## Integrated charge (scintillation runs) ##
     print("Run ", run, "Channel ", ch)
-    popt, pcov, perr = charge_fit(my_runs,int_key,OPT)
+    popt, pcov, perr = charge_fit(my_runs, int_key, OPT)
     # scintillation_txt(run, ch, popt, pcov, filename="pC", info=info) ## Charge parameters = mu,height,sigma,nevents ## 
 #     ### Repetir fits
 #     #JSON --> mapa runes (posibilidad)

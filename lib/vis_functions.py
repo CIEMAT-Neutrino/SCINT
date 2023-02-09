@@ -6,9 +6,9 @@ import keyboard
 import math
 from itertools import product
 
-from .io_functions import load_npy,check_key
+from .io_functions import load_npy,check_key, print_keys
 from .ana_functions import generate_cut_array, get_units
-from .fit_functions import scint_fit, fit_wvfs
+from .fit_functions import gaussian, scint_fit, fit_wvfs, gaussian_fit
 
 import scipy
 from scipy.signal import find_peaks
@@ -333,11 +333,11 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
         - percentile: percentile used for outliers removal
     WARNING! Maybe the binning stuff should be studied in more detail.
     """
+
     figure_features()
     all_counts = []
     all_bins = []
     all_bars = []
-    # aux_data = []
 
     if check_key(my_run[run][ch], "MyCuts") == False:
         generate_cut_array(my_run)
@@ -424,4 +424,3 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
         plt.show(); 
         while not plt.waitforbuttonpress(-1): pass    
     return fig, ax
-
