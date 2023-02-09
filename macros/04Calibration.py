@@ -21,7 +21,6 @@ channels = np.append(channels,info["CHAN_STNRD"])
 int_key = ["ChargeAveRange"]
 OPT = {
     "LOGY": False,
-    "PRINT_KEYS":False,
     "SHOW": True
     }
 
