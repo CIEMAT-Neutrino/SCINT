@@ -173,11 +173,13 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
         except FileExistsError: print("DATA STRUCTURE ALREADY EXISTS") 
 
         header     = np.fromfile(in_path+in_file, dtype='I')[:6] #read first event header
+        print(header)
         NSamples   = int(header[0]/2-header_lines*2)
         Event_size = header_lines*2+NSamples
         data       = np.fromfile(in_path+in_file, dtype='H')
         N_Events   = int( data.shape[0]/Event_size )
-
+        TimeStamp  = (header[5]+header[4]*np.power(2,32)) * 8e-9 #Unidades de TriggerTimeStamp * 8e-9
+        print(TimeStamp)
         if debug:
             print("#####################################################################")
             print("Header:",header)
