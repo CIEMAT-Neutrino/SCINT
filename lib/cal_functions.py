@@ -231,27 +231,23 @@ def charge_fit(my_runs, keys, OPT={}):
             fig_ch.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_ch.supxlabel(key+" ("+my_runs[run][ch]["Units"][key]+")"); fig_ch.supylabel("Counts")
             
             ### --- 1x GAUSSIAN FIT --- ###
-            x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh)
+            x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh, custom_fit=[])
             print("Chi2/N?: ", (sum((my_runs[run][ch][key]-gaussian(my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch][key])), *popt))**2))/len(my_runs[run][ch][key]))
             ax_ch.plot(x,gaussian(x, *popt), label="")
             
-            # confirmation = input("Are you happy with the fit? (y/n) ")
-            # if "n" in confirmation:
+            ## Repeat fit ##
+            confirmation = input("Are you happy with the fit? (y/n) ")
+            if "n" in confirmation:
+
+            # raise ValueError("A value in x_new is below the interpolation "
+            # ValueError: A value in x_new is below the interpolation range.
+
             #     print("--- Repeating the fit with input parameters ---")
-            #     mean   = input("Introduce a value for the MEAN: ")
-            #     height = input("Introduce a value for the HEIGHT: ")
-            #     sigma  = input("Introduce a value for the SIGMA: ")
+            #     min   = input("Introduce MIN value for the fit: ")
+            #     max = input("Introduce MAX value for the fit: ")
 
-            #     # x = my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch][key]))
-            #     # y = my_runs[run][ch][key]
-            #     x_space = np.linspace(int(mean)-int(sigma), int(mean)+int(sigma), 1000) #Array with values between the x_coord of 2 consecutives peaks
-            #     step    = x_space[1]-x_space[0]
-            #     x_gauss = x_space-int(1000/2)*step
-            #     y_gauss = gaussian(x_gauss, height, mean, sigma)
-
-            #     popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[height,mean,sigma])
-            #     perr = np.sqrt(np.diag(pcov))
-            #     ax_ch.plot(x, gaussian(x, *popt), label="")
+                x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,custom_fit=[10,100])
+                ax_ch.plot(x, gaussian(x, *popt), label="")
 
             if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
                 ax_ch.semilogy()

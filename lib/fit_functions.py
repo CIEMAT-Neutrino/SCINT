@@ -59,7 +59,7 @@ def scfunc(t, a, b, c, d, e, f):
 #*********************** FITTING FUNCTIONS *********************************#
 #===========================================================================#
 
-def gaussian_fit(counts, bins, bars,thresh):
+def gaussian_fit(counts, bins, bars,thresh, custom_fit):
     """
     This function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
@@ -72,24 +72,38 @@ def gaussian_fit(counts, bins, bars,thresh):
     acc    = 1000
 
     # Create linear interpolation between bins to search peaks in these variables
-    x = np.linspace(bins[1],bins[-2],acc)
-    y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
-    y = y_intrp(x)
-    # plt.plot(x,y)
-    print("\n...Fitting to a gaussian...")
+    if len(custom_fit) == 2:
+        min_value = custom_fit[0]
+        max_value = custom_fit[1]
 
+        x = np.linspace(min_value,max_value,acc)
+        y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
+        y = y_intrp(x)
+        plt.plot(x,y)
+    else:
+        x = np.linspace(bins[1],bins[-2],acc)
+        y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
+        y = y_intrp(x)
+
+    print("\n...Fitting to a gaussian...")
     # Find indices of peaks
     peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
-    peak_idx1 = peak_idx[0] + 50
-    
-    x_space = np.linspace(x[peak_idx[0]], x[peak_idx1], acc) #Array with values between the x_coord of 2 consecutives peaks
+    if len(custom_fit) == 2: 
+        best_peak_idx = peak_idx[np.abs(x[peak_idx] - (max_value-min_value)/2 ).argmin()]
+        print("Taking peak at: ", x[best_peak_idx])
+    else:
+        best_peak_idx = peak_idx[0]
+        print("Taking peak at: ", x[best_peak_idx])
+    best_peak_idx1 = best_peak_idx + 50
+
+    x_space = np.linspace(x[best_peak_idx], x[best_peak_idx1], acc) #Array with values between the x_coord of 2 consecutives peaks
     step    = x_space[1]-x_space[0]
     x_gauss = x_space-int(acc/2)*step
     x_gauss = x_gauss[x_gauss >= bins[0]]
     y_gauss = y_intrp(x_gauss)
 
     try:
-        popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[peak_idx[0]],x[peak_idx1],abs(wdth*(bins[0]-bins[1]))])
+        popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],abs(wdth*(bins[0]-bins[1]))])
         perr = np.sqrt(np.diag(pcov))
     except:
         print("Peak could not be fitted")
