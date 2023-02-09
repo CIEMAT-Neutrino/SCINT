@@ -108,10 +108,23 @@ def cut_lin_rel(my_runs, keys):
         else: print("Run generate_cut_array")
         while not fig.waitforbuttonpress(-1): pass
 
-# def cut_std(my_runs, keys, limits):
-#     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
-#         data = my_runs[run][ch][key]
-#         ypbot = np.percentile(data, 0.1); yptop = np.percentile(data, 0.99)
-#         ypad = 0.2*(yptop - ypbot)
-#         ymin = ypbot - ypad; ymax = yptop + ypad
-#         data = [i for i in data if ymin<i<ymax]
+def cut_ped_std(my_runs):
+    """
+    This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
+    VARIABLES:
+        - keys: a LIST of variables you want to constrain
+        - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+        - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+    Important! Each key works independently. If one key gives True and the other False, it remains False.
+    Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
+    """
+    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
+        print("Nº total events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
+        print(np.std(my_runs[run][ch]["PedMean"]))
+        if check_key(my_runs[run][ch], "MyCuts") == True:
+            for i in range(len(my_runs[run][ch]["PedSTD"])):
+                if np.std(my_runs[run][ch]["PedMean"]) > my_runs[run][ch]["PedRMS"][i]:
+                    continue    
+                else: my_runs[run][ch]["MyCuts"][i] = False
+            print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+        else: print("Run generate_cut_array")

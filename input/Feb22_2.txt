@@ -36,3 +36,13 @@ TYPE: ChargeAveRange,ChargeRange
 REF: AveWvf
 I_RANGE: 2.25e-6
 F_RANGE: 2.8e-6
+
+########################
+####   CUTS INFO    ####
+########################
+CUTS: MinMax,LinRel
+CUTS_KEYS: PeakAmp,ChargeAveRange
+LIMITS: 0,20,-1,4
+
+
+
