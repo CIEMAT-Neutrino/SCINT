@@ -329,7 +329,7 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
 
     if check_key(my_run[run][ch], "MyCuts") == False:
         generate_cut_array(my_run)
-    if check_key(my_run[run][ch], "Units") == False:
+    if check_key(my_run[run][ch], "UnitsDict") == False:
         get_units(my_run)
     aux_data = my_run[run][ch][key][my_run[run][ch]["MyCuts"] == True]
 
@@ -339,7 +339,6 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
         data = aux_data
         max_amp = np.max(data)
         binning = int(max_amp)+1
-        print("EY!")
     elif key == "PeakTime":
         data = my_run[run][ch]["Sampling"]*aux_data
         binning = int(my_run[run][ch]["NBinsWvf"]/2)
@@ -358,7 +357,7 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     all_bins.append(bins)
     all_bars.append(bars)
     fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
-    fig.supxlabel(key+" ("+my_run[run][ch]["Units"][key]+")"); fig.supylabel("Counts")
+    fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
     
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
         plt.show()
@@ -381,15 +380,15 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
 
     if check_key(my_run[run][ch], "MyCuts") == False:
         generate_cut_array(my_run)
-    if check_key(my_run[run][ch], "Units") == False:
+    if check_key(my_run[run][ch], "UnitsDict") == False:
         get_units(my_run)
     x_data = my_run[run][ch][keys[0]][my_run[run][ch]["MyCuts"] == True]; y_data = my_run[run][ch][keys[1]][my_run[run][ch]["MyCuts"] == True]
 
-    # Calculate range with percentiles for x-axis
+    #### Calculate range with percentiles for x-axis ####
     x_ypbot = np.percentile(x_data, percentile[0]); x_yptop = np.percentile(x_data, percentile[1])
     x_ypad = 0.2*(x_yptop - x_ypbot)
     x_ymin = x_ypbot - x_ypad; x_ymax = x_yptop + x_ypad
-    # Calculate range with percentiles for y-axis
+    #### Calculate range with percentiles for y-axis ####
     y_ypbot = np.percentile(y_data, percentile[0]); y_yptop = np.percentile(y_data, percentile[1])
     y_ypad = 0.2*(y_yptop - y_ypbot)
     y_ymin = y_ypbot - y_ypad; y_ymax = y_yptop + y_ypad
@@ -399,7 +398,7 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
         ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
     else: ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
     ax.grid("both")
-    fig.supxlabel(keys[0]+" ("+my_run[run][ch]["Units"][keys[0]]+")"); fig.supylabel(keys[1]+" ("+my_run[run][ch]["Units"][keys[1]]+")")
+    fig.supxlabel(keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
     fig.suptitle("Run_{} Ch_{} - {} vs {} histogram".format(run,ch,keys[0],keys[1]))
     if select_range:
         x1 = int(input("xmin: ")); x2 = int(input("xmax: "))
