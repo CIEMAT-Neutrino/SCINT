@@ -49,6 +49,7 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
             ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer
             if ped_lim < 0: ped_lim = 50
             my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
+            my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
             my_runs[run][ch][label+"PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
@@ -81,4 +82,4 @@ def get_units(my_runs, debug = False):
                 aux_dic[key] = "pC"
             else:
                 aux_dic[key] = "a.u."
-        my_runs[run][ch]["Units"] = aux_dic
+        my_runs[run][ch]["UnitsDict"] = aux_dic

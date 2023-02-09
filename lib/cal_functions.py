@@ -46,7 +46,7 @@ def vis_persistence(my_run, OPT = {}):
     plt.ioff()
     plt.clf()
 
-def calibrate(my_runs, keys, OPT={}):
+def calibrate(my_runs, keys, fit_function = "gaussian", OPT={}):
     """Computes calibration hist of a collection of runs and returns gain and SPE charge limits"""
 
     plt.ion()
@@ -56,17 +56,19 @@ def calibrate(my_runs, keys, OPT={}):
         
         if check_key(my_runs[run][ch], "MyCuts") == False:
             generate_cut_array(my_runs)
-        if check_key(my_runs[run][ch], "Units") == False:
+        if check_key(my_runs[run][ch], "UnitsDict") == False:
             get_units(my_runs)
-        
+
         try:
             idx = idx + 1
-
-            # Threshold value (for height of peaks and valleys)
-            thresh = int(len(my_runs[run][ch][key])/1000)
-            wdth = 10
-            prom = 0.5
-            acc  = 1000
+            #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
+            thresh = int(len(my_runs[run][ch][key])/1000) # Required height of peaks
+            wdth = 10 # Required width of peaks in samples
+            prom = 0.5 # Required prominence of peaks. 
+            # The prominence of a peak measures how much a peak stands out from the surrounding baseline of the signal and 
+            # is defined as the vertical distance between the peak and its lowest contour line.
+            acc  = 1000 # Number of samples to make the initial linear interpolation
+            # wlen = # A window length in samples that optionally limits the evaluated area for each peak to a subset of x (Interesting?)
 
             counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
             plt.close()
@@ -77,7 +79,7 @@ def calibrate(my_runs, keys, OPT={}):
             add_grid(ax_cal)
             counts = counts[0]; bins = bins[0]; bars = bars[0]
             ax_cal.hist(bins[:-1], bins, weights = counts)
-            fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["Units"][key]+")"); fig_cal.supylabel("Counts")
+            fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
 
             # Create linear interpolation between bins to search peaks in these variables
             x = np.linspace(bins[1],bins[-2],acc)
@@ -85,36 +87,38 @@ def calibrate(my_runs, keys, OPT={}):
             y = y_intrp(x)
             # plt.plot(x,y)
 
-            # Find indices of peaks
-            # peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
-            peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+            if fit_function == "gaussian":
+                # Find indices of peaks
+                peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+                # Find indices of valleys (from inverting the signal)
+                valley_idx, _ = find_peaks(-y, height = [-np.max(counts), -thresh], width = wdth)
+            if fit_function == "loggaussian":
+                # Find indices of peaks
+                peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
+                # Find indices of valleys (from inverting the signal)
+                valley_idx, _ = find_peaks(-np.log10(y), height = [-np.max(np.log10(counts)), -np.log10(thresh)], width = wdth, prominence = prom)
 
-            # Find indices of valleys (from inverting the signal)
-            # valley_idx, _ = find_peaks(-np.log10(y), height = [-np.max(np.log10(counts)), -np.log10(thresh)], width = wdth, prominence = prom)
-            valley_idx, _ = find_peaks(-y, height = [-np.max(counts), -thresh], width = wdth)
-            
             # Plot threshold, peaks (red) and valleys (blue)
             ax_cal.axhline(thresh, ls='--')
             ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
             ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-
-            initial = [] #Saving for input to the TRAIN FIT
             
+            initial = [] # Saving for input to the TRAIN FIT
             n_peaks = 6
             if len(peak_idx)-1 < n_peaks:
-                n_peaks = len(peak_idx)-1 #Number of peaks found by find_peak
+                n_peaks = len(peak_idx)-1 # Number of peaks found by find_peak
             
             for i in range(n_peaks):
-                x_space = np.linspace(x[peak_idx[i]], x[peak_idx[i+1]], acc) #Array with values between the x_coord of 2 consecutives peaks
+                x_space = np.linspace(x[peak_idx[i]], x[peak_idx[i+1]], acc) # Array with values between the x_coord of 2 consecutives peaks
                 step    = x_space[1]-x_space[0]
                 x_gauss = x_space-int(acc/2)*step
                 x_gauss = x_gauss[x_gauss >= bins[0]]
                 y_gauss = y_intrp(x_gauss)
-                # plt.plot(x_gauss,y_gauss,ls="--",alpha=0.9)
-
                 try:
-                    # popt, pcov = curve_fit(loggaussian,x_gauss,np.log10(y_gauss),p0=[np.log10(y[peak_idx[i]]),x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
-                    popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[peak_idx[i]],x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
+                    if fit_function == "gaussian":
+                        popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[peak_idx[i]],x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
+                    if fit_function == "loggaussian":
+                        popt, pcov = curve_fit(loggaussian,x_gauss,np.log10(y_gauss),p0=[np.log10(y[peak_idx[i]]),x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
                     perr = np.sqrt(np.diag(pcov))
                     # FITTED to gaussian(x, height, center, width)
                     initial.append(popt[1])         # HEIGHT
@@ -129,9 +133,11 @@ def calibrate(my_runs, keys, OPT={}):
                     print("Peak %i could not be fitted"%i)
 
             try:
+                if fit_function == "gaussian":
+                    popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]], y[:peak_idx[-1]], p0=initial) 
+                if fit_function == "loggaussian":
+                    popt, pcov = curve_fit(loggaussian_train,x[:peak_idx[-1]],np.log10(y[:peak_idx[-1]]),p0=initial)
                 ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
-                # popt, pcov = curve_fit(loggaussian_train,x[:peak_idx[-1]],np.log10(y[:peak_idx[-1]]),p0=initial)
-                popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]], y[:peak_idx[-1]], p0=initial) 
                 perr = np.sqrt(np.diag(pcov))
             except:
                 popt = initial
@@ -142,8 +148,6 @@ def calibrate(my_runs, keys, OPT={}):
             if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
                 ax_cal.semilogy()
             
-            # plt.ylim(thresh*0.9,np.max(counts)*1.1)
-            # plt.xlim(x[peak_idx[0]]-abs(wdth*(bins[0]-bins[1])),x[peak_idx[-1]]*1.1)
             if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
                 while not plt.waitforbuttonpress(-1): pass
 
@@ -153,15 +157,10 @@ def calibrate(my_runs, keys, OPT={}):
 
             my_runs[run][ch]["Gain"] = popt[3]-abs(popt[0])
             my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
-            print("SPE gauss parameters %.2E, %.2E, %.2E"%(popt[3],popt[4],popt[5]))
-            # print("SPE max charge for run %i ch %i = %.2E"%(run,ch,popt[3] + abs(popt[5])))
             my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
-            # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
-
             
         except KeyError:
             print("Empty dictionary. No calibration to show.")
-    
     # plt.ioff()
     plt.clf()
     plt.close()
