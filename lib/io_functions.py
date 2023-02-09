@@ -172,7 +172,9 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
 
         except FileExistsError: print("DATA STRUCTURE ALREADY EXISTS") 
 
-        header     = np.fromfile(in_path+in_file, dtype='I')[:6] #read first event header
+        headers    = np.fromfile(in_path+in_file, dtype='I') #read first event header
+        header     = headers[:6] #read first event header
+        
         NSamples   = int(header[0]/2-header_lines*2)
         Event_size = header_lines*2+NSamples
         data       = np.fromfile(in_path+in_file, dtype='H')
@@ -188,9 +190,14 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
             
         #reshape everything, delete unused header
         ADC = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
+        headers=np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
         
-        branches = ["RawADC", "NBinsWvf", "Sampling", "Label", "RawPChannel"]
-        content  = [ADC, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
+        TIMESTAMP=(headers[:,4]*2**32+headers[:,5])*8e-9
+        print("Run time:",(TIMESTAMP[-1]-TIMESTAMP[0])/60,"min" )
+        print("Rate :",N_Events/(TIMESTAMP[-1]-TIMESTAMP[0]), "ev/s" )
+
+        branches = ["RawADC","TIMESTAMP","NBinsWvf", "Sampling", "Label", "RawPChannel"]
+        content  = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
         files=os.listdir(out_path+out_folder)
 
         for i, branch in enumerate(branches):
