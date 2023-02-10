@@ -23,7 +23,7 @@ runs = np.append(runs,info["LIGHT_RUNS"])
 runs = np.append(runs,info["ALPHA_RUNS"])
 runs = np.append(runs,info["MUONS_RUNS"])
 
-channels = np.append(channels,info["CHAN_STNRD"])
+channels = np.append(channels,info["CHAN_TOTAL"])
 
 # From the input txt file you can choose the extension of your input file
 # NEEDS UPDATE!

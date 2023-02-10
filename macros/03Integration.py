@@ -19,7 +19,7 @@ runs = np.append(runs,info["LIGHT_RUNS"])
 runs = np.append(runs,info["ALPHA_RUNS"])
 runs = np.append(runs,info["MUONS_RUNS"])
 
-channels = np.append(channels,info["CHAN_STNRD"])
+channels = np.append(channels,info["CHAN_TOTAL"])
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
     
@@ -32,5 +32,5 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
 
     ## Charge Integration ##
     integrate_wvfs(my_runs, info = info) # Compute charge according to selected average wvf ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
-
+    charge_nevents(my_runs)
     save_proccesed_variables(my_runs,"CHARGE",info=info, force=True)

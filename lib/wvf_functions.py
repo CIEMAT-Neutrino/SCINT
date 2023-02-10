@@ -168,3 +168,26 @@ def integrate_wvfs(my_runs, info = {}, key = "ADC"):
         print("Empty dictionary. No integration to compute.")
 
     return my_runs
+
+def charge_nevents(my_runs, keys = ["ChargeAveRange"]):
+    """
+    This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
+    VARIABLES:
+        - my_runs: run(s) we want to use
+        - info: input information from .txt with DAQ characteristics and Charge Information.
+        - key: waveform we want to integrate
+    In txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
+    If I_RANGE = -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
+    If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
+    I_RANGE must have same length than F_RANGE!
+    """
+
+    try:
+        for run,ch,key in product(my_runs["NRun"], my_runs["NChannel"], keys):
+            runtime = (my_runs[run][ch]["TimeStamp"][-1] - my_runs[run][ch]["TimeStamp"][0]) #segundos
+            my_runs[run][ch]["NEvents"+key] = my_runs[run][ch][key] / runtime
+            print(my_runs[run][ch].keys())
+    except KeyError:
+        print("Empty dictionary. No integration to compute.")
+
+    return my_runs
