@@ -356,6 +356,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
+            os.makedirs(name=path+out_folder,exist_ok=True)
             files=os.listdir(path+out_folder)
             if not branch_list:
                branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
@@ -366,6 +367,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                 if key+".npz" in files and force == False:
                     print("File (%s.npz) alredy exists"%key)
                     continue
+                
                 elif key+".npz" in files and force == True:
                     print("File (%s.npz) OVERWRITTEN "%key)
                     os.remove(path+out_folder+key+".npz")
