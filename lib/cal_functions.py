@@ -64,10 +64,19 @@ def calibrate(my_runs, keys, OPT={}):
 
         if check_key(my_runs[run][ch], "MyCuts") == False:
             generate_cut_array(my_runs)
-        if check_key(my_runs[run][ch], "Units") == False:
+        if check_key(my_runs[run][ch], "UnitsDict") == False:
             get_units(my_runs)
-        
+
         try:
+            #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
+            thresh = int(len(my_runs[run][ch][key])/1000) # Required height of peaks
+            wdth = 10 # Required width of peaks in samples
+            prom = 0.5 # Required prominence of peaks. 
+            # The prominence of a peak measures how much a peak stands out from the surrounding baseline of the signal and 
+            # is defined as the vertical distance between the peak and its lowest contour line.
+            acc  = 1000 # Number of samples to make the initial linear interpolation
+            # wlen = # A window length in samples that optionally limits the evaluated area for each peak to a subset of x (Interesting?)
+
             counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
             plt.close()
 
@@ -77,6 +86,7 @@ def calibrate(my_runs, keys, OPT={}):
             add_grid(ax_cal)
             counts = counts[0]; bins = bins[0]; bars = bars[0]
             ax_cal.hist(bins[:-1], bins, weights = counts)
+
             fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["Units"][key]+")"); fig_cal.supylabel("Counts")
             
             if label != "PMT": #Fit for SiPMs/SC
@@ -122,14 +132,11 @@ def calibrate(my_runs, keys, OPT={}):
 
             my_runs[run][ch]["Gain"] = popt[3]-abs(popt[0])
             my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
-            print("SPE gauss parameters %.2E, %.2E, %.2E"%(popt[3],popt[4],popt[5]))
-            # print("SPE max charge for run %i ch %i = %.2E"%(run,ch,popt[3] + abs(popt[5])))
             my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
             # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
-            
+
         except KeyError:
             print("Empty dictionary. No calibration to show.")
-    
     # plt.ioff()
     plt.clf()
     plt.close()

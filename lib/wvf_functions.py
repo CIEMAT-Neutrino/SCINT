@@ -64,7 +64,7 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
             else:
                 generate_cut_array(my_runs)
                 cut_label = ""
-            if check_key(my_runs[run][ch], "Units") == False:
+            if check_key(my_runs[run][ch], "UnitsDict") == False:
                 get_units(my_runs)
 
             buffer = 100  
@@ -162,7 +162,7 @@ def integrate_wvfs(my_runs, info = {}, key = "ADC"):
                     my_runs[run][ch][typ+str(j)]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
                     
                     new_key = {typ+str(j): [t0,tf]}
-                    my_runs[run][ch]["ChargeRangeInfo"].update(new_key) # Update the dictionary
+                    my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
             print("Integrated wvfs according to %s baseline integration limits"%info["REF"][0])
     except KeyError:
         print("Empty dictionary. No integration to compute.")
