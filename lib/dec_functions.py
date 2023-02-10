@@ -10,20 +10,19 @@ import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
 
-def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
+def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
     """ 
     This function deconvolves any given number of arrays according to a provided SPE template.
     By default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
     VARIABLES:
         - my_runs: DICTIONARY containing the wvf to be deconvolved.
-        - dec_runs: DICTIONARY containing the SPE template.
-        - out_runs: DICTIONARY to store resuts (by default under the key "GaussDec" + original key).
-        - keys: LIST containing the keys of the entries of interest in the previous dictionaries.
-        - OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.)  
+        - keys: LIST containing the keys of [wvf, template, outputkey].
+        - peak_buffer: INT with left distance from peak to calculate baseline.
+        - OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).  
     """
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = []; trimm = 0 
-        template = dec_runs[run][ch][keys[1]][0]
+        template = my_runs[run][ch][keys[1]][0]
         
         for i in range(len(my_runs[run][ch][keys[0]])):
             # Select required runs and parameters
@@ -129,7 +128,7 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
             dec = np.fft.irfft(fft_dec)
             # dec = np.roll(dec, np.argmax(template)) # Roll the function to match original position
             
-            dec_std = np.mean(dec[:np.argmax(dec)-40])
+            dec_std = np.mean(dec[:np.argmax(dec)-peak_buffer])
             dec = dec-dec_std
 
             i_signal, f_signal = find_baseline_cuts(signal)
@@ -213,9 +212,9 @@ def deconvolve(my_runs, dec_runs, out_runs, keys = [], OPT = {}):
                 plt.clf()
         
         plt.ioff()
-        out_runs[run][ch][label+keys[2]] = np.asarray(aux)
+        my_runs[run][ch][label+keys[2]] = np.asarray(aux)
         if check_key(OPT, "CONVERT_ADC") == True or OPT["CONVERT_ADC"] == True:
-            out_runs[run][ch][label+keys[2]+"ADC"] = np.asarray(aux)
+            my_runs[run][ch][label+keys[2]+"ADC"] = np.asarray(aux)
         print("Generated wvfs with key %s"%(label+keys[2]))
     # return aux, X
 
