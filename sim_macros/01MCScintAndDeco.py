@@ -47,17 +47,17 @@ OPT = {
 
 OPT["FILTER"] = "WIENER"
 KEY = ["McADC","SPE","DecADC"]
-deconvolve(my_run,my_run,my_run,KEY,OPT)
+deconvolve(my_run,keys=KEY,OPT=OPT)
 
 KEY = ["McNoiseADC","SPE","DecNoiseADC"]
-deconvolve(my_run,my_run,my_run,KEY,OPT)
+deconvolve(my_run,keys=KEY,OPT=OPT)
 
 OPT["FILTER"] = "GAUSS"
 KEY = ["McADC","SPE","DecADC"]
-deconvolve(my_run,my_run,my_run,KEY,OPT)
+deconvolve(my_run,keys=KEY,OPT=OPT)
 
 KEY = ["McNoiseADC","SPE","DecNoiseADC"]
-deconvolve(my_run,my_run,my_run,KEY,OPT)
+deconvolve(my_run,keys=KEY,OPT=OPT)
 
 raw_key = ["McNoiseADC","GaussDecNoiseADC","WienerDecNoiseADC"]
 wvf_key = ["Raw","Gauss","Wiener"]
@@ -75,8 +75,8 @@ for run, ch in product(my_run["NRun"],my_run["NChannel"]):
             noiseSTD = np.std(my_run[run][ch][raw_key[j]][i][:i_base_idx])
             
             if raw_key[j] == "McNoiseADC":
-                charge = np.sum(my_run[run][ch][raw_key[j]][i][i_base_idx:f_base_idx])
-                my_run[run][ch][wvf_key[j]+"Charge"].append(my_run[run][ch]["Sampling"]*charge/my_run[run][ch]["SPEChargeADC"]) 
+                charge = my_run[run][ch]["Sampling"]*np.sum(my_run[run][ch][raw_key[j]][i][i_base_idx:f_base_idx])
+                my_run[run][ch][wvf_key[j]+"Charge"].append(charge/my_run[run][ch]["SPEChargeADC"]) 
             
             else:
                 charge = np.sum(my_run[run][ch][raw_key[j]][i][my_run[run][ch]["PreTrigger"]-20:])
