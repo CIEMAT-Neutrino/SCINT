@@ -16,16 +16,16 @@ info = read_input_file(input_file)
 
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
-channels = np.append(channels,info["CHAN_STNRD"])      
+channels = np.append(channels,info["CHAN_TOTAL"])      
 
 int_key = ["ChargeAveRange"]
 OPT = {
-    "LOGY": False,
+    "LOGY": True,
     "SHOW": True
     }
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
-    my_runs = load_npy([run],[ch], branch_list=["ADC","PedLim","Sampling","ChargeAveRange"], info=info,compressed=True)#preset="ANA"
+    my_runs = load_npy([run],[ch], branch_list=["ADC","PedLim","Label","Sampling","ChargeAveRange"], info=info,compressed=True)#preset="ANA"
     print_keys(my_runs)
 
     ## Persistence Plot ##
