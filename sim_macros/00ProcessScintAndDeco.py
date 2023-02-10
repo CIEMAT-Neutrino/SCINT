@@ -40,9 +40,8 @@ for i in range(len(template_list)):
         # Generate empty array to import data
         i_idx,f_idx = find_amp_decrease(SER[i], 1e-4)
         i_base_idx,f_base_idx = find_baseline_cuts(SER[i])
-        my_run[i+1][j]["SPEChargeADC"] = my_run[i+1][j]["Sampling"]*np.sum(SER[i][i_idx:f_base_idx])
+        my_run[i+1][j]["SPEChargeADC"] = my_run[i+1][j]["Sampling"]*np.sum(10*SER[i][i_idx:f_base_idx]/np.max(SER[i]))
         SER[i] = np.asarray(SER[i][i_idx:])
-        print(type(SER[i]))
         
         if np.size(SER[i]) > my_run[i+1][j]["TimeWindow"]:
             SER[i] = SER[i][:np.size(SER[i])-my_run[i+1][j]["TimeWindow"]]

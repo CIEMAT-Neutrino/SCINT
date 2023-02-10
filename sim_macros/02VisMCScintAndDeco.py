@@ -21,7 +21,7 @@ MC_num = 1000 # Number of mc wvf to be generated
 
 for run, ch in product(my_run["NRun"],my_run["NChannel"]):
     dec_key = "DecNoiseADC"
-    sigma = [1,50]
+    sigma = [50,50]
     num = np.random.randint(0,MC_num)
 
     for filter_key in ["Raw","Gauss","Wiener"]:
@@ -49,7 +49,6 @@ for run, ch in product(my_run["NRun"],my_run["NChannel"]):
                 except:
                     print("FIT COULD NOT BE PERFORMED"); popt2 = initial
                 # for j in range(len(popt2)): print(gauss_fit_labels[j],"{:.2E}".format(popt2[j]))
-                # if i == 2: print("#PE: %.2f"%(popt2[1]/my_run[0][0]["SPECharge"]))
                 ax[i].axvline(popt2[1],c="grey",ls="--",label="MEAN: %.2f"%abs(popt2[1]))
                 ax[i].plot(bins+(bins[1]-bins[0])/2,gauss(bins,*popt2),c="red",label="SIGMA: %.2f %%"%abs(100*popt2[2]/popt2[1]))
 
