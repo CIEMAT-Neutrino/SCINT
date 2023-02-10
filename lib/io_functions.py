@@ -19,7 +19,7 @@ def read_input_file(input, path = "../input/", debug = False):
     file = open(path+input+".txt", 'r')
     lines = file.readlines()
     info = dict()
-    NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_STNRD","CHAN_CALIB","CHAN_POLAR","CHAN_AMPLI"]
+    NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
     STRINGS = ["DAQ","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","TYPE","REF"]
     # Strips the newline character
@@ -181,14 +181,14 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
         N_Events   = int( data.shape[0]/Event_size )
 
         #reshape everything, delete unused header
-        ADC       = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
-        headers   = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
+        ADC        = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
+        headers    = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
         
-        TIMESTAMP = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
+        TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
             
-        branches = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]
-        content  = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
-        files    = os.listdir(out_path+out_folder)
+        branches   = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]
+        content    = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
+        files      = os.listdir(out_path+out_folder)
 
         if debug:
             print("#####################################################################")
@@ -308,14 +308,14 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     elif preset == "RAW":
         branch_list = dict_option[option]
-        aux = ["NBinsWvf", "Sampling", "Label"]
+        aux = ["NBinsWvf", "TimeStamp","Sampling", "Label"]
         for key in branch_list:
             if "Raw" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "CHARGE":
         branch_list = dict_option[option]
-        aux = ["NBinsWvf", "Sampling", "Label"]
+        aux = ["NBinsWvf", "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
             if "Charge" in key: aux.append(key)
         branch_list = aux

@@ -420,6 +420,8 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
         ax.grid("both")
         fig.supxlabel(keys[0]); fig.supylabel(keys[1])
 
+    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
+        plt.yscale('log'); 
     if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
         plt.show(); 
         while not plt.waitforbuttonpress(-1): pass    

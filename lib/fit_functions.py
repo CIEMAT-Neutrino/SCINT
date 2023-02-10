@@ -10,6 +10,7 @@ from scipy.signal   import find_peaks
 from scipy.special import erf
 from .io_functions import load_npy, check_key, print_keys
 from .ana_functions import generate_cut_array, get_units
+np.seterr(divide = 'ignore') 
 
 #===========================================================================#
 #********************** TH FUNCTIONS TO USE ********************************#
@@ -32,6 +33,9 @@ def loggaussian_train(x, *params):
     return np.log10(y)
 
 def gaussian(x, height, center, width):
+    return height * np.exp(-0.5*((x - center)/width)**2)
+
+def pmt_spe(x, height, center, width):
     return height * np.exp(-0.5*((x - center)/width)**2)
 
 def loggaussian(x, height, center, width):
@@ -59,54 +63,62 @@ def scfunc(t, a, b, c, d, e, f):
 #*********************** FITTING FUNCTIONS *********************************#
 #===========================================================================#
 
-def gaussian_fit(counts, bins, bars,thresh, custom_fit):
+def gaussian_fit(counts, bins, bars,thresh, custom_fit=[0]):
     """
     This function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     And return the parameters of the fit (if performed)
     """ 
-    # Threshold value (for height of peaks and valleys)
+    ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
     wdth   = 10
     prom   = 0.5
     acc    = 1000
 
-    # Create linear interpolation between bins to search peaks in these variables
+    ## Create linear interpolation between bins to search peaks in these variables ##
     if len(custom_fit) == 2:
-        min_value = custom_fit[0]
-        max_value = custom_fit[1]
+        mean  = custom_fit[0]
+        sigma = custom_fit[1]
 
-        x = np.linspace(min_value,max_value,acc)
+        x = np.linspace(mean-sigma,mean+sigma,acc)
         y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
         y = y_intrp(x)
-        plt.plot(x,y)
     else:
         x = np.linspace(bins[1],bins[-2],acc)
         y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
         y = y_intrp(x)
 
     print("\n...Fitting to a gaussian...")
-    # Find indices of peaks
+    ## Find indices of peaks ##
     peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+
     if len(custom_fit) == 2: 
-        best_peak_idx = peak_idx[np.abs(x[peak_idx] - (max_value-min_value)/2 ).argmin()]
+        print("\n--- Customized fit ---")
+        mean  = int(custom_fit[0])
+        sigma = int(custom_fit[1])
+        best_peak_idx = peak_idx[np.abs(x[peak_idx] - mean ).argmin()]
+        best_peak_idx1 = best_peak_idx + 50
+
+        x_gauss = x
+        y_gauss = y
         print("Taking peak at: ", x[best_peak_idx])
     else:
+        sigma = abs(wdth*(bins[0]-bins[1]))
         best_peak_idx = peak_idx[0]
+        best_peak_idx1 = best_peak_idx + 50
+
+        x_space = np.linspace(x[best_peak_idx]-sigma, x[best_peak_idx1]+sigma, acc) #Array with values between the x_coord of 2 consecutives peaks
+        step    = x_space[1]-x_space[0]
+        x_gauss = x_space-int(acc/2)*step
+        x_gauss = x_gauss[x_gauss >= bins[0]]
+        y_gauss = y_intrp(x_gauss)
         print("Taking peak at: ", x[best_peak_idx])
-    best_peak_idx1 = best_peak_idx + 50
 
-    x_space = np.linspace(x[best_peak_idx], x[best_peak_idx1], acc) #Array with values between the x_coord of 2 consecutives peaks
-    step    = x_space[1]-x_space[0]
-    x_gauss = x_space-int(acc/2)*step
-    x_gauss = x_gauss[x_gauss >= bins[0]]
-    y_gauss = y_intrp(x_gauss)
-
-    try:
-        popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],abs(wdth*(bins[0]-bins[1]))])
-        perr = np.sqrt(np.diag(pcov))
-    except:
-        print("Peak could not be fitted")
+    # try:
+    popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],sigma])
+    perr = np.sqrt(np.diag(pcov))
+    # except:
+    #     print("WARNING: Peak could not be fitted")
     
     return x, popt, pcov, perr
 
@@ -166,6 +178,71 @@ def gaussian_train_fit(counts, bins, bars, thresh):
     try:
         ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
         # popt, pcov = curve_fit(loggaussian_train,x[:peak_idx[-1]],np.log10(y[:peak_idx[-1]]),p0=initial)
+        popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]], y[:peak_idx[-1]], p0=initial) 
+        perr = np.sqrt(np.diag(pcov))
+    except:
+        popt = initial
+        print("Full fit could not be performed")
+    
+    return x, y, peak_idx, valley_idx, popt, pcov, perr
+
+def pmt_spe_fit(counts, bins, bars, thresh):
+    """
+    This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
+    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    And return the parameters of the fit (if performed)
+    [es muy parecida a gaussian_train_fit; hay algunas cosas que las coge en log pero igual se pueden unificar]
+    [se le puede dedicar un poco mas de tiempo para tener un ajuste mas fino pero parece que funciona]
+    """ 
+    ## Threshold value (for height of peaks and valleys) ##
+    # thresh = int(len(my_runs[run][ch][key])/1000)
+    wdth   = 10
+    prom   = 0.5
+    acc    = 1000
+    
+    ## Create linear interpolation between bins to search peaks in these variables ##
+    x = np.linspace(bins[1],bins[-2],acc)
+    y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
+    y = y_intrp(x)
+
+    ## Find indices of peaks ##
+    peak_idx, _ = find_peaks(np.log(y), height = np.log(thresh), width = wdth, prominence = prom)
+    # peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+    ## Find indices of valleys (from inverting the signal) ##
+    valley_idx, _ = find_peaks(-np.log(y), height = [-np.max(np.log(counts)), -np.log(thresh)], width = wdth, prominence = prom)
+    # valley_idx, _ = find_peaks(-y, height = [-np.max(counts), -thresh], width = wdth)
+
+    n_peaks = 4 #Fit of ped+1pe+2pe
+    initial = []                   #Saving for input to the TRAIN FIT
+    if len(peak_idx)-1 < n_peaks:
+        n_peaks = len(peak_idx)-1  #Number of peaks found by find_peak
+    
+    for i in range(n_peaks):
+        x_space = np.linspace(x[peak_idx[i]], x[peak_idx[i+1]], acc) #Array with values between the x_coord of 2 consecutives peaks
+        step    = x_space[1]-x_space[0]
+        x_gauss = x_space-int(acc/2)*step
+        x_gauss = x_gauss[x_gauss >= bins[0]]
+        y_gauss = y_intrp(x_gauss)
+        # plt.plot(x_gauss,y_gauss,ls="--",alpha=0.9)
+
+        try:
+            popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[peak_idx[i]],x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
+            perr = np.sqrt(np.diag(pcov))
+            ## FITTED to gaussian(x, height, center, width) ##
+            initial.append(popt[1])         # HEIGHT
+            initial.append(popt[0])         # CENTER
+            initial.append(np.abs(popt[2])) # WIDTH
+            # plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
+            # plt.ylim((1e-2,1e5))
+        except:
+            initial.append(x[peak_idx[i]])
+            initial.append(y[peak_idx[i]])
+            initial.append(abs(wdth*(bins[0]-bins[1])))
+            print("Peak %i could not be fitted"%i)
+
+    try:
+    # GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
+    # popt, pcov = curve_fit(loggaussian_train,x[:peak_idx[-1]],np.log10(y[:peak_idx[-1]]),p0=initial)
         popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]], y[:peak_idx[-1]], p0=initial) 
         perr = np.sqrt(np.diag(pcov))
     except:

@@ -20,7 +20,7 @@ runs = []; channels = []
 runs = np.append(runs,info["ALPHA_RUNS"])
 # runs = np.append(runs,info["MUONS_RUNS"])
 
-channels = np.append(channels,info["CHAN_STNRD"])
+channels = np.append(channels,info["CHAN_TOTAL"])
 
 int_key = ["ChargeAveRange"]
 OPT = {
@@ -37,15 +37,20 @@ OPT = {
 # my_runs = load_npy(runs.astype(int),channels.astype(int),branch_list=["Label","Sampling","AveWvf"],info=info,compressed=True) #Remember to LOAD your wvf
 # my_runs = load_npy([25],[0],branch_list=["Label","Sampling","AveWvf"],info=info,compressed=True) #Remember to LOAD your wvf
 # vis_compare_wvf(my_runs, ["AveWvf"], compare="RUNS", OPT=OPT)
-# FITTING --> tau slow etc Look fit_wvfs(my_runs,"SCINT",thrld,range,key,OPT)
+
+    ### FITTING --> tau slow etc
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
-    my_runs = load_npy([run],[ch], branch_list=["ADC","TimeStamp","Sampling","ChargeAveRange","AveWvf"], info=info,compressed=True) #preset="ANA"
+    my_runs = load_npy([run],[ch], branch_list=["ADC","TimeStamp","Sampling","ChargeAveRange", "NEventsChargeAveRange","AveWvf"], info=info,compressed=True) #preset="ANA"
     print_keys(my_runs)
 
-    # ## Integrated charge (scintillation runs) ##
+    ## Integrated charge (scintillation runs) ##
     print("Run ", run, "Channel ", ch)
-    popt, pcov, perr = charge_fit(my_runs, int_key, OPT)
-    # scintillation_txt(run, ch, popt, pcov, filename="pC", info=info) ## Charge parameters = mu,height,sigma,nevents ## 
-#     ### Repetir fits
-#     #JSON --> mapa runes (posibilidad)
+
+    popt_ch = []; pcov_ch = []; perr_ch = []; popt_nevt = []; pcov_nevt = []; perr_nevt = []
+    popt, pcov, perr = charge_fit(my_runs, int_key, OPT); popt_ch.append(popt); pcov_ch.append(pcov); perr_ch.append(perr)
+    popt, pcov, perr = charge_fit(my_runs, ["NEventsChargeAveRange"], OPT); popt_nevt.append(popt[1]); pcov_nevt.append(pcov[1]); perr_nevt.append(perr[1])
+
+    scintillation_txt(run, ch, popt_ch+popt_nevt, pcov_ch+pcov_nevt, filename="pC", info=info) ## Charge parameters = mu,height,sigma,nevents ## 
+
+    ###JSON --> mapa runes (posibilidad)
