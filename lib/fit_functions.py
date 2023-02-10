@@ -63,17 +63,17 @@ def scfunc(t, a, b, c, d, e, f):
 #*********************** FITTING FUNCTIONS *********************************#
 #===========================================================================#
 
-def gaussian_fit(counts, bins, bars,thresh, custom_fit=[0]):
+
+def gaussian_fit(counts, bins, bars,thresh, fit_function="gaussian", custom_fit=[0]):
     """
     This function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     And return the parameters of the fit (if performed)
     """ 
-    ## Threshold value (for height of peaks and valleys) ##
-    # thresh = int(len(my_runs[run][ch][key])/1000)
-    wdth   = 10
-    prom   = 0.5
-    acc    = 1000
+    #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
+    wdth = 10
+    prom = 0.5
+    acc  = 1000
 
     ## Create linear interpolation between bins to search peaks in these variables ##
     if len(custom_fit) == 2:
@@ -90,8 +90,9 @@ def gaussian_fit(counts, bins, bars,thresh, custom_fit=[0]):
 
     print("\n...Fitting to a gaussian...")
     ## Find indices of peaks ##
-    peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
-
+    if fit_function == "gaussian":    peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+    if fit_function == "loggaussian": peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
+    
     if len(custom_fit) == 2: 
         print("\n--- Customized fit ---")
         mean  = int(custom_fit[0])
@@ -122,7 +123,8 @@ def gaussian_fit(counts, bins, bars,thresh, custom_fit=[0]):
     
     return x, popt, pcov, perr
 
-def gaussian_train_fit(counts, bins, bars, thresh):
+
+def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
     """
     This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
@@ -139,12 +141,13 @@ def gaussian_train_fit(counts, bins, bars, thresh):
     y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
     y = y_intrp(x)
 
-    ## Find indices of peaks ##
-    # peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
-    peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
-    ## Find indices of valleys (from inverting the signal) ##
-    # valley_idx, _ = find_peaks(-np.log10(y), height = [-np.max(np.log10(counts)), -np.log10(thresh)], width = wdth, prominence = prom)
-    valley_idx, _ = find_peaks(-y, height = [-np.max(counts), -thresh], width = wdth)
+    ## Find indices of peaks and valleys ##
+    if fit_function == "gaussian":
+        peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+        valley_idx, _ = find_peaks(-y, height = [-np.max(counts), -thresh], width = wdth)
+    if fit_function == "loggaussian":
+        peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
+        valley_idx, _ = find_peaks(-np.log10(y), height = [-np.max(np.log10(counts)), -np.log10(thresh)], width = wdth, prominence = prom)
 
     n_peaks = 6
     initial = []                   #Saving for input to the TRAIN FIT
@@ -177,8 +180,9 @@ def gaussian_train_fit(counts, bins, bars, thresh):
 
     try:
         ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
-        # popt, pcov = curve_fit(loggaussian_train,x[:peak_idx[-1]],np.log10(y[:peak_idx[-1]]),p0=initial)
-        popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]], y[:peak_idx[-1]], p0=initial) 
+        if fit_function == "gaussian":    popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]], y[:peak_idx[-1]], p0=initial) 
+        if fit_function == "loggaussian": popt, pcov = curve_fit(loggaussian_train,x[:peak_idx[-1]],np.log10(y[:peak_idx[-1]]),p0=initial)
+        
         perr = np.sqrt(np.diag(pcov))
     except:
         popt = initial
