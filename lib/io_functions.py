@@ -19,7 +19,7 @@ def read_input_file(input, path = "../input/", debug = False):
     file = open(path+input+".txt", 'r')
     lines = file.readlines()
     info = dict()
-    NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_STNRD","CHAN_CALIB","CHAN_POLAR","CHAN_AMPLI"]
+    NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
     STRINGS = ["DAQ","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","TYPE","REF"]
     # Strips the newline character
@@ -180,25 +180,25 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
         data       = np.fromfile(in_path+in_file, dtype='H')
         N_Events   = int( data.shape[0]/Event_size )
 
+        #reshape everything, delete unused header
+        ADC        = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
+        headers    = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
+        
+        TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
+            
+        branches   = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]
+        content    = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
+        files      = os.listdir(out_path+out_folder)
+
         if debug:
             print("#####################################################################")
             print("Header:",header)
             print("Waveform Samples:",NSamples)
             print("Event_size(wvf+header):",Event_size)
             print("N_Events:",N_Events)
+            print("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" )
+            print("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" )
             print("#####################################################################\n")
-            
-        #reshape everything, delete unused header
-        ADC = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
-        headers=np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
-        
-        TIMESTAMP=(headers[:,4]*2**32+headers[:,5])*8e-9
-        print("Run time:",(TIMESTAMP[-1]-TIMESTAMP[0])/60,"min" )
-        print("Rate :",N_Events/(TIMESTAMP[-1]-TIMESTAMP[0]), "ev/s" )
-
-        branches = ["RawADC","TIMESTAMP","NBinsWvf", "Sampling", "Label", "RawPChannel"]
-        content  = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
-        files=os.listdir(out_path+out_folder)
 
         for i, branch in enumerate(branches):
             try:
@@ -212,8 +212,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
                         os.remove(out_path+out_folder+branch+".npy") 
                         np.save(out_path+out_folder+branch+".npy", content[i])
                         os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
-                
+                        
                 elif branch+".npz" in files and force == False:
                     print("File (%s.npz) alredy exists."%branch)
                     continue
@@ -308,14 +307,14 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     elif preset == "RAW":
         branch_list = dict_option[option]
-        aux = ["NBinsWvf", "Sampling", "Label"]
+        aux = ["NBinsWvf", "TimeStamp","Sampling", "Label"]
         for key in branch_list:
             if "Raw" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "CHARGE":
         branch_list = dict_option[option]
-        aux = ["NBinsWvf", "Sampling", "Label"]
+        aux = ["NBinsWvf", "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
             if "Charge" in key: aux.append(key)
         branch_list = aux
