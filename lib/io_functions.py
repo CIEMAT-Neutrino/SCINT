@@ -212,8 +212,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
                         os.remove(out_path+out_folder+branch+".npy") 
                         np.save(out_path+out_folder+branch+".npy", content[i])
                         os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
-                
+                        
                 elif branch+".npz" in files and force == False:
                     print("File (%s.npz) alredy exists."%branch)
                     continue
@@ -320,6 +319,13 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Charge" in key: aux.append(key)
         branch_list = aux
 
+    elif preset == "CUTS":
+        branch_list = dict_option[option]
+        aux = ["NBinsWvf", "Sampling", "Label"]
+        for key in branch_list:
+            if not "ADC" in key: aux.append(key)
+        branch_list = aux
+
     if debug: print("\nPreset branch_list:", branch_list)
     return branch_list
 
@@ -350,7 +356,10 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
 
             for branch in branch_list:   
                 try:
-                    my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]           
+                    if "Dict" in branch:
+                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()    
+                    else:
+                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
                     if not compressed:
                         my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
 
@@ -371,6 +380,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
+            os.makedirs(name=path+out_folder,exist_ok=True)
             files=os.listdir(path+out_folder)
             if not branch_list:
                branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
@@ -381,6 +391,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                 if key+".npz" in files and force == False:
                     print("File (%s.npz) alredy exists"%key)
                     continue
+                
                 elif key+".npz" in files and force == True:
                     print("File (%s.npz) OVERWRITTEN "%key)
                     os.remove(path+out_folder+key+".npz")
