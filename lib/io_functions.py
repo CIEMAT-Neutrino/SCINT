@@ -84,6 +84,7 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
         print("\n----------- Saving -----------")
 
         if not os.path.exists(path+filename+"_ch%i.txt"%ch): #HEADER#
+            os.makedirs(name=path,exist_ok=True)
             with open(path+filename+"_ch%i.txt"%ch, 'a+') as f:
                 f.write("\t".join(header_list)+"\n")
 
