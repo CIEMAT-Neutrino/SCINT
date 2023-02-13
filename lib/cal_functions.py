@@ -121,6 +121,7 @@ def calibrate(my_runs, keys, OPT={}):
                     ax_cal.legend()
                 if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
                     ax_cal.semilogy()
+                    ax_cal.set_ylim(1)
                 if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
                     while not plt.waitforbuttonpress(-1): pass
                 plt.clf()
@@ -184,13 +185,13 @@ def calibration_txt(run, ch, popt, pcov, filename, info):
         fitted_peaks = len(cal_parameters)
         for i in np.arange(fitted_peaks): #three parameters fitted for each peak
                     print("\nPeak:", i)
-                    print("MU +- DMU:",         ['{:.2E}'.format(item) for item in cal_parameters[i][0]])
-                    print("HEIGHT +- DHEIGHT:", ['{:.2E}'.format(item) for item in cal_parameters[i][1]])
-                    print("SIGMA +- DSIGMA:",   ['{:.2E}'.format(item) for item in cal_parameters[i][2]])
-                    print("GAIN +- DGAIN",      ['{:.2E}'.format(item) for item in cal_parameters[i][3]])
-                    print("SN0 +- DSN0",        ['{:.2E}'.format(item) for item in cal_parameters[i][4]])
-                    print("SN1 +- DSN1",        ['{:.2E}'.format(item) for item in cal_parameters[i][5]])
-                    print("SN2 +- DSN2",        ['{:.2E}'.format(item) for item in cal_parameters[i][6]])
+                    print("MU     +- DMU:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][0]])
+                    print("HEIGHT +- DHEIGHT:",['{:.2E}'.format(item) for item in cal_parameters[i][1]])
+                    print("SIGMA  +- DSIGMA: ",['{:.2E}'.format(item) for item in cal_parameters[i][2]])
+                    print("GAIN   +- DGAIN:  ",['{:.2E}'.format(item) for item in cal_parameters[i][3]])
+                    print("SN0    +- DSN0:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][4]])
+                    print("SN1    +- DSN1:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][5]])
+                    print("SN2    +- DSN2:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][6]])
         
         write_output_file(run, ch, cal_parameters, filename, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"], extra_tab=[3])
 
