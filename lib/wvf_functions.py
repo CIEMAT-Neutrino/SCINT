@@ -122,13 +122,13 @@ def smooth(my_run, alpha):
     my_run = unweighted_average(my_run)
     return my_run
 
-def integrate_wvfs(my_runs, info = {}, key = "ADC"):
+def integrate_wvfs(my_runs, info = {}, key = ""):
     """
     This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
     VARIABLES:
         - my_runs: run(s) we want to use
         - info: input information from .txt with DAQ characteristics and Charge Information.
-        - key: waveform we want to integrate
+        - key: waveform we want to integrate (by default any ADC)
     In txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
     If I_RANGE = -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
     If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
@@ -143,6 +143,11 @@ def integrate_wvfs(my_runs, info = {}, key = "ADC"):
         f_range = info["F_RANGE"] # Get final time(s) to finish the integration
         
         for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
+            if key == "":
+                for branch in my_runs[run][ch].keys():
+                    if "ADC" in str(branch):
+                        key = str(branch)
+            
             ave = my_runs[run][ch][ref] # Load the reference average waveform
             my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             for i in range(len(ave)):
