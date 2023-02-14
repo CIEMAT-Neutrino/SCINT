@@ -51,10 +51,10 @@ def find_amp_decrease(raw,thrld):
 
 def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
     """
-    It calculates the average waveform of a run in three different ways:
-        - AveWvf: each event is added without centering
-        - AveWvfPeak: 
-        - AveWvfThreshold: 
+    It calculates the average waveform of a run. Select centering:
+        - "NONE"      -> AveWvf: each event is added without centering.
+        - "PEAK"      -> AveWvfPeak: each event is centered according to wvf argmax. 
+        - "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
     """
 
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -149,6 +149,9 @@ def integrate_wvfs(my_runs, info = {}, key = "ADC"):
                 if typ == "ChargeAveRange":
                     i_idx,f_idx = find_baseline_cuts(ave[i])
                     my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
+                    if key == "GaussADC" or key == "WienerADC":
+                        my_runs[run][ch]["Dec"+typ] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+
             if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
             if typ.startswith("ChargeRange"):
                 for j in range(len(f_range)):
@@ -160,7 +163,9 @@ def integrate_wvfs(my_runs, info = {}, key = "ADC"):
                         t0 = i_range[j]; tf = f_range[j]
                     i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
                     my_runs[run][ch][typ+str(j)]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
-                    
+                    if key == "GaussADC" or key == "WienerADC":
+                        my_runs[run][ch]["Dec"+typ+str(j)] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+
                     new_key = {typ+str(j): [t0,tf]}
                     my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
             print("Integrated wvfs according to %s baseline integration limits"%info["REF"][0])

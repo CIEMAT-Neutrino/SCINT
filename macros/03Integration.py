@@ -31,6 +31,6 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
 
     ## Charge Integration ##
-    integrate_wvfs(my_runs, info = info) # Compute charge according to selected average wvf ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
-    charge_nevents(my_runs)
+    integrate_wvfs(my_runs, info = info, key="ADC") # Compute charge according to selected average wvf from input file ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
+    # charge_nevents(my_runs)
     save_proccesed_variables(my_runs,"CHARGE",info=info, force=True)

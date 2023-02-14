@@ -180,6 +180,7 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                 plt.ion()
                 next_plot = False
                 plt.rcParams['figure.figsize'] = [16,8]
+                plt.title("DECONVOLUTION RUN %i CH %i"%(run,ch))
                 plt.subplot(1, 2, 1)
                 
                 if check_key(OPT, "NORM") ==  True and OPT["NORM"] ==  True:
@@ -224,7 +225,7 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                 plt.axhline(1,ls="--",c="grey")
                 if check_key(OPT, "SHOW_F_DEC") !=  False: plt.plot(fft_signal_X, np.abs(fft_dec), label = "DECONVOLUTION", c = "tab:red")
                 if check_key(OPT, "SHOW_F_WIENER") !=  False: 
-                    plt.plot(fft_signal_X, wiener, label = "WIENER", c = "tab:orange")
+                    plt.plot(fft_signal_X, wiener, label = "WIENER", c = "tab:orange", ls = "--")
                     plt.plot(env_wiener.x[:env_wiener_min], -1*(env_wiener.y[:env_wiener_min]-2), label = "ENV_WIENER", c = "tab:pink", ls = "--")
 
                 if check_key(OPT, "SHOW_F_GAUSS") !=  False: plt.plot(fft_signal_X, fft_gauss, label = "GAUSS", c = "tab:green")

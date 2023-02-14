@@ -89,7 +89,21 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     ped = 0
                     std = my_run[run][ch_list[j]]["PedSTD"][idx]
                     label = ""
-                    
+                
+                elif("ADC" in str(key)):
+                    min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
+                    raw.append(my_run[run][ch_list[j]][key][idx])
+                    ped = 0
+                    std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
+                    label = key.replace("ADC","")
+                
+                elif("Ave" in str(key)):
+                    min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
+                    raw.append(my_run[run][ch_list[j]][key][idx])
+                    ped = 0
+                    std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
+                    label = key.replace("Ave","")
+
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
                     norm_raw[j] = (np.max(raw[j]))
                     raw[j] = raw[j]/np.max(raw[j])
