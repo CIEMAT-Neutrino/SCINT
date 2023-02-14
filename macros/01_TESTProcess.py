@@ -5,6 +5,8 @@
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
+#Memory(max)--> 11 GB RAM (min 8.3GB)
+
 import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 try:
@@ -15,11 +17,11 @@ except IndexError:
 info = read_input_file(input_file)
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
-# runs = np.append(runs,info["LIGHT_RUNS"])
-# runs = np.append(runs,info["ALPHA_RUNS"])
-# runs = np.append(runs,info["MUONS_RUNS"])
+runs = np.append(runs,info["LIGHT_RUNS"])
+runs = np.append(runs,info["ALPHA_RUNS"])
+runs = np.append(runs,info["MUONS_RUNS"])
 
-channels = np.append(channels,info["CHAN_STNRD"])
+channels = np.append(channels,info["CHAN_TOTAL"])
 
 """ To-Do: Avoid using loop in this macro. Maybe "ADC" type dict can be loaded in lazy mode """
 
