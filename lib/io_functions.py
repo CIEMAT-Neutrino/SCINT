@@ -9,6 +9,25 @@ from itertools import product
 #===========================================================================#
 #************************** INPUT FILE *************************************#
 #===========================================================================#
+def list_to_string(input_list):
+    string = str(input_list).replace("[","") 
+    string = string.replace("]","") 
+    string = string.replace("'","") 
+    string = string.replace(" ","") 
+    return string 
+
+def generate_input_file(info,path="../input/",label="",debug=False):
+    file = open(path+label+str(info["MONTH"][0])+".txt", 'w+')
+    for branch in info:
+        if branch == "MONTH":
+            if label == "Dec":
+                file.write(branch+": "+label+list_to_string(info[branch])+"\n")
+        if branch == "LOAD_PRESET":
+            if label == "Dec":
+                info[branch][2] = "DEC"
+                file.write(branch+": "+list_to_string(info[branch])+"\n")
+        else:
+            file.write(branch+": "+list_to_string(info[branch])+"\n")
 
 def read_input_file(input, path = "../input/", debug = False):
     """
@@ -21,7 +40,7 @@ def read_input_file(input, path = "../input/", debug = False):
     info = dict()
     NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    STRINGS = ["DAQ","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","TYPE","REF"]
+    STRINGS = ["DAQ","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF"]
     # Strips the newline character
     for line in lines:
         for LABEL in DOUBLES:
@@ -315,14 +334,14 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Raw" in key: aux.append(key)
         branch_list = aux
 
-    elif preset == "CHARGE":
+    elif preset == "INT":
         branch_list = dict_option[option]
         aux = ["NBinsWvf", "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
             if "Charge" in key: aux.append(key)
         branch_list = aux
 
-    elif preset == "CUTS":
+    elif preset == "EVA":
         branch_list = dict_option[option]
         aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
