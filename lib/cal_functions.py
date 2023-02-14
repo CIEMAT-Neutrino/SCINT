@@ -207,12 +207,13 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
 
     charge_parameters = []
     perr0 = np.sqrt(np.diag(pcov[0]))  #error for each variable
-    perr1 = np.sqrt(np.diag(pcov[1]))  #error for each variable
+    # perr1 = np.sqrt(np.diag(pcov[1]))  #error for each variable
 
     mu       = [popt[0][1], perr0[1]]  # mu +- dmu
     height   = [popt[0][0], perr0[0]]  # height +- dheight (not saving in txt by default)
     sigma    = [popt[0][2], perr0[2]]  # sigma +- dsigma
-    nevents  = [popt[1], perr1[0][0]]  # nevents/s +- dnevents/s #HACER BIEN#
+    # nevents  = [popt[1],    perr1[0][0]]  # nevents/s +- dnevents/s #HACER BIEN#
+    nevents  = [popt[0][2], perr0[2]]  # nevents/s +- dnevents/s #HACER BIEN#
     charge_parameters.append([mu,height,sigma,nevents])
     
     print(len(charge_parameters))
