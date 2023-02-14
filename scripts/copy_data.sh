@@ -9,4 +9,17 @@
 
 # Write all runs inside the scp command to avoid inserting password more than once
 # scp -r pcae182_outside:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22_2/ROOT/run{"01","02","03","09","10","11","25","26","27"}_ch* ../data/raw/.
-scp -r pcae146.ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE/Feb22_2/raw/run{"09","25","29"} ../data/Feb22_2/raw/.
+
+if [ -n "$1" ];then
+    afs_user=$1
+    else
+        echo "No afs user introduced try with: sh copy_data.sh USER"
+    fi
+
+if [ -n "$2" ];then
+    afs_pc=$2
+    else
+        afs_pc=146
+        echo "No afs pcae introduced, taking pcae146 as default"
+    fi
+scp -r "${afs_user}"@pcae"${afs_pc}".ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE/Feb22_2/raw/run{"01","08","09","25","29"} ../data/Feb22_2/raw/.
