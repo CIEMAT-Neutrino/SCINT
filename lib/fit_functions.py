@@ -64,7 +64,7 @@ def scfunc(t, a, b, c, d, e, f):
 #===========================================================================#
 
 
-def gaussian_fit(counts, bins, bars,thresh, fit_function="gaussian", custom_fit=[0]):
+def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit=[0]):
     """
     This function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
