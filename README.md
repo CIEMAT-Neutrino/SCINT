@@ -31,7 +31,7 @@ We don't want:
 
     Setup all the utilities needed for the macros:
     ```
-    ./scripts/setup.sh 
+    sh scripts/setup.sh 
     ```
     
     Then place all your root files in data/MONTH/raw folder (check copy_data.sh for ideas and run)
@@ -56,7 +56,10 @@ We don't want:
     python 3 00Raw2Np.py MergeDebug
     python 3 01PreProcess.py MergeDebug 
     python 3 02Process.py MergeDebug
-    python 3 03Calibration.py MergeDebug
+    python 3 03Integration.py MergeDebug
+    python 3 04Calibration.py MergeDebug
+    python 3 05Scintillation.py MergeDebug
+    python 3 06Deconvolution.py MergeDebug
     python 3 0XVisEvent.py MergeDebug 1 0,1
 ```
 
