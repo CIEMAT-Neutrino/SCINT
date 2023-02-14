@@ -8,6 +8,8 @@
 #   data/MONTH/npy/runXX_chYY with npz created. (npz_names=keys of the my_runs dict in the macros' workflow)             #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
+#Memory--> 8.8 GB RAM
+
 import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 try:

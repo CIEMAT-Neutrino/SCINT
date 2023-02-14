@@ -5,6 +5,8 @@
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
+#Memory(max)--> 11 GB RAM (min 8.3GB)
+
 import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 try:
