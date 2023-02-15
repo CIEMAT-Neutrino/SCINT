@@ -35,4 +35,4 @@ channels = np.append(channels,info["CHAN_TOTAL"])
 
 if info["RAW_DATA"][0] == "DAT":
     print("----- Taking a .dat file as input data -----")
-    binary2npy(runs.astype(int),channels.astype(int),info=info,compressed=True,force=False)
+    binary2npy(runs.astype(int),channels.astype(int),info=info,compressed=True,force=True)

@@ -13,6 +13,7 @@ except IndexError:
     input_file = input("Please select input File: ")
 
 info = read_input_file(input_file)
+
 channels = []
 raw_runs = np.asarray(info["ALPHA_RUNS"]).astype(int)
 dec_runs = np.asarray(info["LIGHT_RUNS"]).astype(int)
@@ -20,17 +21,16 @@ ref_runs = np.asarray(info["CALIB_RUNS"]).astype(int)
 SiPM_OV = 1 # Choose between OV value for SiPM in alpha run (0, 1 or 2)
 ana_ch = np.asarray(info["CHAN_TOTAL"]).astype(int)
 
-# for run, ch in product(np.arange(0,len(raw_runs)),np.arange(0,len(ana_ch))):
 for idx, run in enumerate(raw_runs):
     for jdx, ch in enumerate(ana_ch):
-        my_runs = load_npy([run],[ch],preset="ANA",info=info,compressed=True)  # Select runs to be deconvolved (tipichaly alpha)     
+        my_runs = load_npy([run],[ch],preset=str(info["LOAD_PRESET"][6]),info=info,compressed=True)  # Select runs to be deconvolved (tipichaly alpha)     
 
         if "SiPM" in str(my_runs[run][ch]["Label"]):
-            light_runs =  load_npy([dec_runs[SiPM_OV]],[ch],preset="CUTS",info=info,compressed=True) # Select runs to serve as dec template (tipichaly light)    
-            single_runs = load_npy([ref_runs[SiPM_OV]],[ch],preset="CUTS",info=info,compressed=True) # Select runs to serve as dec template scaling (tipichaly SPE)   
+            light_runs =  load_npy([dec_runs[SiPM_OV]],[ch],preset="EVA",info=info,compressed=True) # Select runs to serve as dec template (tipichaly light)    
+            single_runs = load_npy([ref_runs[SiPM_OV]],[ch],preset="EVA",info=info,compressed=True) # Select runs to serve as dec template scaling (tipichaly SPE)   
         elif "SC" in str(my_runs[run][ch]["Label"]):
-            light_runs =  load_npy([dec_runs[idx]],[ch],preset="CUTS",info=info,compressed=True) # Select runs to serve as dec template (tipichaly light)    
-            single_runs = load_npy([ref_runs[idx]],[ch],preset="CUTS",info=info,compressed=True) # Select runs to serve as dec template scaling (tipichaly SPE)
+            light_runs =  load_npy([dec_runs[idx]],[ch],preset="EVA",info=info,compressed=True) # Select runs to serve as dec template (tipichaly light)    
+            single_runs = load_npy([ref_runs[idx]],[ch],preset="EVA",info=info,compressed=True) # Select runs to serve as dec template scaling (tipichaly SPE)
         else:
             print("UNKNOWN DETECTOR LABEL!")
         
@@ -66,5 +66,7 @@ for idx, run in enumerate(raw_runs):
         keys[2] = "ADC"
         deconvolve(my_runs,keys=keys,OPT=OPT)
 
-        save_proccesed_variables(my_runs,preset="DEC",info=info,force=True)
+        save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][6]),info=info,force=True)
         del my_runs,light_runs,single_runs
+
+generate_input_file(info,label="Gauss")
