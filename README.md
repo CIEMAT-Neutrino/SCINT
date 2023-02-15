@@ -41,22 +41,6 @@ We don't want:
 
 2. Run the following macros FROM the macros folder:
 
-    - macros/00Raw2Np.py
-
-    - macros/01PreProcess.py
-    
-    - macros/02PreProcess.py
-    
-    - macros/03Integration.py
-
-    - macros/04Calibration.py
-    
-    - macros/05Scintillation.py
-    
-    - macros/06Deconvolution.py
-
-    - macros/0XVisEvent.py or macros/0XVisTests.py (whenever you want! (once you pre-process))
-  
 ```
     cd macros
     python3 00Raw2Np.py MergeDebug
