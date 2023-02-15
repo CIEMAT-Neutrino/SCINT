@@ -23,14 +23,15 @@ channels = np.append(channels,info["CHAN_TOTAL"])
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
     
-    my_runs = load_npy([run],[ch],preset="ANA",info=info,compressed=True)
-    print_keys(my_runs)
+    my_runs = load_npy([run],[ch],preset=str(info["LOAD_PRESET"][3]),info=info,compressed=True)
+    # print_keys(my_runs)
 
     ## Align indivual waveforms + Average ##
     # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
     # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
 
     ## Charge Integration ##
-    integrate_wvfs(my_runs, info = info, key="ADC") # Compute charge according to selected average wvf from input file ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
+    integrate_wvfs(my_runs, info = info) # Compute charge according to selected average wvf from input file ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
     # charge_nevents(my_runs)
-    save_proccesed_variables(my_runs,"CHARGE",info=info, force=True)
+    save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][3]),info=info, force=True)
+    del my_runs

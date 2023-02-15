@@ -147,7 +147,8 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
                 for branch in my_runs[run][ch].keys():
                     if "ADC" in str(branch):
                         key = str(branch)
-            
+                        label = key.replace("ADC","")
+
             ave = my_runs[run][ch][ref] # Load the reference average waveform
             my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             for i in range(len(ave)):
@@ -155,7 +156,7 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
                     i_idx,f_idx = find_baseline_cuts(ave[i])
                     my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
                     if key == "GaussADC" or key == "WienerADC":
-                        my_runs[run][ch]["Dec"+typ] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+                        my_runs[run][ch][label+typ] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
             if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
             if typ.startswith("ChargeRange"):
@@ -169,7 +170,7 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
                     i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
                     my_runs[run][ch][typ+str(j)]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
                     if key == "GaussADC" or key == "WienerADC":
-                        my_runs[run][ch]["Dec"+typ+str(j)] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+                        my_runs[run][ch][label+typ+str(j)] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
                     new_key = {typ+str(j): [t0,tf]}
                     my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
