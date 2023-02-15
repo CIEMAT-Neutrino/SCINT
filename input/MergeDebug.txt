@@ -14,24 +14,24 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-MONTH: MergeDebug
+MONTH: Feb22_2
 
 OV_LABEL: OV1
 
-MUONS_RUNS: 29
-LIGHT_RUNS: 9
+MUONS_RUNS: 
+LIGHT_RUNS: 
 ALPHA_RUNS: 25
-CALIB_RUNS: 1
+CALIB_RUNS: 1,8
 
-CHAN_LABEL: SiPM0,SC
-CHAN_TOTAL: 0,6
-CHAN_POLAR: -1,1
-CHAN_AMPLI: 250,1030
+CHAN_LABEL: SiPM0,PMT,SC
+CHAN_TOTAL: 0,4,6
+CHAN_POLAR: -1,-1,1
+CHAN_AMPLI: 250,50,1030
 
 ########################
 ####  CHARGE INFO   ####
 ########################
 TYPE: ChargeAveRange,ChargeRange
 REF: AveWvf
-I_RANGE: -1
-F_RANGE: 8
+I_RANGE: -1, -1
+F_RANGE: 8, 9
