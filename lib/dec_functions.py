@@ -124,8 +124,10 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                             popt, cov = curve_fit(lambda f, fc: fit_gauss(f,fc,2),np.arange(len(fft_signal_X))[:env_wiener_min],np.log10(-1*(env_wiener_Y[:env_wiener_min]-2)),p0=p0,bounds=lim)
                             perr = np.sqrt(np.diag(cov))
                             params = [popt,2]
-                            print("\n--- GAUSS FILTER FIT VALUES ---")
+                            print("\n-------------- GAUSS FILTER FIT VALUES --------------")
                             print("%s:\t%.2E\t%.2E"%("CUT-OFF FREQUENCY", popt[0], perr[0]))
+                            print("-----------------------------------------------------\n")
+
                             my_runs[run][ch]["GaussCutOff"] = popt[0]
 
                         elif check_key(OPT, "FREE_EXP") ==  True and OPT["FREE_EXP"] ==  True:
@@ -180,9 +182,8 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                 plt.ion()
                 next_plot = False
                 plt.rcParams['figure.figsize'] = [16,8]
-                plt.title("DECONVOLUTION RUN %i CH %i"%(run,ch))
                 plt.subplot(1, 2, 1)
-                
+                plt.title("DECONVOLUTION RUN %i CH %i"%(run,ch))
                 if check_key(OPT, "NORM") ==  True and OPT["NORM"] ==  True:
                     plt.plot(X, signal/np.max(signal), label = "SIGNAL: int = %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", ds = "steps")
                     if check_key(OPT, "SHOW_GAUSS_SIGNAL") !=  False: plt.plot(X, filter_signal/np.max(filter_signal),  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")

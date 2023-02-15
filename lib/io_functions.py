@@ -19,12 +19,17 @@ def list_to_string(input_list):
 def generate_input_file(info,path="../input/",label="",debug=False):
     file = open(path+label+str(info["MONTH"][0])+".txt", 'w+')
     for branch in info:
-        if branch == "MONTH":
-            if label == "Dec":
-                file.write(branch+": "+label+list_to_string(info[branch])+"\n")
         if branch == "LOAD_PRESET":
-            if label == "Dec":
-                info[branch][2] = "DEC"
+            if label == "Gauss" or label == "Wiener":
+                info[branch][3] = "DEC"
+                file.write(branch+": "+list_to_string(info[branch])+"\n")
+        elif branch == "REF":
+            if label == "Gauss" or label == "Wiener":
+                info[branch][0] = label+"AveWvf"
+                file.write(branch+": "+list_to_string(info[branch])+"\n")
+        elif branch == "LIGHT_RUNS" or branch == "CALIB_RUNS" or branch == "MUON_RUNS":    
+            if label == "Gauss" or label == "Wiener":
+                info[branch] = []
                 file.write(branch+": "+list_to_string(info[branch])+"\n")
         else:
             file.write(branch+": "+list_to_string(info[branch])+"\n")
@@ -352,7 +357,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = dict_option[option]
         aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label", "SER"]
         for key in branch_list:
-            if "Gauss" in key or "Wiener" in key: aux.append(key)
+            if "Gauss" in key or "Wiener" in key or "Dec" in key or "Charge" in key: aux.append(key)
         branch_list = aux
 
     if debug: print("\nPreset branch_list:", branch_list)
