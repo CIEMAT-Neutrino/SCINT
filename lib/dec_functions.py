@@ -184,6 +184,7 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                 plt.rcParams['figure.figsize'] = [16,8]
                 plt.subplot(1, 2, 1)
                 plt.title("DECONVOLUTION RUN %i CH %i"%(run,ch))
+
                 if check_key(OPT, "NORM") ==  True and OPT["NORM"] ==  True:
                     plt.plot(X, signal/np.max(signal), label = "SIGNAL: int = %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", ds = "steps")
                     if check_key(OPT, "SHOW_GAUSS_SIGNAL") !=  False: plt.plot(X, filter_signal/np.max(filter_signal),  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
