@@ -34,8 +34,8 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     compute_pedestal_variables(my_runs,key="ADC",debug=False)  # Compute new ped variables
     
     print_keys(my_runs)
-    average_wvfs(my_runs,centering="NONE")                     # Compute average wvfs
+    average_wvfs(my_runs,centering="NONE") # Compute average wvfs centering (choose from: "NONE", "PEAK", "THRESHOLD")
 
     delete_keys(my_runs,["RawADC",'RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','RawPChannel']) # Delete branches to avoid overwritting
-    save_proccesed_variables(my_runs,"ALL",info=info, force=True)
+    save_proccesed_variables(my_runs,"ALL",info=info, force=True) # Try preset ANA
     del my_runs

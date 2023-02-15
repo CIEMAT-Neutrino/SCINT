@@ -4,7 +4,7 @@
 ########################
 ####   DAQ INFO     ####
 ########################
-TYPE: ADC
+DAQ: ADC
 MODEL: 5725S
 BITS: 16384
 DYNAMIC_RANGE: 2
@@ -14,24 +14,34 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-MONTH: MergeDebug
+MONTH: Feb22_2
 
-OV_LABEL: OV1
+OV_LABEL: OV1,OV2,OV3
 
-MUONS_RUNS: 29
-LIGHT_RUNS: 9
-ALPHA_RUNS: 25
-CALIB_RUNS: 1
+MUONS_RUNS: 
+LIGHT_RUNS: 
+ALPHA_RUNS: 25,26,27
+CALIB_RUNS: 
 
-CHAN_LABEL: SiPM0,SC
-CHAN_TOTAL: 0,6
-CHAN_POLAR: -1,1
-CHAN_AMPLI: 250,1030
+CHAN_LABEL: SiPM0,SiPM1,SC
+CHAN_TOTAL: 0,1,6
+CHAN_POLAR: -1,-1,1
+CHAN_AMPLI: 250,250,1030
 
 ########################
 ####  CHARGE INFO   ####
 ########################
 TYPE: ChargeAveRange,ChargeRange
-REF: AveWvf
+REF: GaussAveWvf
 I_RANGE: -1
-F_RANGE: 8
+F_RANGE: 8e-6
+
+########################
+####   CUTS INFO    ####
+########################
+CUTS: MinMax,LinRel
+CUTS_KEYS: PeakAmp,ChargeAveRange
+LIMITS: 0,20,-1,4
+
+
+

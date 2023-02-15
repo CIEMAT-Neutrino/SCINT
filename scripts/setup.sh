@@ -4,8 +4,8 @@
 
 #create data directory if not present
 if [ ! -d "../data" ]; then
-mkdir -p ../data/Feb22_2/raw
-mkdir -p ../data/Feb22_2/npy
+mkdir -p ../data/MergeDebug/raw
+mkdir -p ../data/MergeDebug/npy
 fi
 
 if [ ! -d "../fit_data" ]; then
