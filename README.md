@@ -46,21 +46,27 @@ We don't want:
     - macros/01PreProcess.py
     
     - macros/02PreProcess.py
+    
+    - macros/03Integration.py
 
-    - macros/03Calibration.py
+    - macros/04Calibration.py
+    
+    - macros/05Scintillation.py
+    
+    - macros/06Deconvolution.py
 
     - macros/0XVisEvent.py or macros/0XVisTests.py (whenever you want! (once you pre-process))
   
 ```
     cd macros
-    python 3 00Raw2Np.py MergeDebug
-    python 3 01PreProcess.py MergeDebug 
-    python 3 02Process.py MergeDebug
-    python 3 03Integration.py MergeDebug
-    python 3 04Calibration.py MergeDebug
-    python 3 05Scintillation.py MergeDebug
-    python 3 06Deconvolution.py MergeDebug
-    python 3 0XVisEvent.py MergeDebug 1 0,1
+    python3 00Raw2Np.py MergeDebug
+    python3 01PreProcess.py MergeDebug 
+    python3 02Process.py MergeDebug
+    python3 03Integration.py MergeDebug
+    python3 04Calibration.py MergeDebug
+    python3 05Scintillation.py MergeDebug
+    python3 06Deconvolution.py MergeDebug
+    python3 0XVisEvent.py MergeDebug 1 0,1
 ```
 
     
