@@ -18,7 +18,7 @@ from .fig_config import (
     figure_features,
 )
 
-def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
+def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = False):
     """
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -82,27 +82,31 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     ped = np.mean(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = "Raw"
+                    if debug: print("Using '%s' label"%label)
 
-                if(key == "ADC"):
+                elif(key == "ADC"):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = 0
                     std = my_run[run][ch_list[j]]["PedSTD"][idx]
                     label = ""
-                
+                    if debug: print("Using '%s' label"%label)
+
                 elif("ADC" in str(key)):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = 0
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = key.replace("ADC","")
-                
+                    if debug: print("Using '%s' label"%label)
+
                 elif("Ave" in str(key)):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = 0
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = key.replace("Ave","")
+                    if debug: print("Using '%s' label"%label)
 
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
                     norm_raw[j] = (np.max(raw[j]))
