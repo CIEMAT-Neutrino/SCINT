@@ -15,6 +15,8 @@ np.seterr(divide = 'ignore')
 #===========================================================================#
 #********************** TH FUNCTIONS TO USE ********************************#
 #===========================================================================#
+def pure_scint(time,t0,a1,a2,tau1,tau2):
+    y = a1*np.exp(-(time-t0)/tau1)+a2*np.exp(-(time-t0)/tau2)
 
 def gauss(x,a,x0,sigma):
     return a/(sigma*math.sqrt(2*math.pi))*np.exp(-0.5*np.power((x-x0)/sigma,2))
