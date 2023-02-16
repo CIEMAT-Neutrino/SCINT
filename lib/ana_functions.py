@@ -45,19 +45,21 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
 def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
     """Computes the pedestal variables of a collection of a run's collection in standard format"""
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
-        # try:
-        ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer
-        if ped_lim < 0: ped_lim = 50
-        my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
-        my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
-        my_runs[run][ch][label+"PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
-        my_runs[run][ch][label+"PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)
-        my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
-        my_runs[run][ch][label+"PedLim"]  = ped_lim
-        print("Pedestal variables have been computed for run %i ch %i"%(run,ch))
-        # except: 
-        #     KeyError
-        #     if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
+        try:
+            # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
+            values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
+            ped_lim = values[np.argmax(counts)]-buffer
+            if ped_lim < 0: ped_lim = 50
+            my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
+            my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
+            my_runs[run][ch][label+"PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
+            my_runs[run][ch][label+"PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)
+            my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
+            my_runs[run][ch][label+"PedLim"]  = ped_lim
+            print("Pedestal variables have been computed for run %i ch %i"%(run,ch))
+        except: 
+            KeyError
+            if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
 
 def compute_ana_wvfs(my_runs, debug = False):
     """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
