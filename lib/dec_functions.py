@@ -84,9 +84,10 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
             
             # Calculate fft arrays
             fft_signal = np.fft.rfft(signal)
-            fft_signal_X = np.fft.rfftfreq(len(signal), 4e-9)
+            fft_signal_X = np.fft.rfftfreq(len(signal), my_runs[run][ch]["Sampling"])
            
             i_template, f_template = find_baseline_cuts(template)
+            # conv_template = np.convolve(template, )
             fft_template = np.fft.rfft(template)
             wiener = abs(fft_template)**2/(abs(fft_template)**2+abs(fft_noise)**2)
 
