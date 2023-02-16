@@ -73,7 +73,6 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
             # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) # Deprecated function st.mode()
             values, counts = np.unique(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1), return_counts=True) #using the mode peak as reference
             bin_ref_peak = values[np.argmax(counts)]
-            bin_ref_peak = bin_ref_peak[0][0]
             
             # centering none
             if centering == "NONE":
