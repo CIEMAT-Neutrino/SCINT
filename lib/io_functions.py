@@ -45,7 +45,7 @@ def read_input_file(input, path = "../input/", debug = False):
     info = dict()
     NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    STRINGS = ["DAQ","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF"]
+    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF"]
     # Strips the newline character
     for line in lines:
         for LABEL in DOUBLES:
@@ -135,8 +135,8 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
     \n Size increases x2 times. 
     """
 
-    in_path  = "../data/"+info["MONTH"][0]+"/raw/"
-    out_path = "../data/"+info["MONTH"][0]+"/npy/"
+    in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
+    out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     for run, ch in product (runs.astype(int),channels.astype(int)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
@@ -181,8 +181,8 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
     \n Depends numpy. 
     """
 
-    in_path  = "../data/"+info["MONTH"][0]+"/raw/"
-    out_path = "../data/"+info["MONTH"][0]+"/npy/"
+    in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
+    out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(int),channels.astype(int)):
         i = np.where(runs == run)[0][0]
@@ -374,7 +374,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
     \n Presets can be used to only load a subset of desired branches. ALL is default.
     """
 
-    path = "../data/"+info["MONTH"][0]+"/npy/"
+    path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
 
     my_runs = dict()
     my_runs["NRun"]     = runs
@@ -409,7 +409,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
     """
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-    path = "../data/"+info["MONTH"][0]+"/npy/"
+    path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
 
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:

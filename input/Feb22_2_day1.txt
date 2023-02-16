@@ -14,6 +14,8 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
+#PATH: /pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/
+PATH: ../data/
 MONTH: Feb22_2
 
 OV_LABEL: OV1,OV2,OV3
