@@ -13,7 +13,7 @@ mkdir ../fit_data
 fi
 
 pip3 install    -r requirements.txt
-sudo apt install <requirementsTeX.txt
+#sudo apt install <requirementsTeX.txt
 
 echo SUCCESS!
 
