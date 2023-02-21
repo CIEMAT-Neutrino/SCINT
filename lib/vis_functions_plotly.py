@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+import plotly.express as px
 from matplotlib.colors import LogNorm
 from matplotlib.cm import viridis
 import numpy as np
@@ -108,7 +108,8 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                         axs[j].semilogy()
                         std = 0 # It is ugly if we see this line in log plots
                     # fig.tight_layout(h_pad=2) # If we want more space betweeb subplots. We avoid small vertical space between plots            
-                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2, zorder = -1)
+                    fig = px.line(x = my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])), y = raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2, zorder = -1)
+                    fig.show()
                     axs[j].grid(True, alpha = 0.7)
                     try:
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
@@ -397,7 +398,7 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     all_bins.append(bins)
     all_bars.append(bars)
     fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
-    # fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
+    fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
     
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
         plt.show()

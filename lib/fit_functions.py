@@ -71,9 +71,12 @@ def gaussian_fit(counts, bins, bars,thresh, fit_function="gaussian", custom_fit=
     And return the parameters of the fit (if performed)
     """ 
     #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
-    wdth = 10
-    prom = 0.5
-    acc  = 1000
+    wdth = 10 # Required width of peaks in samples
+    prom = 0.5 # Required prominence of peaks. 
+    # The prominence of a peak measures how much a peak stands out from the surrounding baseline of the signal and 
+    # is defined as the vertical distance between the peak and its lowest contour line.
+    acc  = 1000 # Number of samples to make the initial linear interpolation
+    # wlen = # A window length in samples that optionally limits the evaluated area for each peak to a subset of x (Interesting?)
 
     ## Create linear interpolation between bins to search peaks in these variables ##
     if len(custom_fit) == 2:
