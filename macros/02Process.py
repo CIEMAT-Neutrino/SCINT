@@ -37,3 +37,4 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     delete_keys(my_runs,["RawADC",'RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','RawPChannel']) # Delete branches to avoid overwritting
     save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][2]),info=info, force=True) # Try preset ANA
     del my_runs
+    gc.collect()

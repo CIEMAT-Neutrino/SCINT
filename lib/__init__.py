@@ -3,6 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy             as np
 import scipy             as sc
+import gc
 from scipy.signal   import find_peaks
 from scipy.optimize import curve_fit
 from scipy.special  import erf
