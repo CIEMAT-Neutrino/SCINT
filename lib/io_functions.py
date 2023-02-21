@@ -1,4 +1,4 @@
-import os
+import os, gc
 import matplotlib.pyplot as plt
 import numpy as np
 import uproot
@@ -254,7 +254,8 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
                         print(branch)
                         print("Saved data in:" , out_path+out_folder+branch+".npx")
                         print("----------------------\n")
-                    
+                    gc.collect()
+
                 except FileNotFoundError:
                     print("--- File %s was not foud!!! \n"%in_file)
         except FileNotFoundError:
@@ -442,7 +443,8 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     del my_runs
-    
+    gc.collect()
+
 #DEPREACTED??#
 def copy_single_run(my_runs, runs, channels, keys):
     my_run = dict()

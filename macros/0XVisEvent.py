@@ -20,7 +20,9 @@ except IndexError:
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 
-info = {"MONTH": [input_folder]}
+info = {"MONTH": [input_folder],
+        "PATH": ["../data/"]}
+
 OPT  = {
     "MICRO_SEC":   True,
     "NORM":        False,                # Runs can be displayed normalised (True/False)
@@ -34,9 +36,9 @@ OPT  = {
 ###################################
 
 ##### LOAD RUNS #####
-my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True) # preset could be RAW or ANA
+my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True) # preset could be RAW or ANA
 #####################
 
 ##### EVENT VISUALIZER #####
-vis_npy(my_runs, ["RawADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
+vis_npy(my_runs, ["ADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
 ############################

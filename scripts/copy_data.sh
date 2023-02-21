@@ -22,4 +22,4 @@ if [ -n "$2" ];then
         afs_pc=146
         echo "No afs pcae introduced, taking pcae146 as default"
     fi
-scp -r "${afs_user}"@pcae"${afs_pc}".ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE/Feb22_2/raw/run{"01","08","09","25","29"} ../data/MergeDebug/raw/.
+scp -r "${afs_user}"@pcae"${afs_pc}".ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE/SBND_XA_VIS/raw/run{"01","02","03"} ../data/SBND/raw/.
