@@ -36,3 +36,4 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     # charge_nevents(my_runs)
     save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][3]),info=info, force=True)
     del my_runs
+    gc.collect()

@@ -258,7 +258,10 @@ def pmt_spe_fit(counts, bins, bars, thresh):
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
 def peak_fit(fit_raw, raw_x, buffer, thrld, sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-9, OPT={}):
+    """ DOC """
 
+    max = np.argmax(fit_raw)
+    # print(fit_raw)
     if check_key(OPT, "CUT_NEGATIVE") == True and OPT["CUT_NEGATIVE"] == True:
         for i in range(len(fit_raw)):
             if fit_raw[i] <= thrld:
@@ -266,11 +269,8 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma = 1e-8, a_fast = 1e-8, a_slow 
             if np.isnan(fit_raw[i]):
                 fit_raw[i] = thrld
 
-    fit_raw  = fit_raw/np.max(fit_raw)
-    t0       = np.argmax(fit_raw) #t0
-    raw_x    = np.arange(len(fit_raw))
     guess_t0 = raw_x[np.argmax(fit_raw)-10]
-    p = np.mean(fit_raw[:t0-buffer])
+    p = np.mean(fit_raw[:max-buffer])
 
     t0 = guess_t0; t0_low = guess_t0*0.02; t0_high = guess_t0*50
     
@@ -279,26 +279,21 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma = 1e-8, a_fast = 1e-8, a_slow 
     tau1  = 9e-9;   tau1_low = 6e-9;       tau1_high  = 1e-8
 
     bounds  = ([t0_low, sigma_low, a1_low, tau1_low], [t0_high, sigma_high, a1_high, tau1_high])
-    # initial = (t0, sigma, a1, tau1)
-    initial  = (t0, 8, 12, 25)
+    initial = (t0, sigma, a1, tau1)
     labels  = ["TIME", "SIGM", "AMP1", "TAU1"]
 
     # FIT PEAK
     try:
-        popt, pcov = curve_fit(func, raw_x[t0-buffer:t0+int(buffer/2)], fit_raw[t0-buffer:t0+int(buffer/2)], p0 = initial, method = "trf")
+        popt, pcov = curve_fit(func, raw_x[max-buffer:max+int(buffer/2)], fit_raw[max-buffer:max+int(buffer/2)], p0 = initial, bounds = bounds, method = "trf")
         perr = np.sqrt(np.diag(pcov))
-    except Exception as e:
-        if e=='ValueError(\'Residuals are not finite in the initial point.\')':
-            pass
-        else:
-            print("\n --- WARNING: Peak fit could not be performed ---")
-            print("ERROR: ", e)
-            popt = initial
-            perr = np.zeros(len(initial))
+    except:
+        print("Peak fit could not be performed")
+        popt = initial
+        perr = np.zeros(len(initial))
 
     # PRINT FIRST FIT VALUE
     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-        print("\n--- FIRST FIT VALUES (FAST) ---")
+        print("\n--- FISRT FIT VALUES (FAST) ---")
         for i in range(len(initial)):
             print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
         print("-------------------------------")

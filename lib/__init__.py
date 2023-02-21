@@ -1,5 +1,5 @@
-import os, copy
-import math
+import os, copy, gc, math
+
 import matplotlib.pyplot as plt
 import numpy             as np
 import scipy             as sc
