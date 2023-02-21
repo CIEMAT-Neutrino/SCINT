@@ -5,6 +5,7 @@ import uproot
 import copy
 import stat
 from itertools import product
+import gc
 
 #===========================================================================#
 #************************** INPUT FILE *************************************#
@@ -227,14 +228,19 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
 
             for i, branch in enumerate(branches):
                 try:
-                    if branch+".npz" in files and force == True:
-                        print("File (%s.npz) alredy exists. OVERWRITTEN"%branch)
-                        os.remove(out_path+out_folder+branch+".npz") 
-                        np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
-                        os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                    if (branch+".npz" in files or branch+".npy" in files) and force == True:
+                        print("File (%s.npx) already exists. OVERWRITTEN"%branch)
+                        if compressed:
+                            try:    
+                                os.remove(out_path+out_folder+branch+".npz")
+                            except FileNotFoundError: print(".npy was found but not .npz")
+                            np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
+                            os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
-                        if not compressed:
-                            os.remove(out_path+out_folder+branch+".npy") 
+                        else:
+                            try:
+                                os.remove(out_path+out_folder+branch+".npy") 
+                            except FileNotFoundError: print(".npz was found but not .npy")
                             np.save(out_path+out_folder+branch+".npy", content[i])
                             os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                             
@@ -254,7 +260,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
                         print(branch)
                         print("Saved data in:" , out_path+out_folder+branch+".npx")
                         print("----------------------\n")
-                    
+                    gc.collect()
                 except FileNotFoundError:
                     print("--- File %s was not foud!!! \n"%in_file)
         except FileNotFoundError:
@@ -426,12 +432,15 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                     print("File (%s.npz) alredy exists"%key)
                     continue
                 
-                elif key+".npz" in files and force == True:
-                    print("File (%s.npz) OVERWRITTEN "%key)
-                    os.remove(path+out_folder+key+".npz")
-                    np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
-                    os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
+                elif (key+".npz" in files or key+".npy" in files) and force == True:
+                    if compressed:
+                        print("File (%s.npz) OVERWRITTEN "%key)
+                        os.remove(path+out_folder+key+".npz")
+                        np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
+                        os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                    else:
+                        np.save(path+out_folder+key+".npy",aux[run][ch][key])
+                        os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 else:
                     print("Saving NEW file: %s.npz"%key)
                     print(path+out_folder+key+".npz")
@@ -442,6 +451,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     del my_runs
+    gc.collect()
     
 #DEPREACTED??#
 def copy_single_run(my_runs, runs, channels, keys):
