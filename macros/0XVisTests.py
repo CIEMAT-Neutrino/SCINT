@@ -25,7 +25,7 @@ OPT  = {
     "MICRO_SEC":   True,
     "NORM":        False,                # Runs can be displayed normalised (True/False)
     "LOGY":        False,               # Runs can be displayed in logy (True/False)
-    "SHOW_AVE":    "AveWvfSPE",             # If computed, vis will show average (AveWvf,AveWvfSPE,etc.)
+    "SHOW_AVE":    "",             # If computed, vis will show average (AveWvf,AveWvfSPE,etc.)
     "SHOW_PARAM":  True,                 # Print terminal information (True/False)
     "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False)
@@ -34,14 +34,14 @@ OPT  = {
 ###################################
 
 ##### LOAD RUNS #####
-# my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True)
-my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True)
+my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True)
+# my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True)
 # my_runs = load_npy(runs,channels,preset="CUTS",info=info,compressed=True) # Fast load (no ADC)
-print(my_runs[runs[0]][channels[0]].keys())
+# print(my_runs[runs[0]][channels[0]].keys())
 #####################
 
 ##### EVENT VISUALIZER #####
-# vis_npy(my_runs, ["RawADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input variables should be lists of integers
+vis_npy(my_runs, ["RawADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input variables should be lists of integers
 # vis_npy(my_runs, ["ADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input variables should be lists of integers
 #####################
 
@@ -52,9 +52,9 @@ print(my_runs[runs[0]][channels[0]].keys())
 ################
 
 ##### HISTOGRAMS #####
-for r in runs:
-    for c in channels:
-        vis_var_hist(my_runs, r, c, "RawPedMean", [0.1,99.9], OPT = {"SHOW": True})
-#         vis_var_hist(my_runs, r, c, "ChargeAveRange",[0.1,99.9], {"SHOW": True})
+# for r in runs:
+#     for c in channels:
+#         vis_var_hist(my_runs, r, c, "PeakAmp", [0.1,99.9], OPT = {"SHOW": True})
+        # vis_var_hist(my_runs, r, c, "ChargeAveRange",[0.1,99.9], {"SHOW": True})
         # vis_two_var_hist(my_runs, r, c, ["PedMax", "PedAmp"], OPT = {"SHOW": True})
 ######################

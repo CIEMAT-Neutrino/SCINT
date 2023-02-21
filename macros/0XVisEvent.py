@@ -34,9 +34,11 @@ OPT  = {
 ###################################
 
 ##### LOAD RUNS #####
-my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True) # preset could be RAW or ANA
+# my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True) # preset could be RAW or ANA
+my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True) # preset could be RAW or ANA
 #####################
 
 ##### EVENT VISUALIZER #####
-vis_npy(my_runs, ["RawADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
+# vis_npy(my_runs, ["RawADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
+vis_npy(my_runs, ["ADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
 ############################

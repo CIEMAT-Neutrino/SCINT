@@ -1,0 +1,47 @@
+# Do not use spaces " " except between KEYWORD and input variables
+# If input variables are a list, use "," as a separator
+
+########################
+####   DAQ INFO     ####
+########################
+DAQ: ADC
+MODEL: 5725S
+BITS: 16384
+DYNAMIC_RANGE: 2
+SAMPLING: 4e-9
+
+########################
+####   RUNS INFO    ####
+########################
+RAW_DATA: DAT
+MONTH: SBND_XA_VIS
+
+OV_LABEL: OV1,OV2,OV3
+
+MUONS_RUNS: 
+LIGHT_RUNS: 
+ALPHA_RUNS: 0
+CALIB_RUNS: 1,2,3
+
+CHAN_LABEL: SiPM0,SiPM1,SC
+CHAN_TOTAL: 0,1,3,4,5
+CHAN_POLAR: -1,-1,-1,-1,1
+CHAN_AMPLI: 250,250,250,250,1030
+
+########################
+####  CHARGE INFO   ####
+########################
+TYPE: ChargeAveRange,ChargeRange
+REF: AveWvf
+I_RANGE: 2.25e-6
+F_RANGE: 2.8e-6
+
+########################
+####   CUTS INFO    ####
+########################
+CUTS: MinMax,LinRel
+CUTS_KEYS: PeakAmp,ChargeAveRange
+LIMITS: 0,20,-1,4
+
+
+
