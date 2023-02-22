@@ -1,3 +1,7 @@
+#data
+*npy
+*npz
+
 # Add coustom folders
 data*/
 laura/
