@@ -12,8 +12,14 @@ if [ ! -d "../fit_data" ]; then
 mkdir ../fit_data
 fi
 
+### COMMON VIRTUAL ENVIROMENT TO RUN THE MACROS ###
+# source /pnfs/ciemat.es/data/neutrinos/venv_python3.7/bin/activate 
+
+pip install --upgrade pip
 pip3 install    -r requirements.txt
 #sudo apt install <requirementsTeX.txt
+
+#deactivate 
 
 echo SUCCESS!
 
