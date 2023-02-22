@@ -13,10 +13,12 @@ def open_run_var(run_path,var_name,channels,compressed=True):
     
     for ch in channels:
         
-        full_path = run_path+var_name+"_ch"+str(ch)+".npz"
-        if not compressed: full_path = run_path+var_name+"_ch"+str(ch)+".npy"
-        
-        run_var[ch]=np.load(full_path ,allow_pickle=True,mmap_mode='r') ["arr_0"]
+        if compressed: 
+            full_path = run_path+var_name+"_ch"+str(ch)+".npz"
+            run_var[ch]=np.load(full_path ,allow_pickle=True,mmap_mode='r') ["arr_0"]
+        else: 
+            full_path = run_path+var_name+"_ch"+str(ch)+".npy"
+            run_var[ch]=np.load(full_path ,allow_pickle=True,mmap_mode='r')
 
     return run_var;
 
@@ -45,11 +47,16 @@ def save_run_var(run_var,run_path,var_name,compressed=True):
 
     print("----------")
     for ch in channels:
-        full_path = run_path+var_name+"_ch"+str(ch)+".npz"
-        if not compressed: full_path = run_path+var_name+"_ch"+str(ch)+".npy"
+        
+        if compressed:
+            full_path = run_path+var_name+"_ch"+str(ch)+".npz"
+            np.savez_compressed(full_path,run_var[ch])
+    
+        else: 
+            full_path = run_path+var_name+"_ch"+str(ch)+".npy"
+            np.save(full_path,run_var[ch])
         
         print("Saving: ",var_name," channel:",ch, " ,in:",full_path)
-        np.savez_compressed(full_path,run_var[ch])
 
 
 
@@ -81,9 +88,3 @@ def do_run_things(run,func):
             things[ch]=func(vars_ch);
         
         return things
-        
-
-
-# def close_dict(run):
-#     del run #free memory
-#     gc.collect()

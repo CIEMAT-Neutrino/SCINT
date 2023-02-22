@@ -1,4 +1,5 @@
 import numpy as np
+import numexpr as ne
 
 def compute_Pedestal(ADC,ped_lim=50):
     pedestal_vars=dict();
@@ -12,7 +13,10 @@ def compute_Pedestal(ADC,ped_lim=50):
 def substract_Pedestal(Vars,pol=1):
     adc_raw, pedestal , polarity= Vars
     
-    adc=((adc_raw.T-pedestal["MEAN"].T).T)*polarity
-    adc_raw=0;#remove adcs_raw once used, else memory overloads
+    
+    a=adc_raw.T
+    b=pedestal["MEAN"].T
+    
+    adc_raw=ne.evaluate( '(a-b)*polarity').T #optimizing, multithreading
 
-    return adc;
+    return adc_raw;
