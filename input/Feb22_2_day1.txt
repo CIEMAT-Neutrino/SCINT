@@ -15,7 +15,7 @@ SAMPLING: 4e-9
 ########################
 RAW_DATA: DAT
 #PATH: /pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/
-PATH: ../data/
+PATH: /media/smanthey/2Gb/data/
 MONTH: Feb22_2
 
 OV_LABEL: OV1,OV2,OV3

@@ -387,7 +387,7 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     all_bins.append(bins)
     all_bars.append(bars)
     fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
-    fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
+    # fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
     
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
         plt.show()
