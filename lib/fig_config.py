@@ -1,8 +1,20 @@
+import subprocess
+
+bashCommand = "yum info texlive-latex-base"
+process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+output, error = process.communicate()
+if "Error" in str(output):
+    print("You don't have latex installed. Changing default configuration to tex=False")
+    tex_installed = False
+else:
+    print("You have latex installed!. Applying default configuration (tex=True)")
+    tex_installed = True
+
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
 
-def figure_features(tex=True, font="serif", dpi=300):
+def figure_features(tex=tex_installed, font="serif", dpi=300):
     """Customize figure settings.
     Args:
         tex (bool, optional): use LaTeX. Defaults to True.
