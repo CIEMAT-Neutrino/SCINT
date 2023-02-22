@@ -138,48 +138,49 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
     I_RANGE must have same length than F_RANGE!
     """
 
-    try:
-        conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
-        channels = []; channels = np.append(channels,info["CHAN_TOTAL"])
-        ch_amp = dict(zip(channels,info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
-        i_range = info["I_RANGE"] # Get initial time(s) to start the integration
-        f_range = info["F_RANGE"] # Get final time(s) to finish the integration
-        
-        for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
-            if key == "":
-                for branch in my_runs[run][ch].keys():
-                    if "ADC" in str(branch):
-                        key = str(branch)
-                        label = key.replace("ADC","")
+    # try:
+    conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
+    channels = []; channels = np.append(channels,info["CHAN_TOTAL"])
+    ch_amp = dict(zip(channels,info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
+    i_range = info["I_RANGE"] # Get initial time(s) to start the integration
+    f_range = info["F_RANGE"] # Get final time(s) to finish the integration
+    
+    for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
+        if key == "":
+            for branch in my_runs[run][ch].keys():
+                if "ADC" in str(branch):
+                    key = str(branch)
+                    label = key.replace("ADC","")
 
-            ave = my_runs[run][ch][ref] # Load the reference average waveform
-            my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
-            for i in range(len(ave)):
-                if typ == "ChargeAveRange":
-                    i_idx,f_idx = find_baseline_cuts(ave[i])
-                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
-                    if key == "GaussADC" or key == "WienerADC":
-                        my_runs[run][ch][label+typ] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+        ave = my_runs[run][ch][ref] # Load the reference average waveform
+        my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
+        for i in range(len(ave)):
+            if typ == "ChargeAveRange":
+                i_idx,f_idx = find_baseline_cuts(ave[i])
+                print(key)
+                my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
+                if key == "GaussADC" or key == "WienerADC":
+                    my_runs[run][ch][label+typ] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
-            if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
-            if typ.startswith("ChargeRange"):
-                for j in range(len(f_range)):
-                    my_runs[run][ch][typ+str(j)] = []
-                    if i_range[j] == -1: # Integration with fixed ranges
-                        t0 = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"]
-                        tf = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"] + f_range[j]
-                    else: # Integration with custom ranges
-                        t0 = i_range[j]; tf = f_range[j]
-                    i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
-                    my_runs[run][ch][typ+str(j)]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
-                    if key == "GaussADC" or key == "WienerADC":
-                        my_runs[run][ch][label+typ+str(j)] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+        if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
+        if typ.startswith("ChargeRange"):
+            for j in range(len(f_range)):
+                my_runs[run][ch][typ+str(j)] = []
+                if i_range[j] == -1: # Integration with fixed ranges
+                    t0 = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"]
+                    tf = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"] + f_range[j]
+                else: # Integration with custom ranges
+                    t0 = i_range[j]; tf = f_range[j]
+                i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
+                my_runs[run][ch][typ+str(j)]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
+                if key == "GaussADC" or key == "WienerADC":
+                    my_runs[run][ch][label+typ+str(j)] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
-                    new_key = {typ+str(j): [t0,tf]}
-                    my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
-            print("Integrated wvfs according to %s baseline integration limits"%info["REF"][0])
-    except KeyError:
-        print("Empty dictionary. No integration to compute.")
+                new_key = {typ+str(j): [t0,tf]}
+                my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
+        print("Integrated wvfs according to %s baseline integration limits"%info["REF"][0])
+    # except KeyError:
+    #     print("Empty dictionary. No integration to compute.")
 
     return my_runs
 
