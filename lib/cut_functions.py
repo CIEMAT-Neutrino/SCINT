@@ -24,7 +24,10 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
     Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
     """
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
-        if check_key(my_runs[run][ch], "MyCuts") == True:
+        if check_key(my_runs[run][ch], "MyCuts") == False:
+            print("...Running generate_cut_array...")
+            generate_cut_array(my_runs)
+        else:
             if check_key(my_runs[run][ch], key) == True:
                 if ranges[0]==0 and ranges[1]==0:
                     for i in range(len(my_runs[run][ch][key])):
@@ -38,7 +41,6 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
                             continue    
                         else: my_runs[run][ch]["MyCuts"][i] = False
             else: print(key," does not exist in my_runs!")
-        else: print("Run generate_cut_array")
 
 def cut_min_max_sim(my_runs, keys, limits):
     """
@@ -50,7 +52,10 @@ def cut_min_max_sim(my_runs, keys, limits):
     Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
     """
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        if check_key(my_runs[run][ch], "MyCuts") == True:
+        if check_key(my_runs[run][ch], "MyCuts") == False:
+            print("...Running generate_cut_array...")
+            generate_cut_array(my_runs)
+        else:
             for i in range(len(my_runs[run][ch][keys[0]])):
                 for j in range(len(keys)):
                     if check_key(my_runs[run][ch], keys[j]) == True:
@@ -59,7 +64,6 @@ def cut_min_max_sim(my_runs, keys, limits):
                             break
                         else: my_runs[run][ch]["MyCuts"][i] = False
                     else: print(keys," does not exist in my_runs!")
-        else: print("Run generate_cut_array")
 
 def cut_lin_rel(my_runs, keys):
     """
@@ -69,7 +73,10 @@ def cut_lin_rel(my_runs, keys):
         - keys: a LIST of variables you want to plot and cut
     """
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        if check_key(my_runs[run][ch], "MyCuts") == True:
+        if check_key(my_runs[run][ch], "MyCuts") == False:
+            print("...Running generate_cut_array...")
+            generate_cut_array(my_runs)
+        else:
                 for j in range(len(keys)):
                     if check_key(my_runs[run][ch], keys[j]) == True:
                         continue
@@ -105,7 +112,6 @@ def cut_lin_rel(my_runs, keys):
 
                 ax.scatter(my_runs[run][ch][keys[0]][my_runs[run][ch]["MyCuts"] == False],my_runs[run][ch][keys[1]][my_runs[run][ch]["MyCuts"] == False], c = "red", s = 2)
                 print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
-        else: print("Run generate_cut_array")
         while not fig.waitforbuttonpress(-1): pass
 
 def cut_ped_std(my_runs):
@@ -121,10 +127,12 @@ def cut_ped_std(my_runs):
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         print("Nº total events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         print(np.std(my_runs[run][ch]["PedMean"]))
-        if check_key(my_runs[run][ch], "MyCuts") == True:
+        if check_key(my_runs[run][ch], "MyCuts") == False:
+            print("...Running generate_cut_array...")
+            generate_cut_array(my_runs)
+        else:
             for i in range(len(my_runs[run][ch]["PedSTD"])):
                 if np.std(my_runs[run][ch]["PedMean"]) > my_runs[run][ch]["PedRMS"][i]:
                     continue    
                 else: my_runs[run][ch]["MyCuts"][i] = False
             print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
-        else: print("Run generate_cut_array")
