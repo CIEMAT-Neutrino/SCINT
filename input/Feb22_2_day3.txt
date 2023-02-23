@@ -14,13 +14,14 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
+PATH: /pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/
 MONTH: Feb22_2
 
 OV_LABEL: OV1,OV2,OV3
 
 MUONS_RUNS: 
 LIGHT_RUNS: 9,10,11
-ALPHA_RUNS: 68,67,69
+ALPHA_RUNS: 67,68,69
 CALIB_RUNS: 56,57,58
 
 CHAN_LABEL: SiPM0,SiPM1,SC
@@ -39,9 +40,9 @@ SAVE_PRESET: NON,ALL,ANA,INT,NON,NON,DEC
 ########################
 ####  CHARGE INFO   ####
 ########################
-TYPE: ChargeAveRange,ChargeRange
+TYPE: ChargeAveRange
 REF: AveWvf
-I_RANGE: 2.25e-6
+I_RANGE: -1
 F_RANGE: 2.8e-6
 
 ########################
