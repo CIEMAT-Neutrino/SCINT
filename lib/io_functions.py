@@ -17,8 +17,8 @@ def list_to_string(input_list):
     string = string.replace(" ","") 
     return string 
 
-def generate_input_file(info,path="../input/",label="",debug=False):
-    file = open(path+label+str(info["MONTH"][0])+".txt", 'w+')
+def generate_input_file(input_file,info,path="../input/",label="",debug=False):
+    file = open(path+label+str(input_file)+".txt", 'w+')
     for branch in info:
         if branch == "LOAD_PRESET":
             if label == "Gauss" or label == "Wiener":
@@ -181,11 +181,11 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
     Input are binary input file path and npy outputfile as strings. 
     \n Depends numpy. 
     """
-
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(int),channels.astype(int)):
+        print("--- Reading RUN%i CH%i ---"%(run, ch))
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
