@@ -25,7 +25,7 @@ OPT = {
     }
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
-    my_runs = load_npy([run],[ch], branch_list=["ADC","PedLim","Label","Sampling","ChargeAveRange","Units"], info=info,compressed=True)#preset="ANA"
+    my_runs = load_npy([run],[ch], preset=str(info["LOAD_PRESET"][4]), info=info,compressed=True)#preset="ANA"
     # my_runs = load_npy([run],[ch], preset = "CUTS", info=info, compressed=True)
     
     print_keys(my_runs)
