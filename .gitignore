@@ -2,6 +2,10 @@
 *data*/
 laura/
 larsoft/
+# Ignore everything from input files
+input/*.txt
+# But not the template one
+!input/MergeDebug*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
