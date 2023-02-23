@@ -1,6 +1,6 @@
 # Add coustom folders
 *data*/
-laura/
+scratch/
 larsoft/
 # Ignore everything from input files
 input/*.txt
