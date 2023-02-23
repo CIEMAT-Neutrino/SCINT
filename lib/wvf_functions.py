@@ -146,6 +146,15 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
         f_range = info["F_RANGE"] # Get final time(s) to finish the integration
         
         for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
+            if check_key(my_runs[run][ch], "MyCuts") == True:
+                print("Calculating average wvf with cuts")
+            else:
+                generate_cut_array(my_runs)
+                cut_label = ""
+            if check_key(my_runs[run][ch], "UnitsDict") == False:
+                get_units(my_runs)
+                
+            print("--- Integrating RUN%i CH%i ---"%(run,ch))
             if key == "":
                 for branch in my_runs[run][ch].keys():
                     if "ADC" in str(branch):
@@ -157,12 +166,13 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
             for i in range(len(ave)):
                 if typ == "ChargeAveRange":
                     i_idx,f_idx = find_baseline_cuts(ave[i])
+                    t0 = i_idx * my_runs[run][ch]["Sampling"]; tf = f_idx * my_runs[run][ch]["Sampling"]
                     my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
                     if key == "GaussADC" or key == "WienerADC":
                         my_runs[run][ch][label+typ] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
-            if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
             if typ.startswith("ChargeRange"):
+                if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
                 for j in range(len(f_range)):
                     my_runs[run][ch][typ+str(j)] = []
                     if i_range[j] == -1: # Integration with fixed ranges
@@ -177,7 +187,12 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
 
                     new_key = {typ+str(j): [t0,tf]}
                     my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
-            print("Integrated wvfs according to %s baseline integration limits"%info["REF"][0])
+
+            print("======================================================================")
+            print("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0])
+            print("=============== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs ==============="%(t0*1E6,tf*1E6))
+            print("======================================================================")
+
     except KeyError:
         print("Empty dictionary. No integration to compute.")
 

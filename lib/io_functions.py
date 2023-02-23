@@ -185,7 +185,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(int),channels.astype(int)):
-        print("--- Reading RUN%i CH%i ---"%(run, ch))
+        print(".......Reading RUN%i CH%i......."%(run, ch))
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
@@ -367,6 +367,9 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Gauss" in key or "Wiener" in key or "Dec" in key or "Charge" in key: aux.append(key)
         branch_list = aux
 
+    elif preset == "CAL":
+        branch_list = ["ADC","PedLim","Label","Sampling","ChargeAveRange"]
+
     if debug: print("\nPreset branch_list:", branch_list)
     return branch_list
 
@@ -398,7 +401,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
             for branch in branch_list:   
                 try:
                     if "Dict" in branch:
-                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()    
+                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()   
                     else:
                         my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
                     if not compressed:
@@ -440,6 +443,8 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                         np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                     else:
+                        print("File (%s.npy) OVERWRITTEN "%key)
+                        os.remove(path+out_folder+key+".npy")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 else:
@@ -449,6 +454,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
                     if not compressed:
+                        print("Saving NEW file: %s.npy"%key)
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     del my_runs
