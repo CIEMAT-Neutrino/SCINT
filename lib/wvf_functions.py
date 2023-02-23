@@ -167,14 +167,14 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
                 if typ == "ChargeAveRange":
                     i_idx,f_idx = find_baseline_cuts(ave[i])
                     t0 = i_idx * my_runs[run][ch]["Sampling"]; tf = f_idx * my_runs[run][ch]["Sampling"]
-                    my_runs[run][ch][typ] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
+                    my_runs[run][ch][typ+cut_label] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
                     if key == "GaussADC" or key == "WienerADC":
-                        my_runs[run][ch][label+typ] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+                        my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
             if typ.startswith("ChargeRange"):
                 if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
                 for j in range(len(f_range)):
-                    my_runs[run][ch][typ+str(j)] = []
+                    my_runs[run][ch][typ+str(j)+cut_label] = []
                     if i_range[j] == -1: # Integration with fixed ranges
                         t0 = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"]
                         tf = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"] + f_range[j]
@@ -183,7 +183,7 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
                     i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
                     my_runs[run][ch][typ+str(j)]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
                     if key == "GaussADC" or key == "WienerADC":
-                        my_runs[run][ch][label+typ+str(j)] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+                        my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
                     new_key = {typ+str(j): [t0,tf]}
                     my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
