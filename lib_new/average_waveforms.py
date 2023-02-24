@@ -14,7 +14,7 @@ def Average_waveform(ADCs,mode="simple",shift=None):
         shift (numpy.ndarray): If present, Must be a numpy 1Darray, with entries equal to number of rows of input wvf 
     
     Returns:
-        Average WVF: np array with number of entries equal to number of columns of input ADCs
+        Average WVF(NDArray): np array with number of entries equal to number of columns of input ADCs
     """
     
     if mode=="simple":
