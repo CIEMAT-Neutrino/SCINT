@@ -9,7 +9,7 @@ import gc #garbage collector interface
 
 path ="/media/rodrigoa/2Gb/data/SBND_XA_PDE/SBND_XA_VIS/joython/"
 
-for run in range(30):
+for run in range(1):
     if run==3:continue # Rodrigo forgot one run :D
     Run_props=open_run_properties(run,"Runs_list.xlsx")
     run_path=path+"run"+str(run).zfill(2)+"/";
@@ -28,7 +28,7 @@ for run in range(30):
         ADC=do_run_things((ADC,Pedestal_vars,Run_props["Polarity"]),substract_Pedestal)
         
         # save_run_var(ADC,run_path,"ADC",compressed=compress) #no real need to save this, ~1s to load and substract pedestals anyway;
-        save_run_var(Pedestal_vars,run_path,"Pedestal_vars")
+        save_run_var(Pedestal_vars,run_path,"Pedestal_vars",compressed=compress)
         
         del Pedestal_vars, ADC
 

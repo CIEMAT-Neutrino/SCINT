@@ -5,7 +5,7 @@
 
 import numpy as np
 
-def Average_waveform(ADC):
+def Average_waveform(ADC,mode="simple",shift=None):
     """Template function computing average waveform for a fixed channel
 
     Args:
@@ -17,17 +17,15 @@ def Average_waveform(ADC):
         Average WVF(NDArray): np array with number of entries equal to number of columns of input ADCs
     """
     ADCs=ADC
-    if type(ADC)==tuple:
+    if type(ADC)==tuple: #more arguments given
         ADCs,mode,shift=ADC
-        print(mode)
+
     if mode=="simple":
         return np.mean(ADCs,axis=0) #Good ol mean
     
     elif mode == "shifted":
-        print("debugg")
         N_wvfs=len(ADCs)
         for i in range(N_wvfs):
-            print(int(shift[i]))
             ADCs[i]=shift4_numba(ADCs[i],int(shift[i])) # Shift the wvfs
         
         return Average_waveform(ADCs) #once aligned, call simple mode
