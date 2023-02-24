@@ -40,7 +40,7 @@ def Average_waveform(ADCs,mode="simple",shift=None):
 import numba
 
 @numba.njit
-def shift4_numba(arr, num, fill_value=0):
+def shift4_numba(arr, num, fill_value=0):#default shifted value is 0, remember to always substract your pedestal first
     if num >= 0:
         return np.concatenate((np.full(num, fill_value), arr[:-num]))
     else:
