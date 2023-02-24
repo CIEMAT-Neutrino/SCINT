@@ -49,9 +49,9 @@ def save_Run_Bin2Np(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",o
         print("-----------------")
         save_Bin2Np(inchan,outchan,compressed=Compressed)
 
-def Bin2Np_excel(excel_file_path="",sheet='Sheet1',compressed=True):
+def Bin2Np_excel(excel_file_path="",sheet='Sheet1',compressed=True,i_path="",o_path=""):
     """Calls the dumping function using a excel table with the data runs of our"""
     df = pd.read_excel(excel_file_path, sheet_name=sheet,engine='openpyxl')
     df['Channels']=df['Channels'].apply(lambda x: list(map(int,x.split(",")))) #excell only allows one value per cell, convert channels from string to array of ints
 
-    df.apply(lambda x: save_Run_Bin2Np(x["Run"],x["Channels"],Compressed=compressed),axis=1,);
+    df.apply(lambda x: save_Run_Bin2Np(x["Run"],x["Channels"],Compressed=compressed,in_path=i_path,out_path=o_path),axis=1,);
