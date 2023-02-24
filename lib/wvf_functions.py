@@ -125,7 +125,7 @@ def smooth(my_run, alpha):
     my_run = unweighted_average(my_run)
     return my_run
 
-def integrate_wvfs(my_runs, info = {}, key = ""):
+def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
     """
     This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
     VARIABLES:
