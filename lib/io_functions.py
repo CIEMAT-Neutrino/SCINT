@@ -332,12 +332,13 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     if preset == "ALL":
         branch_list = dict_option[option]
         if "UnitsDict" in branch_list: branch_list.remove("UnitsDict")
+        if "MyCuts" in branch_list: branch_list.remove("MyCuts")
 
     elif preset == "ANA":
         branch_list = dict_option[option]
         aux = []
         for key in branch_list:
-            if not "Raw" in key and not "Dict" in key: aux.append(key)
+            if not "Raw" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "RAW":
@@ -358,7 +359,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = dict_option[option]
         aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
-            if not "ADC" in key and not "Dict" in key: aux.append(key)
+            if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "DEC":
@@ -370,7 +371,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     elif preset == "CAL":
         branch_list = dict_option[option]
-        aux = ["ADC","PedLim","Label","Sampling","ChargeAveRange","PeakAmp"] #PARCHE PARA PODER HACER CORTES PENSAR
+        aux = ["ADC","PedLim","Label","Sampling","ChargeAveRange","PeakAmp","PedSTD","PedMean"] #PARCHE PARA PODER HACER CORTES PENSAR
         for key in branch_list:
             if "Charge" in key: aux.append(key)
         branch_list = aux
