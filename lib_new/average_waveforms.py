@@ -4,6 +4,16 @@
 # is necessary 
 
 import numpy as np
+def compute_AverageWaveforms(Vars,Pretrigger=0.2):
+    """Interface to call the 3 different modes to compute avg waveforms"""
+
+    ADC, peak_vars = Vars
+    centering_bin=int(ADC.shape[1]*Pretrigger)
+    av_wv_vars=dict();
+    av_wv_vars["AvWvf"]=Average_waveform(ADC);
+    av_wv_vars["AvWvf_Center_Peak"]=Average_waveform(ADC,"shifted",centering_bin-peak_vars["PeakTime"]);
+    av_wv_vars["AvWvf_Center_Rise"]=Average_waveform(ADC,"shifted",centering_bin-peak_vars["RiseTime"]);
+    return av_wv_vars;
 
 def Average_waveform(ADC,mode="simple",shift=None):
     """Template function computing average waveform for a fixed channel
@@ -24,29 +34,23 @@ def Average_waveform(ADC,mode="simple",shift=None):
         return np.mean(ADCs,axis=0) #Good ol mean
     
     elif mode == "shifted":
-        N_wvfs=len(ADCs)
+        N_wvfs=ADCs.shape[0]
+        aux_ADC=np.zeros(ADCs.shape)
         for i in range(N_wvfs):
-            ADCs[i]=shift4_numba(ADCs[i],int(shift[i])) # Shift the wvfs
+            aux_ADC[i]=shift4_numba(ADCs[i],int(shift[i])) # Shift the wvfs
         
-        return Average_waveform(ADCs) #once aligned, call simple mode
+        return Average_waveform(aux_ADC) #once aligned, call simple mode
     else:
         Exception
-
-
-
-
-
-
-
-
-
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
 import numba
 
 @numba.njit
 def shift4_numba(arr, num, fill_value=0):#default shifted value is 0, remember to always substract your pedestal first
-    if num >= 0:
+    if   num > 0:
         return np.concatenate((np.full(num, fill_value), arr[:-num]))
-    else:
+    elif num < 0:
         return np.concatenate((arr[-num:], np.full(-num, fill_value)))
+    else:#no shift
+        return arr

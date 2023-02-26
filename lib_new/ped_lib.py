@@ -11,12 +11,19 @@ def compute_Pedestal(ADC,ped_lim=50):
     return pedestal_vars;
 
 def substract_Pedestal(Vars,pol=1):
-    adc_raw, pedestal , polarity= Vars
+    ADC_raw, pedestal , polarity= Vars
     
     
-    a=adc_raw.T
+    a=ADC_raw.T
     b=pedestal["MEAN"].T
     
-    adc_raw=ne.evaluate( '(a-b)*polarity').T #optimizing, multithreading
+    ADC_raw=ne.evaluate( '(a-b)*polarity').T #optimizing, multithreading
+    return ADC_raw;
 
-    return adc_raw;
+def compute_Peak(ADC,thr=30):
+    peak_vars=dict();
+    peak_vars["Peak"]     = np.max    (ADC    ,axis=1)
+    peak_vars["PeakTime"] = np.argmax (ADC    ,axis=1)
+    peak_vars["RiseTime"] = np.argmax (ADC>thr,axis=1)
+
+    return peak_vars;
