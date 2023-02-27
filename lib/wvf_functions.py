@@ -49,7 +49,7 @@ def find_amp_decrease(raw,thrld):
             break
     return i_idx,f_idx
 
-def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
+def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label="", OPT={}):
     """
     It calculates the average waveform of a run. Select centering:
         - "NONE"      -> AveWvf: each event is added without centering.
@@ -68,10 +68,10 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
                 get_units(my_runs)
 
             buffer = 100  
-            mean_ana_ADC = np.mean(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=0)
-            aux_ADC = my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]
-            # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) # Deprecated function st.mode()
-            values, counts = np.unique(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True],axis=1), return_counts=True) #using the mode peak as reference
+            mean_ana_ADC = np.mean(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=0)
+            aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
+            # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) # Deprecated function st.mode()
+            values, counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), return_counts=True) #using the mode peak as reference
             bin_ref_peak = values[np.argmax(counts)]
             
             # centering none
@@ -80,7 +80,7 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
             
             # centering peak
             if centering == "PEAK":
-                bin_max_peak = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
+                bin_max_peak = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
                 bin_max_peak = bin_max_peak + bin_ref_peak - buffer
                 for ii in range(len(aux_ADC)):
                     aux_ADC[ii] = np.roll(aux_ADC[ii], bin_max_peak[ii] - bin_ref_peak)
@@ -89,10 +89,10 @@ def average_wvfs(my_runs, centering="NONE", threshold=0, cut_label="", OPT={}):
             # centering thld
             if centering == "THRESHOLD":
                 if threshold == 0: threshold = np.max(mean_ana_ADC)/2
-                # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), keepdims=True) # Deprecated st.mode()
-                values,counts = np.unique(np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), return_counts=True) #using the mode peak as reference
+                # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), keepdims=True) # Deprecated st.mode()
+                values,counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), return_counts=True) #using the mode peak as reference
                 bin_ref_thld = values[np.argmax(counts)]
-                bin_max_thld = np.argmax(my_runs[run][ch]["ADC"][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
+                bin_max_thld = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
                 bin_max_peak = bin_max_thld + bin_ref_thld - buffer
                 for ii in range(len(aux_ADC)):
                     aux_ADC[ii] = np.roll(aux_ADC[ii], bin_max_thld[ii] - bin_ref_thld)
@@ -133,7 +133,7 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
         - info: input information from .txt with DAQ characteristics and Charge Information.
         - key: waveform we want to integrate (by default any ADC)
     In txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
-    If I_RANGE = -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
+    If I_RANGE == -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
     If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
     I_RANGE must have same length than F_RANGE!
     """
