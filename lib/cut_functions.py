@@ -27,20 +27,24 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
             generate_cut_array(my_runs)
-
+        
+        print("Nº total events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         if check_key(my_runs[run][ch], key) == True:
             if ranges[0]==0 and ranges[1]==0:
                 for i in range(len(my_runs[run][ch][key])):
-                    if limits[key][0] <= my_runs[run][ch][key][i] <= limits[key][1]:
-                        continue    
+                    if key == "PeakTime" and limits[key][0] <= my_runs[run][ch]["Sampling"]*my_runs[run][ch][key][i] <= limits[key][1]:
+                        continue
+                    elif limits[key][0] <= my_runs[run][ch][key][i] <= limits[key][1]:
+                        continue
                     else: my_runs[run][ch]["MyCuts"][i] = False
             else:
                 i_idx = int(np.round(ranges[0]/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(ranges[1]/my_runs[run][ch]["Sampling"]))
                 for i in range(i_idx,f_idx+1):
                     if limits[key][0] <= my_runs[run][ch][key][i] <= limits[key][1]:
-                        continue    
+                        continue
                     else: my_runs[run][ch]["MyCuts"][i] = False
-        else: print(key," does not exist in my_runs!")
+            print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+        print("Nº total final events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
 
 def cut_min_max_sim(my_runs, keys, limits):
     """
@@ -56,6 +60,7 @@ def cut_min_max_sim(my_runs, keys, limits):
             print("...Running generate_cut_array...")
             generate_cut_array(my_runs)
 
+        print("Nº total events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         for i in range(len(my_runs[run][ch][keys[0]])):
             for j in range(len(keys)):
                 if check_key(my_runs[run][ch], keys[j]) == True:
@@ -64,6 +69,7 @@ def cut_min_max_sim(my_runs, keys, limits):
                         break
                     else: my_runs[run][ch]["MyCuts"][i] = False
                 else: print(keys," does not exist in my_runs!")
+        print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
 
 def cut_lin_rel(my_runs, keys):
     """
