@@ -66,29 +66,29 @@ def save_run_var(run_var,run_path,var_name,compressed=True):
 
 
 
-def do_run_things(run,func):
+def do_run_things(VAR,func):
     
-    if type(run)== dict:#single variable passed here
-        channels=run.keys()
+    if type(VAR)== dict:#single variable passed here
+        channels=VAR.keys()
         # Do stuff on every channel of the run
         things=dict()
         
         print("----------")
         for ch in channels: 
             print("Doing: ",func.__name__," on channel:",ch)
-            things[ch]=func(run[ch]);
+            things[ch]=func(VAR[ch]);
         
         return things
 
-    elif type(run) == tuple:# we are facing multiple input variables
-        channels=run[0].keys()
+    elif type(VAR) == tuple:# we are facing multiple input variables
+        channels=VAR[0].keys()
 
         # Do stuff on every channel of the run
         things=dict()
 
         print("----------")
         for ch in channels: 
-            vars_ch=tuple(var[ch] for var in run) #prepare all the variables only in the selected channel
+            vars_ch=tuple(var[ch] for var in VAR) #prepare all the variables only in the selected channel
 
             print("Doing: ",func.__name__," on channel:",ch)
             things[ch]=func(vars_ch);
