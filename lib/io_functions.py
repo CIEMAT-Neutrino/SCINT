@@ -371,7 +371,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     elif preset == "CAL":
         branch_list = dict_option[option]
-        aux = ["ADC","PedLim","Label","Sampling","ChargeAveRange","PeakAmp","PedSTD","PedMean"] #PARCHE PARA PODER HACER CORTES PENSAR
+        aux = ["ADC","PedLim","Label","Sampling"]
         for key in branch_list:
             if "Charge" in key: aux.append(key)
         branch_list = aux
