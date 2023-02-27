@@ -175,7 +175,7 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                     confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?")
                     if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
                     else: continue
-            if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC" or confirmation not in ["n","N","no","NO","q"]:
+            if (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC") or (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and confirmation not in ["n","N","no","NO","q"]):
                 for j in range(len(f_range)):
                     my_runs[run][ch][typ+str(j)+cut_label] = []
                     if i_range[j] == -1: # Integration with fixed ranges
