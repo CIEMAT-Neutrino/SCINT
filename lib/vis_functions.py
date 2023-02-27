@@ -140,7 +140,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                             if OPT["NORM"] == True and OPT["NORM"] == True:
                                 ave = ave/np.max(ave)
                             axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                        except:
+                        except KeyError:
                             print("Run has not been averaged!")
 
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
@@ -185,8 +185,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                             if OPT["NORM"] == True and OPT["NORM"] == True:
                                 ave = ave/np.max(ave)
                             axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                        except:
-                            print("Run has not been averaged!")
+                        except KeyError: print("Run has not been averaged!")
 
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
                         axs.legend()
