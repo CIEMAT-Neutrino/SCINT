@@ -1,7 +1,14 @@
 import subprocess
 
-bashCommand = "yum info texlive-latex-base"
-process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+try:
+    # print("WORKING ON CENTOS")
+    bashCommand = "yum info texlive-latex-base"
+    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+except FileNotFoundError:
+    # print("WORKING ON UBUNTU")
+    bashCommand = "apt list --installed | grep texlive-latex-base"
+    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
 output, error = process.communicate()
 if "Error" in str(output):
     print("You don't have latex installed. Changing default configuration to tex=False")
