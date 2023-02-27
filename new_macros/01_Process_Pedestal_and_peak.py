@@ -4,7 +4,6 @@ sys.path.insert(0, '../')
 from lib_new.io_lib  import open_run_var,open_run_properties,do_run_things,save_run_var
 from lib_new.ped_lib import compute_Pedestal,substract_Pedestal, compute_Peak
 from lib.header import print_header
-import gc #garbage collector interface
 
 
 # path ="/media/rodrigoa/2Gb/data/SBND_XA_PDE/SBND_XA_VIS/joython/"

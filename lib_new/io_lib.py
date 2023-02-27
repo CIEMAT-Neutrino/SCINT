@@ -38,8 +38,10 @@ def open_run_properties(run,excel_file_path="",sheet='Sheet1'):
         Dictionary with run properties: polarity, type of run, thresholds, aprox duration... etc can be computed here
     """
     df = pd.read_excel(excel_file_path, sheet_name=sheet,engine='openpyxl')
-    df['Channels'] = df['Channels'].apply(lambda x: list(map(int,x.split(" ")))) #excell only allows one value per cell, convert channels from string to array of ints
-    df['Polarity'] = df['Polarity'].apply(lambda x: list(map(int,x.split(" "))))
+    df['Channels']    = df['Channels']   .apply(lambda x: list(map(int,x.split(" ")))) #excell only allows one value per cell, convert channels from string to array of ints
+    df['Polarity']    = df['Polarity']   .apply(lambda x: list(map(int,x.split(" "))))
+    df['ChannelName'] = df['ChannelName'].apply(lambda x: x.split(" "))
+    
     props=df.loc[df['Run'] == run].to_dict(orient='records')[0]
     
     props['Polarity'] = dict(zip(props['Channels'],props['Polarity'])) #map polarity with channels
