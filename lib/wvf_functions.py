@@ -154,7 +154,7 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
             if check_key(my_runs[run][ch], "UnitsDict") == False:
                 get_units(my_runs)
                 
-            print("--- Integrating RUN%i CH%i ---"%(run,ch))
+            print("\n--- Integrating RUN%i CH%i ---"%(run,ch))
             if key == "":
                 for branch in my_runs[run][ch].keys():
                     if "ADC" in str(branch):
@@ -172,7 +172,10 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                         my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
             if typ.startswith("ChargeRange"):
-                if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
+                if my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
+                    confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?")
+                    if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
+                    else: continue
                 for j in range(len(f_range)):
                     my_runs[run][ch][typ+str(j)+cut_label] = []
                     if i_range[j] == -1: # Integration with fixed ranges
