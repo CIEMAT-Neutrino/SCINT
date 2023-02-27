@@ -4,6 +4,8 @@
 # is necessary 
 
 import numpy as np
+import numba
+
 def compute_AverageWaveforms(Vars,Pretrigger=0.2):
     """Interface to call the 3 different modes to compute avg waveforms"""
 
@@ -44,8 +46,6 @@ def Average_waveform(ADC,mode="simple",shift=None):
         Exception
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
-import numba
-
 @numba.njit
 def shift4_numba(arr, num, fill_value=0):#default shifted value is 0, remember to always substract your pedestal first
     if   num > 0:
