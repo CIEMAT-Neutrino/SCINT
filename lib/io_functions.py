@@ -1,4 +1,4 @@
-import os
+import os, gc
 import matplotlib.pyplot as plt
 import numpy as np
 import uproot
@@ -17,8 +17,8 @@ def list_to_string(input_list):
     string = string.replace(" ","") 
     return string 
 
-def generate_input_file(info,path="../input/",label="",debug=False):
-    file = open(path+label+str(info["MONTH"][0])+".txt", 'w+')
+def generate_input_file(input_file,info,path="../input/",label="",debug=False):
+    file = open(path+label+str(input_file)+".txt", 'w+')
     for branch in info:
         if branch == "LOAD_PRESET":
             if label == "Gauss" or label == "Wiener":
@@ -181,11 +181,11 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
     Input are binary input file path and npy outputfile as strings. 
     \n Depends numpy. 
     """
-
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(int),channels.astype(int)):
+        print(".......Reading RUN%i CH%i......."%(run, ch))
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
@@ -261,6 +261,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
                         print("Saved data in:" , out_path+out_folder+branch+".npx")
                         print("----------------------\n")
                     gc.collect()
+
                 except FileNotFoundError:
                     print("--- File %s was not foud!!! \n"%in_file)
         except FileNotFoundError:
@@ -330,12 +331,14 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     if preset == "ALL":
         branch_list = dict_option[option]
+        if "UnitsDict" in branch_list: branch_list.remove("UnitsDict")
+        if "MyCuts" in branch_list: branch_list.remove("MyCuts")
 
     elif preset == "ANA":
         branch_list = dict_option[option]
         aux = []
         for key in branch_list:
-            if not "Raw" in key: aux.append(key)
+            if not "Raw" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "RAW":
@@ -357,7 +360,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = dict_option[option]
         aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
-            if not "ADC" in key: aux.append(key)
+            if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "DEC":
@@ -365,6 +368,13 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label", "SER"]
         for key in branch_list:
             if "Gauss" in key or "Wiener" in key or "Dec" in key or "Charge" in key: aux.append(key)
+        branch_list = aux
+
+    elif preset == "CAL":
+        branch_list = dict_option[option]
+        aux = ["ADC","PedLim","Label","Sampling"]
+        for key in branch_list:
+            if "Charge" in key: aux.append(key)
         branch_list = aux
 
     if debug: print("\nPreset branch_list:", branch_list)
@@ -397,10 +407,10 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
 
             for branch in branch_list:   
                 try:
-                    if "Dict" in branch:
-                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()    
-                    else:
-                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
+                    # if "Dict" in branch: #BORRAR A NO SER QUE ALGUNA VEZ QUERAMOS CARGAR ALGUN DICCIONARIO
+                    #     my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()   
+                    # else:
+                    my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
                     if not compressed:
                         my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
 
@@ -442,6 +452,8 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                         np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                     else:
+                        print("File (%s.npy) OVERWRITTEN "%key)
+                        os.remove(path+out_folder+key+".npy")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 else:
@@ -451,10 +463,10 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
                     if not compressed:
+                        print("Saving NEW file: %s.npy"%key)
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     del my_runs
-    gc.collect()
     
 #DEPREACTED??#
 def copy_single_run(my_runs, runs, channels, keys):
