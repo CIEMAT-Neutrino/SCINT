@@ -10,7 +10,8 @@ def Bin2Np_ADC(FileName,header_lines=6):
     
     DEBUG=False
     
-    header=np.fromfile(FileName, dtype='I')[:6] #read first event header
+    headers= np.fromfile(FileName, dtype='I') #read first event header
+    header = headers[:6] #read first event header
     NSamples=int(header[0]/2-header_lines*2)
     Event_size=header_lines*2+NSamples
 
@@ -25,14 +26,18 @@ def Bin2Np_ADC(FileName,header_lines=6):
         
         print("N_Events:",N_Events)
     #reshape everything, delete unused header
-    data=np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
 
-    return data;
+    data    = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
+    headers = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
+    
+    TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
+
+    return data , TIMESTAMP;
 
 
 def save_Bin2Np(file_in,file_out,compressed=True):
     """Self-explainatory. Computation time x10 slower than un-compresed, size x3 times smaller"""
-    data_npy=Bin2Np_ADC(file_in)
+    data_npy, timestamp = Bin2Np_ADC(file_in)
     if compressed:np.savez_compressed(file_out,data_npy)
     else:         np.save(file_out,data_npy)
     
@@ -45,7 +50,7 @@ def save_Run_Bin2Np(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",o
     for ch in Channel:
         inchan =in_path+"run"+str(Run).zfill(2)+"/wave"+str(ch)+".dat"
         outchan=out_path+"run"+str(Run).zfill(2)+"/"+out_name+"_ch"+str(ch)  
-        
+
         print("-----------------")
         print("Dumping: ",inchan," to: ",outchan+".Np")
         print("-----------------")
