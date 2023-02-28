@@ -2,6 +2,8 @@ import math
 import numpy as np
 import scipy as sc
 import matplotlib.pyplot as plt
+import os
+import stat
 from itertools import product
 
 import scipy
@@ -10,6 +12,7 @@ from scipy.signal   import find_peaks
 from scipy.special import erf
 from .io_functions import load_npy, check_key, print_keys
 from .ana_functions import generate_cut_array, get_units
+from .wvf_functions import find_amp_decrease, find_baseline_cuts
 np.seterr(divide = 'ignore') 
 
 #===========================================================================#
@@ -49,8 +52,8 @@ def func(t, t0, sigma, a, tau):
 def func2(t, p, t0, sigma, a1, tau1, sigma2, a2, tau2):
     return p + func(t, t0, sigma, a1, tau1) + func(t, t0, sigma2, a2, tau2)
 
-def logfunc2(t, p, t0, sigma, a1, tau1, a2, tau2):
-    return np.log(p + func(t, t0, sigma, a1, tau1) + func(t, t0, sigma, a2, tau2))
+def logfunc2(t, p, t0, sigma1, a1, tau1, sigma2, a2, tau2):
+    return np.log(p + func(t, t0, sigma1, a1, tau1) + func(t, t0, sigma2, a2, tau2))
 
 def logfunc3(t, p, t0, sigma, a1, tau1, a2, tau2, a3, tau3):
     return np.log(p + func(t, t0, sigma, a1, tau1) + func(t, t0, sigma, a2, tau2) + func(t, t0, sigma, a3, tau3))
@@ -257,7 +260,10 @@ def pmt_spe_fit(counts, bins, bars, thresh):
     
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
-def peak_fit(fit_raw, raw_x, buffer, thrld, sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-9, OPT={}):
+def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_fast = 1e-8, OPT={}):
+    """ DOC """
+
+    raw_max = np.argmax(fit_raw)
 
     if check_key(OPT, "CUT_NEGATIVE") == True and OPT["CUT_NEGATIVE"] == True:
         for i in range(len(fit_raw)):
@@ -266,39 +272,31 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma = 1e-8, a_fast = 1e-8, a_slow 
             if np.isnan(fit_raw[i]):
                 fit_raw[i] = thrld
 
-    fit_raw  = fit_raw/np.max(fit_raw)
-    t0       = np.argmax(fit_raw) #t0
-    raw_x    = np.arange(len(fit_raw))
-    guess_t0 = raw_x[np.argmax(fit_raw)-10]
-    p = np.mean(fit_raw[:t0-buffer])
+    guess_t0 = raw_x[raw_max]
+    p = np.mean(fit_raw[:raw_max-buffer])
 
     t0 = guess_t0; t0_low = guess_t0*0.02; t0_high = guess_t0*50
     
-    sigma_low = sigma*1e-2;  sigma_high = sigma*1e2
-    a1    = a_fast; a1_low = a_fast*1e-2; a1_high = a_fast*1e2                    
-    tau1  = 9e-9;   tau1_low = 6e-9;       tau1_high  = 1e-8
+    sigma = sigma_fast;   sigma_low = sigma*1e-2;  sigma_high = sigma*1e2
+    a1    = a_fast;       a1_low    = a_fast*1e-2; a1_high    = a_fast*1e2                    
+    tau1  = tau_fast;     tau1_low  = 6e-9;        tau1_high  = tau1*1e2
 
     bounds  = ([t0_low, sigma_low, a1_low, tau1_low], [t0_high, sigma_high, a1_high, tau1_high])
-    # initial = (t0, sigma, a1, tau1)
-    initial  = (t0, 8, 12, 25)
+    initial = [t0, sigma, a1, tau1]
     labels  = ["TIME", "SIGM", "AMP1", "TAU1"]
 
     # FIT PEAK
-    try:
-        popt, pcov = curve_fit(func, raw_x[t0-buffer:t0+int(buffer/2)], fit_raw[t0-buffer:t0+int(buffer/2)], p0 = initial, method = "trf")
-        perr = np.sqrt(np.diag(pcov))
-    except Exception as e:
-        if e=='ValueError(\'Residuals are not finite in the initial point.\')':
-            pass
-        else:
-            print("\n --- WARNING: Peak fit could not be performed ---")
-            print("ERROR: ", e)
-            popt = initial
-            perr = np.zeros(len(initial))
+    # try:
+    popt, pcov = curve_fit(func, raw_x[raw_max-buffer:raw_max+int(buffer/2)], fit_raw[raw_max-buffer:raw_max+int(buffer/2)], p0 = initial)
+    perr = np.sqrt(np.diag(pcov))
+    # except:
+        #print("Peak fit could not be performed")
+        #popt = initial
+        #perr = np.zeros(len(initial))
 
     # PRINT FIRST FIT VALUE
     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-        print("\n--- FIRST FIT VALUES (FAST) ---")
+        print("\n--- FISRT FIT VALUES (FAST) ---")
         for i in range(len(initial)):
             print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
         print("-------------------------------")
@@ -336,11 +334,6 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
 
     sigma2 = popt[0];a2 = popt[1];tau2 = popt[2];a3 = popt[3];tau3 = popt[4]
     param  = [p, a1, sigma2, tau1, popt1[3], a2, tau2, a3, tau3]
-    if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
-        print("\n--- SECOND FIT VALUES (SLOW) ---")
-        for i in range(len(initial2)):
-            print("%s: \t%.2E \u00B1 %.2E"%(labels2[i], popt[i], perr2[i]))
-        print("--------------------------------\n")
 
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
         # CHECK FIRST FIT
@@ -369,94 +362,81 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
             plt.clf()
 
     aux = func3(raw_x, *param)
-    return aux,param,perr2
+    return aux,param,perr2,labels2
 
-def scint_fit(raw, raw_x, fit_range, thrld=1e-6, sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-9,OPT={}):       
-    # Prepare plot vis
+def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
+    """ DOC """
     next_plot = False
-    plt.rcParams['figure.figsize'] = [8, 8]
-
-    raw     = raw/np.max(raw)
-    t0      = np.argmax(raw)
-    raw_x   = np.arange(len(raw))
-    buffer1 = fit_range[0]
-    buffer2 = fit_range[1]
-    p       = np.mean(raw[:t0-buffer1])
     OPT["CUT_NEGATIVE"] = True
-
-    # FITTING THE PEAK #
-    popt1, perr1 = peak_fit(raw, raw_x, buffer1, thrld, sigma, a_fast, a_slow, OPT)
+    
+    # Define input parameters from dictionary
+    sigma    = i_param["sigma"]
+    a_fast   = i_param["a_fast"]
+    tau_fast = i_param["tau_fast"]
+    a_slow   = i_param["a_slow"]
+    tau_slow = i_param["tau_slow"]
+    
+    # Find peak and perform fit
+    raw_max = np.argmax(raw)
+    buffer1 = fit_range[0]; buffer2 = fit_range[1]
+    popt1, perr1 = peak_fit(raw, raw_x, buffer1, thrld, sigma, a_fast, tau_fast, OPT)
+    
     # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
-    sigm = popt1[1]; sigm_low = sigm*0.9; sigm_high = sigm*1.1
-    a1   = popt1[2]; a1_low   = a1*0.9;   a1_high   = a1*1.1  
-    tau1 = popt1[3]; tau1_low = tau1*0.9; tau1_high = tau1*1.1  
-
-    a2   = a_slow;   a2_low = a_slow*1e-2; a2_high = a_slow*1e2 #initial input
-    tau2 = 1.4e-6; tau2_low = 1.2e-6;    tau2_high = 1.6e-6
+    p = np.mean(raw[:raw_max-buffer1]); p_std = np.std(raw[:raw_max-buffer1]);
     
-    # bounds2  = ([sigm_low, a1_low, tau1_low, a2_low, tau2_low], [sigm_high, a1_high, tau1_high, a2_high, tau2_high])
-    # initial2 = (sigm, a1, tau1, a2, tau2)
-    initial2 = (p, t0, sigm, a1, tau1, 10, 100, 40)
-    labels2  = ["p", "t0", "SIGM1", "AMP1", "tau1", "SIGM2", "AMP2", "tau2"]
+    sigma1 = popt1[1]; sigma1_low = sigma1*0.9;    sigma1_high = sigma1*1.1
+    a1     = popt1[2]; a1_low     = a1*0.9;        a1_high     = a1*1.1
+    tau1   = popt1[3]; tau1_low   = tau1*0.9;      tau1_high   = tau1*1.1
     
-    # Fitting to func2(t, p, t0, sigma, a1, tau1, a2, tau2) =  return p + func(t, t0, sigma, a1, tau1) + func(t, t0, sigma, a2, tau2)
-    try:
-        popt2, pcov2 = curve_fit(func2,raw_x[buffer1:buffer2], raw[buffer1:buffer2], p0 = initial2, method = "trf")
-        perr2 = np.sqrt(np.diag(pcov2))
-    except Exception as e:
-        if e=='ValueError(\'Residuals are not finite in the initial point.\')':
-            pass
-        else:
-            print("\n --- WARNING: Fit could not be performed ---")
-            print("ERROR: ", e)
-            popt2 = initial2
-            perr2 = np.zeros(len(popt2))
-
-    t0     = popt1[0]
-    sigma1 = popt1[2]; a1 = popt2[3] ; tau1 = popt2[4]
-    sigma2 = popt2[5]; a2 = popt2[6] ; tau2 = popt2[7]
+    sigma2 = sigma;    sigma2_low = sigma*0.9;     sigma2_high = sigma*1.1
+    a2     = a_slow;   a2_low     = a_slow*1e-2;   a2_high     = a_slow*1e2
+    tau2   = tau_slow; tau2_low   = tau_slow*1e-2; tau2_high   = tau_slow*1e2
     
-    param = [p, t0, sigma1, a1, tau1, sigma2, a2, tau2]
+    bounds2  = ([a1_low, sigma2_low, a2_low, tau2_low], [a1_high, sigma2_high, a2_high, tau2_high])
+    initial2 = (a1, sigma2, a2, tau2)
+    labels2  = ["AMP1", "SIG2", "AMP2", "TAU2"]
     
-    if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-        if check_key(OPT, "COLOR") == True: color = OPT["COLOR"]
-        else: color = "tab:red"
-        print("\n--- SECOND FIT VALUES (SLOW) ---")
-        for i in range(len(initial2)):
-            print("%s:\t%.2E\t%.2E"%(labels2[i], popt2[i], perr2[i]))
-        print("--------------------------------\n")
-
-    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:    
+    # try:
+    popt2, pcov2 = curve_fit(lambda t, a1, sigma2, a2, tau2: logfunc2(t, p, popt1[0], popt1[1], a1, popt1[3], sigma2, a2, tau2), raw_x[raw_max-buffer1:raw_max+buffer2], np.log(raw[raw_max-buffer1:raw_max+buffer2]), p0 = initial2)
+    perr2 = np.sqrt(np.diag(pcov2))
+    
+    # except:
+        # print("Fit could not be performed")
+        # popt2 = initial2
+        # perr2 = np.zeros(len(popt2))
+    
+    t0    = popt1[0]; a1 = popt2[0]
+    sigma2 = popt2[1]; a2 = popt2[2] ; tau2 = popt2[3]
+    
+    labels = ["PED", "T0",     "SIG1",   "AMP1",   "TAU1",   "SIG2",   "AMP2",   "TAU2"  ]
+    param  = [p,     popt1[0], popt1[1], popt2[0], popt1[2], popt2[1], popt2[2], popt2[3]]
+    perr   = [p_std, perr1[0], perr1[1], perr2[0], perr1[2], perr2[1], perr2[2], perr2[3]] 
+    
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
         # print("SHOW key not included in OPT")
         # CHECK FIRST FIT
         plt.rcParams['figure.figsize'] = [16, 8]
         plt.subplot(1, 2, 1)
         plt.title("First fit to determine peak")
-        # plt.plot(raw_x, raw, label="raw", c=color)
-        plt.plot(raw_x, raw, label="raw")
-        # plt.plot(raw_x[t0-buffer1:t0+int(buffer1/2)], func(raw_x[t0-buffer1:t0+int(buffer1/2)], *popt1), label="FIT")
-        plt.plot(raw_x[buffer1:buffer2], func(raw_x[buffer1:buffer2], *popt1), label="FIT")
+        plt.plot(raw_x, raw, label="raw", c=color)
+        plt.plot(raw_x[max-buffer1:max+int(buffer1/2)], func(raw_x[max-buffer1:max+int(buffer1/2)], *popt1), label="FIT")
         # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-        if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[np.argmax(raw)]*2)
+        if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
         plt.legend()
-
         plt.subplot(1, 2, 2)
         plt.title("Second fit with full wvf")
-        # plt.plot(raw_x, raw, zorder=0, label="raw", c=color)
-        plt.plot(raw_x, raw, zorder=0, label="raw")
-        # plt.plot(raw_x[t0-buffer1:t0+buffer2], func2(raw_x[t0-buffer1:t0+buffer2], *param), label="FIT")
-        plt.plot(raw_x[buffer1:buffer2], func2(raw_x[buffer1:buffer2], *param),label="FIT")
+        plt.plot(raw_x, raw, zorder=0, label="raw", c=color)
+        plt.plot(raw_x[max-buffer1:max+buffer2], func2(raw_x[max-buffer1:max+buffer2], *param), label="FIT")
         plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-        # plt.axvline(raw_x[t0+buffer2], ls = "--", c = "k")
-        if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy(); plt.ylim(thrld, raw[np.argmax(raw)]*2)
+        plt.axvline(raw_x[max+buffer2], ls = "--", c = "k")
+        if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
         plt.legend()
-
         while not plt.waitforbuttonpress(-1): pass
         plt.clf()
     
     aux = func2(raw_x, *param)
-    return aux, param, perr2
+    return aux,param,perr,labels
 
 def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     # Prepare plot vis
@@ -477,12 +457,6 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
         popt = initial
         perr = np.zeros(len(initial))
 
-    if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-        print("\n--- FIT VALUES (SLOW) ---")
-        for i in range(len(initial)):
-            print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
-        print("--------------------------------\n")
-
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
         plt.title("Fit with full wvf")
         plt.plot(raw_x, raw, zorder=0, c="tab:blue", label="raw")
@@ -497,40 +471,61 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     
     aux = scfunc(raw_x, *popt)
     # print("\n")
-    return aux,popt,perr
+    return aux,popt,perr,labels
 
-def fit_wvfs(my_runs, signal_type, thrld, fit_range=[0,0], sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-9, in_key=["ADC"], out_key="", OPT={}):
+def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={}):
     """ DOC """
+    
+    i_param = get_initial_parameters(i_param)
 
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ion()
+    
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], in_key):
         aux = dict()
-        if key.startswith("Dec"): OPT["COLOR"] = "tab:red"
         raw = my_runs[run][ch][key]        
         raw_x = my_runs[run][ch]["Sampling"]*np.arange(len(raw[0]))
+        
         for i in range(len(raw)):
-            print("Fitting wvf ", i)
-            if check_key(OPT, "NORM") == True and OPT["NORM"] == True: raw[i] = raw[i]/np.max(raw[i])
-            raw[i] = raw[i]/np.max(raw[i])
-            if signal_type == "SiPM":  fit, popt, perr = sipm_fit(raw[i], raw_x, fit_range, thrld, OPT)
-            if signal_type == "SC":    fit, popt, perr = sc_fit(raw[i],   raw_x, fit_range, thrld, OPT)
-            if signal_type == "Scint": fit, popt, perr = scint_fit(raw[i],raw_x, fit_range, thrld, sigma, a_fast, a_slow, OPT)
-            aux[i] = fit
-         
+            raw_max = np.max(raw[i])
+            raw[i] = raw[i]/raw_max
+            if signal_type == "SiPM":  fit, popt, perr, labels = sipm_fit(raw[i], raw_x, fit_range, thrld, OPT)
+            if signal_type == "SC":    fit, popt, perr, labels = sc_fit(raw[i],   raw_x, fit_range, thrld, OPT)
+            if signal_type == "Scint": fit, popt, perr, labels = scint_fit(raw[i],raw_x, fit_range, thrld, i_param, OPT)
+            aux[i] = fit*raw_max
+            raw[i] = raw[i]*raw_max
+            i_idx, f_idx = find_amp_decrease(aux[i],1e-3)
+            PE = np.sum(raw[i])
+            PE_std = np.std(raw[i][:i_idx])
+            
+            if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
+                print("Fitting wvf %i for run %i, ch %i"%(i,run,ch))
+                
+                print("\n---------- TOTAL FIT ----------")
+                with open("../fit_data/DeconvolutionFit_%i_%i.txt"%(run,ch),"w+") as f:
+                    f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
+                    for i in range(len(labels)):
+                        print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
+                        f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
+                f.close()
+                os.chmod("../fit_data/DeconvolutionFit_%i_%i.txt"%(run,ch), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                print("--------------------------------\n")
+        
         my_runs[run][ch]["Fit"+signal_type+out_key] = aux
 
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ioff()
     print("\n")
 
-# Scintillation profile
-    # print("VALUES OF THE FIT: ")
-    # print("PED +- DPED:",  ['{:.2E}'.format(item) for item in [popt[0], perr[0]]])
-    # print("t0 +- Dt0:",    ['{:.2f}'.format(item) for item in [popt[1], perr[1]]])
-    # print("SIG1 +- DSIG1:",['{:.2f}'.format(item) for item in [popt[2], perr[2]]])
-    # print("AMP1 +- DAMP1", ['{:.2f}'.format(item) for item in [popt[3], perr[3]]])
-    # print("TAU1 +- DTAU1", ['{:.2f}'.format(item) for item in [popt[4], perr[4]]])
-    # print("SIG2 +- DSIG2", ['{:.2f}'.format(item) for item in [popt[5], perr[5]]])
-    # print("AMP2 +- DAMP2", ['{:.2f}'.format(item) for item in [popt[6], perr[6]]])
-    # print("TAU2 +- DTAU2", ['{:.2f}'.format(item) for item in [popt[7], perr[7]]])
-
     return fit, popt
+
+def get_initial_parameters(i_param):
+    
+    # Define input parameters from dictionary
+    if check_key(i_param,"ped")      == False: i_param["ped"]      = 1e-6
+    if check_key(i_param,"t0")       == False: i_param["t0"]       = 1e-6
+    if check_key(i_param,"sigma")    == False: i_param["sigma"]    = 1e-8
+    if check_key(i_param,"a_fast")   == False: i_param["a_fast"]   = 1e-2
+    if check_key(i_param,"tau_fast") == False: i_param["tau_fast"] = 1e-8
+    if check_key(i_param,"a_slow")   == False: i_param["a_slow"]   = 1e-2
+    if check_key(i_param,"tau_slow") == False: i_param["tau_slow"] = 1e-6
+    
+    return i_param
