@@ -161,8 +161,8 @@ def integrate_wvfs(my_runs, info = {}, key = ""):
                     if key == "GaussADC" or key == "WienerADC":
                         my_runs[run][ch][label+typ] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
-            if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
             if typ.startswith("ChargeRange"):
+                if my_runs[run][ch]["Label"]=="SC" and key =="ADC": break # Avoid range integration for SC (save time)
                 for j in range(len(f_range)):
                     my_runs[run][ch][typ+str(j)] = []
                     if i_range[j] == -1: # Integration with fixed ranges

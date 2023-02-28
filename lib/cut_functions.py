@@ -28,7 +28,9 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
             if check_key(my_runs[run][ch], key) == True:
                 if ranges[0]==0 and ranges[1]==0:
                     for i in range(len(my_runs[run][ch][key])):
-                        if limits[key][0] <= my_runs[run][ch][key][i] <= limits[key][1]:
+                        if key == "PeakTime" and limits[key][0] <= my_runs[run][ch]["Sampling"]*my_runs[run][ch][key][i] <= limits[key][1]:
+                            continue
+                        elif limits[key][0] <= my_runs[run][ch][key][i] <= limits[key][1]:
                             continue    
                         else: my_runs[run][ch]["MyCuts"][i] = False
                 else:
@@ -37,6 +39,8 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
                         if limits[key][0] <= my_runs[run][ch][key][i] <= limits[key][1]:
                             continue    
                         else: my_runs[run][ch]["MyCuts"][i] = False
+                print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"]) - len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
+                print("Nº total final events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
             else: print(key," does not exist in my_runs!")
         else: print("Run generate_cut_array")
 
@@ -59,6 +63,7 @@ def cut_min_max_sim(my_runs, keys, limits):
                             break
                         else: my_runs[run][ch]["MyCuts"][i] = False
                     else: print(keys," does not exist in my_runs!")
+            print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"])-len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         else: print("Run generate_cut_array")
 
 def cut_lin_rel(my_runs, keys):
@@ -76,7 +81,7 @@ def cut_lin_rel(my_runs, keys):
                     else: print("IAAA ERROR"); break
                 figure_features()
                 fig, ax = vis_two_var_hist(my_runs,run,ch,[keys[0],keys[1]], [0.1,99.9], OPT = {"Show": False})
-                coords = fig.ginput(100, timeout=60)
+                coords = fig.ginput(100, timeout=1000)
                 polygon = Polygon(coords)
                 n_points = len(coords)
                 print(n_points)
@@ -104,7 +109,8 @@ def cut_lin_rel(my_runs, keys):
                     else: my_runs[run][ch]["MyCuts"][i] = False
 
                 ax.scatter(my_runs[run][ch][keys[0]][my_runs[run][ch]["MyCuts"] == False],my_runs[run][ch][keys[1]][my_runs[run][ch]["MyCuts"] == False], c = "red", s = 2)
-                print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+                print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"])-
+                  len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         else: print("Run generate_cut_array")
         while not fig.waitforbuttonpress(-1): pass
 
@@ -126,5 +132,6 @@ def cut_ped_std(my_runs):
                 if np.std(my_runs[run][ch]["PedMean"]) > my_runs[run][ch]["PedRMS"][i]:
                     continue    
                 else: my_runs[run][ch]["MyCuts"][i] = False
-            print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+            print("Nº cutted events: ", my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]-
+                  my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False])
         else: print("Run generate_cut_array")
