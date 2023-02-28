@@ -21,8 +21,6 @@ info     = read_input_file(input_file)
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 
-info = read_input_file(input_folder)
-
 OPT  = {
     "MICRO_SEC":   True,
     "NORM":        False,                # Runs can be displayed normalised (True/False)
@@ -56,7 +54,7 @@ print(my_runs[runs[0]][channels[0]].keys())
 # vis_npy(my_runs, ["RawADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input variables should be lists of integers
 # vis_npy(my_runs, ["ADC"], evt_sel = 0, same_plot = False, OPT = OPT) # Input variables should be lists of integers
 # vis_npy(my_runs, ["GaussADC"], evt_sel = -1, same_plot = False, OPT = OPT) # Input variables should be lists of integers
-vis_compare_wvf(my_runs, ["AveWvfPeak","AveWvfSPE"], compare = "RUNS", OPT = OPT) # Input variables should be lists of integers
+vis_compare_wvf(my_runs, ["AveWvfPeak","AveWvf"], compare = "RUNS", OPT = OPT) # Input variables should be lists of integers
 #####################
 
 ##### HISTOGRAMS #####
