@@ -18,6 +18,10 @@ def Bin2Np_ADC(FileName,header_lines=6):
     data=np.fromfile(FileName, dtype='H');
     N_Events=int( data.shape[0]/Event_size );
 
+    data    = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
+    headers = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
+    
+    TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
 
     if DEBUG:
         print("Header:",header)
@@ -25,21 +29,23 @@ def Bin2Np_ADC(FileName,header_lines=6):
         print("Event_size(wvf+header):",Event_size)
         
         print("N_Events:",N_Events)
+        print("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" )
+        print("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" )
+        print("#####################################################################\n")
+
     #reshape everything, delete unused header
-
-    data    = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
-    headers = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
-    
-    TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
-
     return data , TIMESTAMP;
 
 
-def save_Bin2Np(file_in,file_out,compressed=True):
+def save_Bin2Np(file_in,file_out,compressed=True,file_timestamp="Timestamp"):
     """Self-explainatory. Computation time x10 slower than un-compresed, size x3 times smaller"""
     data_npy, timestamp = Bin2Np_ADC(file_in)
-    if compressed:np.savez_compressed(file_out,data_npy)
-    else:         np.save(file_out,data_npy)
+    if compressed:
+        np.savez_compressed(file_out,data_npy)
+        np.savez_compressed(file_timestamp,timestamp)
+    else:         
+        np.save(file_out,data_npy)
+        np.save(file_timestamp,timestamp)
     
     del data_npy #free memory
     gc.collect()
@@ -48,13 +54,14 @@ def save_Run_Bin2Np(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",o
     """Run is an int, channel is an int array. In/out paths are strings."""
     os.system("mkdir -p " + out_path+"run"+str(Run).zfill(2)+"/") # create output folder if not present
     for ch in Channel:
-        inchan =in_path+"run"+str(Run).zfill(2)+"/wave"+str(ch)+".dat"
-        outchan=out_path+"run"+str(Run).zfill(2)+"/"+out_name+"_ch"+str(ch)  
+        inchan  = in_path+"run"+str(Run).zfill(2)+"/wave"+str(ch)+".dat"
+        ADC_outchan = out_path+"run"+str(Run).zfill(2)+"/"+out_name+"_ch"+str(ch)  
+        Timestamp_outchan = out_path+"run"+str(Run).zfill(2)+"/"+"Timestamp"+"_ch"+str(ch)  
 
         print("-----------------")
-        print("Dumping: ",inchan," to: ",outchan+".Np")
+        print("Dumping: ",inchan," to: ",ADC_outchan+".np*",Timestamp_outchan+".np*")
         print("-----------------")
-        save_Bin2Np(inchan,outchan,compressed=Compressed)
+        save_Bin2Np(inchan,ADC_outchan,compressed=Compressed,file_timestamp=Timestamp_outchan)
 
 def Bin2Np_excel(excel_file_path="",sheet='Sheet1',compressed=True,i_path="",o_path=""):
     """Calls the dumping function using a excel table with the data runs of our"""
@@ -63,4 +70,4 @@ def Bin2Np_excel(excel_file_path="",sheet='Sheet1',compressed=True,i_path="",o_p
     # df['Channels'].apply(lambda x: print(x.split(" "))) #excell only allows one value per cell, convert channels from string to array of ints
     df['Channels']=df['Channels'].apply(lambda x: list(map(int,x.split(" ")))) #excell only allows one value per cell, convert channels from string to array of ints
 
-    df.apply(lambda x: save_Run_Bin2Np(x["Run"],x["Channels"],Compressed=compressed,in_path=i_path,out_path=o_path),axis=1,);
+    df.apply(lambda x: save_Run_Bin2Np(x["Run"],x["Channels"],Compressed=compressed,in_path=i_path,out_path=o_path),axis=1);
