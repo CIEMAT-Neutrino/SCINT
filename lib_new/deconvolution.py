@@ -1,6 +1,5 @@
 import numpy as np
-import numba
-from numba import njit
+import numexpr as ne
 
 
 #custom function for the filter
@@ -16,6 +15,7 @@ def gauss(x, sigma, n, mean = 0, norm = 1):
 
 def deconvolve(ADCs:np.ndarray,SER:np.ndarray,FILTER=[])->np.ndarray:
     ADCs_dec=np.zeros(ADCs.shape)
+    ped=250;
     SER_FFT=np.fft.rfft(SER)
     if  len(FILTER)==0:
         for i in range(ADCs.shape[0]):
@@ -25,5 +25,21 @@ def deconvolve(ADCs:np.ndarray,SER:np.ndarray,FILTER=[])->np.ndarray:
         for i in range(ADCs.shape[0]):
             wvf=np.fft.irfft((np.fft.rfft (ADCs[i])/SER_FFT)*FILTER)
             ADCs_dec[i]=wvf
-    
+
+    #substract pedestal again
+    a=ADCs_dec.T
+    b=np.mean(ADCs_dec[:,:ped],axis=1).T
+    ADCs_dec=ne.evaluate( '(a-b)').T #optimizing, multithreading
+
     return ADCs_dec;
+
+#Framework interface, not debugged yet
+def compute_DecWvf(VARS:tuple)->np.ndarray:
+    if len(VARS)==2:#no filter involved
+        adc,ser=VARS
+        return deconvolve(adc,ser)
+    elif len(VARS)==3:#with filter
+        adc,ser,filt=VARS
+        return deconvolve(adc,ser,filt)
+    else:
+        raise NotImplementedError("Inputs must be 2 or 3 tuple longs")
