@@ -1,6 +1,6 @@
 import numpy as np
 import numexpr as ne
-
+##For now, numba doesn't support np.fft, stay tunned for this: https://github.com/numba/numba/issues/5864
 
 #custom function for the filter
 def gauss(x, sigma, n, mean = 0, norm = 1):
