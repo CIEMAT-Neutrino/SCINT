@@ -33,7 +33,6 @@ def Bin2Np_ADC(FileName,header_lines=6):
         print("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" )
         print("#####################################################################\n")
 
-    #reshape everything, delete unused header
     return data , TIMESTAMP;
 
 
