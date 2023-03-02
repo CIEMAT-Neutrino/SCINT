@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, '../')
 
 import pandas as pd
-from lib_new.first_data_process import Bin2Np_excel
+from lib.first_data_process import Bin2Np_excel
 
 # in_path ="/media/rodrigoa/2Gb/data/SBND_XA_PDE/SBND_XA_VIS/raw/"
 in_path ="/media/rodrigoa/DiscoDuro/SBND_XA_VIS/"
