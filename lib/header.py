@@ -3,7 +3,7 @@ def print_header():
     # file_contents = f.read()
     # print (file_contents)
     # f.close
-    print(
+        print(
     """
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -19,10 +19,8 @@ def print_header():
 ⣈⠻⣏⣰⣾⡻⣿⣿⣶⣤⣄⣀⣠⠞⢹⠀⠀⠻⣿⣿⣶⣿⣿⣿⣷⣶⡿⢿⡿⠁⠈⢿⣿⣿⣿⣧⡹⣿⣿⣿⠃⠀⣹⣿⡀⠀⠘⢿⣿⣿⣿⣿⣿⣷⣶⣶⡿⠛⠋⠁⠀
 ⠻⢿⣿⡿⠛⠛⠛⢻⣿⣿⡿⠛⢻⣿⡿⠀⢲⣾⣿⣿⠋⠉⣿⣿⡟⠉⠀⠀⠀⠀⠸⢿⣿⣿⠁⠙⣿⣿⠉⠁⠀⠀⠙⠿⠃⠘⢷⣾⣿⡿⠉⠉⠙⢿⣿⡏⠀⠀⠀⠀⠀
 ⠀⠀⠈⠀⠀⠀⠀⠉⠉⠉⠁⠀⠈⠉⠁⠀⠀⠈⠉⠋⠀⠀⠈⠉⠁⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠈⠉⠀⠀⠀⠀⠀⠀
-
 The CYTHON TOOLs Team
 R. Alvarez, A. de la Torre, L. Perez, S. Manthey
-
 Software is provided "as is", without warranty of any kind,
 express or implied.
     """
