@@ -1,8 +1,8 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib_new.io_functions  import open_run_var,open_run_properties,do_run_things,save_run_var
-from lib_new.ped_functions import compute_Pedestal,substract_Pedestal, compute_Peak
+from lib.io_functions  import open_run_var,open_run_properties,do_run_things,save_run_var
+from lib.ped_functions import compute_Pedestal,substract_Pedestal, compute_Peak
 from lib.header import print_header
 
 
