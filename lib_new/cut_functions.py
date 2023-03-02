@@ -22,7 +22,7 @@ def VARsAsDataFrame(VARs:tuple) -> pd.DataFrame:
     
     return pd.concat(aux,axis=1).swaplevel(0,1,1).sort_index(axis=1)
 
-def SWAP_COLUM_LEVELS(DF: pd.DataFrame):
+def SWAP_COLUM_LEVELS(DF: pd.DataFrame):#in a multiindexed dataframe, swaps order of the columns labels: df[var][ch] to df[ch][var] and vice-versa
     return DF.swaplevel(0,1,1).sort_index(1)
 
 
