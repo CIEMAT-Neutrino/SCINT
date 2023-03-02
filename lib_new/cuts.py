@@ -20,13 +20,22 @@ def VARsAsDataFrame(VARs:tuple) -> pd.DataFrame:
         pd1=pd.DataFrame(reform)
         aux.append(pd1)
     
-    return pd.concat(aux,axis=1).sort_index(axis=1)
+    return pd.concat(aux,axis=1).swaplevel(0,1,1).sort_index(axis=1)
 
 def SWAP_COLUM_LEVELS(DF: pd.DataFrame):
     return DF.swaplevel(0,1,1).sort_index(1)
 
 
-def Apply_cut_toVAR(df:pd.DataFrame,VAR)->dict:
+def Apply_cut_to_VAR(df:pd.DataFrame,VAR:dict)->dict:
+    """This interface provides link between nice pandas df structure for cuts, and previous setup for channels and variables
+    
+    Args:
+        df (pd.DataFrame): A data frame  as provided by 
+
+    Returns:
+        pd.DataFrame: DataFrame of linked variables, shared index axis (number of events)
+
+    """
     
     aux_VAR=copy.deepcopy(VAR) #copy
      
