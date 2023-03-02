@@ -1,11 +1,4 @@
-from lib_new.io_lib  import open_run_var,open_run_properties,do_run_things,save_run_var
-from lib_new.ped_lib import compute_Pedestal,substract_Pedestal
-from lib.header import print_header
-import gc #garbage collector interface
-
-# print_header()
-
-
+from lib import *
 
 for run in [1,2,3,9,10,11,25,26,27]:
     path="../data/raw/run"+str(run).zfill(2)+"/";
