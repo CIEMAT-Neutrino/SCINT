@@ -353,6 +353,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         aux = ["NBinsWvf", "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
             if "Charge" in key: aux.append(key)
+            if "Ave" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "EVA":
@@ -401,7 +402,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
         for ch in channels:
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
-            if not branch_list:
+            if preset!="":
                 branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug)
 
             for branch in branch_list:   
@@ -417,6 +418,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
                     if debug: print("-----------------------------------------------")
                 except FileNotFoundError: print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
             print("-> DONE!\n")
+            del branch_list
     return my_runs
 
 def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, force=False, debug = False, compressed=True):
@@ -426,6 +428,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
+    # opath = info["OPATH"][0]+info["MONTH"][0]+"/npy/"
 
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
