@@ -280,7 +280,7 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         a_list = ch_list 
         b_list = r_list 
 
-    for a, key in product(a_list, keys):
+    for a in a_list:
         if compare == "CHANNELS": run = a
         if compare == "RUNS":      ch = a
 
@@ -291,30 +291,34 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         fig.supxlabel(r'Time [s]')
         fig.supylabel("ADC Counts")
         norm_raw = [1]*nch # Generates a list with the norm correction for std bar
-
+        counter = 0
         for b in b_list:
             if compare == "CHANNELS": ch = b; label = "Channel {} ({})".format(ch,my_run[run][ch]["Label"]); title = "Average Waveform - Run {}".format(run)
             if compare == "RUNS":    run = b; label = "Run {}".format(run); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"])
-
-            ave = my_run[run][ch][key][0]
+            print("RUN: ", run)
+            print("CHANNEL: ", ch)
+            if len(keys) == 1:
+                ave = my_run[run][ch][keys[counter]][0]
+            elif len(keys) > 1:
+                print("Counter", counter)
+                print("KEYS", keys[counter])
+                ave = my_run[run][ch][keys[counter]][0]
+                counter = counter + 1
             norm_ave = np.max(ave)
             sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
             thrld = 1e-6
+            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
+                ave = ave/norm_ave
             if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
                 fig.supxlabel(r'Time [$\mu$s]')
-                my_run[run][ch]["Sampling"] = my_run[run][ch]["Sampling"]*1e6
+                sampling = my_run[run][ch]["Sampling"]*1e6
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
                 axs.semilogy()
             if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
-                fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[key])
-            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
-                ave = ave/norm_ave
-                axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label+" (Raw)")
-                axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
-                axs.set_ylim(thrld, ave[np.argmax(ave)]*2)
+                fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[keys[counter]])
 
-            axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave*norm_ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label+" (Raw)")
-            axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit*norm_ave, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
+            axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label+" (Raw)")
+            # axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit*norm_ave, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
 
         axs.grid(True, alpha = 0.7)
         axs.set_title(title,size = 14)
@@ -333,7 +337,6 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         if ch == len(ch_list): break
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
-        
         plt.close()   
 
 def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}):
@@ -370,7 +373,7 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
         binning = int(max_amp)+1
     elif key == "PeakTime":
         data = my_run[run][ch]["Sampling"]*aux_data
-        binning = int(my_run[run][ch]["NBinsWvf"]/2)
+        binning = int(my_run[run][ch]["NBinsWvf"]/10)
     else:
         data = aux_data
         ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
@@ -425,7 +428,9 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
     fig, ax = plt.subplots(1,1, figsize = (8,6))
     if "Time" in keys[0]:
         ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
-    else: ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+    else: 
+        print(x_ymin, x_ymax, y_ymin, y_ymax)
+        ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
     ax.grid("both")
     fig.supxlabel(keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
     fig.suptitle("Run_{} Ch_{} - {} vs {} histogram".format(run,ch,keys[0],keys[1]))

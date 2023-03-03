@@ -90,7 +90,7 @@ def cut_lin_rel(my_runs, keys):
 
         figure_features()
         fig, ax = vis_two_var_hist(my_runs,run,ch,[keys[0],keys[1]], [0.1,99.9], OPT = {"Show": False})
-        coords = fig.ginput(100, timeout=60)
+        coords = fig.ginput(100, timeout=1000)
         polygon = Polygon(coords)
         n_points = len(coords)
         print("Nº points: ", n_points)
@@ -119,7 +119,8 @@ def cut_lin_rel(my_runs, keys):
             else: my_runs[run][ch]["MyCuts"][i] = False
         
         ax.scatter(my_runs[run][ch][keys[0]][my_runs[run][ch]["MyCuts"] == False],my_runs[run][ch][keys[1]][my_runs[run][ch]["MyCuts"] == False], c = "red", s = 2)
-        print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+        print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"])-
+                  len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         
         while not fig.waitforbuttonpress(-1): pass
 
