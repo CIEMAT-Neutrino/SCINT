@@ -7,9 +7,9 @@
 scratch/
 larsoft/
 # Ignore everything from input files
-input/*.txt
+# input/*.txt
 # But not the template one
-!input/MergeDebug*.txt
+# !input/MergeDebug*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
