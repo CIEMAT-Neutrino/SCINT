@@ -4,7 +4,7 @@
 ########################
 ####   DAQ INFO     ####
 ########################
-DAQ: ADC
+TYPE: ADC
 MODEL: 5725S
 BITS: 16384
 DYNAMIC_RANGE: 2
@@ -14,43 +14,33 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-PATH: /pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/
+PATH: ../data/
 MONTH: Feb22_2
 
-OV_LABEL: OV1,OV2,OV3
+OV_LABEL: OV1,0V2,0V3
 
-MUONS_RUNS: 
-LIGHT_RUNS: 9,10,11
-ALPHA_RUNS: 67,68,69
-CALIB_RUNS: 56,57,58
+MUONS_RUNS: 29
+LIGHT_RUNS: 09
+ALPHA_RUNS: 25
+CALIB_RUNS: 1,8
 
-CHAN_LABEL: SiPM0,SiPM1,SC
-CHAN_TOTAL: 0,1,6
-CHAN_POLAR: -1,-1,1
-CHAN_AMPLI: 250,250,1030
+CHAN_LABEL: SiPM0,PMT,SC
+CHAN_TOTAL: 0,4,6
+CHAN_POLAR: -1,1
+CHAN_AMPLI: 250,50,1030
 
 ########################
 ####   BRANCH INFO  ####
 ########################
 
 #PRESETS USED: 0,  1,  2,  3,  4,  5,  6
-LOAD_PRESET: NON,RAW,RAW,ANA,NON,NON,ANA
+LOAD_PRESET: NON,RAW,ALL,ANA,NON,NON,ANA
 SAVE_PRESET: NON,ALL,ANA,INT,NON,NON,DEC
 
 ########################
 ####  CHARGE INFO   ####
 ########################
-TYPE: ChargeAveRange
+TYPE: ChargeAveRange,ChargeRange
 REF: AveWvf
 I_RANGE: -1
-F_RANGE: 2.8e-6
-
-########################
-####   CUTS INFO    ####
-########################
-CUTS: MinMax,LinRel
-CUTS_KEYS: PeakAmp,ChargeAveRange
-LIMITS: 0,20,-1,4
-
-
-
+F_RANGE: 8

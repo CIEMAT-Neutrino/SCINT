@@ -14,20 +14,22 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-PATH: /pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/
-MONTH: Feb22_2
+PATH: /media/andres/2Gb/data/SBND_XA_PDE/
+#OPATH: /pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE/
+#PATH: ../data/
+MONTH: SBND_XA_VIS
 
 OV_LABEL: OV1,OV2,OV3
 
 MUONS_RUNS: 
-LIGHT_RUNS: 9,10,11
-ALPHA_RUNS: 67,68,69
-CALIB_RUNS: 56,57,58
+LIGHT_RUNS: 15
+ALPHA_RUNS: 29,32,35
+CALIB_RUNS: 24
 
-CHAN_LABEL: SiPM0,SiPM1,SC
-CHAN_TOTAL: 0,1,6
-CHAN_POLAR: -1,-1,1
-CHAN_AMPLI: 250,250,1030
+CHAN_LABEL: SiPM0,SiPM1,SiPM2,SiPM3
+CHAN_TOTAL: 0,1,3,4
+CHAN_POLAR: -1,-1,-1,-1
+CHAN_AMPLI: 250,250,250,250
 
 ########################
 ####   BRANCH INFO  ####
@@ -42,8 +44,8 @@ SAVE_PRESET: NON,ALL,ANA,INT,NON,NON,DEC
 ########################
 TYPE: ChargeAveRange
 REF: AveWvf
-I_RANGE: -1
-F_RANGE: 2.8e-6
+I_RANGE: 
+F_RANGE: 
 
 ########################
 ####   CUTS INFO    ####
