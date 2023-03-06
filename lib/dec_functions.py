@@ -10,7 +10,7 @@ import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
 
-def generate_SER(my_runs,dec_runs,SPE_runs):
+def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
     """ 
     This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
         - my_runs: DICTIONARY containing the wvf to be deconvolved.
@@ -21,7 +21,10 @@ def generate_SER(my_runs,dec_runs,SPE_runs):
         for jj in range(len(my_runs["NChannel"])):
             det_response =    dec_runs[dec_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvf"][0]
             single_response = SPE_runs[SPE_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvfSPE"][0]
-            SER = np.max(single_response)*det_response/np.max(det_response)
+            if scaling_type == "Amplitude":
+                SER = np.max(single_response)*det_response/np.max(det_response)
+            if scaling_type == "Charge": 
+                SER = np.sum(single_response)*det_response/np.sum(det_response)
             i_idx,f_idx = find_amp_decrease(SER, 1e-4)
             SER = np.roll(SER,-i_idx)
             my_runs[my_runs["NRun"][ii]][my_runs["NChannel"][jj]]["SER"] = [SER]

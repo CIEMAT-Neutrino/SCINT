@@ -18,8 +18,8 @@ channels = []
 raw_runs = np.asarray(info["ALPHA_RUNS"]).astype(int)
 dec_runs = np.asarray(info["LIGHT_RUNS"]).astype(int)
 ref_runs = np.asarray(info["CALIB_RUNS"]).astype(int)
-SiPM_OV = 1 # Choose between OV value for SiPM in alpha run (0, 1 or 2)
-ana_ch = np.asarray(info["CHAN_TOTAL"]).astype(int)
+SiPM_OV  = 1 # Choose between OV value for SiPM in alpha run (0, 1 or 2)
+ana_ch   = np.asarray(info["CHAN_TOTAL"]).astype(int)
 
 for idx, run in enumerate(raw_runs):
     for jdx, ch in enumerate(ana_ch):
@@ -69,4 +69,4 @@ for idx, run in enumerate(raw_runs):
         save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][6]),info=info,force=True)
         del my_runs,light_runs,single_runs
 
-generate_input_file(info,label="Gauss")
+generate_input_file(input_file,info,label="Gauss")

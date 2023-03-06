@@ -1,11 +1,14 @@
 numpy
+plotly
+pandas
+scipy 
 matplotlib
 uproot
-scipy 
 pynput
 awkward
 keyboard
 pyqt5
 shapely
 curve
-plotly
+pandas
+openpyxl
