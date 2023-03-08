@@ -396,14 +396,14 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     initial2 = (a1, sigma2, a2, tau2)
     labels2  = ["AMP1", "SIG2", "AMP2", "TAU2"]
     
-    # try:
-    popt2, pcov2 = curve_fit(lambda t, a1, sigma2, a2, tau2: logfunc2(t, p, popt1[0], popt1[1], a1, popt1[3], sigma2, a2, tau2), raw_x[raw_max-buffer1:raw_max+buffer2], np.log(raw[raw_max-buffer1:raw_max+buffer2]), p0 = initial2)
-    perr2 = np.sqrt(np.diag(pcov2))
+    try:
+        popt2, pcov2 = curve_fit(lambda t, a1, sigma2, a2, tau2: logfunc2(t, p, popt1[0], popt1[1], a1, popt1[3], sigma2, a2, tau2), raw_x[raw_max-buffer1:raw_max+buffer2], np.log(raw[raw_max-buffer1:raw_max+buffer2]), p0 = initial2)
+        perr2 = np.sqrt(np.diag(pcov2))
     
-    # except:
-        # print("Fit could not be performed")
-        # popt2 = initial2
-        # perr2 = np.zeros(len(popt2))
+    except:
+        print("Fit could not be performed")
+        popt2 = initial2
+        perr2 = np.zeros(len(popt2))
     
     t0    = popt1[0]; a1 = popt2[0]
     sigma2 = popt2[1]; a2 = popt2[2] ; tau2 = popt2[3]
