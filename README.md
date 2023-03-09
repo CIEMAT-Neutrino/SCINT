@@ -31,7 +31,7 @@ We don't want:
 
     Setup all the utilities needed for the macros:
     ```
-    ./scripts/setup.sh 
+    sh scripts/setup.sh 
     ```
     
     Then place all your root files in data/MONTH/raw folder (check copy_data.sh for ideas and run)
@@ -41,23 +41,16 @@ We don't want:
 
 2. Run the following macros FROM the macros folder:
 
-    - macros/00Raw2Np.py
-
-    - macros/01PreProcess.py
-    
-    - macros/02PreProcess.py
-
-    - macros/03Calibration.py
-
-    - macros/0XVisEvent.py or macros/0XVisTests.py (whenever you want! (once you pre-process))
-  
 ```
     cd macros
-    python 3 00Raw2Np.py MergeDebug
-    python 3 01PreProcess.py MergeDebug 
-    python 3 02Process.py MergeDebug
-    python 3 03Calibration.py MergeDebug
-    python 3 0XVisEvent.py MergeDebug 1 0,1
+    python3 00Raw2Np.py MergeDebug
+    python3 01PreProcess.py MergeDebug 
+    python3 02Process.py MergeDebug
+    python3 03Integration.py MergeDebug
+    python3 04Calibration.py MergeDebug
+    python3 05Scintillation.py MergeDebug
+    python3 06Deconvolution.py MergeDebug
+    python3 0XVisEvent.py MergeDebug 1 0,1
 ```
 
     

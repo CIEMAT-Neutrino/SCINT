@@ -1,21 +1,26 @@
 ## CYTHON TO DO LIST
 
+------ CYTHON WORKSHOP III ------
+
 ------ CYTHON WORKSHOP II ------
 
-- [ ] Las cargas que se calculan de nuevo se sobrescriben tal y como esta ahora mismo. hay que pensar como organizar eso. (lo de que no se vea el diccionario es una kk)
-- [ ] Falta por implementar que se pueda repetir el fit y le puedas dar valores de entrada por ejemplo (calib/scintill)
+- [ ] Las cargas que se calculan de nuevo se sobrescriben tal y como esta ahora mismo. hay que pensar como organizar eso. 
+- [x] ~~Falta por implementar que se pueda repetir el fit y le puedas dar valores de entrada por ejemplo (calib/scintill)~~
 - [ ] En la de scintillation hay que poner que rango de cargas de los que hay calculados quieres usar/fittear o lo que sea
-- [ ] El fit del perfil de centelleo para sacar la tau_slow etc
+- [x] ~~El fit del perfil de centelleo para sacar la tau_slow etc~~ --> LISTO EN DECONVOLUCION
 - [ ] Calcular NEvents/s 
-- [ ] Documentar algunas cosas que faltan en las funciones + Wiki (subir los gifs :) )
+- [ ] Documentar algunas cosas que faltan en las funciones + Wiki (hace mas pequeño el codigo o resumir lo importante)
 - [ ] Mejorar los output por terminal
-- [ ] (Extra: Calibracion pmt, DC)
+- [x] ~~(Extra: Calibracion pmt)~~
+- [ ] (Extra: Analisis DC)
 - [ ] ColorStyle
+- [x] ~~Leer TimeStamp --> calcular tiempo medida runs / Rate~~
+- [ ] Integrar cada waveform
 
 - [ ] QUITAR BUCLES (cambiar for por vectores)
     - [ ] Problema con el procesado de WFS: procesarlas run a run i.e hacer una macro que ejecute python3 ... para cada run y no pete
     - [ ] El resto sin bucle (poner un WARNING?)
-    - [ ] INDEXADO para quitar los bucles en los cortes
+    - [x] ~~INDEXADO para quitar los bucles en los cortes~~ (EJEMPLO TO CHECK: my_run[run][ch][key][my_run[run][ch]["MyCuts"] == True] )
 - [x] ~~Añadir al ppio de las funciones una comprobacion de si existen cortes generados y aplicarlos en las funciones que vengan despues.~~
 - [ ]  No queremos guardar una branch con los cortes --> Ahora se esta guardando
 - [x] ~~Comprobar ganancias FEB22_2 (testear que los resultados son compatibles con las otras macros)~~
@@ -23,7 +28,7 @@
 - [x] ~~Imports desde un .py comun~~
 - [x] ~~No pasar por los .root :)~~
 - [x] ~~Cambiar estructura a carpeta (run00_ch00) con .npy (Ana/Dec/Fit) que serian las ramas del root + info extra que vamos añadiendo. Hay que cambiar os prefijos para que sean el nombre de los .npy. Puedes cargas las ramas que elijas. Kind of solve memory problem~~
-- [ ] Libreria de fit: no saca el chi2; hay que cambiarla o ver como añadirlo
+- [ ] Libreria de fit: no saca el chi2; hay que cambiarla o ver como añadirlo/calcularlo
 - [x] ~~persistencia no funciona~~
 
 EXTRAS PARA CUANDO TODO FUNCIONE BIEN

@@ -15,11 +15,13 @@ from scipy.optimize import curve_fit
 plt.rcParams.update({'font.size': 15})
 
 # Generate dict framework structure
-info = {"MONTH": ["SC_Test"]}
+info = { "PATH": ["../_data/"],
+        "MONTH": ["SC_Test"]}
+
 my_run = dict()
 my_run["NRun"] = []
 my_run["NChannel"] = []
-template_list = ["../data/SC_Test/raw/wvf_config_1.npy","../data/SC_Test/raw/wvf_config_2.npy","../data/SC_Test/raw/wvf_config_3.npy"]
+template_list = ["../_data/SC_Test/raw/wvf_config_1.npy","../_data/SC_Test/raw/wvf_config_2.npy","../_data/SC_Test/raw/wvf_config_3.npy"]
 
 # Each template is a run
 for i in range(len(template_list)):
@@ -50,7 +52,11 @@ for i in range(len(template_list)):
 
         SER[i] = np.resize(SER[i],my_run[i+1][j]["TimeWindow"])
         my_run[i+1][j]["SPE"] = [10*np.array(SER[i])/np.max(np.array(SER[i]))]
-        # plt.plot(np.arange(0,j,1),my_run[i+1][j]["SPE"][0])
-        # plt.show()
+
+        # cutoff = 2.56e6 # Cutoff frequency in [Hz]
+        cutoff = 2e6 # Cutoff frequency in [Hz]
+        my_run[i+1][j]["GaussCutOff"] = my_run[i+1][j]["TimeWindow"]*cutoff*my_run[i+1][j]["Sampling"]
+        plt.plot(np.arange(0,j,1),my_run[i+1][j]["SPE"][0])
+        plt.show()
 
 save_proccesed_variables(my_run,preset="ALL",info=info,force=True)

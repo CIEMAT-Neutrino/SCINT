@@ -14,10 +14,16 @@ from scipy.optimize import curve_fit
 
 plt.rcParams.update({'font.size': 15})
 
-info = {"MONTH": ["SC_Test"]}
+info = { "PATH": ["../_data/"],
+        "MONTH": ["SC_Test"]}
 
 my_run = load_npy([1,2,3],[500,600,700,800,900,1000], preset="ALL", info=info)
+
+templates=["Only Input Transformer (reduce undershoot)","Original Input","Input Capacitor 100n (extra reduce undershoot)"]
+# my_run = load_npy([1],[500], preset="ALL", info=info)
 MC_num = 1000 # Number of mc wvf to be generated
+out_file = open(info["PATH"][0]+"SC_Test/results/results.txt",mode="w+")
+out_file.write("Label\tTemplate\tWindow Length [ticks]\tMEAN\tSTD\n")
 
 for run, ch in product(my_run["NRun"],my_run["NChannel"]):
     dec_key = "DecNoiseADC"
@@ -70,4 +76,7 @@ for run, ch in product(my_run["NRun"],my_run["NChannel"]):
         ax[0].set_title("Example" + filter_key + "Wvf")
         ax[0].set_xlabel("Time in [us]")
         ax[0].set_ylabel("Amp in [a.u.]")
-        plt.savefig("../data/SC_Test/results/%sWvf_%i_array_%i_us"%(filter_key,run,ch))
+        plt.savefig(info["PATH"][0]+"SC_Test/results/%sWvf_%i_array_%i_us"%(filter_key,run,ch))
+        plt.close()
+        out_file.write("%s\t%s\t%i\t%f\t%f\n"%(filter_key, templates[run-1], ch, popt2[1], popt2[2]))
+out_file.close()

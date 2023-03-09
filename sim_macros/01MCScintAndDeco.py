@@ -14,9 +14,11 @@ from scipy.optimize import curve_fit
 
 plt.rcParams.update({'font.size': 15})
 
-info = {"MONTH": ["SC_Test"]}
+info = { "PATH": ["../_data/"],
+        "MONTH": ["SC_Test"]}
 
 my_run = load_npy([1,2,3],[500,600,700,800,900,1000], preset="ALL", info=info)
+# my_run = load_npy([1],[500], preset="ALL", info=info)
 MC_num = 1000 # Number of mc wvf to be generated
 for run, ch in product(my_run["NRun"],my_run["NChannel"]):
     buffer = 4*my_run[run][ch]["TimeWindow"]  # Buffer expanding array to accomodate scint wvfs [ticks]
@@ -42,7 +44,8 @@ OPT = {
 "NOISE_AMP": 0.5, # Noise amp as a factor of SPE max.
 "FIX_EXP":True,
 "WIENER_BUFFER": 50,
-"CONVERT_ADC": False
+"CONVERT_ADC": False,
+"FIXED_CUTOFF": True
 }
 
 OPT["FILTER"] = "WIENER"
@@ -79,7 +82,7 @@ for run, ch in product(my_run["NRun"],my_run["NChannel"]):
                 my_run[run][ch][wvf_key[j]+"Charge"].append(charge/my_run[run][ch]["SPEChargeADC"]) 
             
             else:
-                charge = np.sum(my_run[run][ch][raw_key[j]][i][my_run[run][ch]["PreTrigger"]-20:])
+                charge = np.sum(my_run[run][ch][raw_key[j]][i][my_run[run][ch]["PreTrigger"]-20:my_run[run][ch]["PreTrigger"]+300])
                 my_run[run][ch][wvf_key[j]+"Charge"].append(charge)
             my_run[run][ch][wvf_key[j]+"Amp"].append(amp)
             my_run[run][ch][wvf_key[j]+"Time"].append(time*1e9)

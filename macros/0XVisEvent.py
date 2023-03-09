@@ -9,24 +9,24 @@ import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 ##### INPUT RUNS AND OPTIONS #####
 try:
-    input_folder   = sys.argv[1]
+    input_file     = sys.argv[1]
     input_runs     = sys.argv[2]
     input_channels = sys.argv[3]
 except IndexError:
-    input_folder   = input("Please select FOLDER (e.g Feb22_2): ")
+    input_file     = input("Please select input file (e.g Feb22_2): ")
     input_runs     = input("Please select RUNS (separated with commas): ")
     input_channels = input("Please select CHANNELS (separated with commas): ")
 
+info     = read_input_file(input_file)
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 
-info = {"MONTH": [input_folder]}
 OPT  = {
     "MICRO_SEC":   True,
     "NORM":        False,                # Runs can be displayed normalised (True/False)
     "LOGY":        False,                # Runs can be displayed in logy (True/False)
     "SHOW_AVE":    "AveWvf",             # If computed, vis will show average (AveWvf,AveWvfSPE,etc.)
-    "SHOW_PARAM":  False,                 # Print terminal information (True/False)
+    "SHOW_PARAM":  True,                 # Print terminal information (True/False)
     "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False)
     "LEGEND":      False                 # Shows plot legend (True/False)

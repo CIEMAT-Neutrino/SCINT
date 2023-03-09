@@ -18,22 +18,16 @@ runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
 channels = np.append(channels,info["CHAN_TOTAL"])      
 
-int_key = ["ChargeAveRange"]
+# int_key = ["ChargeAveRange"]
+int_key = ["ChargeRange0_CuttedPeakTime"]
 OPT = {
-    "LOGY": True,
+    "LOGY": False,
     "SHOW": True
     }
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
-    my_runs = load_npy([run],[ch], branch_list=["ADC","PedLim","Label","Sampling","ChargeAveRange","Units"], info=info,compressed=True)#preset="ANA"
-    # my_runs = load_npy([run],[ch], preset = "CUTS", info=info, compressed=True)
-    
+    my_runs = load_npy([run],[ch],preset=str(info["LOAD_PRESET"][4]), info=info,compressed=True)
     print_keys(my_runs)
-    #### APPLY CUTS ####
-    # cut_min_max(my_runs, ["ChargeAveRange"], limits = {"ChargeAveRange": [-1,4]})
-    # cut_min_max_sim(my_runs, ["ChargeAveRange"], limits = {"ChargeAveRange": [-1,4]})
-    # cut_lin_rel(my_runs, ["PeakAmp", "ChargeAveRange"])
-    ####################
 
     ## Persistence Plot ##
     # vis_persistence(my_runs)
@@ -42,10 +36,11 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     print("Run ", run, "Channel ", ch)
     popt, pcov, perr = calibrate(my_runs,int_key,OPT)
     # Calibration parameters = mu,height,sigma,gain,sn0,sn1,sn2 ##
-    calibration_txt(run, ch, popt, pcov, filename="gain",info=info)
+    # calibration_txt(run, ch, popt, pcov, filename="gain",info=info)
     
     ## SPE Average Waveform ##
     if all(x !=-99 for x in popt):
+        print("\n...Calculating the SPE average waveform...")
         SPE_min_charge = popt[3]-abs(popt[5])
         SPE_max_charge = popt[3]+abs(popt[5])
         cut_min_max(my_runs, int_key, limits = {int_key[0]: [SPE_min_charge,SPE_max_charge]})

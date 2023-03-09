@@ -352,8 +352,8 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = dict_option[option]
         aux = ["NBinsWvf", "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
-            if "Charge" in key: aux.append(key)
-            if "Ave" in key: aux.append(key)
+            if "Charge" in key and key not in aux: aux.append(key)
+            if "Ave" in key and key not in aux: aux.append(key)
         branch_list = aux
 
     elif preset == "EVA":
@@ -437,7 +437,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
             files=os.listdir(path+out_folder)
             if not branch_list:
                branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
-
+            print(branch_list)
             for key in branch_list:
                 key = key.replace(".npz","")
 

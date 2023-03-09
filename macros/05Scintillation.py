@@ -49,8 +49,11 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
 
     popt_ch = []; pcov_ch = []; perr_ch = []; popt_nevt = []; pcov_nevt = []; perr_nevt = []
     popt, pcov, perr = charge_fit(my_runs, int_key, OPT); popt_ch.append(popt); pcov_ch.append(pcov); perr_ch.append(perr)
-    popt, pcov, perr = charge_fit(my_runs, ["NEventsChargeAveRange"], OPT); popt_nevt.append(popt[1]); pcov_nevt.append(pcov[1]); perr_nevt.append(perr[1])
-
-    scintillation_txt(run, ch, popt_ch+popt_nevt, pcov_ch+pcov_nevt, filename="pC", info=info) ## Charge parameters = mu,height,sigma,nevents ## 
+    
+    # To be implemented:
+    # popt, pcov, perr = charge_fit(my_runs, ["NEventsChargeAveRange"], OPT); popt_nevt.append(popt[1]); pcov_nevt.append(pcov[1]); perr_nevt.append(perr[1])
+    # scintillation_txt(run, ch, popt_ch+popt_nevt, pcov_ch+pcov_nevt, filename="pC", info=info) ## Charge parameters = mu,height,sigma,nevents ## 
+    
+    scintillation_txt(run, ch, popt_ch, pcov_ch, filename="pC", info=info) ## Charge parameters = mu,height,sigma,nevents ## 
 
     ###JSON --> mapa runes (posibilidad)

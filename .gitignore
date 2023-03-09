@@ -1,7 +1,17 @@
+#data
+*npy
+*npz
+
 # Add coustom folders
 *data*/
-laura/
+scratch/
 larsoft/
+macros/
+# Ignore everything from input files
+input/*.txt
+# But not the template one
+!input/MergeDebug*.txt
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
