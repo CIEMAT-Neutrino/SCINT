@@ -10,7 +10,7 @@ import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
 
-def generate_SER(my_runs,dec_runs,SPE_runs):
+def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
     """ 
     This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
         - my_runs: DICTIONARY containing the wvf to be deconvolved.
@@ -21,7 +21,10 @@ def generate_SER(my_runs,dec_runs,SPE_runs):
         for jj in range(len(my_runs["NChannel"])):
             det_response =    dec_runs[dec_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvf"][0]
             single_response = SPE_runs[SPE_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvfSPE"][0]
-            SER = np.max(single_response)*det_response/np.max(det_response)
+            if scaling_type == "Amplitude":
+                SER = np.max(single_response)*det_response/np.max(det_response)
+            if scaling_type == "Charge": 
+                SER = np.sum(single_response)*det_response/np.sum(det_response)
             i_idx,f_idx = find_amp_decrease(SER, 1e-4)
             SER = np.roll(SER,-i_idx)
             my_runs[my_runs["NRun"][ii]][my_runs["NChannel"][jj]]["SER"] = [SER]
@@ -84,9 +87,10 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
             
             # Calculate fft arrays
             fft_signal = np.fft.rfft(signal)
-            fft_signal_X = np.fft.rfftfreq(len(signal), 4e-9)
+            fft_signal_X = np.fft.rfftfreq(len(signal), my_runs[run][ch]["Sampling"])
            
             i_template, f_template = find_baseline_cuts(template)
+            # conv_template = np.convolve(template, )
             fft_template = np.fft.rfft(template)
             wiener = abs(fft_template)**2/(abs(fft_template)**2+abs(fft_noise)**2)
 
@@ -124,8 +128,10 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                             popt, cov = curve_fit(lambda f, fc: fit_gauss(f,fc,2),np.arange(len(fft_signal_X))[:env_wiener_min],np.log10(-1*(env_wiener_Y[:env_wiener_min]-2)),p0=p0,bounds=lim)
                             perr = np.sqrt(np.diag(cov))
                             params = [popt,2]
-                            print("\n--- GAUSS FILTER FIT VALUES ---")
+                            print("\n-------------- GAUSS FILTER FIT VALUES --------------")
                             print("%s:\t%.2E\t%.2E"%("CUT-OFF FREQUENCY", popt[0], perr[0]))
+                            print("-----------------------------------------------------\n")
+
                             my_runs[run][ch]["GaussCutOff"] = popt[0]
 
                         elif check_key(OPT, "FREE_EXP") ==  True and OPT["FREE_EXP"] ==  True:
@@ -181,7 +187,8 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                 next_plot = False
                 plt.rcParams['figure.figsize'] = [16,8]
                 plt.subplot(1, 2, 1)
-                
+                plt.title("DECONVOLUTION RUN %i CH %i"%(run,ch))
+
                 if check_key(OPT, "NORM") ==  True and OPT["NORM"] ==  True:
                     plt.plot(X, signal/np.max(signal), label = "SIGNAL: int = %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", ds = "steps")
                     if check_key(OPT, "SHOW_GAUSS_SIGNAL") !=  False: plt.plot(X, filter_signal/np.max(filter_signal),  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
@@ -224,7 +231,7 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                 plt.axhline(1,ls="--",c="grey")
                 if check_key(OPT, "SHOW_F_DEC") !=  False: plt.plot(fft_signal_X, np.abs(fft_dec), label = "DECONVOLUTION", c = "tab:red")
                 if check_key(OPT, "SHOW_F_WIENER") !=  False: 
-                    plt.plot(fft_signal_X, wiener, label = "WIENER", c = "tab:orange")
+                    plt.plot(fft_signal_X, wiener, label = "WIENER", c = "tab:orange", ls = "--")
                     plt.plot(env_wiener.x[:env_wiener_min], -1*(env_wiener.y[:env_wiener_min]-2), label = "ENV_WIENER", c = "tab:pink", ls = "--")
 
                 if check_key(OPT, "SHOW_F_GAUSS") !=  False: plt.plot(fft_signal_X, fft_gauss, label = "GAUSS", c = "tab:green")

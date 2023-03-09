@@ -72,67 +72,67 @@ def calibrate(my_runs, keys, OPT={}):
             if check_key(my_runs[run][ch], "UnitsDict") == False:
                 get_units(my_runs)
 
-            try:
-                counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
-                plt.close()
+            # try:
+            counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
+            plt.close()
 
-                ## New Figure with the fit ##
-                fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
+            ## New Figure with the fit ##
+            fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
 
-                add_grid(ax_cal)
-                counts = counts[0]; bins = bins[0]; bars = bars[0]
-                ax_cal.hist(bins[:-1], bins, weights = counts)
-                fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
+            add_grid(ax_cal)
+            counts = counts[0]; bins = bins[0]; bars = bars[0]
+            ax_cal.hist(bins[:-1], bins, weights = counts)
+            fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
+        
+            if label != "PMT": #Fit for SiPMs/SC
+                ### --- Nx GAUSSIAN FIT --- ### 
+                thresh = int(len(my_runs[run][ch][key])/2000)
+                x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, 20,fit_function="gaussian")
+                ## Plot threshold, peaks (red) and valleys (blue) ##
+                ax_cal.axhline(thresh, ls='--')
+                ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
+                ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
+                ## Plot the fit ##
+                ax_cal.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
+
+                ## Repeat customized fit ## Ver si necesario -- añadir opcion customizar a gaussian_train_fit
+                # confirmation = input("Are you happy with the fit? (y/n) ")
+                # if "n" in confirmation:
+                #     print("\n--- Repeating the fit with input parameters (\u03BC \u00B1 \u03C3) \u03B5 [{:0.2f}, {:0.2f}] ---".format(x[0],x[-1]))
+                #     n_peaks = input("Introduce NPEAKS to fit: ")
+                #     mean  = input("Introduce MEAN value for the fit: ")
+                #     sigma = input("Introduce SIGMA value for the fit: ")
+
+                #     x, popt, pcov, perr = gaussian_train_fit(counts, bins, bars,thresh,custom_fit=[int(mean),int(sigma)])
+                #     ax_cal.plot(x, gaussian(x, *popt), label="")
             
-                if label != "PMT": #Fit for SiPMs/SC
-                    ### --- Nx GAUSSIAN FIT --- ### 
-                    thresh = int(len(my_runs[run][ch][key])/1000)
-                    x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, thresh,fit_function="gaussian")
-                    ## Plot threshold, peaks (red) and valleys (blue) ##
-                    ax_cal.axhline(thresh, ls='--')
-                    ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
-                    ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-                    ## Plot the fit ##
-                    ax_cal.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
+            else: #Particular calibration fit for PMTs
+                print("Hello, we are working on a funtion to fit PMT spe :)")
+                thresh = int(len(my_runs[run][ch][key])/1e4)
+                x, y, peak_idx, valley_idx, popt, pcov, perr = pmt_spe_fit(counts, bins, bars, thresh)
+                ## Plot threshold, peaks (red) and valleys (blue) ##
+                ax_cal.axhline(thresh, ls='--')
+                ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
+                ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
+                ## Plot the fit ##
+                ax_cal.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
 
-                    ## Repeat customized fit ## Ver si necesario -- añadir opcion customizar a gaussian_train_fit
-                    # confirmation = input("Are you happy with the fit? (y/n) ")
-                    # if "n" in confirmation:
-                    #     print("\n--- Repeating the fit with input parameters (\u03BC \u00B1 \u03C3) \u03B5 [{:0.2f}, {:0.2f}] ---".format(x[0],x[-1]))
-                    #     n_peaks = input("Introduce NPEAKS to fit: ")
-                    #     mean  = input("Introduce MEAN value for the fit: ")
-                    #     sigma = input("Introduce SIGMA value for the fit: ")
+            if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
+                ax_cal.legend()
+            if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
+                ax_cal.semilogy()
+                ax_cal.set_ylim(1)
+            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
+                while not plt.waitforbuttonpress(-1): pass
+            plt.clf()
 
-                    #     x, popt, pcov, perr = gaussian_train_fit(counts, bins, bars,thresh,custom_fit=[int(mean),int(sigma)])
-                    #     ax_cal.plot(x, gaussian(x, *popt), label="")
-                
-                else: #Particular calibration fit for PMTs
-                    print("Hello, we are working on a funtion to fit PMT spe :)")
-                    thresh = int(len(my_runs[run][ch][key])/1e4)
-                    x, y, peak_idx, valley_idx, popt, pcov, perr = pmt_spe_fit(counts, bins, bars, thresh)
-                    ## Plot threshold, peaks (red) and valleys (blue) ##
-                    ax_cal.axhline(thresh, ls='--')
-                    ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
-                    ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-                    ## Plot the fit ##
-                    ax_cal.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
+            my_runs[run][ch]["Gain"] = popt[3]-abs(popt[0])
+            my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
+            my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
+            # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
 
-                if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
-                    ax_cal.legend()
-                if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
-                    ax_cal.semilogy()
-                    ax_cal.set_ylim(1)
-                if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
-                    while not plt.waitforbuttonpress(-1): pass
-                plt.clf()
-
-                my_runs[run][ch]["Gain"] = popt[3]-abs(popt[0])
-                my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
-                my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
-                # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
-
-            except KeyError:
-                print("Empty dictionary. No calibration to show.")
+            # except KeyError:
+            #     print("Empty dictionary. No calibration to show.")
         # plt.ioff()
         plt.clf()
         plt.close()
@@ -207,12 +207,13 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
 
     charge_parameters = []
     perr0 = np.sqrt(np.diag(pcov[0]))  #error for each variable
-    perr1 = np.sqrt(np.diag(pcov[1]))  #error for each variable
+    # perr1 = np.sqrt(np.diag(pcov[1]))  #error for each variable
 
     mu       = [popt[0][1], perr0[1]]  # mu +- dmu
     height   = [popt[0][0], perr0[0]]  # height +- dheight (not saving in txt by default)
-    sigma    = [popt[0][2], perr0[2]]  # sigma +- dsigma
-    nevents  = [popt[1], perr1[0][0]]  # nevents/s +- dnevents/s #HACER BIEN#
+    sigma    = [abs(popt[0][2]), perr0[2]]  # sigma +- dsigma
+    # nevents  = [popt[1],    perr1[0][0]]  # nevents/s +- dnevents/s #HACER BIEN#
+    nevents  = [popt[0][2], perr0[2]]  # nevents/s +- dnevents/s #HACER BIEN#
     charge_parameters.append([mu,height,sigma,nevents])
     
     print(len(charge_parameters))
@@ -246,44 +247,43 @@ def charge_fit(my_runs, keys, OPT={}):
             generate_cut_array(my_runs)
         if check_key(my_runs[run][ch], "UnitsDict") == False:
             get_units(my_runs)
+        # try:
+        thresh = int(len(my_runs[run][ch][key])/1000)
+        counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
+        plt.close()
+
+        ## New Figure with the fit ##
+        fig_ch, ax_ch = plt.subplots(1,1, figsize = (8,6))
+        add_grid(ax_ch)
+        counts = counts[0]; bins = bins[0]; bars = bars[0]
+        ax_ch.hist(bins[:-1], bins, weights = counts)
+        fig_ch.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_ch.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_ch.supylabel("Counts")
         
-        try:
-            thresh = int(len(my_runs[run][ch][key])/1000)
-            counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
-            plt.close()
+        ### --- 1x GAUSSIAN FIT --- ###
+        x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,fit_function="gaussian")
+        print("Chi2/N?: ", (sum((my_runs[run][ch][key]-gaussian(my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch][key])), *popt))**2))/len(my_runs[run][ch][key]))
+        ax_ch.plot(x,gaussian(x, *popt), label="")
+        
+        ## Repeat customized fit ##
+        confirmation = input("Are you happy with the fit? (y/n) ")
+        if "n" in confirmation:
+            print("\n--- Repeating the fit with input parameters (\u03BC \u00B1 \u03C3) \u03B5 [{:0.2f}, {:0.2f}] ---".format(x[0],x[-1]))
+            mean  = input("Introduce MEAN value for the fit: ")
+            sigma = input("Introduce SIGMA value for the fit: ")
 
-            ## New Figure with the fit ##
-            fig_ch, ax_ch = plt.subplots(1,1, figsize = (8,6))
-            add_grid(ax_ch)
-            counts = counts[0]; bins = bins[0]; bars = bars[0]
-            ax_ch.hist(bins[:-1], bins, weights = counts)
-            fig_ch.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_ch.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_ch.supylabel("Counts")
-            
-            ### --- 1x GAUSSIAN FIT --- ###
-            x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,fit_function="gaussian")
-            print("Chi2/N?: ", (sum((my_runs[run][ch][key]-gaussian(my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch][key])), *popt))**2))/len(my_runs[run][ch][key]))
-            ax_ch.plot(x,gaussian(x, *popt), label="")
-            
-            ## Repeat customized fit ##
-            confirmation = input("Are you happy with the fit? (y/n) ")
-            if "n" in confirmation:
-                print("\n--- Repeating the fit with input parameters (\u03BC \u00B1 \u03C3) \u03B5 [{:0.2f}, {:0.2f}] ---".format(x[0],x[-1]))
-                mean  = input("Introduce MEAN value for the fit: ")
-                sigma = input("Introduce SIGMA value for the fit: ")
+            x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,custom_fit=[int(mean),int(sigma)])
+            ax_ch.plot(x, gaussian(x, *popt), label="")
+        
+        if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
+            ax_ch.legend()
+        if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
+            ax_ch.semilogy()
+        if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
+            while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
 
-                x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,custom_fit=[int(mean),int(sigma)])
-                ax_ch.plot(x, gaussian(x, *popt), label="")
-            
-            if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
-                ax_ch.legend()
-            if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
-                ax_ch.semilogy()
-            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
-                while not plt.waitforbuttonpress(-1): pass
-            plt.clf()
-
-        except KeyError:
-            print("Empty dictionary. No computed charge.")
+        # except KeyError:
+        #     print("Empty dictionary. No computed charge.")
     
     # plt.ioff()
     plt.clf()

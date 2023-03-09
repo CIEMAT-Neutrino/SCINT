@@ -14,8 +14,7 @@ def insert_variable(my_runs, var, key, debug = False):
 
         try:
             my_runs[run][ch][key] = var[j]
-        except: 
-            KeyError
+        except KeyError: 
             if debug: print("Inserting value...")
 
 def generate_cut_array(my_runs,debug=False):
@@ -25,8 +24,13 @@ def generate_cut_array(my_runs,debug=False):
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         if debug: print("Keys in my_run before generating cut array: ",my_runs[run][ch].keys())
         for key in my_runs[run][ch].keys():
-            if debug: print("Output of find function for key: ",key,key.find("ADC"))
-            if key.find("ADC") == 0:
+            # if debug: print("Output of find function for key: ",key,key.find("ADC"))
+            # if key.find("ADC") == 0:
+            if "ADC" in key:
+                ADC_key = key
+            elif "Charge" in key:
+                ADC_key = key
+            elif "Peak" in key:
                 ADC_key = key
         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
         if debug: print("Keys in my_run after generating cut array: ",my_runs[run][ch].keys())
@@ -38,15 +42,16 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
             my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
             my_runs[run][ch][label+"PeakTime"] = np.argmax (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
             print("Peak variables have been computed for run %i ch %i"%(run,ch))
-        except: 
-            KeyError
+        except KeyError: 
             if debug: print("*EXCEPTION: for ",run,ch,key," peak variables could not be computed")
 
 def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
     """Computes the pedestal variables of a collection of a run's collection in standard format"""
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
-            ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer
+            # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
+            values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
+            ped_lim = values[np.argmax(counts)]-buffer
             if ped_lim < 0: ped_lim = 50
             my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
