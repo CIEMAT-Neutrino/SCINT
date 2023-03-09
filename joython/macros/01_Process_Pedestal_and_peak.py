@@ -7,9 +7,11 @@ from lib.ped_functions import compute_Pedestal,substract_Pedestal, compute_Peak
 
 
 # path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
-path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
+# Runs=open_runs_table("../macros/APSAIA_VIS.xlsx")
 
+path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
 Runs=open_runs_table("../macros/APSAIA_VUV.xlsx")
+
 for run in Runs["Run"].array:
 
     Run_props=open_run_properties(run,"APSAIA_VUV.xlsx")
