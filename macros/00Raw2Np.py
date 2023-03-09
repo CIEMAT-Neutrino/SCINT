@@ -8,6 +8,8 @@
 #   data/MONTH/npy/runXX_chYY with npz created. (npz_names=keys of the my_runs dict in the macros' workflow)             #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
+#Memory--> 8.8 GB RAM
+
 import sys; sys.path.insert(0, '../'); from lib import *; print_header()
 
 try:
@@ -26,11 +28,11 @@ runs = np.append(runs,info["MUONS_RUNS"])
 channels = np.append(channels,info["CHAN_TOTAL"])
 
 # From the input txt file you can choose the extension of your input file
-# NEEDS UPDATE!
+# DEPRECATED (PROBABLY :) )!
 # if info["RAW_DATA"][0] == "ROOT":
 #     print("----- Taking a .root file as input data -----")
 #     root2npy(runs.astype(int),channels.astype(int),info=info)
 
 if info["RAW_DATA"][0] == "DAT":
     print("----- Taking a .dat file as input data -----")
-    binary2npy(runs.astype(int),channels.astype(int),info=info,compressed=True,force=False)
+    binary2npy(runs.astype(int),channels.astype(int),info=info,compressed=True,force=True)

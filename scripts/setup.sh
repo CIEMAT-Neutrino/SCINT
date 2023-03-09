@@ -4,16 +4,22 @@
 
 #create data directory if not present
 if [ ! -d "../data" ]; then
-mkdir -p ../data/Feb22_2/raw
-mkdir -p ../data/Feb22_2/npy
+mkdir -p ../data/MergeDebug/raw
+mkdir -p ../data/MergeDebug/npy
 fi
 
 if [ ! -d "../fit_data" ]; then
 mkdir ../fit_data
 fi
 
+### COMMON VIRTUAL ENVIROMENT TO RUN THE MACROS ###
+# source /pnfs/ciemat.es/data/neutrinos/venv_python3.7/bin/activate 
+
+pip install --upgrade pip
 pip3 install    -r requirements.txt
-sudo apt install <requirementsTeX.txt
+#sudo apt install <requirementsTeX.txt
+
+#deactivate 
 
 echo SUCCESS!
 

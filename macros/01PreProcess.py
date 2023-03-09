@@ -32,4 +32,6 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     compute_pedestal_variables(my_runs,key="RawADC",label="Raw")
     print_keys(my_runs)
     delete_keys(my_runs,["RawADC"]) # Delete previous peak and pedestal variables
-    save_proccesed_variables(my_runs,"ALL",info=info, force=True)
+    save_proccesed_variables(my_runs,"ALL",info=info, force=False)
+    del my_runs
+    gc.collect()
