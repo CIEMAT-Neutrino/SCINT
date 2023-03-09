@@ -83,7 +83,7 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label=""
                 bin_max_peak = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
                 bin_max_peak = bin_max_peak + bin_ref_peak - buffer
                 for ii in range(len(aux_ADC)):
-                    aux_ADC[ii] = np.roll(aux_ADC[ii], bin_max_peak[ii] - bin_ref_peak)
+                    aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii])
                 my_runs[run][ch]["AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]
 
             # centering thld
@@ -95,8 +95,8 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label=""
                 bin_max_thld = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
                 bin_max_peak = bin_max_thld + bin_ref_thld - buffer
                 for ii in range(len(aux_ADC)):
-                    aux_ADC[ii] = np.roll(aux_ADC[ii], bin_max_thld[ii] - bin_ref_thld)
-                my_runs[run][ch]["AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]
+                    aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])
+                my_runs[run][ch]["AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]
 
         except KeyError:
             print("Empty dictionary. No average to compute.")
@@ -153,6 +153,8 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                 cut_label = ""
             if check_key(my_runs[run][ch], "UnitsDict") == False:
                 get_units(my_runs)
+            if check_key(my_runs[run][ch], "ChargeRangeDict") == False:
+                my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
                 
             print("\n--- Integrating RUN%i CH%i ---"%(run,ch))
             if key == "":
@@ -162,7 +164,6 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                         label = key.replace("ADC","")
 
             ave = my_runs[run][ch][ref] # Load the reference average waveform
-            my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             for i in range(len(ave)):
                 if typ == "ChargeAveRange":
                     i_idx,f_idx = find_baseline_cuts(ave[i])
@@ -170,6 +171,8 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                     my_runs[run][ch][typ+cut_label] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
                     if key == "GaussADC" or key == "WienerADC":
                         my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+                    new_key = {typ+cut_label: [t0,tf]}
+                    my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
                 if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
                     confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?")
