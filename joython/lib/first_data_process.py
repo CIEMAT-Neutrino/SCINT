@@ -57,10 +57,17 @@ def save_Run_Bin2Np(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",o
         ADC_outchan = out_path+"run"+str(Run).zfill(2)+"/"+out_name+"_ch"+str(ch)  
         Timestamp_outchan = out_path+"run"+str(Run).zfill(2)+"/"+"Timestamp"+"_ch"+str(ch)  
 
-        print("-----------------")
-        print("Dumping: ",inchan," to: ",ADC_outchan+".np*",Timestamp_outchan+".np*")
-        print("-----------------")
-        save_Bin2Np(inchan,ADC_outchan,compressed=Compressed,file_timestamp=Timestamp_outchan)
+        check_file_C = os.path.isfile(ADC_outchan+".npz")#compresed flag
+        check_file_U = os.path.isfile(ADC_outchan+".npy")#uncompresed
+        if check_file_C or check_file_U: 
+            print("-----------------")
+            print("Already dumped: ",inchan," to: ",ADC_outchan+".np*",Timestamp_outchan+".np*")
+            print("-----------------")
+        else:
+            print("-----------------")
+            print("Dumping: ",inchan," to: ",ADC_outchan+".np*",Timestamp_outchan+".np*")
+            print("-----------------")
+            save_Bin2Np(inchan,ADC_outchan,compressed=Compressed,file_timestamp=Timestamp_outchan)
 
 def Bin2Np_excel(excel_file_path="",sheet='Sheet1',compressed=True,i_path="",o_path=""):
     """Calls the dumping function using a excel table with the data runs of our"""
