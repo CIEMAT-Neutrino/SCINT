@@ -1,16 +1,18 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib.io_functions  import open_run_var,open_run_properties,do_run_things,save_run_var
+from lib.io_functions  import open_run_var,open_runs_table,open_run_properties,do_run_things,save_run_var
 from lib.ped_functions import compute_Pedestal,substract_Pedestal, compute_Peak
 # from lib.header import print_header
 
 
-# path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
-# Runs=open_runs_table("../macros/APSAIA_VIS.xlsx")
+path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
+Runs=open_runs_table("../macros/APSAIA_VIS.xlsx")
+Runs=Runs[Runs["Run"]==26]
 
-path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
-Runs=open_runs_table("../macros/APSAIA_VUV.xlsx")
+
+# path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
+# Runs=open_runs_table("../macros/APSAIA_VUV.xlsx")
 
 for run in Runs["Run"].array:
 

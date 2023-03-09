@@ -4,11 +4,12 @@ from lib import *
 
 
 
-# path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
-# Runs=open_runs_table("../macros/APSAIA_VIS.xlsx")
+path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
+Runs=open_runs_table("../macros/APSAIA_VIS.xlsx")
 
-path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
-Runs=open_runs_table("../macros/APSAIA_VUV.xlsx")
+# path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
+# Runs=open_runs_table("../macros/APSAIA_VUV.xlsx")
+# Runs=Runs[Runs["Run"]==39]
 
 for run in Runs["Run"].array:
     if run==3:continue # Rodrigo forgot one run :D
