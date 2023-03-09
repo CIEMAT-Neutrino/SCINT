@@ -12,8 +12,9 @@ from scipy.optimize import curve_fit
 from scipy.special  import erf
 from itertools      import product
 
-from .io_functions  import *
-from .wvf_functions import *
-from .cut_functions import *
-from .dec_functions import *
-from .ped_functions import *
+from .io_functions     import *
+from .wvf_functions    import *
+from .cut_functions    import *
+from .dec_functions    import *
+from .ped_functions    import *
+from .charge_functions import *
