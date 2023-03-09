@@ -1,7 +1,7 @@
 import numpy as np
 from lib.wvf_functions import shift_ADCs
 
-def compute_ChargeRange(ADC,low=500,high=4000):
+def compute_ChargeRange(ADC,low=250,high=4000):
     
     #Fixed size in window
     charge_vars=dict();
@@ -13,7 +13,7 @@ def compute_ChargeRange(ADC,low=500,high=4000):
     shifted=shift_ADCs(ADC,shift=centering_bin-peak_time)
 
     #Fixed size wrt the peak
-    charge_vars["ChargePeakRange"]   = np.sum (shifted[:,centering_bin-500:high],axis=1)
+    charge_vars["ChargePeakRange"]   = np.sum (shifted[:,centering_bin-250:high],axis=1)
 
     return charge_vars;
 
