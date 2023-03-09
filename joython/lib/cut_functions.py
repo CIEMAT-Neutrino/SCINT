@@ -44,8 +44,10 @@ def Apply_cut_to_VAR(df:pd.DataFrame,VAR:dict)->dict:
         for channel in VAR:
             for var in VAR[channel]: 
                 aux_VAR[channel][var]=VAR[channel][var][cut_as_dict[channel]]
+            print("Cut in ch",channel,":",VAR[channel][var].shape, aux_VAR[channel][var].shape)
         return aux_VAR;
     else:#single dictionary, one key per channel
         for channel in VAR:
             aux_VAR[channel]=VAR[channel][cut_as_dict[channel]]
+        print("Cut in ch",channel,":",VAR[channel].shape, aux_VAR[channel].shape)
         return aux_VAR;

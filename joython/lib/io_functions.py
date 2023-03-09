@@ -26,7 +26,7 @@ def open_run_var(run_path,var_name,channels,compressed=True):
 
     return run_var;
 
-def open_run_properties(run,excel_file_path="",sheet='Sheet1'):
+def open_runs_table(excel_file_path="",sheet='Sheet1'):
     """Creates a dictionary with run properties out of an exel table
 
     Args:
@@ -41,11 +41,14 @@ def open_run_properties(run,excel_file_path="",sheet='Sheet1'):
     df['Channels']    = df['Channels']   .apply(lambda x: list(map(int,x.split(" ")))) #excell only allows one value per cell, convert channels from string to array of ints
     df['Polarity']    = df['Polarity']   .apply(lambda x: list(map(int,x.split(" "))))
     df['ChannelName'] = df['ChannelName'].apply(lambda x: x.split(" "))
+    df["Polarity"]=df.apply(lambda x: dict(zip(x["Channels"],x["Polarity"])),axis=1)
+
+    return df
+
+def open_run_properties(run,excel_file_path="",sheet='Sheet1'):
     
+    df=open_runs_table(excel_file_path,sheet)
     props=df.loc[df['Run'] == run].to_dict(orient='records')[0]
-    
-    props['Polarity'] = dict(zip(props['Channels'],props['Polarity'])) #map polarity with channels
-    
     return props
 
 def save_run_var(run_var,run_path,var_name,compressed=True):
