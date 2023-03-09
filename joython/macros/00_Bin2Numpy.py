@@ -4,8 +4,13 @@ sys.path.insert(0, '../')
 import pandas as pd
 from lib.first_data_process import Bin2Np_excel
 
-# in_path ="/media/rodrigoa/2Gb/data/SBND_XA_PDE/SBND_XA_VIS/raw/"
-in_path ="/media/rodrigoa/DiscoDuro/SBND_XA_VIS/"
-out_path="/media/rodrigoa/DiscoDuro/SBND_XA_VIS/joython/"
 
-Bin2Np_excel("Runs_list.xlsx",compressed=False,i_path=in_path,o_path=out_path)
+# ## First Week: Apsaia VIS
+# in_path ="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/"
+# out_path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
+
+## Second Week: Apsaia VUV
+in_path ="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/"
+out_path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
+
+Bin2Np_excel("APSAIA_VUV.xlsx",compressed=False,i_path=in_path,o_path=out_path)
