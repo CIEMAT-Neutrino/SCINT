@@ -1,14 +1,39 @@
-import os
+import os, gc
 import matplotlib.pyplot as plt
 import numpy as np
 import uproot
 import copy
 import stat
 from itertools import product
+import gc
 
 #===========================================================================#
 #************************** INPUT FILE *************************************#
 #===========================================================================#
+def list_to_string(input_list):
+    string = str(input_list).replace("[","") 
+    string = string.replace("]","") 
+    string = string.replace("'","") 
+    string = string.replace(" ","") 
+    return string 
+
+def generate_input_file(input_file,info,path="../input/",label="",debug=False):
+    file = open(path+label+str(input_file)+".txt", 'w+')
+    for branch in info:
+        if branch == "LOAD_PRESET":
+            if label == "Gauss" or label == "Wiener":
+                info[branch][3] = "DEC"
+                file.write(branch+": "+list_to_string(info[branch])+"\n")
+        elif branch == "REF":
+            if label == "Gauss" or label == "Wiener":
+                info[branch][0] = label+"AveWvf"
+                file.write(branch+": "+list_to_string(info[branch])+"\n")
+        elif branch == "LIGHT_RUNS" or branch == "CALIB_RUNS" or branch == "MUON_RUNS":    
+            if label == "Gauss" or label == "Wiener":
+                info[branch] = []
+                file.write(branch+": "+list_to_string(info[branch])+"\n")
+        else:
+            file.write(branch+": "+list_to_string(info[branch])+"\n")
 
 def read_input_file(input, path = "../input/", debug = False):
     """
@@ -21,7 +46,7 @@ def read_input_file(input, path = "../input/", debug = False):
     info = dict()
     NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    STRINGS = ["DAQ","MODEL","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","TYPE","REF"]
+    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF"]
     # Strips the newline character
     for line in lines:
         for LABEL in DOUBLES:
@@ -111,8 +136,8 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
     \n Size increases x2 times. 
     """
 
-    in_path  = "../data/"+info["MONTH"][0]+"/raw/"
-    out_path = "../data/"+info["MONTH"][0]+"/npy/"
+    in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
+    out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     for run, ch in product (runs.astype(int),channels.astype(int)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
@@ -156,11 +181,11 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
     Input are binary input file path and npy outputfile as strings. 
     \n Depends numpy. 
     """
-
-    in_path  = "../data/"+info["MONTH"][0]+"/raw/"
-    out_path = "../data/"+info["MONTH"][0]+"/npy/"
-
+    in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
+    out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
+    os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(int),channels.astype(int)):
+        print(".......Reading RUN%i CH%i......."%(run, ch))
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
@@ -172,68 +197,76 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
             os.chmod(out_path+out_folder, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
         except FileExistsError: print("DATA STRUCTURE ALREADY EXISTS") 
-
-        headers    = np.fromfile(in_path+in_file, dtype='I') #read first event header
-        header     = headers[:6] #read first event header
-        
-        NSamples   = int(header[0]/2-header_lines*2)
-        Event_size = header_lines*2+NSamples
-        data       = np.fromfile(in_path+in_file, dtype='H')
-        N_Events   = int( data.shape[0]/Event_size )
-
-        #reshape everything, delete unused header
-        ADC        = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
-        headers    = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
-        
-        TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
+        try:
+            headers    = np.fromfile(in_path+in_file, dtype='I') #read first event header
+            header     = headers[:6] #read first event header
             
-        branches   = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]
-        content    = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
-        files      = os.listdir(out_path+out_folder)
+            NSamples   = int(header[0]/2-header_lines*2)
+            Event_size = header_lines*2+NSamples
+            data       = np.fromfile(in_path+in_file, dtype='H')
+            N_Events   = int( data.shape[0]/Event_size )
 
-        if debug:
-            print("#####################################################################")
-            print("Header:",header)
-            print("Waveform Samples:",NSamples)
-            print("Event_size(wvf+header):",Event_size)
-            print("N_Events:",N_Events)
-            print("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" )
-            print("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" )
-            print("#####################################################################\n")
-
-        for i, branch in enumerate(branches):
-            try:
-                if branch+".npz" in files and force == True:
-                    print("File (%s.npz) alredy exists. OVERWRITTEN"%branch)
-                    os.remove(out_path+out_folder+branch+".npz") 
-                    np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
-                    os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
-                    if not compressed:
-                        os.remove(out_path+out_folder+branch+".npy") 
-                        np.save(out_path+out_folder+branch+".npy", content[i])
-                        os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                        
-                elif branch+".npz" in files and force == False:
-                    print("File (%s.npz) alredy exists."%branch)
-                    continue
-
-                else:
-                    np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
-                    os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
-                    if not compressed:
-                        np.save(out_path+out_folder+branch+".npy", content[i])
-                        os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
-                if debug:
-                    print(branch)
-                    print("Saved data in:" , out_path+out_folder+branch+".npx")
-                    print("----------------------\n")
+            #reshape everything, delete unused header
+            ADC        = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
+            headers    = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
+            
+            TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
                 
-            except FileNotFoundError:
-                print("--- File %s was not foud!!! \n"%in_file)
-        
+            branches   = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]
+            content    = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])]
+            files      = os.listdir(out_path+out_folder)
+
+            if debug:
+                print("#####################################################################")
+                print("Header:",header)
+                print("Waveform Samples:",NSamples)
+                print("Event_size(wvf+header):",Event_size)
+                print("N_Events:",N_Events)
+                print("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" )
+                print("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" )
+                print("#####################################################################\n")
+
+            for i, branch in enumerate(branches):
+                try:
+                    if (branch+".npz" in files or branch+".npy" in files) and force == True:
+                        print("File (%s.npx) already exists. OVERWRITTEN"%branch)
+                        if compressed:
+                            try:    
+                                os.remove(out_path+out_folder+branch+".npz")
+                            except FileNotFoundError: print(".npy was found but not .npz")
+                            np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
+                            os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
+                        else:
+                            try:
+                                os.remove(out_path+out_folder+branch+".npy") 
+                            except FileNotFoundError: print(".npz was found but not .npy")
+                            np.save(out_path+out_folder+branch+".npy", content[i])
+                            os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                            
+                    elif branch+".npz" in files and force == False:
+                        print("File (%s.npz) alredy exists."%branch)
+                        continue
+
+                    else:
+                        np.savez_compressed(out_path+out_folder+branch+".npz", content[i])
+                        os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
+                        if not compressed:
+                            np.save(out_path+out_folder+branch+".npy", content[i])
+                            os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
+                    if debug:
+                        print(branch)
+                        print("Saved data in:" , out_path+out_folder+branch+".npx")
+                        print("----------------------\n")
+                    gc.collect()
+
+                except FileNotFoundError:
+                    print("--- File %s was not foud!!! \n"%in_file)
+        except FileNotFoundError:
+            print("--- File %s was not foud!!! \n"%(in_path+in_file))
+
 
 #===========================================================================#
 #***************************** KEYS ****************************************#
@@ -298,12 +331,14 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     if preset == "ALL":
         branch_list = dict_option[option]
+        if "UnitsDict" in branch_list: branch_list.remove("UnitsDict")
+        if "MyCuts" in branch_list: branch_list.remove("MyCuts")
 
     elif preset == "ANA":
         branch_list = dict_option[option]
         aux = []
         for key in branch_list:
-            if not "Raw" in key: aux.append(key)
+            if not "Raw" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "RAW":
@@ -313,18 +348,33 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Raw" in key: aux.append(key)
         branch_list = aux
 
-    elif preset == "CHARGE":
+    elif preset == "INT":
         branch_list = dict_option[option]
         aux = ["NBinsWvf", "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
             if "Charge" in key: aux.append(key)
+            if "Ave" in key: aux.append(key)
         branch_list = aux
 
-    elif preset == "CUTS":
+    elif preset == "EVA":
         branch_list = dict_option[option]
-        aux = ["NBinsWvf", "Sampling", "Label"]
+        aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label"]
         for key in branch_list:
-            if not "ADC" in key: aux.append(key)
+            if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
+        branch_list = aux
+
+    elif preset == "DEC":
+        branch_list = dict_option[option]
+        aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label", "SER"]
+        for key in branch_list:
+            if "Gauss" in key or "Wiener" in key or "Dec" in key or "Charge" in key: aux.append(key)
+        branch_list = aux
+
+    elif preset == "CAL":
+        branch_list = dict_option[option]
+        aux = ["ADC","PedLim","Label","Sampling"]
+        for key in branch_list:
+            if "Charge" in key: aux.append(key)
         branch_list = aux
 
     if debug: print("\nPreset branch_list:", branch_list)
@@ -341,7 +391,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
     \n Presets can be used to only load a subset of desired branches. ALL is default.
     """
 
-    path = "../data/"+info["MONTH"][0]+"/npy/"
+    path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
 
     my_runs = dict()
     my_runs["NRun"]     = runs
@@ -352,15 +402,15 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
         for ch in channels:
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
-            if not branch_list:
+            if preset!="":
                 branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug)
 
             for branch in branch_list:   
                 try:
-                    if "Dict" in branch:
-                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()    
-                    else:
-                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
+                    # if "Dict" in branch: #BORRAR A NO SER QUE ALGUNA VEZ QUERAMOS CARGAR ALGUN DICCIONARIO
+                    #     my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()   
+                    # else:
+                    my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
                     if not compressed:
                         my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
 
@@ -368,6 +418,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
                     if debug: print("-----------------------------------------------")
                 except FileNotFoundError: print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
             print("-> DONE!\n")
+            del branch_list
     return my_runs
 
 def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, force=False, debug = False, compressed=True):
@@ -376,7 +427,8 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
     """
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-    path = "../data/"+info["MONTH"][0]+"/npy/"
+    path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
+    # opath = info["OPATH"][0]+info["MONTH"][0]+"/npy/"
 
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
@@ -393,12 +445,17 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                     print("File (%s.npz) alredy exists"%key)
                     continue
                 
-                elif key+".npz" in files and force == True:
-                    print("File (%s.npz) OVERWRITTEN "%key)
-                    os.remove(path+out_folder+key+".npz")
-                    np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
-                    os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
+                elif (key+".npz" in files or key+".npy" in files) and force == True:
+                    if compressed:
+                        print("File (%s.npz) OVERWRITTEN "%key)
+                        os.remove(path+out_folder+key+".npz")
+                        np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
+                        os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                    else:
+                        print("File (%s.npy) OVERWRITTEN "%key)
+                        os.remove(path+out_folder+key+".npy")
+                        np.save(path+out_folder+key+".npy",aux[run][ch][key])
+                        os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 else:
                     print("Saving NEW file: %s.npz"%key)
                     print(path+out_folder+key+".npz")
@@ -406,6 +463,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
                     if not compressed:
+                        print("Saving NEW file: %s.npy"%key)
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     del my_runs

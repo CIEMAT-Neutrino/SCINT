@@ -5,11 +5,11 @@ import numpy as np
 import keyboard
 import math
 from itertools import product
+from scipy.ndimage.interpolation import shift
 
 from .io_functions import load_npy,check_key, print_keys
 from .ana_functions import generate_cut_array, get_units
 from .fit_functions import gaussian, scint_fit, fit_wvfs, gaussian_fit
-from scipy.ndimage.filters import gaussian_filter1d
 
 import scipy
 from scipy.signal import find_peaks
@@ -19,7 +19,7 @@ from .fig_config import (
     figure_features,
 )
 
-def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
+def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = False):
     """
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -76,9 +76,6 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
             min = []
             raw = []
             norm_raw = [1]*nch # Generates a list with the norm correction for std bar
-            xgauss = np.linspace(-1,1,5000)
-            sigma = 2e-3
-            ygauss = gaussian(xgauss, center = 0, height = 1/(sigma*np.sqrt(2*math.pi)), width = sigma)
             for j in range(nch):
                 if (key == "RawADC"):
                     min.append(np.argmin(my_run[run][ch_list[j]][key][idx]))
@@ -86,14 +83,32 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     ped = np.mean(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = "Raw"
+                    if debug: print("Using '%s' label"%label)
 
-                if(key == "ADC"):
+                elif(key == "ADC"):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = 0
                     std = my_run[run][ch_list[j]]["PedSTD"][idx]
                     label = ""
-                    
+                    if debug: print("Using '%s' label"%label)
+
+                elif("ADC" in str(key)):
+                    min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
+                    raw.append(my_run[run][ch_list[j]][key][idx])
+                    ped = 0
+                    std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
+                    label = key.replace("ADC","")
+                    if debug: print("Using '%s' label"%label)
+
+                elif("Ave" in str(key)):
+                    min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
+                    raw.append(my_run[run][ch_list[j]][key][idx])
+                    ped = 0
+                    std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
+                    label = key.replace("Ave","")
+                    if debug: print("Using '%s' label"%label)
+
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
                     norm_raw[j] = (np.max(raw[j]))
                     raw[j] = raw[j]/np.max(raw[j])
@@ -108,7 +123,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                         axs[j].semilogy()
                         std = 0 # It is ugly if we see this line in log plots
                     # fig.tight_layout(h_pad=2) # If we want more space betweeb subplots. We avoid small vertical space between plots            
-                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2, zorder = -1)
+                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
                     axs[j].grid(True, alpha = 0.7)
                     try:
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
@@ -125,8 +140,12 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                             ave = my_run[run][ch_list[j]][ave_key][0]
                             if OPT["NORM"] == True and OPT["NORM"] == True:
                                 ave = ave/np.max(ave)
-                            axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                        except:
+                            if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
+                                ref_max_idx = np.argmax(raw[j])
+                                idx_move = np.argmax(ave)
+                                ave = shift(ave, ref_max_idx-idx_move, cval = 0)
+                            axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key, drawstyle = "steps")             
+                        except KeyError:
                             print("Run has not been averaged!")
 
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
@@ -134,38 +153,14 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
 
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
-                        thresh = my_run[run][ch_list[j]]["PedMax"][idx]/norm_raw[j]+(ped+std)/norm_raw[j]
-                        wdth = 5
-                        prom = 20
-                        dist  = 10
-                        # axs[j].axhline(thresh,c="r", alpha=.6, ls = "dotted")
-
-                        filt_data = np.convolve(raw[j], ygauss/np.sum(ygauss), mode = "same")
-                        norm_factor = np.max(raw[j]) / np.max(filt_data)
-                        filt_data = filt_data * norm_factor
-
-                        # filt_data = gaussian_filter1d(raw[j], sigma=10)
-                        # axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])), filt_data, color = "orange")
-                        axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])), filt_data, color = "orange", alpha = 0.8)
-                        pedidx = my_run[run][ch_list[j]][label+"PedLim"]
-                        threshold = np.max(filt_data[:pedidx]) + np.std(filt_data[:pedidx]*2)
-                        print(threshold)
-                        axs[j].axhline(threshold,c="r", alpha=.6, ls = "dotted")
-                        # if np.max(filt_data) < threshold:
-                            # prom = np.abs(np.max(filt_data[:pedidx])) + abs(np.min(filt_data[:pedidx]))
-                        # else:
-                            # prom = np.abs(np.max(filt_data))/2
-                        # print("PROMINENCE!: ", prom)
-                        # peak_idx, properties = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
-                        peak_idx, properties = find_peaks(filt_data, height=threshold, width = 15)
-                        axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*peak_idx,filt_data[peak_idx],c="red", alpha = 1)
+                        thresh = my_run[run][ch_list[j]]["PedMax"][idx]
+                        wdth = 4
+                        prom = 0.01
+                        dist  = 40
+                        axs[j].axhline(thresh,c="k", alpha=.6, ls = "dotted")
+                        peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
                         for p in peak_idx:
-                            # axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
-                            plt.hlines(y=properties["width_heights"], xmin=properties["left_ips"]*my_run[run][ch_list[j]]["Sampling"], 
-                                       xmax=properties["right_ips"]*my_run[run][ch_list[j]]["Sampling"], color = "C1")
-                        plt.vlines(x=my_run[run][ch_list[j]]["Sampling"]*peak_idx, ymin=raw[j][peak_idx], 
-                                   ymax = raw[j][peak_idx] + properties["prominences"], color = "C1")
-                        print(properties)
+                            axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
 
                     try:
                         if my_run[run][ch_list[j]]["MyCuts"][idx] == False:
@@ -194,9 +189,12 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                             ave = my_run[run][ch_list[j]][ave_key][0]
                             if OPT["NORM"] == True and OPT["NORM"] == True:
                                 ave = ave/np.max(ave)
+                            if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
+                                ref_max_idx, = np.where(ave == np.max(ave))
+                                idx, = np.where(ave == np.max(ave))
+                                ave = shift(ave, ref_max_idx-idx, cval = 0)
                             axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                        except:
-                            print("Run has not been averaged!")
+                        except KeyError: print("Run has not been averaged!")
 
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
                         axs.legend()
@@ -205,10 +203,11 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                         # These parameters must be modified according to the run...
                         thresh = my_run[run][ch_list[j]]["PedMax"][idx]
                         wdth = 4
-                        prom = 0.1
+                        prom = 0.01
                         dist = 40
-                        axs.axhline(thresh,c="r", alpha=.6, ls = "dotted")
-                        peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
+                        axs.axhline(thresh,c="salmon", alpha=.6, ls = "dotted")
+                        # peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
+                        peak_idx, _ = find_peaks(raw[j], height = thresh)
                         for p in peak_idx:
                             axs.scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
 
@@ -291,7 +290,7 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         a_list = ch_list 
         b_list = r_list 
 
-    for a, key in product(a_list, keys):
+    for a in a_list:
         if compare == "CHANNELS": run = a
         if compare == "RUNS":      ch = a
 
@@ -302,30 +301,48 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         fig.supxlabel(r'Time [s]')
         fig.supylabel("ADC Counts")
         norm_raw = [1]*nch # Generates a list with the norm correction for std bar
-
+        counter = 0
+        ref_max_idx = -1
         for b in b_list:
             if compare == "CHANNELS": ch = b; label = "Channel {} ({})".format(ch,my_run[run][ch]["Label"]); title = "Average Waveform - Run {}".format(run)
             if compare == "RUNS":    run = b; label = "Run {}".format(run); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"])
-
-            ave = my_run[run][ch][key][0]
+            print("RUN: ", run)
+            print("CHANNEL: ", ch)
+            if len(keys) == 1:
+                ave = my_run[run][ch][keys[counter]][0]
+            elif len(keys) > 1:
+                print("Counter", counter)
+                print("KEYS", keys[counter])
+                ave = my_run[run][ch][keys[counter]][0]
+                counter = counter + 1
             norm_ave = np.max(ave)
             sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
             thrld = 1e-6
-            if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
-                fig.supxlabel(r'Time [$\mu$s]')
-                my_run[run][ch]["Sampling"] = my_run[run][ch]["Sampling"]*1e6
-            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-                axs.semilogy()
-            if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
-                fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[key])
             if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
                 ave = ave/norm_ave
-                axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label+" (Raw)")
-                axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
-                axs.set_ylim(thrld, ave[np.argmax(ave)]*2)
+            if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
+                fig.supxlabel(r'Time [$\mu$s]')
+                sampling = my_run[run][ch]["Sampling"]*1e6
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
+                axs.semilogy()
+            if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
+                align_threshold = np.max(ave)*2/3
+                if ref_max_idx == -1:
+                    ref_max_idx, = np.where(ave == np.max(ave))
+                    # ref_max_idx, = np.where(np.isclose(ave, align_threshold, rtol = 0.05))
+                    # ref_max_idx = ref_max_idx[0]
+                    # print(ref_max_idx)
+                # idx = np.argwhere(ave == align_threshold)
+                # idx, = np.where(np.isclose(ave, align_threshold, rtol = 0.05))
+                # idx = idx[0]
+                idx, = np.where(ave == np.max(ave))
+                ave = shift(ave, ref_max_idx-idx, cval = 0)
 
-            axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(ave)),ave*norm_ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label+" (Raw)")
-            axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit*norm_ave, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
+            if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
+                fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[keys[counter]])
+                axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit*norm_ave, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
+
+            axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "))
 
         axs.grid(True, alpha = 0.7)
         axs.set_title(title,size = 14)
@@ -344,7 +361,6 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         if ch == len(ch_list): break
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
-        
         plt.close()   
 
 def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}):
@@ -381,14 +397,14 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
         binning = int(max_amp)+1
     elif key == "PeakTime":
         data = my_run[run][ch]["Sampling"]*aux_data
-        binning = int(my_run[run][ch]["NBinsWvf"]/2)
+        binning = int(my_run[run][ch]["NBinsWvf"]/10)
     else:
         data = aux_data
         ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
         ypad = 0.2*(yptop - ypbot)
         ymin = ypbot - ypad; ymax = yptop + ypad
         data = [i for i in data if ymin<i<ymax]
-        binning = 600 # FIXED VALUE UNTIL BETTER SOLUTION
+        binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
 
     fig, ax = plt.subplots(1,1, figsize = (8,6))
     add_grid(ax)
@@ -397,8 +413,10 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     all_bins.append(bins)
     all_bars.append(bars)
     fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
-    # fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
+    fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
     
+    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
+        ax.semilogy()
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
         plt.show()
         while not plt.waitforbuttonpress(-1): pass
@@ -436,13 +454,14 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
     fig, ax = plt.subplots(1,1, figsize = (8,6))
     if "Time" in keys[0]:
         ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
-    else: ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+    else: 
+        ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
     ax.grid("both")
     fig.supxlabel(keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
     fig.suptitle("Run_{} Ch_{} - {} vs {} histogram".format(run,ch,keys[0],keys[1]))
     if select_range:
-        x1 = int(input("xmin: ")); x2 = int(input("xmax: "))
-        y1 = int(input("ymin: ")); y2 = int(input("ymax: "))
+        x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
+        y1 = float(input("ymin: ")); y2 = float(input("ymax: "))
         ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
         ax.grid("both")
         fig.supxlabel(keys[0]); fig.supylabel(keys[1])
