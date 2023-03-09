@@ -28,6 +28,10 @@ def generate_cut_array(my_runs,debug=False):
             # if key.find("ADC") == 0:
             if "ADC" in key:
                 ADC_key = key
+            elif "Charge" in key:
+                ADC_key = key
+            elif "Peak" in key:
+                ADC_key = key
         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
         if debug: print("Keys in my_run after generating cut array: ",my_runs[run][ch].keys())
 

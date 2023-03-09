@@ -402,7 +402,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
         for ch in channels:
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
-            if not branch_list:
+            if preset!="":
                 branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug)
 
             for branch in branch_list:   
@@ -418,6 +418,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
                     if debug: print("-----------------------------------------------")
                 except FileNotFoundError: print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
             print("-> DONE!\n")
+            del branch_list
     return my_runs
 
 def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, force=False, debug = False, compressed=True):

@@ -121,7 +121,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
         print("Taking peak at: ", x[best_peak_idx])
 
     # try:
-    popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],sigma])
+    popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],sigma],maxfev=5000)
     perr = np.sqrt(np.diag(pcov))
     # except:
     #     print("WARNING: Peak could not be fitted")
