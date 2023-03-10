@@ -40,10 +40,10 @@ def save_Bin2Np(file_in,file_out,compressed=True,file_timestamp="Timestamp"):
     """Self-explainatory. Computation time x10 slower than un-compresed, size x3 times smaller"""
     data_npy, timestamp = Bin2Np_ADC(file_in)
     if compressed:
-        # np.savez_compressed(file_out,data_npy)
+        np.savez_compressed(file_out,data_npy)
         np.savez_compressed(file_timestamp,timestamp)
     else:         
-        # np.save(file_out,data_npy)
+        np.save(file_out,data_npy)
         np.save(file_timestamp,timestamp)
     
     del data_npy,timestamp #free memory
@@ -59,7 +59,7 @@ def save_Run_Bin2Np(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",o
 
         check_file_C = os.path.isfile(ADC_outchan+".npz")#compresed flag
         check_file_U = os.path.isfile(ADC_outchan+".npy")#uncompresed
-        if not (check_file_C or check_file_U): 
+        if check_file_C or check_file_U: 
             print("-----------------")
             print("Already dumped: ",inchan," to: ",ADC_outchan+".np*",Timestamp_outchan+".np*")
             print("-----------------")
