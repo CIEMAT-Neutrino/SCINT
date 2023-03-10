@@ -6,7 +6,6 @@
 *data*/
 scratch/
 larsoft/
-/macros/*.py
 # Ignore everything from input files
 input/*.txt
 # But not the template one
