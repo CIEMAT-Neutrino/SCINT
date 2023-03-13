@@ -387,34 +387,40 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
         generate_cut_array(my_run)
     if check_key(my_run[run][ch], "UnitsDict") == False:
         get_units(my_run)
-    aux_data = my_run[run][ch][key][my_run[run][ch]["MyCuts"] == True]
 
     plt.ion()
     data = []
-    if key == "PeakAmp":
-        data = aux_data
-        max_amp = np.max(data)
-        binning = int(max_amp)+1
-    elif key == "PeakTime":
-        data = my_run[run][ch]["Sampling"]*aux_data
-        binning = int(my_run[run][ch]["NBinsWvf"]/10)
-    else:
-        data = aux_data
-        ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
-        ypad = 0.2*(yptop - ypbot)
-        ymin = ypbot - ypad; ymax = yptop + ypad
-        data = [i for i in data if ymin<i<ymax]
-        binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
-
     fig, ax = plt.subplots(1,1, figsize = (8,6))
     add_grid(ax)
-    counts, bins, bars = ax.hist(data,binning) # , zorder = 2 f
-    all_counts.append(counts)
-    all_bins.append(bins)
-    all_bars.append(bars)
-    fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
-    fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
+    for k in key:
+        aux_data = my_run[run][ch][k][my_run[run][ch]["MyCuts"] == True]
+        if k == "PeakAmp":
+            data = aux_data
+            max_amp = np.max(data)
+            binning = int(max_amp)+1
+        elif k == "PeakTime":
+            data = my_run[run][ch]["Sampling"]*aux_data
+            binning = int(my_run[run][ch]["NBinsWvf"]/10)
+        else:
+            data = aux_data
+            ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
+            ypad = 0.2*(yptop - ypbot)
+            ymin = ypbot - ypad; ymax = yptop + ypad
+            data = [i for i in data if ymin<i<ymax]
+            binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
+
+        counts, bins, bars = ax.hist(data,binning, label=k, histtype="step") # , zorder = 2 f
+        all_counts.append(counts)
+        all_bins.append(bins)
+        all_bars.append(bars)
+        if len(key) > 1:
+            fig.supxlabel(my_run[run][ch]["UnitsDict"][k]); fig.supylabel("Counts")
+        else:
+            fig.supxlabel(k+" ("+my_run[run][ch]["UnitsDict"][k]+")"); fig.supylabel("Counts")
+            fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
     
+    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
+        ax.legend()
     if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
         ax.semilogy()
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
