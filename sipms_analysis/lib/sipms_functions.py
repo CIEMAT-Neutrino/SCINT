@@ -126,27 +126,48 @@ def sanity_check(df_values,values):
 ########################### VISUALIZATION #########################
 ###################################################################
 
-def plotitos(title, xlabel, ylabel, df, df_mean, columns, colors, decimales=2):
+def plotitos(title, xlabel, ylabel, df, df_mean, columns, colors, bars =[], decimales=2):
     '''
     Histogram given two df one with the values to plot an the other with the Mean and STD to be shown with vertical lines.
     You can give as input variables the title, x/ylabels, the color and the decimals to round the mean/std.
     '''
-    fig, ax = plt.subplots(1,1, figsize = (12,10), sharey=True)
-
     left, width = .25, .23
     bottom, height = .25, .6
     right = left + width
     top = bottom + height
     decimales = decimales
+    # if bars == []:
+    
+    if bars == []: 
+        fig, ax = plt.subplots(1,1, figsize = (12,10), sharey=True)
+        fig.tight_layout()
+        
+        ax.hist(df[columns], color = colors[0]) #, density=True
+        media_std_1 = str(np.round(df_mean[columns]['Mean'],decimales))+ r"$\pm$" +str(np.round(df_mean[columns]['STD'],decimales))
+        ax.axvline(np.round(df_mean[columns]['Mean'],decimales), color=colors[1])
+        ax.axvline(np.round(df_mean[columns]['Mean'],decimales)-np.round(df_mean[columns]['STD'],decimales), color=colors[2], linestyle='dashed')
+        ax.axvline(np.round(df_mean[columns]['Mean'],decimales)+np.round(df_mean[columns]['STD'],decimales), color=colors[2], linestyle='dashed')
+        ax.text(right, top, 'Mean = ' + media_std_1, horizontalalignment='right', verticalalignment='bottom', transform=ax.transAxes)
 
-    ax.hist(df[columns], color = colors[0]) #, density=True
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    media_std_1 = str(np.round(df_mean[columns]['Mean'],decimales))+ r"$\pm$" +str(np.round(df_mean[columns]['STD'],decimales))
-    ax.axvline(np.round(df_mean[columns]['Mean'],decimales), color=colors[1])
-    ax.axvline(np.round(df_mean[columns]['Mean'],decimales)-np.round(df_mean[columns]['STD'],decimales), color=colors[2], linestyle='dashed')
-    ax.axvline(np.round(df_mean[columns]['Mean'],decimales)+np.round(df_mean[columns]['STD'],decimales), color=colors[2], linestyle='dashed')
-    ax.text(right, top, 'Mean = ' + media_std_1, horizontalalignment='right', verticalalignment='bottom', transform=ax.transAxes)
+    else: 
+        fig, ax = plt.subplots(2,int(len(bars)/2), figsize = (40,15), sharey=True)
+        fig.tight_layout(pad=2.5)
+
+        x = [0] * int(len(bars)/2) + [1] * int(len(bars)/2)
+        y = list(np.arange(int(len(bars)/2))) * 2
+        for i, b in enumerate(bars):
+            mean, std = npy2df(df.loc[b])
+            df_mean = df_display(np.array((mean,std)),labels = list(df.columns),index=["Mean","STD"],name="")
+            media_std_1 = str(np.round(df_mean[columns]['Mean'],decimales))+ r"$\pm$" +str(np.round(df_mean[columns]['STD'],decimales))
+            ax[x[i],y[i]].set_title(b)
+            ax[x[i],y[i]].hist(df.loc[b][columns])
+            ax[x[i],y[i]].axvline(np.round(df_mean[columns]['Mean'],decimales), color=colors[1])
+            ax[x[i],y[i]].axvline(np.round(df_mean[columns]['Mean'],decimales)-np.round(df_mean[columns]['STD'],decimales), color=colors[2], linestyle='dashed')
+            ax[x[i],y[i]].axvline(np.round(df_mean[columns]['Mean'],decimales)+np.round(df_mean[columns]['STD'],decimales), color=colors[2], linestyle='dashed')
+            ax[x[i],y[i]].text(right, top, 'Mean = ' + media_std_1, horizontalalignment='right', verticalalignment='bottom', transform=ax[x[i],y[i]].transAxes)
+    
+    fig.suptitle(title)
+    fig.supxlabel(xlabel)
+    fig.supylabel(ylabel)
 
     plt.show()
