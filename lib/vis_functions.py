@@ -363,7 +363,7 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         except: axs.clear()
         plt.close()   
 
-def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}):
+def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = {"SHOW": True}):
     """
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
@@ -382,51 +382,74 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     all_counts = []
     all_bins = []
     all_bars = []
-
-    if check_key(my_run[run][ch], "MyCuts") == False:
-        generate_cut_array(my_run)
-    if check_key(my_run[run][ch], "UnitsDict") == False:
-        get_units(my_run)
-
-    plt.ion()
+    r_list = my_run["NRun"]
+    ch_list = my_run["NChannel"]
+    if compare == "CHANNELS":
+        a_list = r_list 
+        b_list = ch_list 
+    if compare == "RUNS":
+        a_list = ch_list 
+        b_list = r_list
+    if compare == "NONE":
+        a_list = r_list
+        b_list = ch_list
     data = []
-    fig, ax = plt.subplots(1,1, figsize = (8,6))
-    add_grid(ax)
-    for k in key:
-        aux_data = my_run[run][ch][k][my_run[run][ch]["MyCuts"] == True]
-        if k == "PeakAmp":
-            data = aux_data
-            max_amp = np.max(data)
-            binning = int(max_amp)+1
-        elif k == "PeakTime":
-            data = my_run[run][ch]["Sampling"]*aux_data
-            binning = int(my_run[run][ch]["NBinsWvf"]/10)
-        else:
-            data = aux_data
-            ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
-            ypad = 0.2*(yptop - ypbot)
-            ymin = ypbot - ypad; ymax = yptop + ypad
-            data = [i for i in data if ymin<i<ymax]
-            binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
+    for a in a_list:
+        if compare != "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
-        counts, bins, bars = ax.hist(data,binning, label=k, histtype="step") # , zorder = 2 f
-        all_counts.append(counts)
-        all_bins.append(bins)
-        all_bars.append(bars)
-        if len(key) > 1:
-            fig.supxlabel(my_run[run][ch]["UnitsDict"][k]); fig.supylabel("Counts")
-        else:
-            fig.supxlabel(k+" ("+my_run[run][ch]["UnitsDict"][k]+")"); fig.supylabel("Counts")
-            fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
-    
-    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-        ax.legend()
-    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-        ax.semilogy()
-    if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
-        plt.show()
-        while not plt.waitforbuttonpress(-1): pass
-    plt.close()
+        for b in b_list:
+            if compare == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
+            if compare == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
+            if compare == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
+            if check_key(my_run[run][ch], "MyCuts") == False:
+                generate_cut_array(my_run)
+            if check_key(my_run[run][ch], "UnitsDict") == False:
+                get_units(my_run)
+            
+            if compare == "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
+            for k in key:
+                aux_data = my_run[run][ch][k][my_run[run][ch]["MyCuts"] == True]
+                if k == "PeakAmp":
+                    data = aux_data
+                    max_amp = np.max(data)
+                    binning = int(max_amp)+1
+                elif k == "PeakTime":
+                    data = my_run[run][ch]["Sampling"]*aux_data
+                    binning = int(my_run[run][ch]["NBinsWvf"]/10)
+                else:
+                    data = aux_data
+                    ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
+                    ypad = 0.2*(yptop - ypbot)
+                    ymin = ypbot - ypad; ymax = yptop + ypad
+                    data = [i for i in data if ymin<i<ymax]
+                    binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
+                
+                if len(key) > 1:
+                    fig.supxlabel(my_run[run][ch]["UnitsDict"][k]); fig.supylabel("Counts")
+                    label = label + " - " + k
+                    fig.suptitle(title)
+                else:
+                    fig.supxlabel(k+" ("+my_run[run][ch]["UnitsDict"][k]+")"); fig.supylabel("Counts")
+                    fig.suptitle(title + " - {} histogram".format(k))
+
+                counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
+                label = label.replace(" - " + k,"")
+                all_counts.append(counts)
+                all_bins.append(bins)
+                all_bars.append(bars)
+            
+            if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
+                ax.legend()
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
+                ax.semilogy()
+            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and compare == "NONE":
+                plt.show()
+                while not plt.waitforbuttonpress(-1): pass
+                plt.close()
+        if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and compare != "NONE":
+            plt.show()
+            while not plt.waitforbuttonpress(-1): pass
+            plt.close()
     return all_counts, all_bins, all_bars
 
 def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_range = False, OPT={}):
