@@ -73,7 +73,7 @@ def calibrate(my_runs, keys, OPT={}):
                 get_units(my_runs)
 
             # try:
-            counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
+            counts, bins, bars = vis_var_hist(my_runs, run, ch, [key], OPT=OPT)
             plt.close()
 
             ## New Figure with the fit ##
