@@ -16,11 +16,15 @@ def open_run_var(run_path,var_name,channels,compressed=True):
         if compressed: 
             full_path = run_path+var_name+"_ch"+str(ch)+".npz"
             run_var[ch]=np.load(full_path ,allow_pickle=True,mmap_mode='r') ["arr_0"]
+            if (var_name.__contains__("ADC")): #prevents crashes from numba and other optimizers-> all adcs are read as floats
+                run_var[ch]=run_var[ch].astype(float)
             if run_var[ch].shape==():# we are loading a dictionary
                 run_var[ch]=run_var[ch].item()
         else: 
             full_path = run_path+var_name+"_ch"+str(ch)+".npy"
             run_var[ch]=np.load(full_path ,allow_pickle=True)
+            if (var_name.__contains__("ADC")):
+                run_var[ch]=run_var[ch].astype(float)
             if run_var[ch].shape==():# we are loading a dictionary
                 run_var[ch]=run_var[ch].item()
 
