@@ -70,11 +70,12 @@ def scfunc(t, a, b, c, d, e, f):
 
 
 def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit=[0]):
-    """
+    '''
     This function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     And return the parameters of the fit (if performed)
-    """ 
+    ''' 
+    
     #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
     wdth = 10
     prom = 0.5
@@ -130,11 +131,12 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
 
 
 def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
-    """
+    '''
     This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     And return the parameters of the fit (if performed)
-    """ 
+    ''' 
+
     ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
     wdth   = 10
@@ -196,13 +198,14 @@ def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
 def pmt_spe_fit(counts, bins, bars, thresh):
-    """
+    '''
     This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     And return the parameters of the fit (if performed)
     [es muy parecida a gaussian_train_fit; hay algunas cosas que las coge en log pero igual se pueden unificar]
     [se le puede dedicar un poco mas de tiempo para tener un ajuste mas fino pero parece que funciona]
-    """ 
+    ''' 
+
     ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
     wdth   = 10
@@ -261,7 +264,9 @@ def pmt_spe_fit(counts, bins, bars, thresh):
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
 def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_fast = 1e-8, OPT={}):
-    """ DOC """
+    ''' 
+    This function fits the peak to a gaussian function, and returns the parameters
+    '''
 
     raw_max = np.argmax(fit_raw)
 
@@ -307,7 +312,10 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_f
     return popt, perr
 
 def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
-    """ DOC """
+    ''' 
+    DOC 
+    '''
+
     max = np.argmax(raw)
     # thrld = 1e-4
     buffer1 = fit_range[0]
@@ -365,7 +373,10 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     return aux,param,perr2,labels2
 
 def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
-    """ DOC """
+    ''' 
+    DOC 
+    '''
+
     next_plot = False
     OPT["CUT_NEGATIVE"] = True
     
@@ -474,7 +485,9 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     return aux,popt,perr,labels
 
 def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={}):
-    """ DOC """
+    ''' 
+    DOC 
+    '''
     
     i_param = get_initial_parameters(i_param)
 
@@ -518,6 +531,9 @@ def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC
     return fit, popt
 
 def get_initial_parameters(i_param):
+    '''
+    DOC
+    '''
     
     # Define input parameters from dictionary
     if check_key(i_param,"ped")      == False: i_param["ped"]      = 1e-6

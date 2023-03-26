@@ -20,23 +20,23 @@ from .fig_config import (
 )
 
 def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = False):
-    """
+    '''
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
     VARIABLES:
-        - my_run: run(s) we want to check
-        - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
-        - OPT: several options that can be True or False. Type: List
-            a) MICRO_SEC: if True we multiply Sampling by 1e6
-            b) NORM: True if we want normalized waveforms
-            c) LOGY: True if we want logarithmic y-axis
-            d) SHOW_AVE: if computed and True, it will show average
-            e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
-            f) CHARGE_KEY: if computed and True, it will show the parametre value
-            g) PEAK_FINDER: True if we want to check how many peaks are
-        - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
-        - same_plot: True if we want to plot different channels in the SAME plot
-    """
+       \n - my_run: run(s) we want to check
+       \n - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
+       \n - OPT: several options that can be True or False. Type: List
+           \n a) MICRO_SEC: if True we multiply Sampling by 1e6
+           \n b) NORM: True if we want normalized waveforms
+           \n c) LOGY: True if we want logarithmic y-axis
+           \n d) SHOW_AVE: if computed and True, it will show average
+           \n e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
+           \n f) CHARGE_KEY: if computed and True, it will show the parametre value
+           \n g) PEAK_FINDER: True if we want to check how many peaks are
+       \n - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
+       \n - same_plot: True if we want to plot different channels in the SAME plot
+    '''
 
     figure_features()
     charge_key = "ChargeAveRange"
@@ -129,8 +129,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                         axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
                         axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
-                    except KeyError:
-                        print("Run preprocess please!")
+                    except KeyError: print("Run preprocess please!")
                     axs[j].set_title("Run {} - Ch {} - Event Number {}".format(run,ch_list[j],idx),size = 14)
                     axs[j].xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
                     
@@ -148,8 +147,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                         except KeyError:
                             print("Run has not been averaged!")
 
-                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-                        axs[j].legend()
+                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs[j].legend()
 
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
@@ -196,9 +194,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                             axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
                         except KeyError: print("Run has not been averaged!")
 
-                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-                        axs.legend()
-
+                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
                         thresh = my_run[run][ch_list[j]]["PedMax"][idx]
@@ -228,23 +224,19 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     print("- Pedestal time limit: {:.4E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PedLim"]))
                     print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch_list[j]][label+"PeakAmp"][idx]))
                     print("- Max Peak Time: {:.2E}".format(my_run[run][ch_list[j]][label+"PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
-                    try:
-                        print("- Charge: {:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
+                    try:    print("- Charge: {:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
                     except:
                         if check_key(OPT,"CHARGE_KEY"): print("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"])
                         else: print("- Charge: default charge key has not been computed")
-                    try:
-                        print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
+                    try:    print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
                     except:
                         if not check_key(OPT,"PEAK_FINDER"): print("")
                 my_run[run][ch_list[j]]["Sampling"] = sampling    
 
             tecla = input("\nPress q to quit, p to save plot, r to go back, n to choose event or any key to continue: ")
 
-            if tecla == "q":
-                break
-            elif tecla == "r":
-                idx = idx-1
+            if tecla == "q":   break
+            elif tecla == "r": idx = idx-1
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
@@ -252,8 +244,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
             elif tecla == "p":
                 fig.savefig('run{}_evt{}.png'.format(run,idx), dpi = 500)
                 idx = idx+1
-            else:
-                idx = idx + 1
+            else: idx = idx + 1
             if idx == len(my_run[run][ch_list[j]][key]): break
             try: [axs[j].clear() for j in range (nch)]
             except: axs.clear()
@@ -262,7 +253,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
         plt.close()
 
 def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
-    """
+    '''
     This function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
     VARIABLES:
         - my_run: run(s) we want to check
@@ -274,21 +265,16 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         - compare: 
             a) "RUNS" to get a plot for each channel and the selected runs. Type: String
             b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
-    """
+    '''
 
     figure_features()
-
     r_list = my_run["NRun"]
     ch_list = my_run["NChannel"]
     nch = len(my_run["NChannel"])
     axs = []
     
-    if compare == "CHANNELS":
-        a_list = r_list 
-        b_list = ch_list 
-    if compare == "RUNS":
-        a_list = ch_list 
-        b_list = r_list 
+    if compare == "CHANNELS": a_list = r_list; b_list = ch_list 
+    if compare == "RUNS":     a_list = ch_list; b_list = r_list 
 
     for a in a_list:
         if compare == "CHANNELS": run = a
@@ -308,8 +294,7 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
             if compare == "RUNS":    run = b; label = "Run {}".format(run); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"])
             print("RUN: ", run)
             print("CHANNEL: ", ch)
-            if len(keys) == 1:
-                ave = my_run[run][ch][keys[counter]][0]
+            if len(keys) == 1:  ave = my_run[run][ch][keys[counter]][0]
             elif len(keys) > 1:
                 print("Counter", counter)
                 print("KEYS", keys[counter])
@@ -318,17 +303,14 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
             norm_ave = np.max(ave)
             sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
             thrld = 1e-6
-            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
-                ave = ave/norm_ave
+            if check_key(OPT,"NORM") == True and OPT["NORM"] == True: ave = ave/norm_ave
             if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
                 fig.supxlabel(r'Time [$\mu$s]')
                 sampling = my_run[run][ch]["Sampling"]*1e6
-            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-                axs.semilogy()
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:  axs.semilogy()
             if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
                 align_threshold = np.max(ave)*2/3
-                if ref_max_idx == -1:
-                    ref_max_idx, = np.where(ave == np.max(ave))
+                if ref_max_idx == -1: ref_max_idx, = np.where(ave == np.max(ave))
                     # ref_max_idx, = np.where(np.isclose(ave, align_threshold, rtol = 0.05))
                     # ref_max_idx = ref_max_idx[0]
                     # print(ref_max_idx)
@@ -346,46 +328,41 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         axs.grid(True, alpha = 0.7)
         axs.set_title(title,size = 14)
         axs.xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
-        if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-            axs.legend()
+        if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
        
         tecla      = input("\nPress q to quit, p to save plot and any key to continue: ")
-        if tecla   == "q":
-            break 
+        if tecla   == "q": break 
         elif tecla == "p":
             fig.savefig('AveWvf_Ch{}.png'.format(ch), dpi = 500)
             ch = ch+1
-        else:
-            ch = ch+1
+        else: ch = ch+1
         if ch == len(ch_list): break
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
         plt.close()   
 
 def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}):
-    """
+    '''
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
     It returns values of counts, bins and bars from the histogram to be used in other function.
     VARIABLES:
-        - my_run: run(s) we want to check
-        - keys: variables we want to plot as histograms. Type: List
-            a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
-            b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
-            c) Other variable: any other variable. Here we reject outliers.
-        - percentile: percentile used for outliers removal
+       \n - my_run: run(s) we want to check
+       \n - keys: variables we want to plot as histograms. Type: List
+           \n a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
+           \n b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
+           \n c) Other variable: any other variable. Here we reject outliers.
+       \n - percentile: percentile used for outliers removal
     WARNING! Maybe the binning stuff should be studied in more detail.
-    """
+    '''
 
     figure_features()
     all_counts = []
     all_bins = []
     all_bars = []
 
-    if check_key(my_run[run][ch], "MyCuts") == False:
-        generate_cut_array(my_run)
-    if check_key(my_run[run][ch], "UnitsDict") == False:
-        get_units(my_run)
+    if check_key(my_run[run][ch], "MyCuts") == False: generate_cut_array(my_run)
+    if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
     aux_data = my_run[run][ch][key][my_run[run][ch]["MyCuts"] == True]
 
     plt.ion()
@@ -414,31 +391,30 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     fig.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
     # fig.supxlabel(key+" ("+my_run[run][ch]["UnitsDict"][key]+")"); fig.supylabel("Counts")
     
-    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-        ax.semilogy()
+    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: ax.semilogy()
     if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
         plt.show()
         while not plt.waitforbuttonpress(-1): pass
     plt.close()
+
     return all_counts, all_bins, all_bars
 
 def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_range = False, OPT={}):
-    """
+    '''
     This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     It plots values below and above the indicated percetiles, but values are not removed from data.
     VARIABLES:
-        - my_run: run(s) we want to check
-        - keys: variables we want to plot as histograms. Type: List
-        - percentile: percentile used for outliers removal
-        - select_range: if we still have many outliers we can select the ranges in x and y axis.
-    """
+       \n - my_run: run(s) we want to check
+       \n - keys: variables we want to plot as histograms. Type: List
+       \n - percentile: percentile used for outliers removal
+       \n - select_range: if we still have many outliers we can select the ranges in x and y axis.
+    '''
+
     figure_features()
     x_data = []; y_data = []
 
-    if check_key(my_run[run][ch], "MyCuts") == False:
-        generate_cut_array(my_run)
-    if check_key(my_run[run][ch], "UnitsDict") == False:
-        get_units(my_run)
+    if check_key(my_run[run][ch], "MyCuts") == False: generate_cut_array(my_run)
+    if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
     x_data = my_run[run][ch][keys[0]][my_run[run][ch]["MyCuts"] == True]; y_data = my_run[run][ch][keys[1]][my_run[run][ch]["MyCuts"] == True]
 
     #### Calculate range with percentiles for x-axis ####
@@ -451,10 +427,8 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
     y_ymin = y_ypbot - y_ypad; y_ymax = y_yptop + y_ypad
     plt.ion()
     fig, ax = plt.subplots(1,1, figsize = (8,6))
-    if "Time" in keys[0]:
-        ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
-    else:
-        ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+    if "Time" in keys[0]: ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+    else:                 ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
     ax.grid("both")
     fig.supxlabel(keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
     fig.suptitle("Run_{} Ch_{} - {} vs {} histogram".format(run,ch,keys[0],keys[1]))
@@ -465,9 +439,9 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
         ax.grid("both")
         fig.supxlabel(keys[0]); fig.supylabel(keys[1])
 
-    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-        plt.yscale('log'); 
+    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.yscale('log'); 
     if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
         plt.show(); 
         while not plt.waitforbuttonpress(-1): pass    
+        
     return fig, ax

@@ -7,7 +7,10 @@ from itertools import product
 from .io_functions import check_key, print_keys
 
 def insert_variable(my_runs, var, key, debug = False):
-    """Insert values for each type of signal"""
+    '''
+    Insert values for each type of signal
+    '''
+
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         i = np.where(np.array(my_runs["NRun"]).astype(int) == run)[0][0]
         j = np.where(np.array(my_runs["NChannel"]).astype(int) == ch)[0][0]
@@ -18,9 +21,10 @@ def insert_variable(my_runs, var, key, debug = False):
             if debug: print("Inserting value...")
 
 def generate_cut_array(my_runs,debug=False):
-    """
+    '''
     This function generates an array of bool = True with length = NEvts. If cuts are applied and then you run this function, it resets the cuts.
-    """
+    '''
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         if debug: print("Keys in my_run before generating cut array: ",my_runs[run][ch].keys())
         for key in my_runs[run][ch].keys():
@@ -36,7 +40,10 @@ def generate_cut_array(my_runs,debug=False):
         if debug: print("Keys in my_run after generating cut array: ",my_runs[run][ch].keys())
 
 def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
-    """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
+    '''
+    Computes the peaktime and amplitude of a collection of a run's collection in standard format
+    '''
+
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
@@ -46,7 +53,10 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
             if debug: print("*EXCEPTION: for ",run,ch,key," peak variables could not be computed")
 
 def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
-    """Computes the pedestal variables of a collection of a run's collection in standard format"""
+    '''
+    Computes the pedestal variables of a collection of a run's collection in standard format
+    '''
+
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
@@ -65,7 +75,10 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
             if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
 
 def compute_ana_wvfs(my_runs, debug = False):
-    """Computes the peaktime and amplitude of a collection of a run's collection in standard format"""
+    '''
+    Computes the peaktime and amplitude of a collection of a run's collection in standard format
+    '''
+
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
 
         my_runs[run][ch]["ADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
@@ -75,6 +88,10 @@ def compute_ana_wvfs(my_runs, debug = False):
         del my_runs[run][ch]["RawADC"] # After ADC is computed, delete RawADC from memory
 
 def get_units(my_runs, debug = False):
+    '''
+    Computes and store in a dictionary the units of each variable.  
+    '''
+    
     for run, ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         keys = my_runs[run][ch].keys()
         aux_dic = {}
