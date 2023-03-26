@@ -14,15 +14,16 @@ from .fig_config    import*
 
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
-    """
+    '''
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
     VARIABLES:
-        - keys: a LIST of variables you want to constrain
-        - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-        - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+       \n - keys: a LIST of variables you want to constrain
+       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+       \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
     Important! Each key works independently. If one key gives True and the other False, it remains False.
     Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
-    """
+    '''
+
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
@@ -47,14 +48,15 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0]):
         print("Nº total final events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
 
 def cut_min_max_sim(my_runs, keys, limits):
-    """
+    '''
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
     VARIABLES:
-        - keys: a LIST of variables you want to constrain at the same time
-        - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+       \n - keys: a LIST of variables you want to constrain at the same time
+       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
     Important! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
     Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
-    """
+    '''
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
@@ -72,12 +74,13 @@ def cut_min_max_sim(my_runs, keys, limits):
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
 
 def cut_lin_rel(my_runs, keys):
-    """
+    '''
     This is a function to cut manually with a polygonal figure on two variables. You can do any polygonal figure (avoid strange figures with crossed lines).
     "Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
     VARIABLES:
-        - keys: a LIST of variables you want to plot and cut
-    """
+       \n - keys: a LIST of variables you want to plot and cut
+    '''
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
@@ -125,15 +128,16 @@ def cut_lin_rel(my_runs, keys):
         while not fig.waitforbuttonpress(-1): pass
 
 def cut_ped_std(my_runs):
-    """
+    '''
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
     VARIABLES:
-        - keys: a LIST of variables you want to constrain
-        - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-        - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+       \n - keys: a LIST of variables you want to constrain
+       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+       \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
     Important! Each key works independently. If one key gives True and the other False, it remains False.
     Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
-    """
+    '''
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
