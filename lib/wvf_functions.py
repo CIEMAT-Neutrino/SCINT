@@ -158,6 +158,7 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                 if typ == "ChargeAveRange": # Integrated charge from the average waveform
                     i_idx,f_idx = find_baseline_cuts(ave[i])
                     t0 = i_idx * my_runs[run][ch]["Sampling"]; tf = f_idx * my_runs[run][ch]["Sampling"]
+                    # [my_runs[r][ch][charge]] = pC = s * [ADC] * [V/ADC] * [A/V] * [1e12 pC/1 C]
                     my_runs[run][ch][typ+cut_label] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
                     if key == "GaussADC" or key == "WienerADC": 
                         my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) # Integrated charge from the DECONVOLUTED average waveform
