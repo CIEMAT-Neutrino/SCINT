@@ -74,6 +74,6 @@ def Bin2Np_excel(excel_file_path="",sheet='Sheet1',compressed=True,i_path="",o_p
     df = pd.read_excel(excel_file_path, sheet_name=sheet,engine='openpyxl')
     
     # df['Channels'].apply(lambda x: print(x.split(" "))) #excell only allows one value per cell, convert channels from string to array of ints
-    df['Channels']=df['Channels'].apply(lambda x: list(map(int,x.split(" ")))) #excell only allows one value per cell, convert channels from string to array of ints
+    df['Channels']=df['Channels'].apply(lambda x: list(map(int,x.split("|")))) #excell only allows one value per cell, convert channels from string to array of ints
 
     df.apply(lambda x: save_Run_Bin2Np(x["Run"],x["Channels"],Compressed=compressed,in_path=i_path,out_path=o_path),axis=1);
