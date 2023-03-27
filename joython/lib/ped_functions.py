@@ -39,9 +39,10 @@ def compute_Pedestal_slidingWindows(ADC,ped_lim=400,sliding=50,pretrigger=800):
         aux[:,i]=np.std (ADC[:,(i*sliding):(i*sliding+ped_lim)],axis=1)
 
     #put first in the wvf the appropiate window, the one with less std:
-    shifts= np.argmin (aux,axis=1)*(-1)*sliding
+    shifts= np.argmin (aux,axis=1)
+    shifts*=(-1)*sliding;#weird segmentation fault if used in line b4;
     ADC_s = shift_ADCs(ADC,shifts)
-    
+
     #compute all ped variables, now with the best window available
     slided_ped_vars=compute_Pedestal(ADC_s,ped_lim)
     return slided_ped_vars;

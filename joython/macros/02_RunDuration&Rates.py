@@ -1,25 +1,19 @@
 import sys
 sys.path.insert(0, '../')
 
-from lib.io_functions  import open_run_var,open_run_properties,do_run_things,save_run_var
+from lib.io_functions  import open_run_var,open_runs_table,do_run_things,save_run_var
 from lib.ped_functions import compute_Pedestal,substract_Pedestal, compute_Peak
 
+WEEK="APSAIA_VUV";
+path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
+Runs=open_runs_table("../macros/"+WEEK+".xlsx")
 
-# path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
-path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
+for run in Runs["Run"].array:
 
-for run in range(40):
-    if run==3:continue
-    
-    Run_props=open_run_properties(run,"APSAIA_VUV.xlsx")
+    Run_props=Runs[Runs["Run"]==run].iloc[0]
     run_path=path+"run"+str(run).zfill(2)+"/";
 
     compress=False
-    
-    
-    # One channel at a time: 
-    # loading all ch waveforms might demmand too much memory, 
-    # remember to always delete between runs to prevent overloading)
 
     for ch in [Run_props["Channels"][0]]:
         TS=open_run_var(run_path,"Timestamp",[ Run_props["Channels"][0] ],compressed=compress)
