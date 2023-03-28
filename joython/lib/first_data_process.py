@@ -20,8 +20,12 @@ def Bin2Np_ADC(FileName,header_lines=6):
 
     data    = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
     headers = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
+    headers=headers.astype(float)
     
-    TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
+    first=headers[:,4]*2**32
+    second=headers[:,5]
+    TIMESTAMP  = first + second 
+    TIMESTAMP *= 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
 
     if DEBUG:
         print("Header:",header)
@@ -74,6 +78,6 @@ def Bin2Np_excel(excel_file_path="",sheet='Sheet1',compressed=True,i_path="",o_p
     df = pd.read_excel(excel_file_path, sheet_name=sheet,engine='openpyxl')
     
     # df['Channels'].apply(lambda x: print(x.split(" "))) #excell only allows one value per cell, convert channels from string to array of ints
-    df['Channels']=df['Channels'].apply(lambda x: list(map(int,x.split("|")))) #excell only allows one value per cell, convert channels from string to array of ints
+    df['Channels']=df['Channels'].apply(lambda x: list(map(int,x.split(" ")))) #excell only allows one value per cell, convert channels from string to array of ints
 
     df.apply(lambda x: save_Run_Bin2Np(x["Run"],x["Channels"],Compressed=compressed,in_path=i_path,out_path=o_path),axis=1);

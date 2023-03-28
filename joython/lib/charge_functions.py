@@ -4,6 +4,8 @@ from lib.wvf_functions import shift_ADCs
 
 def compute_ChargeRange(ADC,low=250,high=2000):
     
+    ## All waveformsm, same range
+    
     #Fixed size in window
     charge_vars=dict();
     peak_time=np.argmax (ADC    ,axis=1)
@@ -16,6 +18,14 @@ def compute_ChargeRange(ADC,low=250,high=2000):
     #Fixed size wrt the peak
     charge_vars["ChargePeakRange"]   = np.sum (shifted[:,centering_bin-low:centering_bin+high],axis=1)
     
+    #Fixed size, set by average wvf cuantities. Requires pedestal subtraction first to make sense.
+    average_wvf=np.mean(ADC,axis=0);
+    RELATIVE_AMPLITUDE=0.01;
+    left, right = find_bins(average_wvf,RELATIVE_AMPLITUDE);
+    charge_vars["ChargeRangeAverageWvf"]   = np.sum (ADC[:,left:right],axis=1);
+    
+    ## Waveform by waveform
+
     #from peak to 1% of max amplitude
     charge_vars["ChargeRangeRelativeAmp"] =sum_near_maximum(ADC)
     
@@ -25,7 +35,7 @@ def compute_ChargeRange(ADC,low=250,high=2000):
     # Mixed approach (peakfinder-like), in given range, look for max above threshold (SPE), 
     # then integrate the pulse until tolerance relative amplitude to the max is found, 
     # then look for next peak and repeat until no peak above threshold is found
-    charge_vars["PeakFinderInRange"]=fin_peaks_above_threshold_and_sum_near_maximum(shifted,relative_amplitude=0.1,threshold=12,bmin=0,bmax=4000)
+    charge_vars["PeakFinderInRange"]=fin_peaks_above_threshold_and_sum_near_maximum(shifted,relative_amplitude=0.01,threshold=12,bmin=800,bmax=1100)
     return charge_vars;
 
 
@@ -93,3 +103,37 @@ def fin_peaks_above_threshold_and_sum_near_maximum(ADC, relative_amplitude, thre
             result[i]+=subsum;
 
     return result
+
+from numba import njit
+
+
+@njit
+def find_bins(arr, rel_amp):
+    """
+    Finds the first bin to the left and right of the maximum value in the array that has a value equal to or
+    lower than the maximum times the relative amplitude value.
+    
+    Parameters:
+    arr (numpy.ndarray): A 1D numpy array.
+    rel_amp (float): A relative amplitude value.
+    
+    Returns:
+    left_bin (int): The index of the first bin to the left of the maximum value that satisfies the condition.
+    right_bin (int): The index of the first bin to the right of the maximum value that satisfies the condition.
+    """
+    max_val = arr.max()
+    threshold = max_val * rel_amp
+    
+    left_bin = 0
+    for i in range(arr.argmax(), -1, -1):
+        if arr[i] <= threshold:
+            left_bin = i
+            break
+    
+    right_bin = arr.size - 1
+    for i in range(arr.argmax(), arr.size):
+        if arr[i] <= threshold:
+            right_bin = i
+            break
+    
+    return left_bin, right_bin
