@@ -17,7 +17,8 @@ args = parser.parse_args()
 if args.Run is None: raise NotImplementedError("Must add run number with -r or --R")
 
 # path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
-path="/scr/neutrinos/rodrigoa/APSAIA_VIS/joython/"
+# path="/scr/neutrinos/rodrigoa/APSAIA_VIS/joython/"
+path="/scr/neutrinos/rodrigoa/DAPHNE_VIS/joython/"
 Runs=open_runs_table("../macros/APSAIA_VIS.xlsx")
 Runs=Runs[Runs["Run"]==int(args.Run)]
 
@@ -47,7 +48,7 @@ for run in Runs["Run"].array:
         Peak_vars=do_run_things(ADC,compute_Peak)
 
         save_run_var(Pedestal_vars,run_path,"Pedestal_vars",compressed=compress)
-        # save_run_var(Pedestal_vars_SW,run_path,"Pedestal_vars_SW",compressed=compress)
+        save_run_var(Pedestal_vars_SW,run_path,"Pedestal_vars_SW",compressed=compress)
         save_run_var(Peak_vars,run_path,"Peak_vars",compressed=compress)
         
         del Pedestal_vars,Peak_vars, ADC
