@@ -9,11 +9,8 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
 
 import sys; sys.path.insert(0, '../'); from lib import *; print_header()
-
-try:
-    input_file = sys.argv[1]
-except IndexError:
-    input_file = input("Please select input File: ")
+try:               input_file = sys.argv[1]
+except IndexError: input_file = input("Please select input File: ")
 
 info = read_input_file(input_file)
 runs = []; channels = []
