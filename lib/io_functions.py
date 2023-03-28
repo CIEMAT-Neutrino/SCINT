@@ -427,8 +427,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             os.makedirs(name=path+out_folder,exist_ok=True)
             files=os.listdir(path+out_folder)
-            if not branch_list:
-               branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
+            if not branch_list: branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
             print(branch_list)
             for key in branch_list:
                 key = key.replace(".npz","")
