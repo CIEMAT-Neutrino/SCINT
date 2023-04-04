@@ -9,7 +9,7 @@ def horizontal_subplots(x,ys,yer,legend):
     fig.subplots_adjust(wspace=0)
 
     for i in range(len(legend)):
-        axs[i].errorbar (x,ys[i],fmt='', yerr=yer[i],color= colors[i],linewidth=1)
+        axs[i].errorbar (x,ys[i], yerr=[yer[i],yer[i]],color= colors[i],linewidth=1,marker='o',markersize=3,elinewidth=1,capsize=2)
         axs[i].set_ylim([2,10])
         axs[i].legend([legend[i]])
         axs[i].grid()
