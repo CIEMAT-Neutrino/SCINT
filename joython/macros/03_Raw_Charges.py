@@ -13,8 +13,9 @@ parser.add_argument("-r", "--Run", help = "Selected data taking",type=int)
 args = parser.parse_args()
 if args.Run is None : raise NotImplementedError("Must add run number with -r or --R")
 
+WEEK="APSAIA_VUV";
 # WEEK="APSAIA_VIS";
-WEEK="DAPHNE_VIS";
+# WEEK="DAPHNE_VIS";
 path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
 Runs=open_runs_table("../macros/"+WEEK+".xlsx")
 Runs=Runs[Runs["Run"]==int(args.Run)]
