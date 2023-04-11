@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from curve import Curve
 
-from .io_functions  import check_key
+from .io_functions  import check_key, print_colored
 from .fit_functions import func2
 from .wvf_functions import smooth, find_baseline_cuts, find_amp_decrease
 
@@ -68,14 +68,12 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
             
             # print(template)
             if check_key(OPT,  "SMOOTH") ==  True:
-                if OPT["SMOOTH"] > 0:
-                    signal = smooth(signal, OPT["SMOOTH"])
-                else:
-                    print("Invalid value encountered in smooth")
-            try:
-                timebin = my_runs[run][ch]["Sampling"]
+                if OPT["SMOOTH"] > 0: signal = smooth(signal, OPT["SMOOTH"])
+                else:                 print_colored("Invalid value encountered in smooth", "ERROR")
+
+            try: timebin = my_runs[run][ch]["Sampling"]
             except:
-                print("\n---Sampling key not found!")
+                print_colored("\n---Sampling key not found!", "ERROR")
                 if check_key(OPT, "TIMEBIN") ==  True: timebin = OPT["TIMEBIN"]    
             
             X = timebin*np.arange(len(signal))
@@ -142,7 +140,7 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                     
                     except:
                         params = [50, 2]
-                        print("FIT COULD NOT BE PERFORMED!")
+                        print_colored("FIT COULD NOT BE PERFORMED!", "ERROR")
                         print("Filter strengh %f and exp %f"%(params[0], params[1]))
                 
                 # Generate gauss filter and filtered signal
@@ -252,7 +250,7 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
     plt.close()
 
 def convolve(my_runs, keys = [], OPT = {}):
-    print("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n")
+    print_colored("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n", "blue", bold=True)
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = dict()
@@ -346,44 +344,45 @@ def convolve(my_runs, keys = [], OPT = {}):
             output_file.write("%.2E \t\u00B1\t %.2E\n"%(fit_finals[0], perr[0]))
 
 def check_array_len(wvf1,wvf2):
-    if len(wvf1) < len(wvf2):
-        print("RAW WVF IS LONGER THAN WVF TEMPLATE")
+    if len(wvf1) < len(wvf2): 
+        print_colored("RAW WVF IS LONGER THAN WVF TEMPLATE", "WARNING")
         wvf2 = wvf2[:-(len(wvf2)-len(wvf1))]
     if len(wvf1) > len(wvf2):
-        print("RAW WVF IS SHORTER THAN WVF TEMPLATE")
+        print_colored("RAW WVF IS SHORTER THAN WVF TEMPLATE", "WARNING")
         wvf1 = wvf1[:-(len(wvf1)-len(wvf2))] 
+        
     return wvf1,wvf2
 
 def check_array_even(wvf):
-    if len(wvf) % 2 > 0:
-        return wvf[:-1]
-    else: return wvf
+    if len(wvf) % 2 > 0: return wvf[:-1]
+    else:                return wvf
 
 def conv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
-
     resp = func2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)
     
     conv = convolve(wvf[1], resp)
     conv = conv/np.max(conv)
     wvf_max = np.argmax(wvf[1])
     conv_max = np.argmax(conv)
+
     return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
 
 def logconv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
-    
     resp = logfunc2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)
 
     conv = convolve(wvf[1], resp)
     conv = conv/np.max(conv)
     wvf_max = np.argmax(wvf[1])
     conv_max = np.argmax(conv)
+
     return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
 
 def gauss(f, fc, n):
     y = np.exp(-0.5*(f/fc)**n)
+
     return y
 
 def fit_gauss(f, fc, n):
-    y = np.log10(gauss(f, fc, n))
-    y[0] = 0
+    y = np.log10(gauss(f, fc, n)); y[0] = 0
+
     return y

@@ -1,6 +1,6 @@
 import numpy as np
 
-from .io_functions import load_npy,check_key
+from .io_functions import load_npy,check_key, print_colored
 from itertools import product
 
 def rand_scint_times(n, fast = 6e-9, slow = 1.4e-6, ratio = 0.23):
@@ -14,7 +14,7 @@ def rand_scint_times(n, fast = 6e-9, slow = 1.4e-6, ratio = 0.23):
         ***Values adopted from: Enhancement of the X-Arapuca photon detection device for the DUNE experiment, Journal of Instrumentation, vol. 16, p. P09027, sep (2021).
     '''
 
-    if ratio < 0 or ratio > 1: print("WARNING: ratio should be between 0 and 1!!!")    
+    if ratio < 0 or ratio > 1: print_colored("WARNING: ratio should be between 0 and 1!!!", "WARNING")    
 
     aux = np.random.uniform(low = 0, high = 1, size = n)
     # offset = np.random.random() #photon can arrive at any time

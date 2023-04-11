@@ -10,7 +10,7 @@ import scipy
 from scipy.optimize import curve_fit
 from scipy.signal   import find_peaks
 from scipy.special import erf
-from .io_functions import load_npy, check_key, print_keys
+from .io_functions import load_npy, check_key, print_keys, print_colored
 from .ana_functions import generate_cut_array, get_units
 from .wvf_functions import find_amp_decrease, find_baseline_cuts
 np.seterr(divide = 'ignore') 
@@ -18,6 +18,10 @@ np.seterr(divide = 'ignore')
 #===========================================================================#
 #********************** TH FUNCTIONS TO USE ********************************#
 #===========================================================================#
+def chi_squared(x,y,popt):
+    fit_y = np.sum([gaussian(x, popt[j], popt[j+1], popt[j+2]) for j in range(0, len(popt), 3)])
+    return np.sum((y - fit_y) ** 2 / fit_y) / (y.size - len(popt))
+
 def pure_scint(time,t0,a1,a2,tau1,tau2):
     y = a1*np.exp(-(time-t0)/tau1)+a2*np.exp(-(time-t0)/tau2)
 
@@ -124,10 +128,12 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
     # try:
     popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],sigma],maxfev=5000)
     perr = np.sqrt(np.diag(pcov))
+    chi2 = chi_squared(x_gauss,y_gauss,popt)
     # except:
     #     print("WARNING: Peak could not be fitted")
     
     return x, popt, pcov, perr
+    # return x, popt, pcov, perr, chi2 # UPLOAD WHEN POSSIBLE MERGING IN MAIN BRANCH; upgrade all the fit functions
 
 
 def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
@@ -183,7 +189,7 @@ def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
             initial.append(x[peak_idx[i]])
             initial.append(y[peak_idx[i]])
             initial.append(abs(wdth*(bins[0]-bins[1])))
-            print("Peak %i could not be fitted"%i)
+            print_colored("Peak %i could not be fitted"%i, "ERROR")
 
     try:
         ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
@@ -193,7 +199,7 @@ def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
         perr = np.sqrt(np.diag(pcov))
     except:
         popt = initial
-        print("Full fit could not be performed")
+        print_colored("Full fit could not be performed", "ERROR")
     
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
@@ -250,7 +256,7 @@ def pmt_spe_fit(counts, bins, bars, thresh):
             initial.append(x[peak_idx[i]])
             initial.append(y[peak_idx[i]])
             initial.append(abs(wdth*(bins[0]-bins[1])))
-            print("Peak %i could not be fitted"%i)
+            print_colored("Peak %i could not be fitted"%i, "ERROR")
 
     try:
     # GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
@@ -259,7 +265,7 @@ def pmt_spe_fit(counts, bins, bars, thresh):
         perr = np.sqrt(np.diag(pcov))
     except:
         popt = initial
-        print("Full fit could not be performed")
+        print_colored("Full fit could not be performed", "ERROR")
     
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
@@ -302,8 +308,7 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_f
     # PRINT FIRST FIT VALUE
     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
         print("\n--- FISRT FIT VALUES (FAST) ---")
-        for i in range(len(initial)):
-            print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
+        for i in range(len(initial)): print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
         print("-------------------------------")
 
     # EXPORT FIT PARAMETERS
@@ -412,7 +417,7 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
         perr2 = np.sqrt(np.diag(pcov2))
     
     except:
-        print("Fit could not be performed")
+        print_colored("Fit could not be performed", "ERROR")
         popt2 = initial2
         perr2 = np.zeros(len(popt2))
     
@@ -464,7 +469,7 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
         popt, pcov = curve_fit(scfunc, raw_x[fit_range[0]:fit_range[1]], raw[fit_range[0]:fit_range[1]], p0 = initial, method = "trf")
         perr = np.sqrt(np.diag(pcov))
     except:
-        print("Fit did not succeed")
+        print_colored("Fit did not succeed", "ERROR")
         popt = initial
         perr = np.zeros(len(initial))
 

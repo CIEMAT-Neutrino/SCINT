@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from scipy import stats as st
-from .io_functions import check_key
+from .io_functions import check_key, print_colored, color_list
 from .ana_functions import generate_cut_array, get_units
 from itertools import product
 
@@ -83,8 +83,7 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label=""
                     aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])    # It centers the waveform using the threshold
                 my_runs[run][ch]["AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]  # It saves the average waveform as "AveWvfThreshold_*"
 
-        except KeyError:
-            print("Empty dictionary. No average to compute.")
+        except KeyError: print_colored("Empty dictionary. No average to compute.", "ERROR")
 
 def expo_average(my_run, alpha):
     ''' 
@@ -166,7 +165,7 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                     my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
                 if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
-                    confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?")
+                    confirmation = input(color_list("red")+"**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?"+color_list("end"))
                     if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
                     else: continue
             if (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC") or (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and confirmation not in ["n","N","no","NO","q"]):
@@ -184,12 +183,12 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                     new_key = {typ+str(j)+cut_label: [t0,tf]}
                     my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
-                print("======================================================================")
-                print("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0])
-                print("=============== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs ==============="%(t0*1E6,tf*1E6))
-                print("======================================================================")
+                print_colored("======================================================================", "SUCCESS")
+                print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")
+                print_colored("=============== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs ==============="%(t0*1E6,tf*1E6), "SUCCESS")
+                print_colored("======================================================================", "SUCCESS")
 
-    except KeyError: print("Empty dictionary. No integration to compute.")
+    except KeyError: print_colored("Empty dictionary. No integration to compute.", "ERROR")
 
     return my_runs
 
@@ -212,6 +211,6 @@ def charge_nevents(my_runs, keys = ["ChargeAveRange"]):
             runtime = (my_runs[run][ch]["TimeStamp"][-1] - my_runs[run][ch]["TimeStamp"][0]) #segundos
             my_runs[run][ch]["NEvents"+key] = my_runs[run][ch][key] / runtime
             print(my_runs[run][ch].keys())
-    except KeyError: print("Empty dictionary. No integration to compute.")
+    except KeyError: print_colored("Empty dictionary. No integration to compute.", "ERROR")
 
     return my_runs
