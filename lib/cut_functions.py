@@ -6,7 +6,7 @@ from itertools import product
 from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
 
-from .io_functions  import check_key,print_keys,copy_single_run
+from .io_functions  import check_key,print_keys,copy_single_run, print_colored
 from .vis_functions import vis_two_var_hist
 from .ana_functions import generate_cut_array
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
@@ -87,9 +87,8 @@ def cut_lin_rel(my_runs, keys):
             generate_cut_array(my_runs)
 
         for j in range(len(keys)):
-            if check_key(my_runs[run][ch], keys[j]) == True:
-                continue
-            else: print("IAAA ERROR"); break
+            if check_key(my_runs[run][ch], keys[j]) == True: continue
+            else: print_colored("IAAA ERROR", "ERROR");      break
 
         figure_features()
         fig, ax = vis_two_var_hist(my_runs,run,ch,[keys[0],keys[1]], [0.1,99.9], OPT = {"Show": False})
@@ -147,7 +146,6 @@ def cut_ped_std(my_runs):
         print(np.std(my_runs[run][ch]["PedMean"]))
         
         for i in range(len(my_runs[run][ch]["PedSTD"])):
-            if np.std(my_runs[run][ch]["PedMean"]) > my_runs[run][ch]["PedRMS"][i]:
-                continue    
+            if np.std(my_runs[run][ch]["PedMean"]) > my_runs[run][ch]["PedRMS"][i]: continue    
             else: my_runs[run][ch]["MyCuts"][i] = False
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))

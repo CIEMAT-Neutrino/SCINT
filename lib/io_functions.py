@@ -7,6 +7,33 @@ import stat
 from itertools import product
 import gc
 
+def color_list(color):
+    colors = {
+              "DEBUG":   '\033[35m', #PURPLE
+              "ERROR":   '\033[91m', #RED
+              "SUCCESS": '\033[92m', #GREEN
+              "WARNING": '\033[93m', #YELLOW
+              "blue":    '\033[94m',
+              "magenta": '\033[95m',
+              "cyan":    '\033[96m',
+              "white":   '\033[97m',
+              "black":   '\033[98m',
+              "end":     '\033[0m'
+              }
+    
+    return colors[color]
+
+def print_colored(string, color, bold=False):
+    '''
+    Print a string in a specific color.
+    '''  
+    
+    color = color_list(color)
+    if bold == False: output = color + str(string) + color_list("end")
+    if bold == True:  output = '\033[1m' + color + string + color_list("end")
+    
+    print(output)
+
 #===========================================================================#
 #************************** INPUT FILE *************************************#
 #===========================================================================#
@@ -26,6 +53,7 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
     '''
     Generate a .txt file with the information needed to load the runs and channels.
     '''
+
     file = open(path+label+str(input_file)+".txt", 'w+')
     for branch in info:
         if branch == "LOAD_PRESET":
@@ -61,8 +89,8 @@ def read_input_file(input, path = "../input/", debug = False):
                 for i in numbers.split(","):
                     try:   info[LABEL].append(float(i)) # Try to convert to float and append to LABEL list
                     except ValueError: 
-                        if debug == True: print("Error when reading: ", info[LABEL])
-                    if debug: print(info[LABEL])
+                        if debug == True: print_colored("Error when reading: " + str(info[LABEL]), "ERROR")
+                    if debug: print_colored(str(info[LABEL]), "DEBUG")
 
         for LABEL in NUMBERS:
             if line.startswith(LABEL):
@@ -70,8 +98,8 @@ def read_input_file(input, path = "../input/", debug = False):
                 for i in numbers.split(","):
                     try:   info[LABEL].append(int(i)) # Try to convert to int and append to LABEL list
                     except ValueError:
-                        if debug == True: print("Error when reading: ", info[LABEL])
-                    if debug: print(info[LABEL])
+                        if debug == True: print_colored("Error when reading: " + str(info[LABEL]), "ERROR")
+                    if debug: print_colored(str(info[LABEL]), "DEBUG")
 
         for LABEL in STRINGS:
             if line.startswith(LABEL):
@@ -79,9 +107,9 @@ def read_input_file(input, path = "../input/", debug = False):
                 for i in numbers.split(","):
                     try:   info[LABEL].append(i) # Try to append the string to LABEL list
                     except ValueError:
-                        if debug == True: print("Error when reading: ", info[LABEL])
+                        if debug == True: print_colored("Error when reading: " + str(info[LABEL]), "ERROR")
                     
-                    if debug: print(info[LABEL])
+                    if debug: print_colored(str(info[LABEL]), "DEBUG")
     print("\n")
     print(info.keys())
     print("\n")
@@ -102,7 +130,7 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
             par_list.remove(p) #removing parameters before saving in txt (height by default)
 
 
-    confirmation = input("\nConfirmation to save in"+path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n) ?"%ch)
+    confirmation = input(color_list("magenta")+"\nConfirmation to save in"+path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n) ?"%ch+color_list("end"))
     if "y" in confirmation:
         print("\n----------- Saving -----------")
 
@@ -147,11 +175,11 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
             my_dict = {}; f = uproot.open(in_path+in_file) # Open the file and dump it in a dictionary
             
             if debug:
-                print("----------------------")
-                print("Dumping file:", in_path+in_file)
+                print_colored("----------------------", "DEBUG")
+                print_colored("Dumping file:"+str(in_path+in_file), "DEBUG")
             
             for branch in f["IR02"].keys():
-                if debug: print("dumping brach:",branch)
+                if debug: print_colored("dumping brach:"+str(branch), "DEBUG")
                 my_dict[branch]=f["IR02"][branch].array().to_numpy()
             
             # additional useful info
@@ -165,9 +193,9 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
             np.save(out_path+out_file,my_dict)
             
             if debug:
-                print(my_dict.keys())
-                print("Saved data in:" , out_path+out_file)
-                print("----------------------\n")
+                print_colored(my_dict.keys(), "DEBUG")
+                print_colored("Saved data in:" +str(out_path+out_file), "DEBUG")
+                print_colored("----------------------\n", "DEBUG")
 
         except FileNotFoundError: print("--- File %s was not foud!!! \n"%in_file)
 
@@ -182,7 +210,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(int),channels.astype(int)):
-        print(".......Reading RUN%i CH%i......."%(run, ch))
+        print("\n....... READING RUN%i CH%i ......."%(run, ch))
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
@@ -193,7 +221,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
             os.mkdir(out_path+out_folder)
             os.chmod(out_path+out_folder, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
-        except FileExistsError: print("DATA STRUCTURE ALREADY EXISTS") 
+        except FileExistsError: print_colored("DATA STRUCTURE ALREADY EXISTS", "WARNING") 
         try:
             headers    = np.fromfile(in_path+in_file, dtype='I') # Reading .dat file as uint32
             header     = headers[:6]                             # Read first event header
@@ -213,34 +241,34 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
             files      = os.listdir(out_path+out_folder)                                                                       # List of files in the output folder
 
             if debug:
-                print("#####################################################################")
-                print("Header:",header)
-                print("Waveform Samples:",NSamples)
-                print("Event_size(wvf+header):",Event_size)
-                print("N_Events:",N_Events)
-                print("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" )
-                print("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" )
-                print("#####################################################################\n")
+                print_colored("#####################################################################","DEBUG")
+                print_colored("Header:"+str(header),"DEBUG")
+                print_colored("Waveform Samples:"+str(NSamples),"DEBUG")
+                print_colored("Event_size(wvf+header):"+str(Event_size),"DEBUG")
+                print_colored("N_Events:"+str(N_Events),"DEBUG")
+                print_colored("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" ,"DEBUG")
+                print_colored("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" ,"DEBUG")
+                print_colored("#####################################################################\n","DEBUG")
 
             for i, branch in enumerate(branches):
                 try:
                     # If the file already exists and force is True, overwrite it
                     if (branch+".npz" in files or branch+".npy" in files) and force == True: 
-                        print("File (%s.npx) already exists. OVERWRITTEN"%branch)
+                        print_colored("File (%s.npx) already exists. OVERWRITTEN"%branch, "WARNING")
                         if compressed: # If compressed, save .npz
                             try:   os.remove(out_path+out_folder+branch+".npz") # Remove the file if it already exists (permissions issues)
-                            except FileNotFoundError: print(".npy was found but not .npz")  
+                            except FileNotFoundError: print_colored(".npy was found but not .npz", "ERROR")  
                             np.savez_compressed(out_path+out_folder+branch+".npz", content[i])                      # Save the file
                             os.chmod(out_path+out_folder+branch+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO) # Set permissions
 
                         else: # If not compressed, save .npy
                             try:   os.remove(out_path+out_folder+branch+".npy") # Remove the file if it already exists (permissions issues)
-                            except FileNotFoundError: print(".npz was found but not .npy") 
+                            except FileNotFoundError: print_colored(".npz was found but not .npy", "ERROR") 
                             np.save(out_path+out_folder+branch+".npy", content[i])                                  # Save the file
                             os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO) # Set permissions
                             
                     # If file already exists, skip
-                    elif branch+".npz" in files and force == False: print("File (%s.npz) alredy exists."%branch); continue 
+                    elif branch+".npz" in files and force == False: print_colored("File (%s.npz) alredy exists."%branch, "WARNING"); continue 
 
                     # If file does not exist, save it
                     else: 
@@ -252,9 +280,9 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
                             os.chmod(out_path+out_folder+branch+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO) # Set permissions
 
                     if debug:
-                        print(branch)
-                        print("Saved data in:" , out_path+out_folder+branch+".npx")
-                        print("----------------------\n")
+                        print_colored(branch, "DEBUG")
+                        print_colored("Saved data in:"  + str(out_path+out_folder+branch)+".npx", "DEBUG")
+                        print_colored("----------------------\n", "DEBUG")
                     gc.collect()
 
                 except FileNotFoundError: print("--- File %s was not foud!!! \n"%in_file)
@@ -284,7 +312,7 @@ def print_keys(my_runs):
             print("------------------------------------------------------------------------------------------------------------------------------------------------------")
             print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
             print("------------------------------------------------------------------------------------------------------------------------------------------------------\n")
-    except KeyError: print("Empty dictionary. No keys to print.")
+    except KeyError: print_colored("Empty dictionary. No keys to print.", "ERROR")
 
 def delete_keys(my_runs, keys):
     '''
@@ -293,7 +321,7 @@ def delete_keys(my_runs, keys):
 
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
         try:   del my_runs[run][ch][key]      # Delete the key
-        except KeyError: print("*EXCEPTION: ",run, ch, key," key combination is not found in my_runs")   
+        except KeyError: print_colored("*EXCEPTION: [Run%i - Ch%i - %s] key combination is not found in my_runs"%(run,ch,key), "WARNING")   
 
 def get_preset_list(my_run, path, folder, preset, option, debug = False):
     '''
@@ -363,8 +391,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Charge" in key and key not in aux: aux.append(key)
         branch_list = aux
 
-    if debug: print("\nPreset branch_list:", branch_list)
-
+    if debug: print_colored("\nPreset branch_list:" + str(branch_list), "DEBUG")
     return branch_list
 
 #===========================================================================#
@@ -398,10 +425,10 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
                     my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]   # Load the branch 
                     if not compressed: my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item() 
 
-                    if debug: print("\nLoaded %s run with keys:"%branch,my_runs.keys())
-                    if debug: print("-----------------------------------------------")
-                except FileNotFoundError: print("\nRun", run, ", channels" ,ch," --> NOT LOADED (FileNotFound)")
-            print("-> DONE!\n")
+                    if debug: print_colored("\nLoaded %s run with keys:"%branch + str(my_runs.keys()), "DEBUG")
+                    if debug: print_colored("-----------------------------------------------", "DEBUG")
+                except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
+            print_colored("load_npy --> DONE!\n", "SUCCESS")
             del branch_list # Delete the branch list to avoid loading the same branches again
     return my_runs
 
@@ -438,25 +465,25 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
                 # If the file already exists and force is True, overwrite it
                 elif (key+".npz" in files or key+".npy" in files) and force == True:        
                     if compressed:
-                        print("File (%s.npz) OVERWRITTEN "%key)
+                        print_colored("File (%s.npz) OVERWRITTEN "%key, "WARNING")
                         os.remove(path+out_folder+key+".npz")
                         np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                     else:
-                        print("File (%s.npy) OVERWRITTEN "%key)
+                        print_colored("File (%s.npy) OVERWRITTEN "%key, "WARNING")
                         os.remove(path+out_folder+key+".npy")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 
                 # If the file does not exist, create it
                 else: 
-                    print("Saving NEW file: %s.npz"%key)
+                    print_colored("Saving NEW file: %s.npz"%key, "SUCCESS")
                     print(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
 
                     if not compressed:
-                        print("Saving NEW file: %s.npy"%key)
+                        print_colored("Saving NEW file: %s.npy"%key, "SUCCESS")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     del my_runs 
@@ -473,6 +500,5 @@ def copy_single_run(my_runs, runs, channels, keys):
             my_run[run] = dict()
             my_run[run][ch] = dict()
             my_run[run][ch][key] = my_runs[run][ch][key]
-        except KeyError:
-            print(run,ch,key," key combination is not found in my_runs")
+        except KeyError: print_colored(str(run) + str(ch)  +str(key) + " key combination is not found in my_runs", "ERROR")
     return my_run

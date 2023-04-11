@@ -6,7 +6,7 @@ from itertools         import product
 from scipy.optimize    import curve_fit
 import scipy 
 
-from .io_functions  import check_key, print_keys, write_output_file
+from .io_functions  import check_key, print_keys, write_output_file, print_colored, color_list
 from .vis_functions import vis_var_hist
 from .fit_functions import gaussian, gaussian_train, loggaussian, loggaussian_train, gaussian_fit, gaussian_train_fit, pmt_spe_fit
 from .ana_functions import generate_cut_array, get_units
@@ -61,7 +61,7 @@ def calibrate(my_runs, keys, OPT={}):
     next_plot = False
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
         if len(my_runs[run][ch].keys()) == 0:
-            print("\n RUN DOES NOT EXIST. Looking for the next")
+            print_colored("\n RUN DOES NOT EXIST. Looking for the next", "WARNING")
             popt = [-99, -99, -99]; pcov= [-99, -99, -99]; perr = [-99, -99, -99]
         
         else: 
@@ -258,11 +258,11 @@ def charge_fit(my_runs, keys, OPT={}):
         ax_ch.plot(x,gaussian(x, *popt), label="")
         
         ## Repeat customized fit ##
-        confirmation = input("Are you happy with the fit? (y/n) ")
+        confirmation = input(color_list("magenta")+"Are you happy with the fit? (y/n) "+color_list("end"))
         if "n" in confirmation:
             print("\n--- Repeating the fit with input parameters (\u03BC \u00B1 \u03C3) \u03B5 [{:0.2f}, {:0.2f}] ---".format(x[0],x[-1]))
-            mean  = input("Introduce MEAN value for the fit: ")
-            sigma = input("Introduce SIGMA value for the fit: ")
+            mean  = input(color_list("magenta")+"Introduce MEAN value for the fit: " +color_list("end"))
+            sigma = input(color_list("magenta")+"Introduce SIGMA value for the fit: "+color_list("end"))
 
             x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,custom_fit=[int(mean),int(sigma)])
             ax_ch.plot(x, gaussian(x, *popt), label="")

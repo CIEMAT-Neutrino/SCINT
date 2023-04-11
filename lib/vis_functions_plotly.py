@@ -6,7 +6,7 @@ import keyboard
 import math
 from itertools import product
 
-from .io_functions import load_npy,check_key, print_keys
+from .io_functions import load_npy,check_key, print_keys, print_colored
 from .ana_functions import generate_cut_array, get_units
 from .fit_functions import gaussian, scint_fit, fit_wvfs, gaussian_fit
 from scipy.ndimage.filters import gaussian_filter1d
@@ -115,7 +115,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                         axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
                         axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
-                    except KeyError: print("Run preprocess please!")
+                    except KeyError: print_colored("Run preprocess please!", "ERROR")
                     axs[j].set_title("Run {} - Ch {} - Event Number {}".format(run,ch_list[j],idx),size = 14)
                     axs[j].xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
                     
@@ -126,8 +126,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                             if OPT["NORM"] == True and OPT["NORM"] == True:
                                 ave = ave/np.max(ave)
                             axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                        except:
-                            print("Run has not been averaged!")
+                        except: print_colored("Run has not been averaged!", "WARNING")
 
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs[j].legend()
 
@@ -148,7 +147,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])), filt_data, color = "orange", alpha = 0.8)
                         pedidx = my_run[run][ch_list[j]][label+"PedLim"]
                         threshold = np.max(filt_data[:pedidx]) + np.std(filt_data[:pedidx]*2)
-                        print(threshold)
+                        print("THRLD: ",threshold)
                         axs[j].axhline(threshold,c="r", alpha=.6, ls = "dotted")
                         # if np.max(filt_data) < threshold:
                             # prom = np.abs(np.max(filt_data[:pedidx])) + abs(np.min(filt_data[:pedidx]))
@@ -164,7 +163,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                                        xmax=properties["right_ips"]*my_run[run][ch_list[j]]["Sampling"], color = "C1")
                         plt.vlines(x=my_run[run][ch_list[j]]["Sampling"]*peak_idx, ymin=raw[j][peak_idx], 
                                    ymax = raw[j][peak_idx] + properties["prominences"], color = "C1")
-                        print(properties)
+                        print("PROPS: ", properties)
 
                     try:
                         if my_run[run][ch_list[j]]["MyCuts"][idx] == False:
@@ -181,8 +180,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]))
                     axs.grid(True, alpha = 0.7)
                     try:   axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
-                    except KeyError:
-                        print("Run preprocess please!")
+                    except KeyError: print_colored("Run preprocess please!", "ERROR")
                     axs.set_title("Run {} - Event Number {}".format(run,idx),size = 14)
                     axs.xaxis.offsetText.set_fontsize(14)
                     
@@ -193,11 +191,9 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                             if OPT["NORM"] == True and OPT["NORM"] == True:
                                 ave = ave/np.max(ave)
                             axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                        except:
-                            print("Run has not been averaged!")
+                        except: print_colored("Run has not been averaged!", "WARNING")
 
-                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-                        axs.legend()
+                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
 
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
@@ -219,7 +215,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     except: pass
                     
                 if check_key(OPT, "SHOW_PARAM") == True and OPT["SHOW_PARAM"]:
-                    print('\033[1m' + "\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]) + '\033[0m')
+                    print_colored("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]), "white", bold=True)
                     print("- Sampling: {:.0E}".format(sampling))
                     print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]][label+"PedMean"][idx]))
                     print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]][label+"PedSTD"][idx]))
@@ -229,7 +225,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
                     print("- Max Peak Time: {:.2E}".format(my_run[run][ch_list[j]][label+"PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
                     try:   print("- Charge: {:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
                     except:
-                        if check_key(OPT,"CHARGE_KEY"): print("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"])
+                        if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"], "WARNING")
                         else: print("- Charge: default charge key has not been computed")
                     try:   print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
                     except:
@@ -243,7 +239,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
-                if idx > len(my_run[run][ch_list[j]][key]): idx = len(my_run[run][ch_list[j]][key])-1; print('\033[1m' + "\nBe careful! There are ", idx, "in total"); print('\033[0m')
+                if idx > len(my_run[run][ch_list[j]][key]): idx = len(my_run[run][ch_list[j]][key])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", bold=True)
             elif tecla == "p":
                 fig.savefig('run{}_evt{}.png'.format(run,idx), dpi = 500)
                 idx = idx+1

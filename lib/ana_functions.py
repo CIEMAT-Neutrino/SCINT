@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy     import stats as st
 from itertools import product
 
-from .io_functions import check_key, print_keys
+from .io_functions import check_key, print_keys, print_colored
 
 def insert_variable(my_runs, var, key, debug = False):
     '''
@@ -18,7 +18,7 @@ def insert_variable(my_runs, var, key, debug = False):
         try:
             my_runs[run][ch][key] = var[j]
         except KeyError: 
-            if debug: print("Inserting value...")
+            if debug: print_colored("Inserting value...", "DEBUG")
 
 def generate_cut_array(my_runs,debug=False):
     '''
@@ -26,18 +26,15 @@ def generate_cut_array(my_runs,debug=False):
     '''
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
-        if debug: print("Keys in my_run before generating cut array: ",my_runs[run][ch].keys())
+        if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
         for key in my_runs[run][ch].keys():
             # if debug: print("Output of find function for key: ",key,key.find("ADC"))
             # if key.find("ADC") == 0:
-            if "ADC" in key:
-                ADC_key = key
-            elif "Charge" in key:
-                ADC_key = key
-            elif "Peak" in key:
-                ADC_key = key
+            if "ADC" in key:      ADC_key = key
+            elif "Charge" in key: ADC_key = key
+            elif "Peak" in key:   ADC_key = key
         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
-        if debug: print("Keys in my_run after generating cut array: ",my_runs[run][ch].keys())
+        if debug: print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
 
 def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
     '''
@@ -48,9 +45,9 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
         try:
             my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
             my_runs[run][ch][label+"PeakTime"] = np.argmax (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
-            print("Peak variables have been computed for run %i ch %i"%(run,ch))
+            print_colored("Peak variables have been computed for run %i ch %i"%(run,ch), "blue")
         except KeyError: 
-            if debug: print("*EXCEPTION: for ",run,ch,key," peak variables could not be computed")
+            if debug: print_colored("*EXCEPTION: for %i, %i, %s peak variables could not be computed"%(run,ch,key), "WARNING")
 
 def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
     '''
@@ -69,10 +66,9 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
             my_runs[run][ch][label+"PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedLim"]  = ped_lim
-            print("Pedestal variables have been computed for run %i ch %i"%(run,ch))
-        except: 
-            KeyError
-            if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
+            print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
+        except KeyError: 
+            if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")
 
 def compute_ana_wvfs(my_runs, debug = False):
     '''
@@ -82,7 +78,7 @@ def compute_ana_wvfs(my_runs, debug = False):
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
 
         my_runs[run][ch]["ADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
-        print("Analysis wvfs have been computed for run %i ch %i"%(run,ch))
+        print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
 
         del my_runs[run][ch]["RawADC"] # After ADC is computed, delete RawADC from memory
@@ -96,12 +92,9 @@ def get_units(my_runs, debug = False):
         keys = my_runs[run][ch].keys()
         aux_dic = {}
         for key in keys:
-            if "Amp" in key or "Ped" in key or "ADC" in key:
-                aux_dic[key] = "ADC"
-            elif "Time" in key or "Sampling" in key:
-                aux_dic[key] = "s"
-            elif "Charge" in key:
-                aux_dic[key] = "pC"
-            else:
-                aux_dic[key] = "a.u."
+            if "Amp" in key or "Ped" in key or "ADC" in key: aux_dic[key] = "ADC"
+            elif "Time" in key or "Sampling" in key:         aux_dic[key] = "s"
+            elif "Charge" in key:                            aux_dic[key] = "pC"
+            else:                                            aux_dic[key] = "a.u."
+            
         my_runs[run][ch]["UnitsDict"] = aux_dic
