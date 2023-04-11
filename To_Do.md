@@ -8,9 +8,9 @@
 - [x] ~~Falta por implementar que se pueda repetir el fit y le puedas dar valores de entrada por ejemplo (calib/scintill)~~
 - [ ] En la de scintillation hay que poner que rango de cargas de los que hay calculados quieres usar/fittear o lo que sea
 - [x] ~~El fit del perfil de centelleo para sacar la tau_slow etc~~ --> LISTO EN DECONVOLUCION
-- [ ] Calcular NEvents/s 
+- [ ] Calcular NEvents/s ???
 - [ ] Documentar algunas cosas que faltan en las funciones + Wiki (hace mas pequeño el codigo o resumir lo importante)
-- [ ] Mejorar los output por terminal (+colores)
+- [ ] Mejorar los output por terminal (~~colores~~)
 - [x] ~~(Extra: Calibracion pmt)~~
 - [ ] (Extra: Analisis DC)
 - [ ] ColorStyle
@@ -28,7 +28,7 @@
 - [x] ~~Imports desde un .py comun~~
 - [x] ~~No pasar por los .root :)~~
 - [x] ~~Cambiar estructura a carpeta (run00_ch00) con .npy (Ana/Dec/Fit) que serian las ramas del root + info extra que vamos añadiendo. Hay que cambiar os prefijos para que sean el nombre de los .npy. Puedes cargas las ramas que elijas. Kind of solve memory problem~~
-- [ ] Libreria de fit: no saca el chi2; hay que cambiarla o ver como añadirlo/calcularlo
+- [x] ~~Libreria de fit: no saca el chi2; hay que cambiarla o ver como añadirlo/calcularlo~~
 
         import numpy as np
         from scipy.optimize import curve_fit
