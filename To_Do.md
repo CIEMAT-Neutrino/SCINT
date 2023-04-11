@@ -10,7 +10,7 @@
 - [x] ~~El fit del perfil de centelleo para sacar la tau_slow etc~~ --> LISTO EN DECONVOLUCION
 - [ ] Calcular NEvents/s 
 - [ ] Documentar algunas cosas que faltan en las funciones + Wiki (hace mas pequeño el codigo o resumir lo importante)
-- [ ] Mejorar los output por terminal
+- [ ] Mejorar los output por terminal (+colores)
 - [x] ~~(Extra: Calibracion pmt)~~
 - [ ] (Extra: Analisis DC)
 - [ ] ColorStyle
@@ -22,13 +22,33 @@
     - [ ] El resto sin bucle (poner un WARNING?)
     - [x] ~~INDEXADO para quitar los bucles en los cortes~~ (EJEMPLO TO CHECK: my_run[run][ch][key][my_run[run][ch]["MyCuts"] == True] )
 - [x] ~~Añadir al ppio de las funciones una comprobacion de si existen cortes generados y aplicarlos en las funciones que vengan despues.~~
-- [ ]  No queremos guardar una branch con los cortes --> Ahora se esta guardando
+- [x] ~~No queremos guardar una branch con los cortes --> Ahora se esta guardando~~
 - [x] ~~Comprobar ganancias FEB22_2 (testear que los resultados son compatibles con las otras macros)~~
 - [ ] TESTS para las medidas XA-SBND 
 - [x] ~~Imports desde un .py comun~~
 - [x] ~~No pasar por los .root :)~~
 - [x] ~~Cambiar estructura a carpeta (run00_ch00) con .npy (Ana/Dec/Fit) que serian las ramas del root + info extra que vamos añadiendo. Hay que cambiar os prefijos para que sean el nombre de los .npy. Puedes cargas las ramas que elijas. Kind of solve memory problem~~
 - [ ] Libreria de fit: no saca el chi2; hay que cambiarla o ver como añadirlo/calcularlo
+
+        import numpy as np
+        from scipy.optimize import curve_fit
+        import matplotlib.pyplot as plt
+        def fit_gaussians(x, y, N, p0):
+            assert x.shape == y.shape, "Input arrays must have the same shape."
+            def gaussian(x, a, x0, sigma):
+                return a * np.exp(-(x - x0) ** 2 / (2 * sigma ** 2))
+            try:
+                popt, pcov = curve_fit(lambda x, *p0: np.sum([gaussian(x, p0[j], p0[j+1], p0[j+2]) for j in range(0, len(p0), 3)]), x, y, p0=p0)
+                fit_y = np.sum([gaussian(x, popt[j], popt[j+1], popt[j+2]) for j in range(0, len(popt), 3)])
+                chi_squared = np.sum((y - fit_y) ** 2 / fit_y) / np.abs(y.size - len(popt))
+                plt.plot(x, y, 'b-', label='data')
+                plt.plot(x, fit_y, 'r-', label='fit')
+                plt.legend()
+                plt.show()
+                return popt, chi_squared
+            except:
+                print("Fit failed.")
+
 - [x] ~~persistencia no funciona~~
 
 EXTRAS PARA CUANDO TODO FUNCIONE BIEN
