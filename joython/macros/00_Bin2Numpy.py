@@ -20,7 +20,7 @@ if DEBUG:import faulthandler; faulthandler.enable();
 
 ## Third Week: Dahpne VIS
 in_path ="/scr/neutrinos/rodrigoa/DAPHNE_VIS/"
-out_path="/scr/neutrinos/rodrigoa/DAPHNE_VIS/joython/"
+out_path="/scr/neutrinos/rodrigoa/DAPHNE_VIS/joython/compressed/"
 run_table="APSAIA_VIS.xlsx"
 
-Bin2Np_excel(run_table,compressed=False,i_path=in_path,o_path=out_path)
+Bin2Np_excel(run_table,compressed=True,i_path=in_path,o_path=out_path)
