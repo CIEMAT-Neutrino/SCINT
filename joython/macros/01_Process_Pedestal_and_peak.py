@@ -16,15 +16,15 @@ parser.add_argument("-r", "--Run", help = "Selected data taking",type=int)
 args = parser.parse_args()
 if args.Run is None: raise NotImplementedError("Must add run number with -r or --R")
 
-# path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
-# path="/scr/neutrinos/rodrigoa/APSAIA_VIS/joython/"
-path="/scr/neutrinos/rodrigoa/DAPHNE_VIS/joython/"
-Runs=open_runs_table("../macros/APSAIA_VIS.xlsx")
+
+# WEEK="APSAIA_VIS"   # 1st  week 
+# WEEK="APSAIA_VUV"   # 2nd  week 
+# WEEK="DAPHNE_VIS"   # 3rd  week 
+# WEEK="DAPHNE_VUV"   # 4th  week 
+WEEK="APSAIA_VUV_2" # 5th  week 
+path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
+Runs=open_runs_table("../macros/"+WEEK+".xlsx")
 Runs=Runs[Runs["Run"]==int(args.Run)]
-
-
-# path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
-# Runs=open_runs_table("../macros/APSAIA_VUV.xlsx")
 
 for run in Runs["Run"].array:
 
@@ -39,7 +39,7 @@ for run in Runs["Run"].array:
     # remember to always delete between runs to prevent overloading)
 
     for ch in Run_props["Channels"]:
-        ADC=open_run_var(run_path,"RawADC",[ch],compressed=compress)
+        ADC=open_run_var(run_path,"RawADC",[ch],compressed=True)
         
         Pedestal_vars=do_run_things   (ADC,compute_Pedestal)
         Pedestal_vars_SW=do_run_things(ADC,compute_Pedestal_slidingWindows)

@@ -49,7 +49,7 @@ while EV<NEV:
     for ch in RunProps["Channels"]:
         i=int(z/Ncols)
         j=z%Ncols
-        ADC          =open_run_var(run_path,"RawADC"       ,[ch],compressed=compress)
+        ADC          =open_run_var(run_path,"RawADC"       ,[ch],compressed=True)
         Pedestal_vars=open_run_var(run_path,"Pedestal_vars",[ch],compressed=compress)
         
         ped    = Pedestal_vars[ch]["MEAN"][EV]

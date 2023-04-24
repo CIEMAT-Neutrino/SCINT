@@ -14,7 +14,11 @@ parser.add_argument("-r", "--Run", help = "Selected data taking",type=int)
 args = parser.parse_args()
 if args.Run is None: raise NotImplementedError("Must add run number with -r or --R")
 
-WEEK="APSAIA_VUV";
+# WEEK="APSAIA_VIS"   # 1st  week 
+# WEEK="APSAIA_VUV"   # 2nd  week 
+# WEEK="DAPHNE_VIS"   # 3rd  week 
+# WEEK="DAPHNE_VUV"   # 4th  week 
+WEEK="APSAIA_VUV_2" # 5th  week 
 path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
 Runs=open_runs_table("../macros/"+WEEK+".xlsx")
 Run_props=Runs[Runs["Run"]==int(args.Run)].iloc[0]
@@ -26,7 +30,7 @@ if not Run_props["Type"]=="Visible": sys.exit()
 compress=False
 
 for ch in Run_props["Channels"]:
-    ADC          =open_run_var(run_path,"RawADC"          ,[ch],compressed=compress)
+    ADC          =open_run_var(run_path,"RawADC"          ,[ch],compressed=True)
     Pedestal_vars=open_run_var(run_path,"Pedestal_vars_SW",[ch],compressed=compress)
     Peak_vars    =open_run_var(run_path,"Peak_vars"       ,[ch],compressed=compress)
     

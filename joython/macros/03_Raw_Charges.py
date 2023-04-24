@@ -13,9 +13,11 @@ parser.add_argument("-r", "--Run", help = "Selected data taking",type=int)
 args = parser.parse_args()
 if args.Run is None : raise NotImplementedError("Must add run number with -r or --R")
 
-WEEK="APSAIA_VUV";
-# WEEK="APSAIA_VIS";
-# WEEK="DAPHNE_VIS";
+# WEEK="APSAIA_VIS"   # 1st  week 
+# WEEK="APSAIA_VUV"   # 2nd  week 
+# WEEK="DAPHNE_VIS"   # 3rd  week 
+# WEEK="DAPHNE_VUV"   # 4th  week 
+WEEK="APSAIA_VUV_2" # 5th  week 
 path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
 Runs=open_runs_table("../macros/"+WEEK+".xlsx")
 Runs=Runs[Runs["Run"]==int(args.Run)]
@@ -29,7 +31,7 @@ for run in Runs["Run"].array:
     
     
     for ch in Run_props["Channels"]:
-        ADC=open_run_var(run_path,"RawADC",[ch],compressed=compress)
+        ADC=open_run_var(run_path,"RawADC",[ch],compressed=True)
         Pedestal_vars_SW=open_run_var(run_path,"Pedestal_vars",[ch],compressed=compress)
         
         ADC=do_run_things((ADC,Pedestal_vars_SW,Run_props["Polarity"]),substract_Pedestal)
