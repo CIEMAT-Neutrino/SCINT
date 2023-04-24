@@ -2,25 +2,39 @@ import sys
 sys.path.insert(0, '../')
 
 import pandas as pd
-from lib.first_data_process import Bin2Np_excel
+from lib.first_data_process import save_Run_Bin2Np
+from lib.io_functions import open_runs_table
 
 DEBUG=True
 if DEBUG:import faulthandler; faulthandler.enable();
 
+import argparse
 
-# ## First Week: Apsaia VIS
-# in_path ="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/"
-# out_path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VIS/joython/"
-# run_table="APSAIA_VIS.xlsx"
+DEBUG=False
+if DEBUG:import faulthandler; faulthandler.enable();
 
-## Second Week: Apsaia VUV
-# in_path ="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/"
-# out_path="/media/rodrigoa/DiscoDuro/SBND_XA_PDE/APSAIA_VUV/joython/"
-# run_table="APSAIA_VUV.xlsx"
+# Initialize parser
+parser = argparse.ArgumentParser()
+# Adding optional argument
+parser.add_argument("-r", "--Run", help = "Selected data taking",type=int)
+# Read arguments from command line
+args = parser.parse_args()
+if args.Run is None: raise NotImplementedError("Must add run number with -r or --Run")
 
-## Third Week: Dahpne VIS
-in_path ="/scr/neutrinos/rodrigoa/DAPHNE_VIS/"
-out_path="/scr/neutrinos/rodrigoa/DAPHNE_VIS/joython/compressed/"
-run_table="APSAIA_VIS.xlsx"
+# WEEK="APSAIA_VIS"   # 1st  week 
+# WEEK="APSAIA_VUV"   # 2nd  week 
+# WEEK="DAPHNE_VIS"   # 3rd  week 
+# WEEK="DAPHNE_VUV"   # 4th  week 
+WEEK="APSAIA_VUV_2" # 5th  week 
 
-Bin2Np_excel(run_table,compressed=True,i_path=in_path,o_path=out_path)
+in_path ="/scr/neutrinos/rodrigoa/"+WEEK+"/"
+out_path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
+Runs=open_runs_table("../macros/"+WEEK+".xlsx")
+Runs=Runs[Runs["Run"]==int(args.Run)]
+
+## Fifth Week: Apsaia VUV 2
+
+for run in Runs["Run"].array:
+
+    Run_props=Runs[Runs["Run"]==run].iloc[0]
+    save_Run_Bin2Np(Run_props["Run"],Run_props["Channels"],Compressed=True,in_path=in_path,out_path=out_path)
