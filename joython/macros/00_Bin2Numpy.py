@@ -23,9 +23,9 @@ if args.Run is None: raise NotImplementedError("Must add run number with -r or -
 
 # WEEK="APSAIA_VIS"   # 1st  week 
 # WEEK="APSAIA_VUV"   # 2nd  week 
-# WEEK="DAPHNE_VIS"   # 3rd  week 
+WEEK="DAPHNE_VIS"   # 3rd  week 
 # WEEK="DAPHNE_VUV"   # 4th  week 
-WEEK="APSAIA_VUV_2" # 5th  week 
+# WEEK="APSAIA_VUV_2" # 5th  week 
 
 in_path ="/scr/neutrinos/rodrigoa/"+WEEK+"/"
 out_path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
