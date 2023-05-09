@@ -2,6 +2,8 @@
 
 ------ CYTHON WORKSHOP III ------
 
+- [ ] FUSION JOYTHON EN CYTHON
+
 ------ CYTHON WORKSHOP II ------
 
 - [ ] Las cargas que se calculan de nuevo se sobrescriben tal y como esta ahora mismo. hay que pensar como organizar eso. 
