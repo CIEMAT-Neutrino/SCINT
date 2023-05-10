@@ -3,8 +3,17 @@ sys.path.insert(0, '../')
 
 from lib.io_functions  import open_run_var,open_runs_table,do_run_things,save_run_var
 from lib.ped_functions import compute_Pedestal,substract_Pedestal, compute_Peak
+import argparse
 
-WEEK="APSAIA_VUV";
+# Initialize parser
+parser = argparse.ArgumentParser()
+# Adding optional argument
+parser.add_argument("-w", "--Week", help = "Selected period",type=str)
+# Read arguments from command line
+args = parser.parse_args()
+if args.Week is None: raise NotImplementedError("Must add week with -w or --Week")
+WEEK=args.Week;
+
 path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
 Runs=open_runs_table("../macros/"+WEEK+".xlsx")
 
