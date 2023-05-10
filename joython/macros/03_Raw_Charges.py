@@ -9,15 +9,18 @@ if DEBUG:import faulthandler; faulthandler.enable();
 parser = argparse.ArgumentParser()
 # Adding optional argument
 parser.add_argument("-r", "--Run", help = "Selected data taking",type=int)
+parser.add_argument("-w", "--Week", help = "Selected period",type=str)
 # Read arguments from command line
 args = parser.parse_args()
-if args.Run is None : raise NotImplementedError("Must add run number with -r or --R")
-
+if args.Run is None: raise NotImplementedError("Must add run number with -r or --Run")
+if args.Week is None: raise NotImplementedError("Must add week with -w or --Week")
+WEEK=args.Week;
 # WEEK="APSAIA_VIS"   # 1st  week 
 # WEEK="APSAIA_VUV"   # 2nd  week 
 # WEEK="DAPHNE_VIS"   # 3rd  week 
 # WEEK="DAPHNE_VUV"   # 4th  week 
-WEEK="APSAIA_VUV_2" # 5th  week 
+# WEEK="APSAIA_VUV_2" # 5th  week 
+
 path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
 Runs=open_runs_table("../macros/"+WEEK+".xlsx")
 Runs=Runs[Runs["Run"]==int(args.Run)]
