@@ -1,13 +1,6 @@
 import sys
 sys.path.insert(0, '../')
-
-import pandas as pd
-from lib.first_data_process import save_Run_Bin2Np
-from lib.io_functions import open_runs_table
-
-DEBUG=True
-if DEBUG:import faulthandler; faulthandler.enable();
-
+from lib import *
 import argparse
 
 DEBUG=False
@@ -28,15 +21,24 @@ WEEK=args.Week;
 # WEEK="DAPHNE_VIS"   # 3rd  week 
 # WEEK="DAPHNE_VUV"   # 4th  week 
 # WEEK="APSAIA_VUV_2" # 5th  week 
-
-in_path ="/scr/neutrinos/rodrigoa/"+WEEK+"/"
-out_path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
+path="/scr/neutrinos/rodrigoa/"+WEEK+"/joython/"
 Runs=open_runs_table("../macros/"+WEEK+".xlsx")
-Runs=Runs[Runs["Run"]==int(args.Run)]
+Run_props=Runs[Runs["Run"]==int(args.Run)].iloc[0]
+run_path=path+"run"+str(Run_props["Run"]).zfill(2)+"/";
 
-## Fifth Week: Apsaia VUV 2
 
-for run in Runs["Run"].array:
+if not Run_props["Type"]=="Visible": sys.exit()
 
-    Run_props=Runs[Runs["Run"]==run].iloc[0]
-    save_Run_Bin2Np(Run_props["Run"],Run_props["Channels"],Compressed=True,in_path=in_path,out_path=out_path)
+compress=False
+
+for ch in Run_props["Channels"]:
+    ADC          =open_run_var(run_path,"RawADC"          ,[ch],compressed=True)
+    Pedestal_vars=open_run_var(run_path,"Pedestal_vars_SW",[ch],compressed=compress)
+    Peak_vars    =open_run_var(run_path,"Peak_vars"       ,[ch],compressed=compress)
+    
+    ADC=do_run_things((ADC,Pedestal_vars,Run_props["Polarity"]),substract_Pedestal)
+    Avg_wvf=do_run_things((ADC,Peak_vars),compute_AverageWaveforms)
+
+    save_run_var(Avg_wvf,run_path,"Avg_wvf",compressed=compress)
+    
+    del Pedestal_vars, ADC

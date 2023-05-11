@@ -159,7 +159,7 @@ def calibration_txt(run, ch, popt, pcov, filename, info):
         for i in np.arange(fitted_peaks): #distances between peaks
             if i == fitted_peaks-1: gain = -99; dgain = -99; sn0 = -99; dsn0 = -99; sn1 = -99; dsn1 = -99; sn2 = -99; dsn2 = -99
             else:
-                # GAIN = [mu(i+1) - mu(i)] * 1e-12 /1.602e-19 (pC)
+                # GAIN = [mu(i+1) - mu(i)] * 1e-12 /    e-19 (pC)
                 gain  = (copy_cal[i+1][0][0]-copy_cal[i][0][0])*1e-12/1.602e-19; dgain = (np.sqrt(copy_cal[i+1][0][1]**2+copy_cal[i][0][1]**2))*1e-12/1.602e-19
                 
                 # SN0 = [mu(i+1)-mu(i)]/sigma(i)
