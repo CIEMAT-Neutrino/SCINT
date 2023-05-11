@@ -20,8 +20,12 @@ def Bin2Np_ADC(FileName,header_lines=6):
 
     data    = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]
     headers = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines]
+    headers=headers.astype(float)
     
-    TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
+    first=headers[:,4]*2**32
+    second=headers[:,5]
+    TIMESTAMP  = first + second 
+    TIMESTAMP *= 8e-9 #Unidades TriggerTimeStamp(PC_Units) * 8e-9
 
     if DEBUG:
         print("Header:",header)
@@ -46,7 +50,7 @@ def save_Bin2Np(file_in,file_out,compressed=True,file_timestamp="Timestamp"):
         np.save(file_out,data_npy)
         np.save(file_timestamp,timestamp)
     
-    del data_npy #free memory
+    del data_npy,timestamp #free memory
     gc.collect()
 
 def save_Run_Bin2Np(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",out_name="RawADC",Compressed=True) :
@@ -57,10 +61,17 @@ def save_Run_Bin2Np(Run,Channel,in_path="../data/raw/",out_path="../data/raw/",o
         ADC_outchan = out_path+"run"+str(Run).zfill(2)+"/"+out_name+"_ch"+str(ch)  
         Timestamp_outchan = out_path+"run"+str(Run).zfill(2)+"/"+"Timestamp"+"_ch"+str(ch)  
 
-        print("-----------------")
-        print("Dumping: ",inchan," to: ",ADC_outchan+".np*",Timestamp_outchan+".np*")
-        print("-----------------")
-        save_Bin2Np(inchan,ADC_outchan,compressed=Compressed,file_timestamp=Timestamp_outchan)
+        check_file_C = os.path.isfile(ADC_outchan+".npz")#compresed flag
+        check_file_U = os.path.isfile(ADC_outchan+".npy")#uncompresed
+        if check_file_C or check_file_U: 
+            print("-----------------")
+            print("Already dumped: ",inchan," to: ",ADC_outchan+".np*",Timestamp_outchan+".np*")
+            print("-----------------")
+        else:
+            print("-----------------")
+            print("Dumping: ",inchan," to: ",ADC_outchan+".np*",Timestamp_outchan+".np*")
+            print("-----------------")
+            save_Bin2Np(inchan,ADC_outchan,compressed=Compressed,file_timestamp=Timestamp_outchan)
 
 def Bin2Np_excel(excel_file_path="",sheet='Sheet1',compressed=True,i_path="",o_path=""):
     """Calls the dumping function using a excel table with the data runs of our"""

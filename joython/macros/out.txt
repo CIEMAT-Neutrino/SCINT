@@ -1,0 +1,2 @@
+Seq	Host	Starttime	JobRuntime	Send	Receive	Exitval	Signal	Command
+1	:	1683741816.174	    36.395	0	2920	0	0	python3 01_Process_Pedestal_and_peak.py -w APSAIA_VUV -r 0
