@@ -193,7 +193,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                                 idx, = np.where(ave == np.max(ave))
                                 ave = shift(ave, ref_max_idx-idx, cval = 0)
                             axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                        except KeyError: print_("Run has not been averaged!", "ERROR")
+                        except KeyError: print_colored("Run has not been averaged!", "ERROR")
 
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
@@ -284,11 +284,10 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         plt.ion()
         fig, ax = plt.subplots(1 ,1, figsize = (8,6))
         axs = ax
-
         fig.supxlabel(r'Time [s]')
         fig.supylabel("ADC Counts")
-        # fig.supylabel("Normalized Amplitude")
-        norm_raw = [1]*nch # Generates a list with the norm correction for std bar
+        # fig.supylabel("Personalized  Y-axis")
+        # fig.supxlabel("Personalized  X-axis")
         counter = 0
         ref_max_idx = -1
         for b in b_list:
@@ -346,7 +345,9 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
            \n a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
            \n b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
            \n c) Other variable: any other variable. Here we reject outliers.
+        \n - compare: NONE, RUNS, CHANNELS. This option chooses the way to compare histograms.
        \n - percentile: percentile used for outliers removal
+       \n - select_range: if we want to change axis limits (for binning reasons or whatever)
     WARNING! Maybe the binning stuff should be studied in more detail.
     '''
 
@@ -367,7 +368,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
         b_list = ch_list
     data = []
     for a in a_list:
-        if compare != "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
+        if compare != "NONE": fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
         for b in b_list:
             if compare == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
@@ -385,7 +386,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                 if k == "PeakAmp":
                     data = aux_data
                     max_amp = np.max(data)
-                    # binning = int(max_amp)+1
+                    # binning = int(max_amp)+1 # For PeakAmp if we want a bin/ADC
                     binning = 1000
                 elif k == "PeakTime":
                     data = my_run[run][ch]["Sampling"]*aux_data
@@ -425,6 +426,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and compare != "NONE":
+            plt.ion()
             plt.show()
             while not plt.waitforbuttonpress(-1): pass
             plt.close()
@@ -437,6 +439,8 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
     VARIABLES:
        \n - my_run: run(s) we want to check
        \n - keys: variables we want to plot as histograms. Type: List
+       \n - compare: NONE, RUNS, CHANNELS. This option chooses the way to compare waveforms both axis. This way we can
+       \n compare variables between RUNS (if they have same length) o CHANNELS.
        \n - percentile: percentile used for outliers removal
        \n - select_range: if we still have many outliers we can select the ranges in x and y axis.
     '''
@@ -514,7 +518,5 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
                 plt.show()
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
-            # else:
-            #     plt.close()
             if compare != "NONE": break
     return figures_list, axes_list
