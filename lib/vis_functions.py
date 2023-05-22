@@ -83,15 +83,17 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     ped = np.mean(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = "Raw"
-                    if debug: print("Using '%s' label"%label)
-
+                    if debug: 
+                        print("Using '%s' label"%label)
                 elif(key == "ADC"):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = 0
                     std = my_run[run][ch_list[j]]["PedSTD"][idx]
                     label = ""
-                    if debug: print("Using '%s' label"%label)
+                    if debug: 
+                        print((my_run[run][ch_list[j]][key][idx]).dtype)
+                        print("Using '%s' label"%label)
 
                 elif("ADC" in str(key)):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
@@ -99,7 +101,9 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     ped = 0
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = key.replace("ADC","")
-                    if debug: print("Using '%s' label"%label)
+                    if debug: 
+                        print((my_run[run][ch_list[j]][key][idx]).dtype)
+                        print("Using '%s' label"%label)
 
                 elif("Ave" in str(key)):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
@@ -153,10 +157,13 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
 
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
-                        thresh = my_run[run][ch_list[j]]["PedMax"][idx]
+                        if check_key(my_run[run][ch_list[j]], "AveWvfSPE") == False:
+                            thresh = my_run[run][ch_list[j]]["PedMax"][idx] + 0.5*my_run[run][ch_list[j]]["PedMax"][idx]
+                        else:
+                            thresh = np.max(my_run[run][ch_list[j]]["AveWvfSPE"])*3/4
                         wdth = 4
                         prom = 0.01
-                        dist  = 40
+                        dist  = 30
                         axs[j].axhline(thresh,c="k", alpha=.6, ls = "dotted")
                         peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
                         for p in peak_idx:
@@ -207,7 +214,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                         dist = 40
                         axs.axhline(thresh,c="salmon", alpha=.6, ls = "dotted")
                         # peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
-                        peak_idx, _ = find_peaks(raw[j], height = thresh)
+                        peak_idx, _ = find_peaks(raw[j], height = thresh)       
                         for p in peak_idx:
                             axs.scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
 
@@ -300,19 +307,16 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
 
         fig.supxlabel(r'Time [s]')
         fig.supylabel("ADC Counts")
+        # fig.supylabel("Normalized Amplitude")
         norm_raw = [1]*nch # Generates a list with the norm correction for std bar
         counter = 0
         ref_max_idx = -1
         for b in b_list:
-            if compare == "CHANNELS": ch = b; label = "Channel {} ({})".format(ch,my_run[run][ch]["Label"]); title = "Average Waveform - Run {}".format(run)
-            if compare == "RUNS":    run = b; label = "Run {}".format(run); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"]).replace("#"," ")
-            print("RUN: ", run)
-            print("CHANNEL: ", ch)
+            if compare == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
+            if compare == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"]).replace("#"," ")
             if len(keys) == 1:
                 ave = my_run[run][ch][keys[counter]][0]
             elif len(keys) > 1:
-                print("Counter", counter)
-                print("KEYS", keys[counter])
                 ave = my_run[run][ch][keys[counter]][0]
                 counter = counter + 1
             norm_ave = np.max(ave)
@@ -326,17 +330,10 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
                 axs.semilogy()
             if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
-                align_threshold = np.max(ave)*2/3
+                ref_threshold = np.argmax(ave>np.max(ave)*2/3)
                 if ref_max_idx == -1:
-                    ref_max_idx, = np.where(ave == np.max(ave))
-                    # ref_max_idx, = np.where(np.isclose(ave, align_threshold, rtol = 0.05))
-                    # ref_max_idx = ref_max_idx[0]
-                    # print(ref_max_idx)
-                # idx = np.argwhere(ave == align_threshold)
-                # idx, = np.where(np.isclose(ave, align_threshold, rtol = 0.05))
-                # idx = idx[0]
-                idx, = np.where(ave == np.max(ave))
-                ave = shift(ave, ref_max_idx-idx, cval = 0)
+                    ref_max_idx = ref_threshold
+                ave = np.roll(ave, ref_max_idx-ref_threshold)
 
             if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
                 fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[keys[counter]])
@@ -363,7 +360,7 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         except: axs.clear()
         plt.close()   
 
-def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = {"SHOW": True}):
+def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False):
     """
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
@@ -406,13 +403,15 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
             if check_key(my_run[run][ch], "UnitsDict") == False:
                 get_units(my_run)
             
-            if compare == "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
+            if compare == "NONE": fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
             for k in key:
                 aux_data = my_run[run][ch][k][my_run[run][ch]["MyCuts"] == True]
+                aux_data = aux_data[~np.isnan(aux_data)]
                 if k == "PeakAmp":
                     data = aux_data
                     max_amp = np.max(data)
-                    binning = int(max_amp)+1
+                    # binning = int(max_amp)+1
+                    binning = 1000
                 elif k == "PeakTime":
                     data = my_run[run][ch]["Sampling"]*aux_data
                     binning = int(my_run[run][ch]["NBinsWvf"]/10)
@@ -432,7 +431,10 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                     fig.supxlabel(k+" ("+my_run[run][ch]["UnitsDict"][k]+")"); fig.supylabel("Counts")
                     fig.suptitle(title + " - {} histogram".format(k))
 
-                counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
+                if select_range:
+                    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))    
+                    counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", range=(x1,x2)) # , zorder = 2 f
+                else: counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
                 label = label.replace(" - " + k,"")
                 all_counts.append(counts)
                 all_bins.append(bins)
@@ -443,6 +445,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
                 ax.semilogy()
             if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and compare == "NONE":
+                plt.ion()
                 plt.show()
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
@@ -452,7 +455,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
             plt.close()
     return all_counts, all_bins, all_bars
 
-def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_range = False, OPT={}):
+def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], select_range = False, OPT={}):
     """
     This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     It plots values below and above the indicated percetiles, but values are not removed from data.
@@ -463,41 +466,79 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
         - select_range: if we still have many outliers we can select the ranges in x and y axis.
     """
     figure_features()
+    r_list = my_run["NRun"]
+    ch_list = my_run["NChannel"]
+    if compare == "CHANNELS":
+        a_list = r_list 
+        b_list = ch_list 
+    if compare == "RUNS":
+        a_list = ch_list 
+        b_list = r_list
+    if compare == "NONE":
+        a_list = r_list
+        b_list = ch_list
     x_data = []; y_data = []
+    for run in r_list:
+        for ch in ch_list:
+            if check_key(my_run[run][ch], "MyCuts") == False:
+                generate_cut_array(my_run)
+            if check_key(my_run[run][ch], "UnitsDict") == False:
+                get_units(my_run)
+    figures_list = []
+    axes_list = []
+    for a in a_list:
+        for b in b_list:
+            fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
-    if check_key(my_run[run][ch], "MyCuts") == False:
-        generate_cut_array(my_run)
-    if check_key(my_run[run][ch], "UnitsDict") == False:
-        get_units(my_run)
-    x_data = my_run[run][ch][keys[0]][my_run[run][ch]["MyCuts"] == True]; y_data = my_run[run][ch][keys[1]][my_run[run][ch]["MyCuts"] == True]
+            if compare == "CHANNELS": 
+                title = "Run_{} ".format(a);
+                label0 = "{}".format(my_run[a][ch_list[0]]["Label"]).replace("#","")
+                label1 = "{}".format(my_run[a][ch_list[1]]["Label"]).replace("#","")
+                aux_x_data = my_run[a][ch_list[0]][keys[0]][my_run[a][ch_list[0]]["MyCuts"] == True]; aux_y_data = my_run[a][ch_list[1]][keys[1]][my_run[a][ch_list[1]]["MyCuts"] == True]
+            if compare == "RUNS":
+                title = "Channel_{} ".format(a);
+                label0 = "{}".format(my_run[r_list[0]][a]["Label"]).replace("#","")
+                label1 = "{}".format(my_run[r_list[1]][a]["Label"]).replace("#","")
+                aux_x_data = my_run[r_list[0]][a][keys[0]][my_run[r_list[0]][a]["MyCuts"] == True]; aux_y_data = my_run[r_list[1]][a][keys[1]][my_run[r_list[1]][a]["MyCuts"] == True]
+            if compare == "NONE":
+                title = "Run_{} Ch_{} - {} vs {} histogram".format(a,b,keys[0],keys[1])
+                label0 = ""; label1 = ""
+                aux_x_data = my_run[a][b][keys[0]][my_run[a][b]["MyCuts"] == True]; aux_y_data = my_run[a][b][keys[1]][my_run[a][b]["MyCuts"] == True]
 
-    #### Calculate range with percentiles for x-axis ####
-    x_ypbot = np.percentile(x_data, percentile[0]); x_yptop = np.percentile(x_data, percentile[1])
-    x_ypad = 0.2*(x_yptop - x_ypbot)
-    x_ymin = x_ypbot - x_ypad; x_ymax = x_yptop + x_ypad
-    #### Calculate range with percentiles for y-axis ####
-    y_ypbot = np.percentile(y_data, percentile[0]); y_yptop = np.percentile(y_data, percentile[1])
-    y_ypad = 0.2*(y_yptop - y_ypbot)
-    y_ymin = y_ypbot - y_ypad; y_ymax = y_yptop + y_ypad
-    plt.ion()
-    fig, ax = plt.subplots(1,1, figsize = (8,6))
-    if "Time" in keys[0]:
-        ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
-    else:
-        ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
-    ax.grid("both")
-    fig.supxlabel(keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
-    fig.suptitle("Run_{} Ch_{} - {} vs {} histogram".format(run,ch,keys[0],keys[1]))
-    if select_range:
-        x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
-        y1 = float(input("ymin: ")); y2 = float(input("ymax: "))
-        ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
-        ax.grid("both")
-        fig.supxlabel(keys[0]); fig.supylabel(keys[1])
+            aux_x_data = aux_x_data[~np.isnan(aux_x_data)]; aux_y_data = aux_y_data[~np.isnan(aux_y_data)]
+            x_data = aux_x_data; y_data = aux_y_data
+            #### Calculate range with percentiles for x-axis ####
+            x_ypbot = np.percentile(x_data, percentile[0]); x_yptop = np.percentile(x_data, percentile[1])
+            x_ypad = 0.2*(x_yptop - x_ypbot)
+            x_ymin = x_ypbot - x_ypad; x_ymax = x_yptop + x_ypad
+            #### Calculate range with percentiles for y-axis ####
+            y_ypbot = np.percentile(y_data, percentile[0]); y_yptop = np.percentile(y_data, percentile[1])
+            y_ypad = 0.2*(y_yptop - y_ypbot)
+            y_ymin = y_ypbot - y_ypad; y_ymax = y_yptop + y_ypad
 
-    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-        plt.yscale('log'); 
-    if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
-        plt.show(); 
-        while not plt.waitforbuttonpress(-1): pass    
-    return fig, ax
+            if "Time" in keys[0]:
+                ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+            else:
+                ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+            ax.grid("both")
+            fig.supxlabel(label0 + " " + keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(label1 + " " + keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
+            fig.suptitle(title)
+            if select_range:
+                x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
+                y1 = float(input("ymin: ")); y2 = float(input("ymax: "))
+                ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
+                ax.grid("both")
+
+            figures_list.append(fig)
+            axes_list.append(ax)
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
+                plt.yscale('log'); 
+            if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
+                plt.ion()
+                plt.show()
+                while not plt.waitforbuttonpress(-1): pass
+                plt.close()
+            # else:
+            #     plt.close()
+            if compare != "NONE": break
+    return figures_list, axes_list

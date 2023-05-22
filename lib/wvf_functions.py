@@ -58,48 +58,47 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label=""
     """
 
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        try:
-            if check_key(my_runs[run][ch], "MyCuts") == True:
-                print("Calculating average wvf with cuts")
-            else:
-                generate_cut_array(my_runs)
-                cut_label = ""
-            if check_key(my_runs[run][ch], "UnitsDict") == False:
-                get_units(my_runs)
+        # try:
+        if check_key(my_runs[run][ch], "MyCuts") == True:
+            print("Calculating average wvf with cuts")
+        else:
+            generate_cut_array(my_runs)
+        if check_key(my_runs[run][ch], "UnitsDict") == False:
+            get_units(my_runs)
 
-            buffer = 100  
-            mean_ana_ADC = np.mean(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=0)
-            aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
-            # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) # Deprecated function st.mode()
-            values, counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), return_counts=True) #using the mode peak as reference
-            bin_ref_peak = values[np.argmax(counts)]
-            
-            # centering none
-            if centering == "NONE":
-                my_runs[run][ch]["AveWvf"+cut_label] = [mean_ana_ADC]
-            
-            # centering peak
-            if centering == "PEAK":
-                bin_max_peak = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
-                bin_max_peak = bin_max_peak + bin_ref_peak - buffer
-                for ii in range(len(aux_ADC)):
-                    aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii])
-                my_runs[run][ch]["AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]
+        buffer = 100  
+        mean_ana_ADC = np.mean(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=0)
+        aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
+        # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) # Deprecated function st.mode()
+        values, counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), return_counts=True) #using the mode peak as reference
+        bin_ref_peak = values[np.argmax(counts)]
+        
+        # centering none
+        if centering == "NONE":
+            my_runs[run][ch]["AveWvf"+cut_label] = [mean_ana_ADC]
+        
+        # centering peak
+        if centering == "PEAK":
+            bin_max_peak = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
+            bin_max_peak = bin_max_peak + bin_ref_peak - buffer
+            for ii in range(len(aux_ADC)):
+                aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii])
+            my_runs[run][ch]["AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]
 
-            # centering thld
-            if centering == "THRESHOLD":
-                if threshold == 0: threshold = np.max(mean_ana_ADC)/2
-                # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), keepdims=True) # Deprecated st.mode()
-                values,counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), return_counts=True) #using the mode peak as reference
-                bin_ref_thld = values[np.argmax(counts)]
-                bin_max_thld = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
-                bin_max_peak = bin_max_thld + bin_ref_thld - buffer
-                for ii in range(len(aux_ADC)):
-                    aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])
-                my_runs[run][ch]["AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]
+        # centering thld
+        if centering == "THRESHOLD":
+            if threshold == 0: threshold = np.max(mean_ana_ADC)/2
+            # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), keepdims=True) # Deprecated st.mode()
+            values,counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), return_counts=True) #using the mode peak as reference
+            bin_ref_thld = values[np.argmax(counts)] # It is an int
+            bin_max_thld = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
+            bin_max_thld = bin_max_thld + bin_ref_thld - buffer
+            for ii in range(len(aux_ADC)):
+                aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])
+            my_runs[run][ch]["AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]
 
-        except KeyError:
-            print("Empty dictionary. No average to compute.")
+        # except KeyError:
+        #     print("Empty dictionary. No average to compute.")
 
 def expo_average(my_run, alpha):
     """ DOC """
@@ -138,69 +137,69 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
     I_RANGE must have same length than F_RANGE!
     """
 
-    try:
-        conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
-        channels = []; channels = np.append(channels,info["CHAN_TOTAL"])
-        ch_amp = dict(zip(channels,info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
-        i_range = info["I_RANGE"] # Get initial time(s) to start the integration
-        f_range = info["F_RANGE"] # Get final time(s) to finish the integration
-        
-        for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
-            if check_key(my_runs[run][ch], "MyCuts") == True:
-                print("Calculating average wvf with cuts")
-            else:
-                generate_cut_array(my_runs)
-                cut_label = ""
-            if check_key(my_runs[run][ch], "UnitsDict") == False:
-                get_units(my_runs)
-            if check_key(my_runs[run][ch], "ChargeRangeDict") == False:
-                my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
-                
-            print("\n--- Integrating RUN%i CH%i ---"%(run,ch))
-            if key == "":
-                for branch in my_runs[run][ch].keys():
-                    if "ADC" in str(branch):
-                        key = str(branch)
-                        label = key.replace("ADC","")
+    # try:
+    conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
+    channels = []; channels = np.append(channels,info["CHAN_TOTAL"])
+    ch_amp = dict(zip(channels,info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
+    i_range = info["I_RANGE"] # Get initial time(s) to start the integration
+    f_range = info["F_RANGE"] # Get final time(s) to finish the integration
+    
+    for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
+        if check_key(my_runs[run][ch], "MyCuts") == True:
+            print("Calculating average wvf with cuts")
+        else:
+            generate_cut_array(my_runs)
+            cut_label = ""
+        if check_key(my_runs[run][ch], "UnitsDict") == False:
+            get_units(my_runs)
+        if check_key(my_runs[run][ch], "ChargeRangeDict") == False:
+            my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
+            
+        print("\n--- Integrating RUN%i CH%i ---"%(run,ch))
+        if key == "":
+            for branch in my_runs[run][ch].keys():
+                if "ADC" in str(branch):
+                    key = str(branch)
+                    label = key.replace("ADC","")
 
-            ave = my_runs[run][ch][ref] # Load the reference average waveform
-            for i in range(len(ave)):
-                if typ == "ChargeAveRange":
-                    i_idx,f_idx = find_baseline_cuts(ave[i])
-                    t0 = i_idx * my_runs[run][ch]["Sampling"]; tf = f_idx * my_runs[run][ch]["Sampling"]
-                    my_runs[run][ch][typ+cut_label] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
-                    if key == "GaussADC" or key == "WienerADC":
-                        my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
-                    new_key = {typ+cut_label: [t0,tf]}
-                    my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
+        ave = my_runs[run][ch][ref] # Load the reference average waveform
+        for i in range(len(ave)):
+            if typ == "ChargeAveRange":
+                i_idx,f_idx = find_baseline_cuts(ave[i])
+                t0 = i_idx * my_runs[run][ch]["Sampling"]; tf = f_idx * my_runs[run][ch]["Sampling"]
+                my_runs[run][ch][typ+cut_label] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
+                if key == "GaussADC" or key == "WienerADC":
+                    my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+                new_key = {typ+cut_label: [t0,tf]}
+                my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
-                if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
-                    confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?")
-                    if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
-                    else: continue
-            if (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC") or (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and confirmation not in ["n","N","no","NO","q"]):
-                for j in range(len(f_range)):
-                    my_runs[run][ch][typ+str(j)+cut_label] = []
-                    if i_range[j] == -1: # Integration with fixed ranges
-                        t0 = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"]
-                        tf = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"] + f_range[j]
-                    else: # Integration with custom ranges
-                        t0 = i_range[j]; tf = f_range[j]
-                    i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
-                    my_runs[run][ch][typ+str(j)+cut_label]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
-                    if key == "GaussADC" or key == "WienerADC":
-                        my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+            if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
+                confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?")
+                if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
+                else: continue
+        if (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC") or (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and confirmation not in ["n","N","no","NO","q"]):
+            for j in range(len(f_range)):
+                my_runs[run][ch][typ+str(j)+cut_label] = []
+                if i_range[j] < 0: # Integration with fixed ranges
+                    t0 = np.argmax(my_runs[run][ch][ref])*my_runs[run][ch]["Sampling"] + i_range[j]
+                    tf = np.argmax(my_runs[run][ch][ref])*my_runs[run][ch]["Sampling"] + f_range[j]
+                else: # Integration with custom ranges
+                    t0 = i_range[j]; tf = f_range[j]
+                i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
+                my_runs[run][ch][typ+str(j)+cut_label]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
+                if key == "GaussADC" or key == "WienerADC":
+                    my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
-                    new_key = {typ+str(j)+cut_label: [t0,tf]}
-                    my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
+                new_key = {typ+str(j)+cut_label: [t0,tf]}
+                my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
-                print("======================================================================")
-                print("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0])
-                print("=============== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs ==============="%(t0*1E6,tf*1E6))
-                print("======================================================================")
+            print("======================================================================")
+            print("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0])
+            print("=============== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs ==============="%(t0*1E6,tf*1E6))
+            print("======================================================================")
 
-    except KeyError:
-        print("Empty dictionary. No integration to compute.")
+    # except KeyError:
+    #     print("Empty dictionary. No integration to compute.")
 
     return my_runs
 
