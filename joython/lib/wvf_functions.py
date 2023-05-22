@@ -54,3 +54,11 @@ def shift4_numba(arr, num, fill_value=0):#default shifted value is 0, remember t
         return np.concatenate((arr[-num:], np.full(-num, fill_value)))
     else:#no shift
         return arr
+
+@numba.njit
+def shift_ADCs(ADC,shift):
+        N_wvfs=ADC.shape[0]
+        aux_ADC=np.zeros(ADC.shape)
+        for i in range(N_wvfs):
+            aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
+        return aux_ADC;

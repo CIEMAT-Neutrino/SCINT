@@ -6,7 +6,7 @@ from itertools import product
 from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
 
-from .io_functions  import check_key,print_keys,copy_single_run
+from .io_functions  import check_key,print_keys,copy_single_run, print_colored
 from .vis_functions import vis_two_var_hist
 from .ana_functions import generate_cut_array, get_units
 from .fit_functions import gaussian,loggaussian,gaussian_train,loggaussian_train
@@ -18,9 +18,9 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
     """
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
     VARIABLES:
-        - keys: a LIST of variables you want to constrain
-        - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-        - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+       \n - keys: a LIST of variables you want to constrain
+       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+       \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
     Important! Each key works independently. If one key gives True and the other False, it remains False.
     Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
     """
@@ -75,14 +75,15 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
 
 
 def cut_min_max_sim(my_runs, keys, limits):
-    """
+    '''
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
     VARIABLES:
-        - keys: a LIST of variables you want to constrain at the same time
-        - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+       \n - keys: a LIST of variables you want to constrain at the same time
+       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
     Important! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
     Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
-    """
+    '''
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
@@ -105,12 +106,13 @@ def cut_min_max_sim(my_runs, keys, limits):
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
 
 def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
-    """
+    '''
     This is a function to cut manually with a polygonal figure on two variables. You can do any polygonal figure (avoid strange figures with crossed lines).
     "Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
     VARIABLES:
-        - keys: a LIST of variables you want to plot and cut
-    """
+       \n - keys: a LIST of variables you want to plot and cut
+    '''
+
     counter = 0
     fig, ax = vis_two_var_hist(my_runs, keys, compare, percentile, OPT = {"SHOW": False})
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -119,9 +121,8 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
             generate_cut_array(my_runs)
 
         for j in range(len(keys)):
-            if check_key(my_runs[run][ch], keys[j]) == True:
-                continue
-            else: print("IAAA ERROR"); break
+            if check_key(my_runs[run][ch], keys[j]) == True: continue
+            else: print_colored("IAAA ERROR", "ERROR");      break
 
         figure_features()
         evts_cut = 0
@@ -169,15 +170,16 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
         
 
 def cut_ped_std(my_runs):
-    """
+    '''
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
     VARIABLES:
-        - keys: a LIST of variables you want to constrain
-        - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-        - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+       \n - keys: a LIST of variables you want to constrain
+       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+       \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
     Important! Each key works independently. If one key gives True and the other False, it remains False.
     Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
-    """
+    '''
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
@@ -187,8 +189,7 @@ def cut_ped_std(my_runs):
         print(np.std(my_runs[run][ch]["PedMean"]))
         
         for i in range(len(my_runs[run][ch]["PedSTD"])):
-            if np.std(my_runs[run][ch]["PedMean"]) > my_runs[run][ch]["PedRMS"][i]:
-                continue    
+            if np.std(my_runs[run][ch]["PedMean"]) > my_runs[run][ch]["PedRMS"][i]: continue    
             else: my_runs[run][ch]["MyCuts"][i] = False
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
 

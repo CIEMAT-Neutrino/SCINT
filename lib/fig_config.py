@@ -11,7 +11,7 @@ except FileNotFoundError:
 
 output, error = process.communicate()
 if "Error" in str(output):
-    print("You don't have latex installed. Changing default configuration to tex=False")
+    print("You don't have latex installed. Changing default configuration to tex=Foptionalalse")
     tex_installed = False
 else:
     print("You have latex installed!. Applying default configuration (tex=True)")
@@ -22,12 +22,13 @@ from matplotlib.ticker import MultipleLocator
 
 
 def figure_features(tex=tex_installed, font="serif", dpi=300):
-    """Customize figure settings.
-    Args:
-        tex (bool, optional): use LaTeX. Defaults to True.
-        font (str, optional): font type. Defaults to "serif".
-        dpi (int, optional): dots per inch. Defaults to 180.
-    """
+    '''
+    Customize figure settings.
+    VARIABLES:
+       \n - tex (bool, optional): use LaTeX. Defaults to True.
+       \n - font (str, optional): font type. Defaults to "serif".
+       \n - dpi (int, optional): dots per inch. Defaults to 180.
+    '''
     plt.rcParams.update(
         {
             "font.size": 16,
@@ -66,13 +67,14 @@ def figure_features(tex=tex_installed, font="serif", dpi=300):
 
 
 def add_grid(ax, lines=True, locations=None):
-    """Add a grid to the current plot.
-    Args:
-        ax (Axis): axis object in which to draw the grid.
-        lines (bool, optional): add lines to the grid. Defaults to True.
-        locations (tuple, optional):
-            (xminor, xmajor, yminor, ymajor). Defaults to None.
-    """
+    '''
+    Add a grid to the current plot.
+    VARIABLES:
+       \n - ax (Axis): axis object in which to draw the grid.
+       \n - lines (bool, optional): add lines to the grid. Defaults to True.
+       \n - locations (tuple, optional):
+           \n - (xminor, xmajor, yminor, ymajor). Defaults to None.
+    '''
 
     if lines:
         ax.grid(lines, alpha=0.5, which="minor", ls=":")
