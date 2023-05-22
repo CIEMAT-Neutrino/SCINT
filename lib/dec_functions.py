@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from curve import Curve
 
-from .io_functions  import check_key
+from .io_functions  import check_key, print_colored
 from .ana_functions  import compute_power_spec
 from .fit_functions import func2
 from .wvf_functions import smooth, find_baseline_cuts, find_amp_decrease
@@ -12,12 +12,12 @@ from scipy.optimize import curve_fit
 from itertools import product
 
 def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
-    """ 
+    ''' 
     This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
-        - my_runs: DICTIONARY containing the wvf to be deconvolved.
-        - dec_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
-        - SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
-    """
+       \n - my_runs: DICTIONARY containing the wvf to be deconvolved.
+       \n - dec_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
+       \n - SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
+    '''
     for ii in range(len(my_runs["NRun"])):
         for jj in range(len(my_runs["NChannel"])):
             det_response =    dec_runs[dec_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvf"][0]
@@ -31,15 +31,16 @@ def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
             my_runs[my_runs["NRun"][ii]][my_runs["NChannel"][jj]]["SER"] = [SER]
 
 def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
-    """ 
+    ''' 
     This function deconvolves any given number of arrays according to a provided SPE template.
     By default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
     VARIABLES:
-        - my_runs: DICTIONARY containing the wvf to be deconvolved.
-        - keys: LIST containing the keys of [wvf, template, outputkey].
-        - peak_buffer: INT with left distance from peak to calculate baseline.
-        - OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).  
-    """
+       \n - my_runs: DICTIONARY containing the wvf to be deconvolved.
+       \n - keys: LIST containing the keys of [wvf, template, outputkey].
+       \n - peak_buffer: INT with left distance from peak to calculate baseline.
+       \n - OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).  
+    '''
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = []; trimm = 0 
         template = my_runs[run][ch][keys[1]][0]
@@ -68,14 +69,12 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
             
             # print(template)
             if check_key(OPT,  "SMOOTH") ==  True:
-                if OPT["SMOOTH"] > 0:
-                    signal = smooth(signal, OPT["SMOOTH"])
-                else:
-                    print("Invalid value encountered in smooth")
-            try:
-                timebin = my_runs[run][ch]["Sampling"]
+                if OPT["SMOOTH"] > 0: signal = smooth(signal, OPT["SMOOTH"])
+                else:                 print_colored("Invalid value encountered in smooth", "ERROR")
+
+            try: timebin = my_runs[run][ch]["Sampling"]
             except:
-                print("\n---Sampling key not found!")
+                print_colored("\n---Sampling key not found!", "ERROR")
                 if check_key(OPT, "TIMEBIN") ==  True: timebin = OPT["TIMEBIN"]    
             
             X = timebin*np.arange(len(signal))
@@ -144,7 +143,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
                     
                     except:
                         params = [50, 2]
-                        print("FIT COULD NOT BE PERFORMED!")
+                        print_colored("FIT COULD NOT BE PERFORMED!", "ERROR")
                         print("Filter strengh %f and exp %f"%(params[0], params[1]))
                 
                 # Generate gauss filter and filtered signal
@@ -256,7 +255,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
     plt.close()
 
 def convolve(my_runs, keys = [], OPT = {}):
-    print("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n")
+    print_colored("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n", "blue", bold=True)
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = dict()
@@ -350,44 +349,45 @@ def convolve(my_runs, keys = [], OPT = {}):
             output_file.write("%.2E \t\u00B1\t %.2E\n"%(fit_finals[0], perr[0]))
 
 def check_array_len(wvf1,wvf2):
-    if len(wvf1) < len(wvf2):
-        print("RAW WVF IS LONGER THAN WVF TEMPLATE")
+    if len(wvf1) < len(wvf2): 
+        print_colored("RAW WVF IS LONGER THAN WVF TEMPLATE", "WARNING")
         wvf2 = wvf2[:-(len(wvf2)-len(wvf1))]
     if len(wvf1) > len(wvf2):
-        print("RAW WVF IS SHORTER THAN WVF TEMPLATE")
+        print_colored("RAW WVF IS SHORTER THAN WVF TEMPLATE", "WARNING")
         wvf1 = wvf1[:-(len(wvf1)-len(wvf2))] 
+        
     return wvf1,wvf2
 
 def check_array_even(wvf):
-    if len(wvf) % 2 > 0:
-        return wvf[:-1]
-    else: return wvf
+    if len(wvf) % 2 > 0: return wvf[:-1]
+    else:                return wvf
 
 def conv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
-
     resp = func2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)
     
     conv = convolve(wvf[1], resp)
     conv = conv/np.max(conv)
     wvf_max = np.argmax(wvf[1])
     conv_max = np.argmax(conv)
+
     return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
 
 def logconv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
-    
     resp = logfunc2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)
 
     conv = convolve(wvf[1], resp)
     conv = conv/np.max(conv)
     wvf_max = np.argmax(wvf[1])
     conv_max = np.argmax(conv)
+
     return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
 
 def gauss(f, fc, n):
     y = np.exp(-0.5*(f/fc)**n)
+
     return y
 
 def fit_gauss(f, fc, n):
-    y = np.log10(gauss(f, fc, n))
-    y[0] = 0
+    y = np.log10(gauss(f, fc, n)); y[0] = 0
+
     return y

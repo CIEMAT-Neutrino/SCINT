@@ -7,11 +7,8 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
 
 import sys; sys.path.insert(0, '../'); from lib import *; print_header()
-
-try:
-    input_file = sys.argv[1]
-except IndexError:
-    input_file = input("Please select input File: ")
+try:               input_file = sys.argv[1]
+except IndexError: input_file = input("Please select input File: ")
 
 info = read_input_file(input_file)
 runs = []; channels = []
@@ -38,7 +35,7 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     ## Align indivual waveforms + Average ##
     # average_wvfs(my_runs,centering="NONE") # Compute average wvfs VERY COMPUTER INTENSIVE!
     # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
-    # average_wvfs(my_runs,centering="THRESHOLD", threshold=60) # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
+    # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
 
     ## Charge Integration ##
     integrate_wvfs(my_runs, info = info) # Compute charge according to selected average wvf from input file ("AveWvf", "AveWvfPeak", "AveWvfThreshold")

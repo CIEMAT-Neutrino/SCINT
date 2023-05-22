@@ -7,7 +7,7 @@ import math
 from itertools import product
 from scipy.ndimage.interpolation import shift
 
-from .io_functions import load_npy,check_key, print_keys
+from .io_functions import load_npy,check_key, print_keys, print_colored
 from .ana_functions import generate_cut_array, get_units
 from .fit_functions import gaussian, scint_fit, fit_wvfs, gaussian_fit
 
@@ -20,23 +20,23 @@ from .fig_config import (
 )
 
 def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = False):
-    """
+    '''
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
     VARIABLES:
-        - my_run: run(s) we want to check
-        - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
-        - OPT: several options that can be True or False. Type: List
-            a) MICRO_SEC: if True we multiply Sampling by 1e6
-            b) NORM: True if we want normalized waveforms
-            c) LOGY: True if we want logarithmic y-axis
-            d) SHOW_AVE: if computed and True, it will show average
-            e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
-            f) CHARGE_KEY: if computed and True, it will show the parametre value
-            g) PEAK_FINDER: True if we want to check how many peaks are
-        - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
-        - same_plot: True if we want to plot different channels in the SAME plot
-    """
+       \n - my_run: run(s) we want to check
+       \n - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
+       \n - OPT: several options that can be True or False. Type: List
+           \n a) MICRO_SEC: if True we multiply Sampling by 1e6
+           \n b) NORM: True if we want normalized waveforms
+           \n c) LOGY: True if we want logarithmic y-axis
+           \n d) SHOW_AVE: if computed and True, it will show average
+           \n e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
+           \n f) CHARGE_KEY: if computed and True, it will show the parametre value
+           \n g) PEAK_FINDER: True if we want to check how many peaks are
+       \n - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
+       \n - same_plot: True if we want to plot different channels in the SAME plot
+    '''
 
     figure_features()
     charge_key = "ChargeAveRange"
@@ -83,17 +83,15 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     ped = np.mean(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = "Raw"
-                    if debug: 
-                        print("Using '%s' label"%label)
+                    if debug: print_colored("Using '%s' label"%label, "DEBUG")
+
                 elif(key == "ADC"):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
                     raw.append(my_run[run][ch_list[j]][key][idx])
                     ped = 0
                     std = my_run[run][ch_list[j]]["PedSTD"][idx]
                     label = ""
-                    if debug: 
-                        print((my_run[run][ch_list[j]][key][idx]).dtype)
-                        print("Using '%s' label"%label)
+                    if debug: print_colored("Using '%s' label"%label, "DEBUG")
 
                 elif("ADC" in str(key)):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
@@ -101,9 +99,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     ped = 0
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = key.replace("ADC","")
-                    if debug: 
-                        print((my_run[run][ch_list[j]][key][idx]).dtype)
-                        print("Using '%s' label"%label)
+                    if debug: print_colored("Using '%s' label"%label, "DEBUG")
 
                 elif("Ave" in str(key)):
                     min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
@@ -111,7 +107,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     ped = 0
                     std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
                     label = key.replace("Ave","")
-                    if debug: print("Using '%s' label"%label)
+                    if debug: print_colored("Using '%s' label"%label, "DEBUG")
 
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
                     norm_raw[j] = (np.max(raw[j]))
@@ -133,8 +129,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                         axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
                         axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
-                    except KeyError:
-                        print("Run preprocess please!")
+                    except KeyError: print_colored("Run preprocess please!", "ERROR")
                     axs[j].set_title("Run {} - Ch {} - Event Number {}".format(run,ch_list[j],idx),size = 14)
                     axs[j].xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
                     
@@ -149,11 +144,9 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                                 idx_move = np.argmax(ave)
                                 ave = shift(ave, ref_max_idx-idx_move, cval = 0)
                             axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key, drawstyle = "steps")             
-                        except KeyError:
-                            print("Run has not been averaged!")
+                        except KeyError: print_colored("Run has not been averaged!", "ERROR")
 
-                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-                        axs[j].legend()
+                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs[j].legend()
 
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
@@ -185,8 +178,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     axs.grid(True, alpha = 0.7)
                     try:
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
-                    except KeyError:
-                        print("Run preprocess please!")
+                    except KeyError: print_colored("Run preprocess please!", "ERROR")
                     axs.set_title("Run {} - Event Number {}".format(run,idx),size = 14)
                     axs.xaxis.offsetText.set_fontsize(14)
                     
@@ -201,11 +193,9 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                                 idx, = np.where(ave == np.max(ave))
                                 ave = shift(ave, ref_max_idx-idx, cval = 0)
                             axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                        except KeyError: print("Run has not been averaged!")
+                        except KeyError: print_("Run has not been averaged!", "ERROR")
 
-                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-                        axs.legend()
-
+                    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
                         thresh = my_run[run][ch_list[j]]["PedMax"][idx]
@@ -227,7 +217,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     except: pass
                     
                 if check_key(OPT, "SHOW_PARAM") == True and OPT["SHOW_PARAM"]:
-                    print('\033[1m' + "\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]) + '\033[0m')
+                    print_colored("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]), "white", bold=True)
                     print("- Sampling: {:.0E}".format(sampling))
                     print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]][label+"PedMean"][idx]))
                     print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]][label+"PedSTD"][idx]))
@@ -235,32 +225,27 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     print("- Pedestal time limit: {:.4E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PedLim"]))
                     print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch_list[j]][label+"PeakAmp"][idx]))
                     print("- Max Peak Time: {:.2E}".format(my_run[run][ch_list[j]][label+"PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
-                    try:
-                        print("- Charge: {:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
+                    try:    print("- Charge: {:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
                     except:
-                        if check_key(OPT,"CHARGE_KEY"): print("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"])
+                        if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"], "WARNING")
                         else: print("- Charge: default charge key has not been computed")
-                    try:
-                        print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
+                    try:    print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
                     except:
                         if not check_key(OPT,"PEAK_FINDER"): print("")
                 my_run[run][ch_list[j]]["Sampling"] = sampling    
 
             tecla = input("\nPress q to quit, p to save plot, r to go back, n to choose event or any key to continue: ")
 
-            if tecla == "q":
-                break
-            elif tecla == "r":
-                idx = idx-1
+            if tecla == "q":   break
+            elif tecla == "r": idx = idx-1
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
-                if idx > len(my_run[run][ch_list[j]][key]): idx = len(my_run[run][ch_list[j]][key])-1; print('\033[1m' + "\nBe careful! There are ", idx, "in total"); print('\033[0m')
+                if idx > len(my_run[run][ch_list[j]][key]): idx = len(my_run[run][ch_list[j]][key])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", bold=True)
             elif tecla == "p":
                 fig.savefig('run{}_evt{}.png'.format(run,idx), dpi = 500)
                 idx = idx+1
-            else:
-                idx = idx + 1
+            else: idx = idx + 1
             if idx == len(my_run[run][ch_list[j]][key]): break
             try: [axs[j].clear() for j in range (nch)]
             except: axs.clear()
@@ -269,7 +254,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
         plt.close()
 
 def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
-    """
+    '''
     This function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
     VARIABLES:
         - my_run: run(s) we want to check
@@ -281,21 +266,16 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         - compare: 
             a) "RUNS" to get a plot for each channel and the selected runs. Type: String
             b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
-    """
+    '''
 
     figure_features()
-
     r_list = my_run["NRun"]
     ch_list = my_run["NChannel"]
     nch = len(my_run["NChannel"])
     axs = []
     
-    if compare == "CHANNELS":
-        a_list = r_list 
-        b_list = ch_list 
-    if compare == "RUNS":
-        a_list = ch_list 
-        b_list = r_list 
+    if compare == "CHANNELS": a_list = r_list; b_list = ch_list 
+    if compare == "RUNS":     a_list = ch_list; b_list = r_list 
 
     for a in a_list:
         if compare == "CHANNELS": run = a
@@ -322,13 +302,11 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
             norm_ave = np.max(ave)
             sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
             thrld = 1e-6
-            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
-                ave = ave/norm_ave
+            if check_key(OPT,"NORM") == True and OPT["NORM"] == True: ave = ave/norm_ave
             if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
                 fig.supxlabel(r'Time [$\mu$s]')
                 sampling = my_run[run][ch]["Sampling"]*1e6
-            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-                axs.semilogy()
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:  axs.semilogy()
             if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
                 ref_threshold = np.argmax(ave>np.max(ave)*2/3)
                 if ref_max_idx == -1:
@@ -344,36 +322,33 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         axs.grid(True, alpha = 0.7)
         axs.set_title(title,size = 14)
         axs.xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
-        if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-            axs.legend()
+        if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
        
         tecla      = input("\nPress q to quit, p to save plot and any key to continue: ")
-        if tecla   == "q":
-            break 
+        if tecla   == "q": break 
         elif tecla == "p":
             fig.savefig('AveWvf_Ch{}.png'.format(ch), dpi = 500)
             ch = ch+1
-        else:
-            ch = ch+1
+        else: ch = ch+1
         if ch == len(ch_list): break
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
         plt.close()   
 
 def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False):
-    """
+    '''
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
     It returns values of counts, bins and bars from the histogram to be used in other function.
     VARIABLES:
-        - my_run: run(s) we want to check
-        - keys: variables we want to plot as histograms. Type: List
-            a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
-            b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
-            c) Other variable: any other variable. Here we reject outliers.
-        - percentile: percentile used for outliers removal
+       \n - my_run: run(s) we want to check
+       \n - keys: variables we want to plot as histograms. Type: List
+           \n a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
+           \n b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
+           \n c) Other variable: any other variable. Here we reject outliers.
+       \n - percentile: percentile used for outliers removal
     WARNING! Maybe the binning stuff should be studied in more detail.
-    """
+    '''
 
     figure_features()
     all_counts = []
@@ -456,15 +431,16 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
     return all_counts, all_bins, all_bars
 
 def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], select_range = False, OPT={}):
-    """
+    '''
     This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     It plots values below and above the indicated percetiles, but values are not removed from data.
     VARIABLES:
-        - my_run: run(s) we want to check
-        - keys: variables we want to plot as histograms. Type: List
-        - percentile: percentile used for outliers removal
-        - select_range: if we still have many outliers we can select the ranges in x and y axis.
-    """
+       \n - my_run: run(s) we want to check
+       \n - keys: variables we want to plot as histograms. Type: List
+       \n - percentile: percentile used for outliers removal
+       \n - select_range: if we still have many outliers we can select the ranges in x and y axis.
+    '''
+
     figure_features()
     r_list = my_run["NRun"]
     ch_list = my_run["NChannel"]
