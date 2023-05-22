@@ -145,7 +145,7 @@ def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
 
     ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
-    wdth   = 10
+    wdth   = 15
     prom   = 0.5
     acc    = 1000
     
@@ -500,7 +500,7 @@ def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC
     
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], in_key):
         aux = dict()
-        raw = my_runs[run][ch][key]        
+        raw = my_runs[run][ch][key]
         raw_x = my_runs[run][ch]["Sampling"]*np.arange(len(raw[0]))
         
         for i in range(len(raw)):
@@ -509,6 +509,8 @@ def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC
             if signal_type == "SiPM":  fit, popt, perr, labels = sipm_fit(raw[i], raw_x, fit_range, thrld, OPT)
             if signal_type == "SC":    fit, popt, perr, labels = sc_fit(raw[i],   raw_x, fit_range, thrld, OPT)
             if signal_type == "Scint": fit, popt, perr, labels = scint_fit(raw[i],raw_x, fit_range, thrld, i_param, OPT)
+            if signal_type == "SimpleScint": fit, popt, perr, labels = simple_scint_fit(raw[i],raw_x, fit_range, i_param, OPT)
+            if signal_type == "TauSlow": fit, popt, perr, labels = tau_fit(raw[i],raw_x, fit_range, i_param, OPT)
             aux[i] = fit*raw_max
             raw[i] = raw[i]*raw_max
             i_idx, f_idx = find_amp_decrease(aux[i],1e-3)
@@ -544,9 +546,140 @@ def get_initial_parameters(i_param):
     if check_key(i_param,"ped")      == False: i_param["ped"]      = 1e-6
     if check_key(i_param,"t0")       == False: i_param["t0"]       = 1e-6
     if check_key(i_param,"sigma")    == False: i_param["sigma"]    = 1e-8
+    if check_key(i_param,"const")    == False: i_param["const"]    = 1e-8
     if check_key(i_param,"a_fast")   == False: i_param["a_fast"]   = 1e-2
     if check_key(i_param,"tau_fast") == False: i_param["tau_fast"] = 1e-8
     if check_key(i_param,"a_slow")   == False: i_param["a_slow"]   = 1e-2
     if check_key(i_param,"tau_slow") == False: i_param["tau_slow"] = 1e-6
     
     return i_param
+
+def scint_profile(x,const,a_f,tau_f,tau_s):
+    return const*(2*a_f/tau_f*np.exp(-(x)/tau_f) + 2*(1-a_f)/tau_s*np.exp(-(x)/tau_s))
+
+def log_scint_profile(x,const,a_f,tau_f,tau_s):
+    return np.log(scint_profile(x,const,a_f,tau_f,tau_s))
+
+def tau_slow_profile(x,a_s,tau_s):
+    return 2*a_s/tau_s*np.exp(-(x)/tau_s)
+
+def log_tau_slow_profile(x,a_s,tau_s):
+    return np.log(tau_slow_profile(x,a_s,tau_s))
+
+def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
+    """ DOC """
+    next_plot = False
+    thrld = 1e-10
+    for i in range(len(raw)):
+        if raw[i] <= thrld:
+            raw[i] = thrld
+        if np.isnan(raw[i]):
+            raw[i] = thrld
+    # Define input parameters from dictionary
+    const    = i_param["const"]
+    a_fast   = i_param["a_fast"]
+    tau_fast = i_param["tau_fast"]
+    a_slow   = i_param["a_slow"]
+    tau_slow = i_param["tau_slow"]
+    
+    # Find peak and perform fit
+    raw_max = np.argmax(raw)
+    buffer1 = fit_range[0]; buffer2 = fit_range[1]
+    
+    # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
+    a1     = a_fast; a1_low     = a1*0.9;        a1_high     = a1*1.1
+    tau1   = tau_fast; tau1_low   = tau1*0.9;      tau1_high   = tau1*1.1
+    
+    a2     = a_slow;   a2_low     = a_slow*1e-2;   a2_high     = a_slow*1e2
+    tau2   = tau_slow; tau2_low   = tau_slow*1e-2; tau2_high   = tau_slow*1e2
+    
+    const_high = const*100; const_low = const*0.01
+
+    bounds2  = ([const_low, a1_low, tau1_low, tau2_low], [const_high, a1_high, tau1_high, tau2_high])
+    initial2 = (const, a1, tau1, tau2)
+    labels2  = ["CONST", "AMP1", "TAU1", "TAU2"]
+    
+    # try:
+    # popt, pcov = curve_fit(scint_profile, raw_x[:buffer2] ,raw[raw_max:raw_max+buffer2],p0=initial2, bounds=bounds2)
+    popt, pcov = curve_fit(log_scint_profile, raw_x[:buffer2] ,np.log(raw[raw_max:raw_max+buffer2]),p0=initial2, bounds=bounds2)
+    perr = np.sqrt(np.diag(pcov))
+    
+    # except:
+    # print("Fit could not be performed")
+    # popt2 = initial2
+    # perr2 = np.zeros(len(popt2))
+    zeros_aux = np.zeros(raw_max)
+    zeros_aux2 = np.zeros(len(raw)- raw_max-buffer2 )
+    
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
+        # print("SHOW key not included in OPT")
+        # CHECK FIRST FIT
+        plt.rcParams['figure.figsize'] = [16, 8]
+        plt.subplot(1, 1, 1)
+        plt.title("First fit to determine peak")
+        plt.plot(raw_x, raw, label="raw", c="black")
+        plt.plot(raw_x, np.concatenate([zeros_aux, scint_profile(raw_x[:-raw_max], *popt)]), label="FIT")
+        # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
+        plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
+        if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy()
+        plt.legend()
+        while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
+
+    aux = np.concatenate([zeros_aux, scint_profile(raw_x[:buffer2], *popt), zeros_aux2])
+    return aux,popt,perr,labels2
+
+def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
+    """ DOC """
+    next_plot = False
+    # thrld = 1e-10
+    # for i in range(len(raw)):
+    #     if raw[i] <= thrld:
+    #         raw[i] = thrld
+    #     if np.isnan(raw[i]):
+    #         raw[i] = thrld
+    # Define input parameters from dictionary
+    a_slow   = i_param["a_slow"]
+    tau_slow = i_param["tau_slow"]
+    
+    # Find peak and perform fit
+    raw_max = np.argmax(raw)
+    buffer1 = fit_range[0]; buffer2 = fit_range[1]
+    
+    # USING VALUES FROM FIRST FIT PERFORM SECONG FIT FOR THE SLOW COMPONENT
+    a2     = a_slow;   a2_low     = a_slow*1e-2;   a2_high     = a_slow*1e2
+    tau2   = tau_slow; tau2_low   = tau_slow*1e-2; tau2_high   = tau_slow*1e2
+    
+
+    bounds2  = ([a2_low, tau2_low], [a2_high, tau2_high])
+    labels2  = ["AMP2","TAU2"]
+    initial2 = (a2, tau2)
+    # try:
+    # popt, pcov = curve_fit(scint_profile, raw_x[:buffer2] ,raw[raw_max:raw_max+buffer2],p0=initial2, bounds=bounds2)
+    popt, pcov = curve_fit(log_tau_slow_profile, raw_x[:buffer2-buffer1] ,np.log(raw[raw_max+buffer1:raw_max+buffer2]),p0=initial2, bounds=bounds2)
+    perr = np.sqrt(np.diag(pcov))
+    
+    # except:
+    # print("Fit could not be performed")
+    # popt2 = initial2
+    # perr2 = np.zeros(len(popt2))
+    zeros_aux = np.zeros(raw_max+buffer1)
+    zeros_aux2 = np.zeros(len(raw) - raw_max - buffer2)
+    
+    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
+        # print("SHOW key not included in OPT")
+        # CHECK FIRST FIT
+        plt.rcParams['figure.figsize'] = [16, 8]
+        plt.subplot(1, 1, 1)
+        plt.title("First fit to determine peak")
+        plt.plot(raw_x, raw, label="raw", c="black")
+        plt.plot(raw_x, np.concatenate([zeros_aux, tau_slow_profile(raw_x[:buffer2-buffer1], *popt), zeros_aux2]), label="FIT")
+        # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
+        plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
+        if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy()
+        plt.legend()
+        while not plt.waitforbuttonpress(-1): pass
+        plt.clf()
+
+    aux = np.concatenate([zeros_aux, tau_slow_profile(raw_x[:buffer2-buffer1], *popt), zeros_aux2])
+    return aux,popt,perr,labels2
