@@ -171,13 +171,7 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
 
 def cut_ped_std(my_runs):
     '''
-    This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-    VARIABLES:
-       \n - keys: a LIST of variables you want to constrain
-       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-       \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
-    Important! Each key works independently. If one key gives True and the other False, it remains False.
-    Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
+    This is function pretends to fit the PedSTD and create a limit. But it is in progress.
     '''
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -193,14 +187,11 @@ def cut_ped_std(my_runs):
             else: my_runs[run][ch]["MyCuts"][i] = False
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
 
-def cut_peak_finder(my_runs, keys, number_peaks):
+def cut_peak_finder(my_runs, number_peaks):
     """
-    This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-    VARIABLES:
-        - keys: a LIST of variables you want to constrain at the same time
-        - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    Important! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
-    Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
+    This is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes)
+    \n and set the threshold in 3/4 of the SPE max. Other way it takes into account the Max value in Pedestal (this works well for laser runes).
+    \n WARNING! Maybe the values of width, prominence and distance may be changed.
     """
     wdth = 4
     prom = 0.01
