@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy     import stats as st
 from itertools import product
+import numba
 
 from .io_functions import check_key, print_keys, print_colored
 
@@ -59,16 +60,34 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
             # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
             ped_lim = values[np.argmax(counts)]-buffer
-            if ped_lim < 0: ped_lim = 50
+            if ped_lim < 0: ped_lim = 200
             my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
-            my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
             my_runs[run][ch][label+"PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedLim"]  = ped_lim
-            print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
-        except KeyError: 
-            if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")
+            # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
+            print("Pedestal variables have been computed for run %i ch %i"%(run,ch))
+        except: 
+            KeyError
+            if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
+def compute_pedestal_variables_sliding_window(my_runs, key = "ADC", label = "", ped_lim = 400,sliding=50,pretrigger=800, start = 0, debug = False):
+    """Computes the pedestal variables of a collection of a run's collection in standard format"""
+    for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
+        try:
+            ADCs_aux=my_runs[run][ch][key]
+            ADCs_s=compute_pedestal_sliding_windows(ADCs_aux,ped_lim=ped_lim,sliding=sliding,pretrigger=pretrigger)
+            
+            my_runs[run][ch][label+"PedSTD"]  = np.std (ADCs_s[:,start:(start+ped_lim)],axis=1)
+            my_runs[run][ch][label+"PedMean"] = np.mean(ADCs_s[:,start:(start+ped_lim)],axis=1)
+            my_runs[run][ch][label+"PedMax"]  = np.max (ADCs_s[:,start:(start+ped_lim)],axis=1)
+            my_runs[run][ch][label+"PedMin"]  = np.min (ADCs_s[:,start:(start+ped_lim)],axis=1)
+            my_runs[run][ch][label+"PedLim"]  = ped_lim
+            # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADCs_s[:,start:(start+ped_lim)]**2),axis=1))
+            print("Pedestal variables have been computed for run %i ch %i"%(run,ch))
+        except: 
+            KeyError
+            if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
 
 def compute_ana_wvfs(my_runs, debug = False):
     '''
@@ -98,3 +117,45 @@ def get_units(my_runs, debug = False):
             else:                                            aux_dic[key] = "a.u."
             
         my_runs[run][ch]["UnitsDict"] = aux_dic
+
+def compute_power_spec(ADC, timebin, debug = False):
+    aux = [] 
+    aux_X = np.fft.rfftfreq(len(ADC[0]), timebin)
+    for i in range(len(ADC)):
+        aux.append(np.fft.rfft(ADC[i]))
+    return np.absolute(np.mean(aux, axis = 0)), np.absolute(aux_X)
+
+def compute_pedestal_sliding_windows(ADC,ped_lim=400,sliding=50,pretrigger=800, start = 0):
+    """Taking the best between different windows in pretrigger"""
+    pedestal_vars=dict();
+    slides=int((pretrigger-ped_lim)/sliding);
+    N_wvfs=ADC.shape[0];
+    aux=np.zeros((N_wvfs,slides))
+    for i in range(slides):
+        aux[:,i]=np.std (ADC[:,(i*sliding+start):(i*sliding+ped_lim+start)],axis=1)
+    #put first in the wvf the appropiate window, the one with less std:
+    shifts= np.argmin (aux,axis=1)*(-1)*sliding
+    ADC_s = shift_ADCs(ADC,shifts)
+    #compute all ped variables, now with the best window available
+
+    return ADC_s
+
+@numba.njit
+def shift_ADCs(ADC,shift):
+        N_wvfs=ADC.shape[0]
+        aux_ADC=np.zeros(ADC.shape)
+        for i in range(N_wvfs):
+            aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
+        return aux_ADC
+
+# eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
+@numba.njit
+def shift4_numba(arr, num, fill_value=0):#default shifted value is 0, remember to always substract your pedestal first
+    if   num > 0:
+        return np.concatenate((np.full(num, fill_value), arr[:-num]))
+    elif num < 0:
+        return np.concatenate((arr[-num:], np.full(-num, fill_value)))
+    else:#no shift
+        return arr
+
+

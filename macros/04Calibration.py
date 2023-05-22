@@ -27,14 +27,17 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     
     print_keys(my_runs)
     #### APPLY CUTS ####
-    # cut_min_max(my_runs, ["ChargeAveRange"], limits = {"ChargeAveRange": [-1,4]})
+    cut_min_max(my_runs, ["PedSTD"], {"PedSTD": [-1,7.5]})
+    # cut_min_max(my_runs, ["PeakTime"], {"PeakTime": [1e-6,4.6e-6]})
+    # cut_min_max(my_runs, ["PedSTD"], {"PedSTD": [-1,4.5]})
+    # cut_peak_finder(my_runs, ["ADC"], 2)
+
     # cut_min_max_sim(my_runs, ["ChargeAveRange"], limits = {"ChargeAveRange": [-1,4]})
     # cut_lin_rel(my_runs, ["PeakAmp", "ChargeAveRange"])
     ####################
 
     ## Persistence Plot ##
     # vis_persistence(my_runs)
-
     ## Calibration ##
     print("Run ", run, "Channel ", ch)
     popt, pcov, perr = calibrate(my_runs,int_key,OPT)
@@ -44,9 +47,11 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     ## SPE Average Waveform ##
     if all(x !=-99 for x in popt):
         SPE_min_charge = popt[3]-abs(popt[5])
+        print("SPE_min_charge: ",SPE_min_charge)
         SPE_max_charge = popt[3]+abs(popt[5])
+        print("SPE_max_charge: ",SPE_max_charge)
         cut_min_max(my_runs, int_key, limits = {int_key[0]: [SPE_min_charge,SPE_max_charge]})
         average_wvfs(my_runs,centering="NONE",cut_label="SPE")
 
-        save_proccesed_variables(my_runs,info=info,branch_list=["AveWvfSPE"])
+        save_proccesed_variables(my_runs,info=info,branch_list=["AveWvfSPE"], force = True)
         # save_proccesed_variables(my_runs,info=info,preset="CUTS", force = True)

@@ -46,44 +46,47 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label=""
     '''
 
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        try:
-            if check_key(my_runs[run][ch], "MyCuts") == True: print("Calculating average wvf with cuts") # If cuts are already applied, it uses them
-            else: generate_cut_array(my_runs); cut_label = ""
+        # try:
+        if check_key(my_runs[run][ch], "MyCuts") == True:
+            print("Calculating average wvf with cuts")
+        else:
+            generate_cut_array(my_runs)
+        if check_key(my_runs[run][ch], "UnitsDict") == False:
+            get_units(my_runs)
 
-            if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs) # If units are not defined, it defines them
+        buffer = 100  
+        mean_ana_ADC = np.mean(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=0)
+        aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
+        # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) # Deprecated function st.mode()
+        values, counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), return_counts=True) #using the mode peak as reference
+        bin_ref_peak = values[np.argmax(counts)]
+        
+        # centering none
+        if centering == "NONE":
+            my_runs[run][ch]["AveWvf"+cut_label] = [mean_ana_ADC] # It saves the average waveform as "AveWvf_*"
+        
+        # centering peak
+        if centering == "PEAK":
+            bin_max_peak = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
+            bin_max_peak = bin_max_peak + bin_ref_peak - buffer
+            for ii in range(len(aux_ADC)):
+                aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii]) # It centers the waveform using the peak
+            my_runs[run][ch]["AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]     # It saves the average waveform as "AveWvfPeak_*"
 
-            buffer = 100  
-            mean_ana_ADC = np.mean(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=0)
-            aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
-            # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) # Deprecated function st.mode()
-            values, counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), return_counts=True) #using the mode peak as reference
-            bin_ref_peak = values[np.argmax(counts)]
-            
-            # centering none
-            if centering == "NONE":
-                my_runs[run][ch]["AveWvf"+cut_label] = [mean_ana_ADC] # It saves the average waveform as "AveWvf_*"
-            
-            # centering peak
-            if centering == "PEAK":
-                bin_max_peak = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
-                bin_max_peak = bin_max_peak + bin_ref_peak - buffer
-                for ii in range(len(aux_ADC)):
-                    aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii]) # It centers the waveform using the peak
-                my_runs[run][ch]["AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]     # It saves the average waveform as "AveWvfPeak_*"
+        # centering thld
+        if centering == "THRESHOLD":
+            if threshold == 0: threshold = np.max(mean_ana_ADC)/2
+            # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), keepdims=True) # Deprecated st.mode()
+            values,counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), return_counts=True) #using the mode peak as reference
+            bin_ref_thld = values[np.argmax(counts)] # It is an int
+            bin_max_thld = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
+            bin_max_thld = bin_max_thld + bin_ref_thld - buffer
+            for ii in range(len(aux_ADC)):
+                aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])    # It centers the waveform using the threshold
+            my_runs[run][ch]["AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]  # It saves the average waveform as "AveWvfThreshold_*"
 
-            # centering thld
-            if centering == "THRESHOLD":
-                if threshold == 0: threshold = np.max(mean_ana_ADC)/2
-                # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), keepdims=True) # Deprecated st.mode()
-                values,counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), return_counts=True) #using the mode peak as reference
-                bin_ref_thld = values[np.argmax(counts)]
-                bin_max_thld = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
-                bin_max_peak = bin_max_thld + bin_ref_thld - buffer
-                for ii in range(len(aux_ADC)):
-                    aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])    # It centers the waveform using the threshold
-                my_runs[run][ch]["AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]  # It saves the average waveform as "AveWvfThreshold_*"
-
-        except KeyError: print_colored("Empty dictionary. No average to compute.", "ERROR")
+        # except KeyError:
+        #     print("Empty dictionary. No average to compute.")
 
 def expo_average(my_run, alpha):
     ''' 
@@ -164,24 +167,25 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                     new_key = {typ+cut_label: [t0,tf]}
                     my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
-                if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
-                    confirmation = input(color_list("red")+"**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?"+color_list("end"))
-                    if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
-                    else: continue
-            if (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC") or (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and confirmation not in ["n","N","no","NO","q"]):
-                for j in range(len(f_range)):
-                    my_runs[run][ch][typ+str(j)+cut_label] = []
-                    if i_range[j] == -1: # Integration with fixed ranges
-                        t0 = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"]
-                        tf = my_runs[run][ch]["PedLim"]*my_runs[run][ch]["Sampling"] + f_range[j]
-                    
-                    else: t0 = i_range[j]; tf = f_range[j] # Integration with custom ranges
-                    i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
-                    my_runs[run][ch][typ+str(j)+cut_label]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
-                    if key == "GaussADC" or key == "WienerADC": my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+            if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
+                confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file?")
+                if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
+                else: continue
+        if (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC") or (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and confirmation not in ["n","N","no","NO","q"]):
+            for j in range(len(f_range)):
+                my_runs[run][ch][typ+str(j)+cut_label] = []
+                if i_range[j] < 0: # Integration with fixed ranges
+                    t0 = np.argmax(my_runs[run][ch][ref])*my_runs[run][ch]["Sampling"] + i_range[j]
+                    tf = np.argmax(my_runs[run][ch][ref])*my_runs[run][ch]["Sampling"] + f_range[j]
+                else: # Integration with custom ranges
+                    t0 = i_range[j]; tf = f_range[j]
+                i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
+                my_runs[run][ch][typ+str(j)+cut_label]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
+                if key == "GaussADC" or key == "WienerADC":
+                    my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
-                    new_key = {typ+str(j)+cut_label: [t0,tf]}
-                    my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
+                new_key = {typ+str(j)+cut_label: [t0,tf]}
+                my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
                 print_colored("======================================================================", "SUCCESS")
                 print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")

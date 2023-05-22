@@ -26,12 +26,15 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
 
     insert_variable(my_runs,np.ones(len(channels)),"PChannel") # Change polarity!
     compute_peak_variables(my_runs,key="ADC")                  # Compute new peak variables
-    compute_pedestal_variables(my_runs,key="ADC",debug=False)  # Compute new ped variables
+    # compute_pedestal_variables(my_runs,key="ADC", buffer = 150, debug=False)  # Compute new ped variables
+    compute_pedestal_variables_sliding_window(my_runs,key="ADC", debug = False)
+
     
     # print_keys(my_runs)
     average_wvfs(my_runs,centering="NONE") # Compute average wvfs centering (choose from: "NONE", "PEAK", "THRESHOLD")
+    # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs centering (choose from: "NONE", "PEAK", "THRESHOLD")
 
     delete_keys(my_runs,["RawADC",'RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim','RawPChannel']) # Delete branches to avoid overwritting
-    save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][2]),info=info, force=False) # Try preset ANA
+    save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][2]),info=info, force=True) # Try preset ANA
     del my_runs
     gc.collect()
