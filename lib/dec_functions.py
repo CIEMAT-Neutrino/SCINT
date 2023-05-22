@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from curve import Curve
 
 from .io_functions  import check_key
+from .ana_functions  import compute_power_spec
 from .fit_functions import func2
 from .wvf_functions import smooth, find_baseline_cuts, find_amp_decrease
 
@@ -29,7 +30,7 @@ def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
             SER = np.roll(SER,-i_idx)
             my_runs[my_runs["NRun"][ii]][my_runs["NChannel"][jj]]["SER"] = [SER]
 
-def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
+def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
     """ 
     This function deconvolves any given number of arrays according to a provided SPE template.
     By default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
@@ -82,8 +83,10 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
             # Define noise (should be imported in future iterations)
             noise_amp = 0.5
             if check_key(OPT,  "NOISE_AMP") ==  True: noise_amp = OPT["NOISE_AMP"]
-            noise = np.random.normal(0,noise_amp*np.max(template),size=len(signal))
-            fft_noise = np.fft.rfft(noise)
+            if noise_run == []:
+                noise = np.random.normal(0,noise_amp*np.max(template),size=len(signal))
+                fft_noise = np.fft.rfft(noise)
+            else: fft_noise, fft_noise_X = compute_power_spec(noise_run, timebin)
             
             # Calculate fft arrays
             fft_signal = np.fft.rfft(signal)
@@ -96,7 +99,7 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
 
             if check_key(OPT, "NORM_DET_RESPONSE") ==  True and OPT["NORM_DET_RESPONSE"] ==  True:
                 fft_template = (fft_template/np.max(fft_template))
-            fft_template_X = np.fft.rfftfreq(len(template), 4e-9)
+            fft_template_X = np.fft.rfftfreq(len(template), timebin)
             
             if check_key(OPT, "FILTER") == True and OPT["FILTER"] == "WIENER":
                 fft_filter_signal = fft_signal*wiener
@@ -232,9 +235,11 @@ def deconvolve(my_runs, keys = [], peak_buffer = 20, OPT = {}):
                 if check_key(OPT, "SHOW_F_DEC") !=  False: plt.plot(fft_signal_X, np.abs(fft_dec), label = "DECONVOLUTION", c = "tab:red")
                 if check_key(OPT, "SHOW_F_WIENER") !=  False: 
                     plt.plot(fft_signal_X, wiener, label = "WIENER", c = "tab:orange", ls = "--")
-                    plt.plot(env_wiener.x[:env_wiener_min], -1*(env_wiener.y[:env_wiener_min]-2), label = "ENV_WIENER", c = "tab:pink", ls = "--")
+                    # plt.plot(env_wiener.x[:env_wiener_min], -1*(env_wiener.y[:env_wiener_min]-2), label = "ENV_WIENER", c = "tab:pink", ls = "--")
 
-                if check_key(OPT, "SHOW_F_GAUSS") !=  False: plt.plot(fft_signal_X, fft_gauss, label = "GAUSS", c = "tab:green")
+                if check_key(OPT, "SHOW_F_GAUSS") !=  False:
+                    if OPT["SHOW_F_GAUSS"] == True:
+                        plt.plot(fft_signal_X, fft_gauss, label = "GAUSS", c = "tab:green")
                 plt.ylabel("a.u.");plt.xlabel("Frequency in [Hz]")
                 plt.ylim(1e-8, np.max(fft_signal)*100)
                 plt.semilogy();plt.semilogx()

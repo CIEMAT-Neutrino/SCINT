@@ -5,6 +5,7 @@ from matplotlib.cm     import viridis
 from itertools         import product
 from scipy.optimize    import curve_fit
 import scipy 
+from scipy import stats as st
 
 from .io_functions  import check_key, print_keys, write_output_file
 from .vis_functions import vis_var_hist
@@ -21,17 +22,19 @@ def vis_persistence(my_run, OPT = {}):
     X_data (time) and Y_data (waveforms) are deleted after the plot to save space.
     WARNING! flattening long arrays leads to MEMORY problems :/
     """
-
+    figure_features()
     plt.ion()
     for run, ch in product(my_run["NRun"],my_run["NChannel"]):
 
         generate_cut_array(my_run)
-        cut_min_max(my_run, ["PeakTime"], {"PeakTime":[my_run[run][ch]["PedLim"]-20,my_run[run][ch]["PedLim"]+50]})
+        # cut_min_max(my_run, ["PeakTime"], {"PeakTime":[(st.mode(my_run[run][ch]["PeakTime"])[0]-20)*4e-9, (st.mode(my_run[run][ch]["PeakTime"])[0]+20)*4e-9]})
+        # cut_min_max(my_run, ["PeakTime"], {"PeakTime":[4.19e-6, 4.22e-6]})
+        # cut_min_max(my_run, ["PeakAmp"], {"PeakAmp":[25,100]})
+        # cut_min_max(my_run, ["PedSTD"], {"PedSTD":[-1,4.8]})
 
         data_flatten = my_run[run][ch]["ADC"][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() #####
         time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch]["ADC"][0]))
         time_flatten = np.array([time] * int(len(data_flatten)/len(time))).flatten()
-
         plt.hist2d(time_flatten,data_flatten,density=True,bins=[5000,1000], cmap = viridis, norm=LogNorm())
 
         plt.colorbar()
@@ -73,7 +76,7 @@ def calibrate(my_runs, keys, OPT={}):
                 get_units(my_runs)
 
             # try:
-            counts, bins, bars = vis_var_hist(my_runs, run, ch, [key], OPT=OPT)
+            counts, bins, bars = vis_var_hist(my_runs, [key], compare="NONE",OPT=OPT)
             plt.close()
 
             ## New Figure with the fit ##
@@ -81,13 +84,15 @@ def calibrate(my_runs, keys, OPT={}):
 
             add_grid(ax_cal)
             counts = counts[0]; bins = bins[0]; bars = bars[0]
-            ax_cal.hist(bins[:-1], bins, weights = counts)
+            ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step")
             fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
         
             if label != "PMT": #Fit for SiPMs/SC
                 ### --- Nx GAUSSIAN FIT --- ### 
-                thresh = int(len(my_runs[run][ch][key])/2000)
-                x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, 20,fit_function="gaussian")
+                # thresh = int(len(my_runs[run][ch][key])/2000)
+                thresh = 10
+                x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, thresh,fit_function="gaussian")
+                # x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, thresh,fit_function="loggaussian")
                 ## Plot threshold, peaks (red) and valleys (blue) ##
                 ax_cal.axhline(thresh, ls='--')
                 ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
@@ -206,18 +211,18 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
     """
 
     charge_parameters = []
-    perr0 = np.sqrt(np.diag(pcov[0]))  #error for each variable
+    perr0 = np.sqrt(np.diag(pcov))  #error for each variable
     # perr1 = np.sqrt(np.diag(pcov[1]))  #error for each variable
 
-    mu       = [popt[0][1], perr0[1]]  # mu +- dmu
-    height   = [popt[0][0], perr0[0]]  # height +- dheight (not saving in txt by default)
-    sigma    = [abs(popt[0][2]), perr0[2]]  # sigma +- dsigma
+    mu       = [popt[1], perr0[1]]  # mu +- dmu
+    height   = [popt[0], perr0[0]]  # height +- dheight (not saving in txt by default)
+    sigma    = [abs(popt[2]), perr0[2]]  # sigma +- dsigma
     # nevents  = [popt[1],    perr1[0][0]]  # nevents/s +- dnevents/s #HACER BIEN#
-    nevents  = [popt[0][2], perr0[2]]  # nevents/s +- dnevents/s #HACER BIEN#
+    nevents  = [popt[2], perr0[2]]  # nevents/s +- dnevents/s #HACER BIEN#
     charge_parameters.append([mu,height,sigma,nevents])
     
     print(len(charge_parameters))
-    print(charge_parameters[0])
+    print(charge_parameters)
 
     print("MU +- DMU:",               ['{:.2f}'.format(item) for item in charge_parameters[0][0]])
     print("HEIGHT +- DHEIGHT:",       ['{:.2f}'.format(item) for item in charge_parameters[0][1]])
@@ -239,8 +244,10 @@ def charge_fit(my_runs, keys, OPT={}):
             b) SHOW: if True, it will show the calibration plot
     """
 
-    plt.ion()
     next_plot = False
+    counter = 0
+    all_counts, all_bins, all_bars = vis_var_hist(my_runs, keys, compare = "NONE", OPT={"SHOW":False})
+    all_popt=[]; all_pcov=[]; all_perr=[]
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
         
         if check_key(my_runs[run][ch], "MyCuts") == False:
@@ -249,21 +256,25 @@ def charge_fit(my_runs, keys, OPT={}):
             get_units(my_runs)
         # try:
         thresh = int(len(my_runs[run][ch][key])/1000)
-        counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)
-        plt.close()
 
         ## New Figure with the fit ##
+        plt.ion()
         fig_ch, ax_ch = plt.subplots(1,1, figsize = (8,6))
         add_grid(ax_ch)
-        counts = counts[0]; bins = bins[0]; bars = bars[0]
-        ax_ch.hist(bins[:-1], bins, weights = counts)
+        counts = all_counts[counter]; bins = all_bins[counter]; bars = all_bars[counter]
+        ax_ch.hist(bins[:-1], bins, weights = counts, histtype="step")
         fig_ch.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_ch.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_ch.supylabel("Counts")
         
         ### --- 1x GAUSSIAN FIT --- ###
         x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,fit_function="gaussian")
         print("Chi2/N?: ", (sum((my_runs[run][ch][key]-gaussian(my_runs[run][ch]["Sampling"]*np.arange(len(my_runs[run][ch][key])), *popt))**2))/len(my_runs[run][ch][key]))
         ax_ch.plot(x,gaussian(x, *popt), label="")
-        
+
+        if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
+            ax_ch.legend()
+        if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
+            ax_ch.semilogy()
+
         ## Repeat customized fit ##
         confirmation = input("Are you happy with the fit? (y/n) ")
         if "n" in confirmation:
@@ -273,20 +284,17 @@ def charge_fit(my_runs, keys, OPT={}):
 
             x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,custom_fit=[int(mean),int(sigma)])
             ax_ch.plot(x, gaussian(x, *popt), label="")
+            all_popt.append(popt); all_pcov.append(pcov); all_perr.append(perr)
+        else:
+            all_popt.append(popt); all_pcov.append(pcov); all_perr.append(perr)
+            plt.close()
+            continue
         
-        if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
-            ax_ch.legend()
-        if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
-            ax_ch.semilogy()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True:
             while not plt.waitforbuttonpress(-1): pass
-        plt.clf()
-
+        counter += 1
+        plt.close()
         # except KeyError:
         #     print("Empty dictionary. No computed charge.")
     
-    # plt.ioff()
-    plt.clf()
-    plt.close()
-    
-    return popt, pcov, perr
+    return all_popt, all_pcov, all_perr

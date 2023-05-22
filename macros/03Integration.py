@@ -16,27 +16,35 @@ except IndexError:
 info = read_input_file(input_file)
 runs = []; channels = []
 runs = np.append(runs,info["CALIB_RUNS"])
-# runs = np.append(runs,info["LIGHT_RUNS"])
-# runs = np.append(runs,info["ALPHA_RUNS"])
-# runs = np.append(runs,info["MUONS_RUNS"])
+runs = np.append(runs,info["LIGHT_RUNS"])
+runs = np.append(runs,info["ALPHA_RUNS"])
+runs = np.append(runs,info["MUONS_RUNS"])
 
 channels = np.append(channels,info["CHAN_TOTAL"])
+
+# my_runs = load_npy(runs.astype(int),channels.astype(int),preset="ANA",info=info,compressed=True)
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
     
     my_runs = load_npy([run],[ch],preset=str(info["LOAD_PRESET"][3]),info=info,compressed=True)
-    print_keys(my_runs)
+    # my_runs = load_npy([run],[ch],preset="EVA",info=info,compressed=True)
+    # cut_min_max(my_runs, ["PedSTD"], {"PedSTD": [-1,7.5]})
+    # cut_min_max(my_runs, ["PeakAmp"], {"PeakAmp": [2400,6500]})
+    # cut_min_max(my_runs, ["PeakTime"], {"PeakTime": [3.8e-6,4e-6]})
+    # cut_lin_rel(my_runs, ["PeakAmp","ChargeAveRange"])
+
+    # cut_peak_finder(my_runs, ["ADC"], 2)
 
     ## Align indivual waveforms + Average ##
+    # average_wvfs(my_runs,centering="NONE") # Compute average wvfs VERY COMPUTER INTENSIVE!
     # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
-    # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
-    
-    ## CUTS ##
-    cut_min_max(my_runs, ["PeakTime"], {"PeakTime": [1.0e-6,1.5e-6]})
+    # average_wvfs(my_runs,centering="THRESHOLD", threshold=60) # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!
 
     ## Charge Integration ##
-    integrate_wvfs(my_runs, info = info, cut_label="_CuttedPeakTime") # Compute charge according to selected average wvf from input file ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
-    ## charge_nevents(my_runs) ## BORRAR O HACER BIEN!
+    integrate_wvfs(my_runs, info = info) # Compute charge according to selected average wvf from input file ("AveWvf", "AveWvfPeak", "AveWvfThreshold")
+    # charge_nevents(my_runs)
+
+    # delete_keys(my_runs,["GaussADC"]) # Delete branches to avoid overwritting
     save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][3]),info=info, force=True)
     del my_runs
     gc.collect()
