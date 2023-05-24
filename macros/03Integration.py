@@ -25,14 +25,14 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     
     my_runs = load_npy([run],[ch],preset=str(info["LOAD_PRESET"][3]),info=info,compressed=True)
     # my_runs = load_npy([run],[ch],preset="EVA",info=info,compressed=True)
+    
+    #### CUT SECTION ####
     # cut_min_max(my_runs, ["PedSTD"], {"PedSTD": [-1,7.5]})
-    # cut_min_max(my_runs, ["PeakAmp"], {"PeakAmp": [2400,6500]})
-    # cut_min_max(my_runs, ["PeakTime"], {"PeakTime": [3.8e-6,4e-6]})
     # cut_lin_rel(my_runs, ["PeakAmp","ChargeAveRange"])
-
     # cut_peak_finder(my_runs, ["ADC"], 2)
+    #####################
 
-    ## Align indivual waveforms + Average ##
+    #### Align indivual waveforms + Average ####
     # average_wvfs(my_runs,centering="NONE") # Compute average wvfs VERY COMPUTER INTENSIVE!
     # average_wvfs(my_runs,centering="PEAK") # Compute average wvfs VERY COMPUTER INTENSIVE!
     # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs EVEN MORE COMPUTER INTENSIVE!

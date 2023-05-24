@@ -203,7 +203,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                         prom = 0.01
                         dist = 40
                         axs.axhline(thresh,c="salmon", alpha=.6, ls = "dotted")
-                        # peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
+                        # peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist) # Ajustando más parámetros
                         peak_idx, _ = find_peaks(raw[j], height = thresh)       
                         for p in peak_idx:
                             axs.scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)

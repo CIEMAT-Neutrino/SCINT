@@ -24,16 +24,12 @@ channels = np.append(channels,info["CHAN_TOTAL"])
 for run, ch in product(runs.astype(int),channels.astype(int)):
     # Start to load_runs 
     my_runs = load_npy([run],[ch], preset="RAW", info=info, compressed=True)
-    # my_runs = load_npy([run],[ch], preset="DEC", info=info, compressed=True)
     
+    # compute_pedestal_variables(my_runs,key="RawADC",label="Raw") # Using a fix window for pedestal
+    compute_pedestal_variables_sliding_window(my_runs,key="RawADC",label="Raw", start = 0) # Checking the best window in the pretrigger
     compute_peak_variables(my_runs,key="RawADC",label="Raw")
-    # compute_peak_variables(my_runs,key="GaussADC",label="Gauss")
-    # compute_pedestal_sliding_windows(my_runs,key="RawADC",label="Raw")
-    compute_pedestal_variables_sliding_window(my_runs,key="RawADC",label="RawFinal", start = 4200)
-    # compute_pedestal_variables(my_runs,key="RawADC",label="Raw")
     print_keys(my_runs)
     delete_keys(my_runs,["RawADC"]) # Delete previous peak and pedestal variables
-    # delete_keys(my_runs,["GaussADC"]) # Delete previous peak and pedestal variables
     save_proccesed_variables(my_runs,"ALL",info=info, force=True)
     del my_runs
     gc.collect()
