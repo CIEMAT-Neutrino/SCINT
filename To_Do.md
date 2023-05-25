@@ -1,8 +1,18 @@
 ## CYTHON TO DO LIST
 
 ------ CYTHON WORKSHOP III ------
+- [ ] Carpeta tutorial sin tocar, cada uno su carpeta de macros en su branch. Para cambios relevantes para todos se cambia tutorial.
+- [ ] Notebook visualizador/cortes etc
 
-- [ ] FUSION JOYTHON EN CYTHON
+- [ ] FUSION JOYTHON EN CYTHON --> Andres tiene partes integradas y Rodrigo ha hecho merge de joython en su carpeta
+- [ ] NOTEBOOKS: VisEvent, Cortes
+- [x] Merge rama de Andres (Sergio?) y 
+- [ ] entender los problemas que hemos tenido
+- [ ] DOCUMENTACION, OUTPUT POR TERMINAL, WIKI, COLORSTYLE
+- [ ] PASAR A DATAFRAME (read from dat could be the same; load in a df directly from the npy; saving new columns etc)
+- [ ] HTML PARA VER EN DIRECTO LOS PLOTS DE RUIDO EN LA TOMA DE DATOS
+- [ ] EXTRAS
+ 
 
 ------ CYTHON WORKSHOP II ------
 
@@ -26,7 +36,7 @@
 - [x] ~~Añadir al ppio de las funciones una comprobacion de si existen cortes generados y aplicarlos en las funciones que vengan despues.~~
 - [x] ~~No queremos guardar una branch con los cortes --> Ahora se esta guardando~~
 - [x] ~~Comprobar ganancias FEB22_2 (testear que los resultados son compatibles con las otras macros)~~
-- [ ] TESTS para las medidas XA-SBND 
+- [x] ~~TESTS para las medidas XA-SBND~~
 - [x] ~~Imports desde un .py comun~~
 - [x] ~~No pasar por los .root :)~~
 - [x] ~~Cambiar estructura a carpeta (run00_ch00) con .npy (Ana/Dec/Fit) que serian las ramas del root + info extra que vamos añadiendo. Hay que cambiar os prefijos para que sean el nombre de los .npy. Puedes cargas las ramas que elijas. Kind of solve memory problem~~
