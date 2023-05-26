@@ -23,7 +23,7 @@ def color_list(color):
     
     return colors[color]
 
-def print_colored(string, color, bold=False):
+def print_colored(string, color, bold=False, end = "\n"):
     '''
     Print a string in a specific color.
     '''  
@@ -32,7 +32,7 @@ def print_colored(string, color, bold=False):
     if bold == False: output = color + str(string) + color_list("end")
     if bold == True:  output = '\033[1m' + color + string + color_list("end")
     
-    print(output)
+    print(output, end = end)
 
 #===========================================================================#
 #************************** INPUT FILE *************************************#
