@@ -5,7 +5,7 @@
 # $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
 # ---------------------------------------------------------------------------------------------------------------------- #
 
-import sys; sys.path.insert(0, '../'); from lib import *; #print_header()
+import sys; sys.path.insert(0, '../'); from lib import *; # print_header()
 import plotly.offline as py
 
 ##### INPUT RUNS AND OPTIONS #####
@@ -19,7 +19,6 @@ except IndexError:
     input_channels = input("Please select CHANNELS (separated with commas): ")
 
 info     = read_input_file(input_file)
-# info     = [read_input_file(in_fi) for in_fi in input_file.split(",")]
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 

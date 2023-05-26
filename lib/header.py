@@ -1,3 +1,4 @@
+from .io_functions import print_colored
 def print_header():
     # f = open('Header.txt', 'r')
     # file_contents = f.read()
@@ -25,3 +26,6 @@ Software is provided "as is", without warranty of any kind,
 express or implied.
     '''
     )
+
+# def print_color():
+#     print_colored("⣤⣄⣀⠀⠀⢀⣀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⠀⠀","WARNING");print("⢀⣠⣴⡶⣆⠀⠀⠀⠀⠀⣠⣴⣶⣿⣦⣄");print_colored("⠀⠀⠀⠈","WARNING")

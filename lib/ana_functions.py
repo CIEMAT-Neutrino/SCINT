@@ -11,7 +11,6 @@ def insert_variable(my_runs, var, key, debug = False):
     '''
     Insert values for each type of signal
     '''
-
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         i = np.where(np.array(my_runs["NRun"]).astype(int) == run)[0][0]
         j = np.where(np.array(my_runs["NChannel"]).astype(int) == ch)[0][0]
@@ -25,7 +24,6 @@ def generate_cut_array(my_runs,debug=False):
     '''
     This function generates an array of bool = True with length = NEvts. If cuts are applied and then you run this function, it resets the cuts.
     '''
-
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
         for key in my_runs[run][ch].keys():
@@ -41,7 +39,6 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
     '''
     Computes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
-
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
@@ -54,7 +51,6 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
     '''
     Computes the pedestal variables of a collection of a run's collection in standard format
     '''
-
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
@@ -71,8 +67,16 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
         except: 
             KeyError
             if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
+
 def compute_pedestal_variables_sliding_window(my_runs, key = "ADC", label = "", ped_lim = 400,sliding=50,pretrigger=800, start = 0, debug = False):
-    """Computes the pedestal variables of a collection of a run's collection in standard format"""
+    """
+    Computes the pedestal variables of a collection of a run's collection in several windows.
+    \n - label: string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD
+    \n - ped_lim: size in bins of the sliding window
+    \n - sliding: bins moved between shifts of the window
+    \n - pretrigger: amount of bins to study. Eg: ped_lim = 400, sliding = 50, pretrigger = 800 --> 8 windows to compute
+    \n - start: the bin where starts the window. This way you can check the end of the window
+    """
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             ADCs_aux=my_runs[run][ch][key]
@@ -93,7 +97,6 @@ def compute_ana_wvfs(my_runs, debug = False):
     '''
     Computes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
-
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
 
         my_runs[run][ch]["ADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
@@ -106,7 +109,6 @@ def get_units(my_runs, debug = False):
     '''
     Computes and store in a dictionary the units of each variable.  
     '''
-    
     for run, ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         keys = my_runs[run][ch].keys()
         aux_dic = {}
@@ -119,6 +121,7 @@ def get_units(my_runs, debug = False):
         my_runs[run][ch]["UnitsDict"] = aux_dic
 
 def compute_power_spec(ADC, timebin, debug = False):
+    """ Computes the power spectrum of the given events. It returns both axis. """
     aux = [] 
     aux_X = np.fft.rfftfreq(len(ADC[0]), timebin)
     for i in range(len(ADC)):
@@ -126,7 +129,8 @@ def compute_power_spec(ADC, timebin, debug = False):
     return np.absolute(np.mean(aux, axis = 0)), np.absolute(aux_X)
 
 def compute_pedestal_sliding_windows(ADC,ped_lim=400,sliding=50,pretrigger=800, start = 0):
-    """Taking the best between different windows in pretrigger"""
+    """Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
+    \n It checks for the best window."""
     pedestal_vars=dict();
     slides=int((pretrigger-ped_lim)/sliding);
     N_wvfs=ADC.shape[0];
@@ -142,15 +146,17 @@ def compute_pedestal_sliding_windows(ADC,ped_lim=400,sliding=50,pretrigger=800, 
 
 @numba.njit
 def shift_ADCs(ADC,shift):
-        N_wvfs=ADC.shape[0]
-        aux_ADC=np.zeros(ADC.shape)
-        for i in range(N_wvfs):
-            aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
-        return aux_ADC
+    """ Used for the sliding window """
+    N_wvfs=ADC.shape[0]
+    aux_ADC=np.zeros(ADC.shape)
+    for i in range(N_wvfs):
+        aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
+    return aux_ADC
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
 @numba.njit
 def shift4_numba(arr, num, fill_value=0):#default shifted value is 0, remember to always substract your pedestal first
+    """ Used for the sliding window """
     if   num > 0:
         return np.concatenate((np.full(num, fill_value), arr[:-num]))
     elif num < 0:

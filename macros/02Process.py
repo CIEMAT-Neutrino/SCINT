@@ -27,10 +27,8 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     insert_variable(my_runs,np.ones(len(channels)),"PChannel") # Change polarity!
     compute_peak_variables(my_runs,key="ADC")                  # Compute new peak variables
     # compute_pedestal_variables(my_runs,key="ADC", buffer = 150, debug=False)  # Compute new ped variables
-    compute_pedestal_variables_sliding_window(my_runs,key="ADC", debug = False)
+    compute_pedestal_variables_sliding_window(my_runs,key="ADC", debug = False) # Compute new ped variables using sliding window
 
-    
-    # print_keys(my_runs)
     average_wvfs(my_runs,centering="NONE") # Compute average wvfs centering (choose from: "NONE", "PEAK", "THRESHOLD")
     # average_wvfs(my_runs,centering="THRESHOLD") # Compute average wvfs centering (choose from: "NONE", "PEAK", "THRESHOLD")
 
