@@ -276,7 +276,7 @@ def charge_fit(my_runs, keys, OPT={}):
             mean  = input(color_list("magenta")+"Introduce MEAN value for the fit: " +color_list("end"))
             sigma = input(color_list("magenta")+"Introduce SIGMA value for the fit: "+color_list("end"))
 
-            x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,custom_fit=[int(mean),int(sigma)])
+            x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,custom_fit=[float(mean),float(sigma)])
             ax_ch.plot(x, gaussian(x, *popt), label="")
             all_popt.append(popt); all_pcov.append(pcov); all_perr.append(perr)
         else:
