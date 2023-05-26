@@ -205,7 +205,6 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
         plt.close()
         counter += 1
         
-
 def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
     """
     This is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes)
