@@ -31,7 +31,7 @@ We don't want:
 
     Setup all the utilities needed for the macros:
     ```
-    sh scripts/setup.sh 
+    sh setup.sh 
     ```
     
     Then place all your root files in data/MONTH/raw folder (check copy_data.sh for ideas and run)
