@@ -105,8 +105,8 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
     
     if len(custom_fit) == 2: 
         print("\n--- Customized fit ---")
-        mean  = int(custom_fit[0])
-        sigma = int(custom_fit[1])
+        mean  = float(custom_fit[0])
+        sigma = float(custom_fit[1])
         best_peak_idx = peak_idx[np.abs(x[peak_idx] - mean ).argmin()]
         best_peak_idx1 = best_peak_idx + 50
 
@@ -127,6 +127,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
 
     # try:
     popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],sigma],maxfev=5000)
+    # popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1]],sigma = sigma, absolute_sigma=True, maxfev=5000)
     perr = np.sqrt(np.diag(pcov))
     chi2 = chi_squared(x_gauss,y_gauss,popt)
     # except:

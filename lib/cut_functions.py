@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from itertools import product
 from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
+import statistics as stat
 
 from .io_functions  import check_key,print_keys,copy_single_run, print_colored
 from .vis_functions import vis_two_var_hist
@@ -21,9 +22,12 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
        \n - keys: a LIST of variables you want to constrain
        \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
        \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+       \n - chs_cut: a LIST with the affected channels.
+       \n - apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
     Important! Each key works independently. If one key gives True and the other False, it remains False.
     Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
     """
+    print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
     if chs_cut == []: chs_cut = my_runs["NChannel"]
     idx_list = []
     initial_evts = 0
@@ -34,11 +38,12 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
         if check_key(my_runs[run][ch], "UnitsDict") == False:
                 get_units(my_runs)
         initial_evts = len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True])
-        print("--- CUTTING EVENTS with", key ,"in ("+str(limits[key][0])+", "+str(limits[key][1])+")",my_runs[run][ch]["UnitsDict"][key], "for Ch", ch, " ---")
+        if run != my_runs["NRun"][0] and ch == chs_cut[0] and key == keys[0]: idx_list = []; print_colored("... NEW RUN ...", color = "WARNING")
+        print("--- CUTTING events with ",end ="");print_colored(key, color = "cyan" ,end = "");print(" in ("+str(limits[key][0])+", "+str(limits[key][1])+")",my_runs[run][ch]["UnitsDict"][key], "for Ch", ch, "Run",run," ---")
         print("Nº events before cut: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         if check_key(my_runs[run][ch], key) == True:
-            ch_idx_list = 0
             rep_idx = 0
+            ch_idx_list = 0
             if ranges[0]==0 and ranges[1]==0:
                 for i in range(len(my_runs[run][ch][key])):
                     if key == "PeakTime" and (limits[key][0] <= my_runs[run][ch]["Sampling"]*my_runs[run][ch][key][i] <= limits[key][1]):
@@ -62,48 +67,78 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
             else:
                 print("Nº cutted events in Ch "+str(ch)+":",rep_idx+ch_idx_list,"("+str(ch_idx_list),"new events cutted)\n")
 
-    if apply_all_chs == True:
-        print("--- CUTTING EVENTS for ALL (loaded) Chs ---")
-        print("Nº of new cutted events in Chs "+str(chs_cut)+":", len(idx_list))
-        for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-            if check_key(my_runs[run][ch], "MyCuts") == False:
-                print("...Running generate_cut_array...")
-                generate_cut_array(my_runs)
-            for i in idx_list:
-                my_runs[run][ch]["MyCuts"][i] = False
-        print("Nº total final events in ALL Chs:", initial_evts - len(idx_list),"\n")
+        if apply_all_chs == True and ch == chs_cut[-1] and key == keys[-1]:
+            print("--- CUTTING EVENTS for ALL (loaded) Chs ---")
+            print("Nº of new cutted events in Chs "+str(my_runs["NChannel"])+":", len(idx_list))
+            for ch in my_runs["NChannel"]:
+                if check_key(my_runs[run][ch], "MyCuts") == False:
+                    print("...Running generate_cut_array...")
+                    generate_cut_array(my_runs)
+                for i in idx_list:
+                    my_runs[run][ch]["MyCuts"][i] = False
+            print("Nº total final events in ALL Chs:", initial_evts - len(idx_list),"\n")
 
-
-def cut_min_max_sim(my_runs, keys, limits):
+def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False):
     '''
-    This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-    VARIABLES:
-       \n - keys: a LIST of variables you want to constrain at the same time
-       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    Important! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
-    Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
+    This is a fuction for a cut in the PedSTD. It uses the median as reference and eliminates events with
+    PedSTD > median + n_std*std, where std is the Standard Deviation of the PedSTD distribution (previously filtered
+    with percentiles). VARIABLES:
+    \n - keys: a LIST of variables you want to constrain
+    \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+    \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+    \n - chs_cut: a LIST with the affected channels.
+    \n - apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
+    
     '''
-
-    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
+    print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
+    if chs_cut == []: chs_cut = my_runs["NChannel"]
+    idx_list = []
+    initial_evts = 0
+    for run, ch in product(my_runs["NRun"], chs_cut):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
             generate_cut_array(my_runs)
 
-        print("Nº total events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
-        print("--- CUTTING EVENTS ---")
-        for i in range(len(my_runs[run][ch][keys[0]])):
-            for j in range(len(keys)):
-                if check_key(my_runs[run][ch], keys[j]) == True:
-                    if limits[keys[j]][0] <= my_runs[run][ch][keys[j]][i] <= limits[keys[j]][1]:
-                        my_runs[run][ch]["MyCuts"][i] = True
-                        print("Key", keys[j], "number ",j,"Evt ",i," Break aquí")
-                        break
-                    else: 
-                        my_runs[run][ch]["MyCuts"][i] = False
-                        print("Key", keys[j], "number ",j,"Evt ",i," Cut aquí")
-                else: print(keys," does not exist in my_runs!")
-                print("Final result is", my_runs[run][ch]["MyCuts"][i])
-        print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+        initial_evts = len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True])
+        if run != my_runs["NRun"][0] and ch == chs_cut[0]: idx_list = []; print_colored("... NEW RUN ...", color = "WARNING")
+
+        data = my_runs[run][ch]["PedSTD"]
+        ypbot = np.percentile(data, 0.1); yptop = np.percentile(data, 99.9)
+        ypad = 0.2*(yptop - ypbot)
+        ymin = ypbot - ypad; ymax = yptop + ypad
+        data = [i for i in data if ymin<i<ymax]
+
+        # moda = stat.mode(data)
+        mediana = np.median(data)
+        std = np.std(data)
+        print("--- CUTTING evetns with ", end = "");print_colored("PedSTD",color="cyan",end = "");print(" <",str(n_std)+"* std (of the distribution) for Ch", ch, "Run",run," ---")
+        print("Nº events before cut: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
+        ch_idx_list = 0
+        rep_idx = 0
+        for i in range(len(my_runs[run][ch]["PedSTD"])):
+            if mediana + n_std*std > my_runs[run][ch]["PedSTD"][i]: continue    
+            else: 
+                if apply_all_chs == False: my_runs[run][ch]["MyCuts"][i] = False
+                else: 
+                    if i not in idx_list and my_runs[run][ch]["MyCuts"][i] != False: idx_list.append(i); ch_idx_list = ch_idx_list + 1
+                    else: rep_idx = rep_idx + 1
+
+        if apply_all_chs == False:
+                print("Nº cutted events:", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+                print("Nº final evts after cutting in PedSTD for Ch "+str(ch)+":", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),"\n")
+        else:
+            print("Nº cutted events in Ch "+str(ch)+":",rep_idx+ch_idx_list,"("+str(ch_idx_list),"new events cutted)\n")
+
+        if apply_all_chs == True and ch == chs_cut[-1]:
+            print("--- CUTTING EVENTS for ALL (loaded) Chs ---")
+            print("Nº of new cutted events in Chs "+str(chs_cut)+":", len(idx_list))
+            for ch in my_runs["NChannel"]:
+                if check_key(my_runs[run][ch], "MyCuts") == False:
+                    print("...Running generate_cut_array...")
+                    generate_cut_array(my_runs)
+                for i in idx_list:
+                    my_runs[run][ch]["MyCuts"][i] = False
+            print("Nº total final events in ALL Chs:", initial_evts - len(idx_list),"\n")
 
 def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
     '''
@@ -111,8 +146,10 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
     "Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
     VARIABLES:
        \n - keys: a LIST of variables you want to plot and cut
+       \n - compare: NONE, RUNS, CHANNELS to decide the histogram to use
+       \n - percentile: the percentile used to reject outliers in the histogram
     '''
-
+    print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
     counter = 0
     fig, ax = vis_two_var_hist(my_runs, keys, compare, percentile, OPT = {"SHOW": False})
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -168,34 +205,13 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
         plt.close()
         counter += 1
         
-
-def cut_ped_std(my_runs):
-    '''
-    This is function pretends to fit the PedSTD and create a limit. But it is in progress.
-    '''
-
-    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        if check_key(my_runs[run][ch], "MyCuts") == False:
-            print("...Running generate_cut_array...")
-            generate_cut_array(my_runs)
-        
-        print("Nº total events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
-        print(np.std(my_runs[run][ch]["PedMean"]))
-        
-        for i in range(len(my_runs[run][ch]["PedSTD"])):
-            if np.std(my_runs[run][ch]["PedMean"]) > my_runs[run][ch]["PedRMS"][i]: continue    
-            else: my_runs[run][ch]["MyCuts"][i] = False
-        print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
-
-def cut_peak_finder(my_runs, number_peaks):
+def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
     """
     This is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes)
-    \n and set the threshold in 3/4 of the SPE max. Other way it takes into account the Max value in Pedestal (this works well for laser runes).
+    and set the threshold in 3/4 of the SPE max. Other way it takes into account the Max value in Pedestal (this works well for laser runes).
     \n WARNING! Maybe the values of width, prominence and distance may be changed.
     """
-    wdth = 4
-    prom = 0.01
-    dist  = 30
+    print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
@@ -216,3 +232,34 @@ def cut_peak_finder(my_runs, number_peaks):
                 my_runs[run][ch]["MyCuts"][i] = False
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
         print("Nº total final events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
+
+def cut_min_max_sim(my_runs, keys, limits):
+    '''
+    This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
+    VARIABLES:
+       \n - keys: a LIST of variables you want to constrain at the same time
+       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+    Important! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
+    Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
+    '''
+    print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
+    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
+        if check_key(my_runs[run][ch], "MyCuts") == False:
+            print("...Running generate_cut_array...")
+            generate_cut_array(my_runs)
+
+        print("Nº total events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
+        print("--- CUTTING EVENTS ---")
+        for i in range(len(my_runs[run][ch][keys[0]])):
+            for j in range(len(keys)):
+                if check_key(my_runs[run][ch], keys[j]) == True:
+                    if limits[keys[j]][0] <= my_runs[run][ch][keys[j]][i] <= limits[keys[j]][1]:
+                        my_runs[run][ch]["MyCuts"][i] = True
+                        print("Key", keys[j], "number ",j,"Evt ",i," Break aquí")
+                        break
+                    else: 
+                        my_runs[run][ch]["MyCuts"][i] = False
+                        print("Key", keys[j], "number ",j,"Evt ",i," Cut aquí")
+                else: print(keys," does not exist in my_runs!")
+                print("Final result is", my_runs[run][ch]["MyCuts"][i])
+        print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))

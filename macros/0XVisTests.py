@@ -41,7 +41,6 @@ OPT  = {
 # my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True) # Load to visualize raw events
 # my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True) # Load to visualize processed events
 my_runs = load_npy(runs, channels,preset="EVA",info=info,compressed=True) # Fast load (no ADC)
-
 #####################
 ##### READ CHARGE DICTIONARY #####
 if OPT["CHARGEDICT"] == True:
@@ -50,10 +49,12 @@ if OPT["CHARGEDICT"] == True:
             dicti = np.load(info["PATH"][0]+info["MONTH"][0]+"/npy/run"+str(r).zfill(2)+"_ch"+str(c)+"/ChargeRangeDict.npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()
             print("ChargeRanges for RUN", r, " and CHANNEL ",c, " :\n", dicti, "\n")
 
-##### CUT SECTION #####
-cut_min_max(my_runs, ["PedSTD"], {"PedSTD": [-1,4.5]}, chs_cut = [], apply_all_chs=False)
-# cut_min_max(my_runs, ["PedSTD","PeakAmp","PeakTime"], {"PedSTD": [0,4.5],"PeakAmp": [60,650],"PeakTime": [3.5e-6,4.5e-6]}, chs_cut=[0,1,3,4], apply_all_chs=True)
-# cut_min_max(my_runs, ["PedSTD","PeakAmp","PeakTime"], {"PedSTD": [0,9],"PeakAmp": [1400,4500],"PeakTime": [3.5e-6,4.5e-6]}, chs_cut=[5], apply_all_chs=True)
+##### CUTS #####
+cut_ped_std(my_runs, n_std = 2, chs_cut=[0,1,3,4,5], apply_all_chs=True)
+# cut_min_max(my_runs, ["PeakAmp","PeakTime"], {"PeakAmp": [60,650],"PeakTime": [3.7e-6,4e-6]}, chs_cut=[0,1,3,4], apply_all_chs=True)
+# cut_min_max(my_runs, ["PeakAmp","PeakTime"], {"PeakAmp": [1400,4500],"PeakTime": [3.7e-6,4e-6]}, chs_cut=[5], apply_all_chs=True)
+# cut_min_max(my_runs, ["PeakAmp","PeakTime"], {"PeakAmp": [2500,7500],"PeakTime": [3.7e-6,4e-6]}, chs_cut=[5], apply_all_chs=True)
+# cut_min_max(my_runs, ["PeakAmp","PeakTime"], {"PeakAmp": [5000,13300],"PeakTime": [3.7e-6,4e-6]}, chs_cut=[5], apply_all_chs=True)
 # cut_lin_rel(my_runs, ["PeakAmp","ChargeAveRange"], compare = "NONE", percentile=[0,100])
 # cut_peak_finder(my_runs, ["ADC"], 2)
 

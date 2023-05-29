@@ -408,7 +408,12 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                     fig.suptitle(title + " - {} histogram".format(k))
 
                 if select_range:
-                    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))    
+                    x1 = -1e6
+                    while x1 == -1e6:
+                        try:
+                            x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
+                        except:
+                            x1 = -1e6   
                     counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", range=(x1,x2)) # , zorder = 2 f
                 else: counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
                 label = label.replace(" - " + k,"")
@@ -504,8 +509,13 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
             fig.supxlabel(label0 + " " + keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(label1 + " " + keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
             fig.suptitle(title)
             if select_range:
-                x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
-                y1 = float(input("ymin: ")); y2 = float(input("ymax: "))
+                x1 = -1e6
+                while x1 == -1e6:
+                    try:
+                        x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
+                        y1 = float(input("ymin: ")); y2 = float(input("ymax: "))
+                    except:
+                        x1 = -1e6
                 ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
                 ax.grid("both")
 
