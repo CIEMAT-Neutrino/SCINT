@@ -42,7 +42,7 @@ We don't want:
 2. Run the following macros FROM the macros folder:
 
 ```
-    cd macros
+    cd ../macros
     python3 00Raw2Np.py MergeDebug
     python3 01PreProcess.py MergeDebug 
     python3 02Process.py MergeDebug
