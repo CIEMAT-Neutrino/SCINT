@@ -5,6 +5,7 @@
 *data*/*
 data/*
 macros/*.py
+macros/simulation/*.py
 scratch/
 larsoft/
 # Ignore everything from input files
