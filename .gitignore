@@ -14,9 +14,6 @@ input/*.txt
 # But not the template one
 !input/MergeDebug*.txt
 !input/TUTORIAL*.txt
-!data/TUTORIAL/
-
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
