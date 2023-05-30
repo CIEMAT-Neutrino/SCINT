@@ -12,6 +12,14 @@ if [ ! -d "../fit_data" ]; then
 mkdir ../fit_data
 fi
 
+if [ ! -d "../macros" ]; then
+cp -r ../01TemplateMacros ../macros
+fi
+
+if [ ! -d "../notebooks" ]; then
+cp -r ../02TemplateNbook ../notebooks
+fi
+
 ### COMMON VIRTUAL ENVIROMENT TO RUN THE MACROS ###
 # source /pnfs/ciemat.es/data/neutrinos/venv_python3.7/bin/activate 
 
