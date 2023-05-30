@@ -1,8 +1,9 @@
 ## CYTHON TO DO LIST
 
 ------ CYTHON WORKSHOP III ------
-- [ ] Carpeta tutorial sin tocar, cada uno su carpeta de macros en su branch. Para cambios relevantes para todos se cambia tutorial.
-- [ ] Notebook visualizador/cortes etc
+- [x] Carpeta tutorial sin tocar, cada uno su carpeta de macros en su branch. Para cambios relevantes para todos se cambia tutorial.
+- [ ] Actualizar notebooks (usados para SBND) y dejar plantillas como las macros para que cada uno parta de ahi
+- [ ] Notebook visualizador/cortes etc --> visualizador +- en tutorial
 
 - [ ] FUSION JOYTHON EN CYTHON --> Andres tiene partes integradas y Rodrigo ha hecho merge de joython en su carpeta
 - [ ] NOTEBOOKS: VisEvent, Cortes
