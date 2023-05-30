@@ -4,6 +4,7 @@
 # Add coustom folders
 *data*/*
 data/*
+notebooks/*.ipynb
 macros/*.py
 macros/simulation/*.py
 scratch/
