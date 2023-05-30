@@ -1,15 +1,19 @@
-#data
 *npy
 *npz
 
 # Add coustom folders
-*data*/
+*data*/*
+data/*
+macros/*.py
 scratch/
 larsoft/
 # Ignore everything from input files
 input/*.txt
 # But not the template one
 !input/MergeDebug*.txt
+!input/TUTORIAL*.txt
+!data/TUTORIAL/
+
 
 
 # Byte-compiled / optimized / DLL files
