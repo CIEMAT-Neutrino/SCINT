@@ -40,7 +40,7 @@ git checkout -b <your_branch_name>
 
 ```bash
 mkdir <your_folder_name>
-echo "<your_folder_name>" >> .gitignore
+echo "<your_folder_name/*>" >> .gitignore
 ```
 
 * Create a folder for your data in data/MONTH/raw or use the copy_data.sh script to copy the data from the server.
