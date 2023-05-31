@@ -174,7 +174,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     if check_key(OPT, "LOGY") == True and OPT["LOGY"]:
                         axs.semilogy()
                         std = 0 # It is ugly if we see this line in log plots
-                    axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]))
+                    axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2,label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]).replace("#"," "))
                     axs.grid(True, alpha = 0.7)
                     try:
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
@@ -203,7 +203,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                         prom = 0.01
                         dist = 40
                         axs.axhline(thresh,c="salmon", alpha=.6, ls = "dotted")
-                        # peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist) # Ajustando más parámetros
+                        # peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
                         peak_idx, _ = find_peaks(raw[j], height = thresh)       
                         for p in peak_idx:
                             axs.scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
@@ -284,10 +284,11 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         plt.ion()
         fig, ax = plt.subplots(1 ,1, figsize = (8,6))
         axs = ax
+
         fig.supxlabel(r'Time [s]')
         fig.supylabel("ADC Counts")
-        # fig.supylabel("Personalized  Y-axis")
-        # fig.supxlabel("Personalized  X-axis")
+        # fig.supylabel("Normalized Amplitude")
+        norm_raw = [1]*nch # Generates a list with the norm correction for std bar
         counter = 0
         ref_max_idx = -1
         for b in b_list:
@@ -324,12 +325,14 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
        
         tecla      = input("\nPress q to quit, p to save plot and any key to continue: ")
+        counter = 0
         if tecla   == "q": break 
         elif tecla == "p":
             fig.savefig('AveWvf_Ch{}.png'.format(ch), dpi = 500)
-            ch = ch+1
-        else: ch = ch+1
-        if ch == len(ch_list): break
+            counter += 1
+        else: counter += 1
+        if counter > len(ch_list): break
+        elif counter > len(r_list): break
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
         plt.close()   
@@ -345,9 +348,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
            \n a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
            \n b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
            \n c) Other variable: any other variable. Here we reject outliers.
-        \n - compare: NONE, RUNS, CHANNELS. This option chooses the way to compare histograms.
        \n - percentile: percentile used for outliers removal
-       \n - select_range: if we want to change axis limits (for binning reasons or whatever)
     WARNING! Maybe the binning stuff should be studied in more detail.
     '''
 
@@ -368,7 +369,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
         b_list = ch_list
     data = []
     for a in a_list:
-        if compare != "NONE": fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
+        if compare != "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
         for b in b_list:
             if compare == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
@@ -386,7 +387,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                 if k == "PeakAmp":
                     data = aux_data
                     max_amp = np.max(data)
-                    # binning = int(max_amp)+1 # For PeakAmp if we want a bin/ADC
+                    # binning = int(max_amp)+1
                     binning = 1000
                 elif k == "PeakTime":
                     data = my_run[run][ch]["Sampling"]*aux_data
@@ -413,7 +414,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                         try:
                             x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
                         except:
-                            x1 = -1e6   
+                            x1 = -1e6 
                     counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", range=(x1,x2)) # , zorder = 2 f
                 else: counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
                 label = label.replace(" - " + k,"")
@@ -431,7 +432,6 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and compare != "NONE":
-            plt.ion()
             plt.show()
             while not plt.waitforbuttonpress(-1): pass
             plt.close()
@@ -444,8 +444,6 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
     VARIABLES:
        \n - my_run: run(s) we want to check
        \n - keys: variables we want to plot as histograms. Type: List
-       \n - compare: NONE, RUNS, CHANNELS. This option chooses the way to compare waveforms both axis. This way we can
-       \n compare variables between RUNS (if they have same length) o CHANNELS.
        \n - percentile: percentile used for outliers removal
        \n - select_range: if we still have many outliers we can select the ranges in x and y axis.
     '''
@@ -528,5 +526,7 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
                 plt.show()
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
+            # else:
+            #     plt.close()
             if compare != "NONE": break
     return figures_list, axes_list
