@@ -68,7 +68,7 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
                 print("Nº cutted events in Ch "+str(ch)+":",rep_idx+ch_idx_list,"("+str(ch_idx_list),"new events cutted)\n")
 
         if apply_all_chs == True and ch == chs_cut[-1] and key == keys[-1]:
-            print("--- CUTTING EVENTS for ALL (loaded) Chs ---")
+            print("--- CUTTING EVENTS for ALL (loaded) Chs in Run",run,"---")
             print("Nº of new cutted events in Chs "+str(my_runs["NChannel"])+":", len(idx_list))
             for ch in my_runs["NChannel"]:
                 if check_key(my_runs[run][ch], "MyCuts") == False:
@@ -131,7 +131,7 @@ def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False):
 
         if apply_all_chs == True and ch == chs_cut[-1]:
             print("--- CUTTING EVENTS for ALL (loaded) Chs ---")
-            print("Nº of new cutted events in Chs "+str(chs_cut)+":", len(idx_list))
+            print("Nº of new cutted events in Chs "+str(my_runs["NChannel"])+":", len(idx_list))
             for ch in my_runs["NChannel"]:
                 if check_key(my_runs[run][ch], "MyCuts") == False:
                     print("...Running generate_cut_array...")
@@ -205,6 +205,7 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
         plt.close()
         counter += 1
         
+
 def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
     """
     This is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes)
