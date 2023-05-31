@@ -1,0 +1,14 @@
+CUT FUNCTIONS:
+- Hacer que funcione el cut_min_max_sim para que se tengan que cumplir dos condiciones simultaneamente (es realmente necesario?) Sobre todo para calibrar sin cargarse el pedestal al cortar en PeakTime. La idea es que se cumplan dos condiciones A LA VEZ, que es diferente a hace un min_max normal y luego otro, porque ahí se modifican los valores por separado. La idea principal de esto es en claibración, poder cortar en PeakTime sin quedarnos sin pedestal, es decir, que se cumpla que el peakTime esté en el rango que le pides y que además tenga > x ADCs (por encima del single). Así no nos cargamos el pedestal.
+
+- Hacer que funcione la variable range para poder chequear las variables en un rango concreto de la ventana.
+
+FIT FUNCTIONS:
+- Limpiar las funciones, sobre todo las nuevas. Añadir documentación
+
+VIS FUNCTIONS:
+- Hacer que el visualizador (vis_npy) admita varios runes seguidos. Los admite pero creo que hay veces en las que se raya un poco. Pero si es solo el visualizador funciona bien.
+- Intentar reducir el tamaño de vis_npy? Funciona bien pero es larga
+
+OTHERS:
+- Conseguir hacer waveforms medias con cortes en varios canales --> cargar mucho --> peta --> los temas de memoria de siempre
