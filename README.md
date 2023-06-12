@@ -84,7 +84,14 @@ cd ../notebooks
 jupyter notebook
 ```
 
-Rodrigo & Sergio & Andrés & Laura
-November 2022
+## LICENSE
+[MIT](https://choosealicense.com/licenses/mit/)
+
+## Authors (alphabetical order, please insert your name here if you contribute to this project)
+
+* [**Alvárez-Garrote, Rodrigo**](https://github.com/LauPM)
+* [**de la Torre Rojo, Andrés**](https://github.com/andtorre)
+* [**Manthey Corchado, Sergio**](https://github.com/mantheys)
+* [**Pérez-Molina, Laura**](https://github.com/rodralva)
 
 ![alt text](https://i.imgflip.com/72cpdl.jpg)
