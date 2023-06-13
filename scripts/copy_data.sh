@@ -1,5 +1,9 @@
 #!/bin/usr/env bash
 
+# ============================================ #
+#    RUN: sh copy_data.sh USER_PC  (AFS_PC)    #
+# ============================================ #
+
 #Script must be run from main folder or paths will be messed up
 
 # runes de interes feb22_2: calib(1,2,3)    laser(9,10,11)  alpha(25,26,27)
