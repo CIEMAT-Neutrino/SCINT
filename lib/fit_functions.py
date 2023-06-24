@@ -1,18 +1,14 @@
-import math
-import numpy as np
-import scipy as sc
-import matplotlib.pyplot as plt
-import os
-import stat
-from itertools import product
+#================================================================================================================================================#
+# This library contains functions to perform fits to the data.                                                                                   #
+#================================================================================================================================================#
 
-import scipy
+import os, stat, math, scipy
+import numpy             as np
+import matplotlib.pyplot as plt
+from itertools      import product
 from scipy.optimize import curve_fit
 from scipy.signal   import find_peaks
-from scipy.special import erf
-from .io_functions import load_npy, check_key, print_keys, print_colored
-from .ana_functions import generate_cut_array, get_units
-from .wvf_functions import find_amp_decrease, find_baseline_cuts
+from scipy.special  import erf
 np.seterr(divide = 'ignore') 
 
 #===========================================================================#
@@ -79,7 +75,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     And return the parameters of the fit (if performed)
     ''' 
-    
+
     #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
     wdth = 10
     prom = 0.5
@@ -143,6 +139,9 @@ def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     And return the parameters of the fit (if performed)
     ''' 
+
+    #Imports from other libraries
+    from .io_functions import print_colored
 
     ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
@@ -213,6 +212,9 @@ def pmt_spe_fit(counts, bins, bars, thresh):
     [se le puede dedicar un poco mas de tiempo para tener un ajuste mas fino pero parece que funciona]
     ''' 
 
+    #Imports from other libraries
+    from .io_functions import print_colored
+
     ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
     wdth   = 10
@@ -275,14 +277,15 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_f
     This function fits the peak to a gaussian function, and returns the parameters
     '''
 
+    # Imports from other libraries
+    from .io_functions import check_key
+
     raw_max = np.argmax(fit_raw)
 
     if check_key(OPT, "CUT_NEGATIVE") == True and OPT["CUT_NEGATIVE"] == True:
         for i in range(len(fit_raw)):
-            if fit_raw[i] <= thrld:
-                fit_raw[i] = thrld
-            if np.isnan(fit_raw[i]):
-                fit_raw[i] = thrld
+            if fit_raw[i] <= thrld:  fit_raw[i] = thrld
+            if np.isnan(fit_raw[i]): fit_raw[i] = thrld
 
     guess_t0 = raw_x[raw_max]
     p = np.mean(fit_raw[:raw_max-buffer])
@@ -321,6 +324,10 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     ''' 
     DOC 
     '''
+
+    # Imports from other libraries
+    from .io_functions import check_key
+
 
     max = np.argmax(raw)
     # thrld = 1e-4
@@ -376,12 +383,16 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
             plt.clf()
 
     aux = func3(raw_x, *param)
+
     return aux,param,perr2,labels2
 
 def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     ''' 
     DOC 
     '''
+
+    # Imports from other libraries
+    from .io_functions import check_key, print_colored
 
     next_plot = False
     OPT["CUT_NEGATIVE"] = True
@@ -456,6 +467,10 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     return aux,param,perr,labels
 
 def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
+
+    # Imports from other libraries
+    from .io_functions import check_key, print_colored
+
     # Prepare plot vis
     next_plot = False
     plt.rcParams['figure.figsize'] = [8, 8]
@@ -494,7 +509,11 @@ def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC
     ''' 
     DOC 
     '''
-    
+
+    # Imports from other libraries
+    from .io_functions  import check_key
+    from .ana_functions import find_amp_decrease
+
     i_param = get_initial_parameters(i_param)
 
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ion()
@@ -542,6 +561,8 @@ def get_initial_parameters(i_param):
     '''
     DOC
     '''
+    # Imports from other libraries
+    from .io_functions import check_key
     
     # Define input parameters from dictionary
     if check_key(i_param,"ped")      == False: i_param["ped"]      = 1e-6
@@ -569,6 +590,10 @@ def log_tau_slow_profile(x,a_s,tau_s):
 
 def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     """ DOC """
+
+    # Imports from other libraries
+    from .io_functions import check_key
+
     next_plot = False
     thrld = 1e-10
     for i in range(len(raw)):
@@ -632,6 +657,10 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
 
 def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     """ DOC """
+
+    # Imports from other libraries
+    from .io_functions import check_key
+    
     next_plot = False
     # thrld = 1e-10
     # for i in range(len(raw)):

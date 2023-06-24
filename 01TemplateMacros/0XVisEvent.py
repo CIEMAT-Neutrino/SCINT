@@ -18,10 +18,8 @@ except IndexError:
     input_channels = input("Please select CHANNELS (separated with commas): ")
 
 info     = read_input_file(input_file)
-# runs     = [9,56,68]
 runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
-# channels = [6]
 
 OPT  = {
     "MICRO_SEC":   True,
@@ -40,6 +38,5 @@ my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True) # prese
 #####################
 
 ##### EVENT VISUALIZER #####
-# vis_npy(my_runs, ["ADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
+vis_npy(my_runs, ["ADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
 ############################
-vis_compare_wvf(my_runs, ["AveWvf"], compare="RUNS", OPT=OPT)

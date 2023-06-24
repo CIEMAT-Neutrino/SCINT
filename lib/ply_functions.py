@@ -1,26 +1,16 @@
 import math
-import scipy
 import numpy                as np
 import plotly.express       as px
 import plotly.offline       as pyoff
+import matplotlib.pyplot    as plt
 
 from matplotlib.colors  import LogNorm
 from matplotlib.cm      import viridis
 from itertools          import product
-# import keyboard
-from scipy.ndimage.filters  import gaussian_filter1d
 from scipy.signal           import find_peaks
 
-from .io_functions      import load_npy,check_key, print_keys, print_colored
-from .ana_functions     import generate_cut_array, get_units
-from .fit_functions     import gaussian, scint_fit, fit_wvfs, gaussian_fit
-
-from .fig_config import ( add_grid, figure_features, )
-
-
 def custom_legend_name(fig_px,new_names):
-    for i, new_name in enumerate(new_names):
-        fig_px.data[i].name = new_name
+    for i, new_name in enumerate(new_names): fig_px.data[i].name = new_name
     return fig_px
 
 def custom_plotly_layout(fig_px, xaxis_title="", yaxis_title="", title="",barmode="stack"):
@@ -60,6 +50,11 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
        \n - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
        \n - same_plot: True if we want to plot different channels in the SAME plot
     '''
+
+    # Import from other libraries
+    from .io_functions  import print_colored, check_key
+    from .fit_functions import gaussian
+    from .fig_config    import figure_features
 
     figure_features()
     charge_key = "ChargeAveRange"
@@ -289,6 +284,11 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
            \n b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     '''
 
+    # Import from other libraries
+    from .io_functions  import check_key
+    from .fit_functions import fit_wvfs
+    from .fig_config    import figure_features
+
     figure_features()
     r_list = my_run["NRun"]
     ch_list = my_run["NChannel"]
@@ -373,17 +373,20 @@ def vis_var_hist(my_run, run, ch, key, percentile = [0.1, 99.9], OPT = {"SHOW": 
     WARNING! Maybe the binning stuff should be studied in more detail.
     '''
 
+    # Import from other libraries
+    from .io_functions  import check_key
+    from .ana_functions import generate_cut_array, get_units
+    from .fig_config    import figure_features, add_grid
+
     figure_features()
     all_counts = []
     all_bins = []
     all_bars = []
 
-    if check_key(my_run[run][ch], "MyCuts") == False:
-        generate_cut_array(my_run)
-    if check_key(my_run[run][ch], "UnitsDict") == False:
-        get_units(my_run)
+    if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run)
+    if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
+    
     aux_data = my_run[run][ch][key][my_run[run][ch]["MyCuts"] == True]
-
     plt.ion()
     data = []
     if key == "PeakAmp":
@@ -428,15 +431,18 @@ def vis_two_var_hist(my_run, run, ch, keys, percentile = [0.1, 99.9], select_ran
        \n - select_range: if we still have many outliers we can select the ranges in x and y axis.
     '''
 
+    # Import from other libraries
+    from .io_functions  import check_key
+    from .ana_functions import generate_cut_array, get_units
+    from .fig_config    import figure_features
+
     figure_features()
     x_data = []; y_data = []
 
-    if check_key(my_run[run][ch], "MyCuts") == False:
-        generate_cut_array(my_run)
-    if check_key(my_run[run][ch], "UnitsDict") == False:
-        get_units(my_run)
+    if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run)
+    if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
+    
     x_data = my_run[run][ch][keys[0]][my_run[run][ch]["MyCuts"] == True]; y_data = my_run[run][ch][keys[1]][my_run[run][ch]["MyCuts"] == True]
-
     #### Calculate range with percentiles for x-axis ####
     x_ypbot = np.percentile(x_data, percentile[0]); x_yptop = np.percentile(x_data, percentile[1])
     x_ypad = 0.2*(x_yptop - x_ypbot)

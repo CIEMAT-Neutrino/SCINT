@@ -1,18 +1,13 @@
+#================================================================================================================================================#
+# This library contains function to perform the calibration of our sensors. They are mostly used in the 04Calibration.py macro.                  #
+#================================================================================================================================================#
+
 import numpy             as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from matplotlib.cm     import viridis
 from itertools         import product
-from scipy.optimize    import curve_fit
-import scipy 
-from scipy import stats as st
-
-from .io_functions  import check_key, print_keys, write_output_file, print_colored, color_list
-from .vis_functions import vis_var_hist
-from .fit_functions import gaussian, gaussian_train, loggaussian, loggaussian_train, gaussian_fit, gaussian_train_fit, pmt_spe_fit
-from .ana_functions import generate_cut_array, get_units
-from .cut_functions import cut_min_max
-from .fig_config    import *
+# from scipy import stats as st
 
 def vis_persistence(my_run, OPT = {}):
     '''
@@ -22,6 +17,11 @@ def vis_persistence(my_run, OPT = {}):
     X_data (time) and Y_data (waveforms) are deleted after the plot to save space.
     WARNING! flattening long arrays leads to MEMORY problems :/
     '''
+
+    #Imports from other libraries
+    from .ana_functions import generate_cut_array
+    from .fig_config    import figure_features
+
     figure_features()
     plt.ion()
     for run, ch in product(my_run["NRun"],my_run["NChannel"]):
@@ -61,6 +61,13 @@ def calibrate(my_runs, keys, OPT={}):
            \n b) SHOW: if True, it will show the calibration plot
     '''
 
+    # Imports from other libraries
+    from .io_functions  import check_key, print_colored
+    from .ana_functions import generate_cut_array, get_units
+    from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit
+    from .vis_functions import vis_var_hist
+    from .fig_config     import add_grid
+
     plt.ion()
     next_plot = False
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
@@ -71,8 +78,8 @@ def calibrate(my_runs, keys, OPT={}):
         else: 
             label = my_runs[run][ch]["Label"]
 
-            if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs) # If cuts not generated, generate them
-            if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)       # Get units
+            if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs) # If cuts not generated, generate them
+            if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
 
             # try:
             counts, bins, bars = vis_var_hist(my_runs, [key], compare="NONE",OPT=OPT)
@@ -151,6 +158,9 @@ def calibration_txt(run, ch, popt, pcov, filename, info):
        \nTakes as input an array of arrays with the computed parameters (see compute_cal_parameters())
     '''
 
+    # Imports from other libraries
+    from .io_functions import write_output_file
+
     if all(x !=-99 for x in popt):
         cal_parameters = []
         perr = np.sqrt(np.diag(pcov))    #error for each variable
@@ -206,6 +216,9 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
         \nTakes as input an array of arrays with the computed parameters (see compute_charge_parameters())
     '''
 
+    # Imports from other libraries
+    from .io_functions import write_output_file
+
     charge_parameters = []
     perr0 = np.sqrt(np.diag(pcov))  #error for each variable
     # perr1 = np.sqrt(np.diag(pcov[1]))  #error for each variable
@@ -240,14 +253,21 @@ def charge_fit(my_runs, keys, OPT={}):
             \n b) SHOW: if True, it will show the calibration plot
     '''
 
+    # Imports from other libraries
+    from .io_functions  import check_key, color_list
+    from .ana_functions import generate_cut_array, get_units
+    from .fit_functions import gaussian_fit, gaussian
+    from .vis_functions import vis_var_hist
+    from .fig_config     import add_grid
+
     next_plot = False
     counter = 0
     all_counts, all_bins, all_bars = vis_var_hist(my_runs, keys, compare = "NONE", OPT={"SHOW":False})
     all_popt=[]; all_pcov=[]; all_perr=[]
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
         
-        if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs) #if no cuts, generate them
-        if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)       #if no units, generate them
+        if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs) #if no cuts, generate them
+        if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          #if no units, generate them
         # try:
         thresh = int(len(my_runs[run][ch][key])/1000)
 
