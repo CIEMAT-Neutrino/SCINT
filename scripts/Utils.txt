@@ -6,3 +6,9 @@ sudo umount ../data
 sudo sshfs -o allow_other perezl@pcae146.ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE ../data
 chmod o=rwx */*.npz
 chmod -R ugo=+rwx folder #POWERFUL --> all the files/folders in the folder you choose are available for everyone
+
+
+#Transform the npx files to another format#
+import numpy as np
+data = np.load(filename)
+for key, value in data.items(): np.savetxt("somepath" + key + ".csv", value)
