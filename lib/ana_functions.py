@@ -1,22 +1,25 @@
-import sys, copy
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy     import stats as st
-from itertools import product
-import numba
+#================================================================================================================================================#
+# This library contains functions to compute variables from the raw data. They are mostky used in the *Process.py macros.                        #
+#================================================================================================================================================#
 
-from .io_functions import check_key, print_keys, print_colored
+import numpy as np
+import numba
+from itertools import product
+# from scipy     import stats as st
 
 def insert_variable(my_runs, var, key, debug = False):
     '''
     Insert values for each type of signal
     '''
+
+    # Import from other libraries
+    from .io_functions import print_colored
+
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         i = np.where(np.array(my_runs["NRun"]).astype(int) == run)[0][0]
         j = np.where(np.array(my_runs["NChannel"]).astype(int) == ch)[0][0]
 
-        try:
-            my_runs[run][ch][key] = var[j]
+        try: my_runs[run][ch][key] = var[j]
         except KeyError: 
             if debug: print_colored("Inserting value...", "DEBUG")
 
@@ -24,6 +27,10 @@ def generate_cut_array(my_runs,debug=False):
     '''
     This function generates an array of bool = True with length = NEvts. If cuts are applied and then you run this function, it resets the cuts.
     '''
+
+    # Import from other libraries
+    from .io_functions import print_colored
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
         for key in my_runs[run][ch].keys():
@@ -39,6 +46,10 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
     '''
     Computes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
+    
+    # Import from other libraries
+    from .io_functions import print_colored
+
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
@@ -51,6 +62,10 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
     '''
     Computes the pedestal variables of a collection of a run's collection in standard format
     '''
+
+    # Import from other libraries
+    from .io_functions import print_colored
+
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
@@ -63,10 +78,9 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
             my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
             my_runs[run][ch][label+"PedLim"]  = ped_lim
             # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
-            print("Pedestal variables have been computed for run %i ch %i"%(run,ch))
-        except: 
-            KeyError
-            if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
+            print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
+        except KeyError: 
+            if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")
 
 def compute_pedestal_variables_sliding_window(my_runs, key = "ADC", label = "", ped_lim = 400,sliding=50,pretrigger=800, start = 0, debug = False):
     """
@@ -77,6 +91,10 @@ def compute_pedestal_variables_sliding_window(my_runs, key = "ADC", label = "", 
     \n - pretrigger: amount of bins to study. Eg: ped_lim = 400, sliding = 50, pretrigger = 800 --> 8 windows to compute
     \n - start: the bin where starts the window. This way you can check the end of the window
     """
+    
+    # Import from other libraries
+    from .io_functions import print_colored
+    
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
             ADCs_aux=my_runs[run][ch][key]
@@ -88,15 +106,17 @@ def compute_pedestal_variables_sliding_window(my_runs, key = "ADC", label = "", 
             my_runs[run][ch][label+"PedMin"]  = np.min (ADCs_s[:,start:(start+ped_lim)],axis=1)
             my_runs[run][ch][label+"PedLim"]  = ped_lim
             # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADCs_s[:,start:(start+ped_lim)]**2),axis=1))
-            print("Pedestal variables have been computed for run %i ch %i"%(run,ch))
-        except: 
-            KeyError
-            if debug: print("*EXCEPTION: for ",run,ch,key," pedestal variables could not be computed")
+            print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
+        except KeyError: 
+            if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")
 
 def compute_ana_wvfs(my_runs, debug = False):
     '''
     Computes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
+    # Import from other libraries
+    from .io_functions import print_colored, print_keys
+
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
 
         my_runs[run][ch]["ADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
@@ -109,6 +129,7 @@ def get_units(my_runs, debug = False):
     '''
     Computes and store in a dictionary the units of each variable.  
     '''
+
     for run, ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         keys = my_runs[run][ch].keys()
         aux_dic = {}
@@ -122,21 +143,22 @@ def get_units(my_runs, debug = False):
 
 def compute_power_spec(ADC, timebin, debug = False):
     """ Computes the power spectrum of the given events. It returns both axis. """
+
     aux = [] 
     aux_X = np.fft.rfftfreq(len(ADC[0]), timebin)
-    for i in range(len(ADC)):
-        aux.append(np.fft.rfft(ADC[i]))
+    for i in range(len(ADC)): aux.append(np.fft.rfft(ADC[i]))
+
     return np.absolute(np.mean(aux, axis = 0)), np.absolute(aux_X)
 
 def compute_pedestal_sliding_windows(ADC,ped_lim=400,sliding=50,pretrigger=800, start = 0):
     """Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
     \n It checks for the best window."""
+    
     pedestal_vars=dict();
     slides=int((pretrigger-ped_lim)/sliding);
     N_wvfs=ADC.shape[0];
     aux=np.zeros((N_wvfs,slides))
-    for i in range(slides):
-        aux[:,i]=np.std (ADC[:,(i*sliding+start):(i*sliding+ped_lim+start)],axis=1)
+    for i in range(slides): aux[:,i]=np.std (ADC[:,(i*sliding+start):(i*sliding+ped_lim+start)],axis=1)
     #put first in the wvf the appropiate window, the one with less std:
     shifts= np.argmin (aux,axis=1)*(-1)*sliding
     ADC_s = shift_ADCs(ADC,shifts)
@@ -147,21 +169,18 @@ def compute_pedestal_sliding_windows(ADC,ped_lim=400,sliding=50,pretrigger=800, 
 @numba.njit
 def shift_ADCs(ADC,shift):
     """ Used for the sliding window """
+
     N_wvfs=ADC.shape[0]
     aux_ADC=np.zeros(ADC.shape)
-    for i in range(N_wvfs):
-        aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
+    for i in range(N_wvfs): aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
+    
     return aux_ADC
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
 @numba.njit
-def shift4_numba(arr, num, fill_value=0):#default shifted value is 0, remember to always substract your pedestal first
+def shift4_numba(arr, num, fill_value=0): #default shifted value is 0, remember to always substract your pedestal first
     """ Used for the sliding window """
-    if   num > 0:
-        return np.concatenate((np.full(num, fill_value), arr[:-num]))
-    elif num < 0:
-        return np.concatenate((arr[-num:], np.full(-num, fill_value)))
-    else:#no shift
-        return arr
 
-
+    if   num > 0: return np.concatenate((np.full(num, fill_value), arr[:-num]))
+    elif num < 0: return np.concatenate((arr[-num:], np.full(-num, fill_value)))
+    else:         return arr #no shift

@@ -1,10 +1,10 @@
-import numpy as np
-import matplotlib.pyplot as plt
+#================================================================================================================================================#
+# In this library we have the functions to compute the average waveform and the integration of the waveforms.                                    #
+#================================================================================================================================================#
 
-from scipy import stats as st
-from .io_functions import check_key, print_colored, color_list
-from .ana_functions import generate_cut_array, get_units
+import numpy as np
 from itertools import product
+# from scipy import stats as st
 
 def find_baseline_cuts(raw):
     '''
@@ -44,6 +44,10 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label=""
        \n - "PEAK"      -> AveWvfPeak: each event is centered according to wvf argmax. 
        \n - "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
     '''
+
+    # Import from other libraries
+    from .io_functions import check_key
+    from .ana_functions import generate_cut_array, get_units
 
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
         # try:
@@ -95,8 +99,7 @@ def expo_average(my_run, alpha):
     '''
 
     v_averaged = np.zeros(len(my_run)); v_averaged[0] = my_run[0]
-    for i in range (len(my_run) - 1):
-        v_averaged[i+1] = (1-alpha) * v_averaged[i] + alpha * my_run[i+1] # e.g. alpha = 0.1  ->  average[1] = 0.9 * average[0] + 0.1 * my_run[1]
+    for i in range (len(my_run) - 1):   v_averaged[i+1] = (1-alpha) * v_averaged[i] + alpha * my_run[i+1] # e.g. alpha = 0.1  ->  average[1] = 0.9 * average[0] + 0.1 * my_run[1]
     
     return v_averaged
 
@@ -109,8 +112,7 @@ def unweighted_average(my_run):
     v_averaged     = np.zeros(len(my_run))
     v_averaged[0] = my_run[0]; v_averaged[-1] = my_run[-1]
 
-    for i in range (len(my_run) - 2):
-        v_averaged[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 #e.g. average[1] = (my_run[0] + my_run[1] + my_run[2]) / 3
+    for i in range (len(my_run) - 2): v_averaged[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 #e.g. average[1] = (my_run[0] + my_run[1] + my_run[2]) / 3
     return v_averaged
 
 def smooth(my_run, alpha):
@@ -135,6 +137,10 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
     If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
     I_RANGE must have same length than F_RANGE!
     '''
+
+    # Import from other libraries
+    from .io_functions import check_key, print_colored
+    from .ana_functions import generate_cut_array, get_units
 
     try:
         conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
@@ -192,29 +198,6 @@ def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
                 print_colored("=============== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs ==============="%(t0*1E6,tf*1E6), "SUCCESS")
                 print_colored("======================================================================", "SUCCESS")
 
-    except KeyError: print_colored("Empty dictionary. No integration to compute.", "ERROR")
-
-    return my_runs
-
-### BORRAR O HACER BIEN ###
-def charge_nevents(my_runs, keys = ["ChargeAveRange"]):
-    '''
-    This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
-    VARIABLES:
-       \n - my_runs: run(s) we want to use
-       \n - info: input information from .txt with DAQ characteristics and Charge Information.
-       \n - key: waveform we want to integrate
-    In txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
-    If I_RANGE = -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
-    If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
-    I_RANGE must have same length than F_RANGE!
-    '''
-
-    try:
-        for run,ch,key in product(my_runs["NRun"], my_runs["NChannel"], keys):
-            runtime = (my_runs[run][ch]["TimeStamp"][-1] - my_runs[run][ch]["TimeStamp"][0]) #segundos
-            my_runs[run][ch]["NEvents"+key] = my_runs[run][ch][key] / runtime
-            print(my_runs[run][ch].keys())
     except KeyError: print_colored("Empty dictionary. No integration to compute.", "ERROR")
 
     return my_runs

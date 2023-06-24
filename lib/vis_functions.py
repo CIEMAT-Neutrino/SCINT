@@ -1,23 +1,16 @@
-import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
-from matplotlib.cm import viridis
-import numpy as np
-import keyboard
+#================================================================================================================================================#
+# In this library we have all the functions related with visualization. They are mostly used in 0XVis*.py macros but can be included anywhere !! #
+#================================================================================================================================================#
+
 import math
-from itertools import product
+import numpy             as np
+import matplotlib.pyplot as plt
+from matplotlib.colors           import LogNorm
+from matplotlib.cm               import viridis
+from itertools                   import product
+from scipy.signal                import find_peaks
 from scipy.ndimage.interpolation import shift
 
-from .io_functions import load_npy,check_key, print_keys, print_colored
-from .ana_functions import generate_cut_array, get_units
-from .fit_functions import gaussian, scint_fit, fit_wvfs, gaussian_fit
-
-import scipy
-from scipy.signal import find_peaks
-
-from .fig_config import (
-    add_grid,
-    figure_features,
-)
 
 def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = False):
     '''
@@ -37,6 +30,11 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
        \n - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
        \n - same_plot: True if we want to plot different channels in the SAME plot
     '''
+
+    # Imports from other libraries
+    from .io_functions  import check_key,print_colored
+    from .fig_config    import figure_features
+
 
     figure_features()
     charge_key = "ChargeAveRange"
@@ -150,17 +148,13 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
 
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
-                        if check_key(my_run[run][ch_list[j]], "AveWvfSPE") == False:
-                            thresh = my_run[run][ch_list[j]]["PedMax"][idx] + 0.5*my_run[run][ch_list[j]]["PedMax"][idx]
-                        else:
-                            thresh = np.max(my_run[run][ch_list[j]]["AveWvfSPE"])*3/4
-                        wdth = 4
-                        prom = 0.01
-                        dist  = 30
+                        if check_key(my_run[run][ch_list[j]], "AveWvfSPE") == False: thresh = my_run[run][ch_list[j]]["PedMax"][idx] + 0.5*my_run[run][ch_list[j]]["PedMax"][idx]
+                        else:                                                        thresh = np.max(my_run[run][ch_list[j]]["AveWvfSPE"])*3/4
+                        
+                        wdth = 4; prom = 0.01; dist  = 30
                         axs[j].axhline(thresh,c="k", alpha=.6, ls = "dotted")
                         peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
-                        for p in peak_idx:
-                            axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
+                        for p in peak_idx: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
 
                     try:
                         if my_run[run][ch_list[j]]["MyCuts"][idx] == False:
@@ -176,8 +170,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                         std = 0 # It is ugly if we see this line in log plots
                     axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2,label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]).replace("#"," "))
                     axs.grid(True, alpha = 0.7)
-                    try:
-                        axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    try: axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                     except KeyError: print_colored("Run preprocess please!", "ERROR")
                     axs.set_title("Run {} - Event Number {}".format(run,idx),size = 14)
                     axs.xaxis.offsetText.set_fontsize(14)
@@ -186,8 +179,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                         try:
                             ave_key = OPT["SHOW_AVE"]
                             ave = my_run[run][ch_list[j]][ave_key][0]
-                            if OPT["NORM"] == True and OPT["NORM"] == True:
-                                ave = ave/np.max(ave)
+                            if OPT["NORM"] == True and OPT["NORM"] == True: ave = ave/np.max(ave)
                             if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
                                 ref_max_idx, = np.where(ave == np.max(ave))
                                 idx, = np.where(ave == np.max(ave))
@@ -199,14 +191,11 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                         # These parameters must be modified according to the run...
                         thresh = my_run[run][ch_list[j]]["PedMax"][idx]
-                        wdth = 4
-                        prom = 0.01
-                        dist = 40
+                        wdth = 4; prom = 0.01; dist = 40
                         axs.axhline(thresh,c="salmon", alpha=.6, ls = "dotted")
                         # peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
                         peak_idx, _ = find_peaks(raw[j], height = thresh)       
-                        for p in peak_idx:
-                            axs.scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
+                        for p in peak_idx: axs.scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
 
                     try:
                         if my_run[run][ch_list[j]]["MyCuts"][idx] == False:
@@ -229,14 +218,14 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     except:
                         if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"], "WARNING")
                         else: print("- Charge: default charge key has not been computed")
-                    try:    print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
+                    try:      print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
                     except:
                         if not check_key(OPT,"PEAK_FINDER"): print("")
                 my_run[run][ch_list[j]]["Sampling"] = sampling    
 
             tecla = input("\nPress q to quit, p to save plot, r to go back, n to choose event or any key to continue: ")
 
-            if tecla == "q":   break
+            if   tecla == "q": break
             elif tecla == "r": idx = idx-1
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
@@ -268,13 +257,18 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
             b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     '''
 
+    # Imports from other libraries
+    from .io_functions  import check_key
+    from .fit_functions import fit_wvfs
+    from .fig_config    import figure_features
+
     figure_features()
     r_list = my_run["NRun"]
     ch_list = my_run["NChannel"]
     nch = len(my_run["NChannel"])
     axs = []
     
-    if compare == "CHANNELS": a_list = r_list; b_list = ch_list 
+    if compare == "CHANNELS": a_list = r_list;  b_list = ch_list 
     if compare == "RUNS":     a_list = ch_list; b_list = r_list 
 
     for a in a_list:
@@ -294,23 +288,18 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         for b in b_list:
             if compare == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
             if compare == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"]).replace("#"," ")
-            if len(keys) == 1:
-                ave = my_run[run][ch][keys[counter]][0]
-            elif len(keys) > 1:
-                ave = my_run[run][ch][keys[counter]][0]
-                counter = counter + 1
+            if   len(keys) == 1: ave = my_run[run][ch][keys[counter]][0]
+            elif len(keys) > 1:  ave = my_run[run][ch][keys[counter]][0]; counter = counter + 1
+
             norm_ave = np.max(ave)
             sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
             thrld = 1e-6
-            if check_key(OPT,"NORM") == True and OPT["NORM"] == True: ave = ave/norm_ave
-            if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
-                fig.supxlabel(r'Time [$\mu$s]')
-                sampling = my_run[run][ch]["Sampling"]*1e6
-            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:  axs.semilogy()
+            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:          ave = ave/norm_ave
+            if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True: fig.supxlabel(r'Time [$\mu$s]'); sampling = my_run[run][ch]["Sampling"]*1e6
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:         axs.semilogy()
             if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
                 ref_threshold = np.argmax(ave>np.max(ave)*2/3)
-                if ref_max_idx == -1:
-                    ref_max_idx = ref_threshold
+                if ref_max_idx == -1: ref_max_idx = ref_threshold
                 ave = np.roll(ave, ref_max_idx-ref_threshold)
 
             if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
@@ -324,15 +313,13 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         axs.xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
         if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
        
-        tecla      = input("\nPress q to quit, p to save plot and any key to continue: ")
+        tecla   = input("\nPress q to quit, p to save plot and any key to continue: ")
         counter = 0
         if tecla   == "q": break 
-        elif tecla == "p":
-            fig.savefig('AveWvf_Ch{}.png'.format(ch), dpi = 500)
-            counter += 1
+        elif tecla == "p": fig.savefig('AveWvf_Ch{}.png'.format(ch), dpi = 500); counter += 1
         else: counter += 1
-        if counter > len(ch_list): break
-        elif counter > len(r_list): break
+        if   counter > len(ch_list): break
+        elif counter > len(r_list):  break
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
         plt.close()   
@@ -352,21 +339,21 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
     WARNING! Maybe the binning stuff should be studied in more detail.
     '''
 
+    # Imports from other libraries
+    from .io_functions  import check_key
+    from .ana_functions import generate_cut_array, get_units
+    from .fig_config    import figure_features, add_grid
+
     figure_features()
     all_counts = []
     all_bins = []
     all_bars = []
     r_list = my_run["NRun"]
     ch_list = my_run["NChannel"]
-    if compare == "CHANNELS":
-        a_list = r_list 
-        b_list = ch_list 
-    if compare == "RUNS":
-        a_list = ch_list 
-        b_list = r_list
-    if compare == "NONE":
-        a_list = r_list
-        b_list = ch_list
+    if compare == "CHANNELS": a_list = r_list;  b_list = ch_list 
+    if compare == "RUNS":     a_list = ch_list; b_list = r_list
+    if compare == "NONE":     a_list = r_list;  b_list = ch_list
+
     data = []
     for a in a_list:
         if compare != "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
@@ -375,10 +362,9 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
             if compare == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
             if compare == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
             if compare == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
-            if check_key(my_run[run][ch], "MyCuts") == False:
-                generate_cut_array(my_run)
-            if check_key(my_run[run][ch], "UnitsDict") == False:
-                get_units(my_run)
+            
+            if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run)
+            if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
             
             if compare == "NONE": fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
             for k in key:
@@ -411,10 +397,8 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                 if select_range:
                     x1 = -1e6
                     while x1 == -1e6:
-                        try:
-                            x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
-                        except:
-                            x1 = -1e6 
+                        try:    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
+                        except: x1 = -1e6 
                     counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", range=(x1,x2)) # , zorder = 2 f
                 else: counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
                 label = label.replace(" - " + k,"")
@@ -422,10 +406,8 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                 all_bins.append(bins)
                 all_bars.append(bars)
             
-            if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-                ax.legend()
-            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-                ax.semilogy()
+            if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:     ax.legend()
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: ax.semilogy()
             if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and compare == "NONE":
                 plt.ion()
                 plt.show()
@@ -435,6 +417,7 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
             plt.show()
             while not plt.waitforbuttonpress(-1): pass
             plt.close()
+
     return all_counts, all_bins, all_bars
 
 def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], select_range = False, OPT={}):
@@ -448,25 +431,23 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
        \n - select_range: if we still have many outliers we can select the ranges in x and y axis.
     '''
 
+    # Imports from other libraries
+    from .io_functions  import check_key
+    from .ana_functions import generate_cut_array, get_units
+    from .fig_config    import figure_features, add_grid
+
     figure_features()
     r_list = my_run["NRun"]
     ch_list = my_run["NChannel"]
-    if compare == "CHANNELS":
-        a_list = r_list 
-        b_list = ch_list 
-    if compare == "RUNS":
-        a_list = ch_list 
-        b_list = r_list
-    if compare == "NONE":
-        a_list = r_list
-        b_list = ch_list
+    if compare == "CHANNELS": a_list = r_list;  b_list = ch_list 
+    if compare == "RUNS":     a_list = ch_list; b_list = r_list
+    if compare == "NONE":     a_list = r_list;  b_list = ch_list
+
     x_data = []; y_data = []
     for run in r_list:
         for ch in ch_list:
-            if check_key(my_run[run][ch], "MyCuts") == False:
-                generate_cut_array(my_run)
-            if check_key(my_run[run][ch], "UnitsDict") == False:
-                get_units(my_run)
+            if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run)
+            if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
     figures_list = []
     axes_list = []
     for a in a_list:
@@ -499,10 +480,8 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
             y_ypad = 0.2*(y_yptop - y_ypbot)
             y_ymin = y_ypbot - y_ypad; y_ymax = y_yptop + y_ypad
 
-            if "Time" in keys[0]:
-                ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
-            else:
-                ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+            if "Time" in keys[0]: ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+            else:                 ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
             ax.grid("both")
             fig.supxlabel(label0 + " " + keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(label1 + " " + keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
             fig.suptitle(title)
@@ -519,9 +498,8 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
 
             figures_list.append(fig)
             axes_list.append(ax)
-            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
-                plt.yscale('log'); 
-            if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
+            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.yscale('log'); 
+            if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True: 
                 plt.ion()
                 plt.show()
                 while not plt.waitforbuttonpress(-1): pass
@@ -529,4 +507,5 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
             # else:
             #     plt.close()
             if compare != "NONE": break
+
     return figures_list, axes_list

@@ -1,15 +1,13 @@
-import numpy as np
+#================================================================================================================================================#
+# This library contains functions to perform deconvolution to our waveforms.                                                                     #
+#================================================================================================================================================#
+
+import numpy             as np
 import matplotlib.pyplot as plt
-from curve import Curve
-
-from .io_functions  import check_key, print_colored
-from .ana_functions  import compute_power_spec
-from .fit_functions import func2
-from .wvf_functions import smooth, find_baseline_cuts, find_amp_decrease
-
 import scipy.interpolate
 from scipy.optimize import curve_fit
-from itertools import product
+from itertools      import product
+from curve          import Curve
 
 def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
     ''' 
@@ -18,14 +16,16 @@ def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
        \n - dec_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
        \n - SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
     '''
+
+    #Imports from other libraries
+    from .wvf_functions import find_amp_decrease
+
     for ii in range(len(my_runs["NRun"])):
         for jj in range(len(my_runs["NChannel"])):
             det_response =    dec_runs[dec_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvf"][0]
             single_response = SPE_runs[SPE_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvfSPE"][0]
-            if scaling_type == "Amplitude":
-                SER = np.max(single_response)*det_response/np.max(det_response)
-            if scaling_type == "Charge": 
-                SER = np.sum(single_response)*det_response/np.sum(det_response)
+            if scaling_type == "Amplitude": SER = np.max(single_response)*det_response/np.max(det_response)
+            if scaling_type == "Charge":    SER = np.sum(single_response)*det_response/np.sum(det_response)
             i_idx,f_idx = find_amp_decrease(SER, 1e-4)
             SER = np.roll(SER,-i_idx)
             my_runs[my_runs["NRun"][ii]][my_runs["NChannel"][jj]]["SER"] = [SER]
@@ -40,6 +40,12 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
        \n - peak_buffer: INT with left distance from peak to calculate baseline.
        \n - OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).  
     '''
+
+    # Imports from other libraries
+    from .io_functions  import print_colored, check_key
+    from .wvf_functions import find_baseline_cuts, smooth
+    from .ana_functions import compute_power_spec
+    from .fit_functions import gauss
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = []; trimm = 0 
@@ -63,8 +69,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
             if check_key(OPT,  "TRIMM") ==  True: trimm = OPT["TRIMM"]
             if check_key(OPT,  "AUTO_TRIMM") ==  True and OPT["AUTO_TRIMM"] ==  True:
                 j = 0
-                while 2**j < len(signal):
-                    j = j+1
+                while 2**j < len(signal): j = j+1
                 trimm = len(signal)-2**(j-1)
             
             # print(template)
@@ -255,6 +260,11 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
     plt.close()
 
 def convolve(my_runs, keys = [], OPT = {}):
+
+    # Imports from other libraries
+    from .io_functions import print_colored, check_key
+    from .wvf_functions import signal_int, conv_func2, func2
+
     print_colored("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n", "blue", bold=True)
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -288,10 +298,10 @@ def convolve(my_runs, keys = [], OPT = {}):
             sigma    = 2e-8; sigma_low    = 9e-9; sigma_high    = 3e-8
 
             fit_initials = (t_fast, t_slow, amp_fast, amp_slow, sigma)
-            fit_finals = [t_fast, t_slow, amp_fast, amp_slow, sigma]
-            limits_low = [t_fast_low, t_slow_low, amp_fast_low, amp_slow_low, sigma_low]
-            limits_high = [t_fast_high, t_slow_high, amp_fast_high, amp_slow_high, sigma_high]
-            fit_limits = (limits_low, limits_high)
+            fit_finals   = [t_fast, t_slow, amp_fast, amp_slow, sigma]
+            limits_low   = [t_fast_low, t_slow_low, amp_fast_low, amp_slow_low, sigma_low]
+            limits_high  = [t_fast_high, t_slow_high, amp_fast_high, amp_slow_high, sigma_high]
+            fit_limits   = (limits_low, limits_high)
 
             popt,  pcov = curve_fit(conv_func2, [laser.wvf_x[:-limit], laser.wvf[:-limit]], alpha.wvf[:-limit],  p0 = fit_initials,  bounds = fit_limits, method = "trf")
             perr = np.sqrt(np.diag(pcov))
@@ -349,6 +359,10 @@ def convolve(my_runs, keys = [], OPT = {}):
             output_file.write("%.2E \t\u00B1\t %.2E\n"%(fit_finals[0], perr[0]))
 
 def check_array_len(wvf1,wvf2):
+
+    # Imports from other libraries
+    from .io_functions import print_colored
+
     if len(wvf1) < len(wvf2): 
         print_colored("RAW WVF IS LONGER THAN WVF TEMPLATE", "WARNING")
         wvf2 = wvf2[:-(len(wvf2)-len(wvf1))]
@@ -363,6 +377,10 @@ def check_array_even(wvf):
     else:                return wvf
 
 def conv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
+
+    #Imports from other libraries
+    from .wvf_functions import func2
+
     resp = func2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)
     
     conv = convolve(wvf[1], resp)
@@ -373,6 +391,10 @@ def conv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
     return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
 
 def logconv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
+
+    #Imports from other libraries
+    from .wvf_functions import logfunc2
+
     resp = logfunc2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)
 
     conv = convolve(wvf[1], resp)

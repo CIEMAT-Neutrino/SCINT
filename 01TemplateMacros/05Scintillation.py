@@ -37,7 +37,7 @@ runs     = [int(r) for r in input_runs.split(",")]
 channels = [int(c) for c in input_channels.split(",")]
 
 # int_key = ["ChargeAveRange"]
-int_key = ["ChargeRange0","ChargeRange6"]
+int_key = ["ChargeRange0"]
 OPT = {
     "LOGY": True,
     "NORM": True,

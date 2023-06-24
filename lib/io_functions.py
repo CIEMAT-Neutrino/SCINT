@@ -1,11 +1,10 @@
-import os, gc
-import matplotlib.pyplot as plt
+#================================================================================================================================================#
+# This library contains general functions used to read/write files, load/save data, etc.                                                         #
+#================================================================================================================================================#
+
+import os, gc, uproot, copy, stat
 import numpy as np
-import uproot
-import copy
-import stat
 from itertools import product
-import gc
 
 def color_list(color):
     colors = {

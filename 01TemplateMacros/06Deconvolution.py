@@ -16,7 +16,7 @@ raw_runs = np.asarray(info["ALPHA_RUNS"]).astype(int)
 dec_runs = np.asarray(info["LIGHT_RUNS"]).astype(int)
 ref_runs = np.asarray(info["CALIB_RUNS"]).astype(int)
 noi_runs = np.asarray(info["NOISE_RUNS"]).astype(int)
-SiPM_OV  = 1 # Choose between OV value for SiPM in alpha run (0, 1 or 2)
+SiPM_OV  = 0 # Choose between OV value for SiPM in alpha run (0, 1 or 2)
 ana_ch   = np.asarray(info["CHAN_TOTAL"]).astype(int)
 
 for idx, run in enumerate(raw_runs):
@@ -34,7 +34,7 @@ for idx, run in enumerate(raw_runs):
         else:
             print("UNKNOWN DETECTOR LABEL!")
         
-        keys = ["AveWvfThreshold","SER","AveWvf"] # keys contains the 3 labels required for deconvolution keys[0] = raw, keys[1] = det_response and keys[2] = deconvolution 
+        keys = ["AveWvf","SER","AveWvf"] # keys contains the 3 labels required for deconvolution keys[0] = raw, keys[1] = det_response and keys[2] = deconvolution 
         # Entrada, deconvolucion, salida. That is: alpha wvf, SPE - Laser result (see in generate_SER to select type of wvf), name for dec wvf (Gauss + str) 
         generate_SER(my_runs, light_runs, single_runs)
         # my_runs[run][ch]["GaussCutOff"] = 120 # El límite del limite de frecuencias
