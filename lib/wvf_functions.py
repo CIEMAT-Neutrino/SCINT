@@ -6,43 +6,17 @@ import numpy as np
 from itertools import product
 # from scipy import stats as st
 
-def find_baseline_cuts(raw):
-    '''
-    It finds the cuts with the x-axis. It returns the index of both bins.
-    VARIABLE:
-       \n - raw: the .root that you want to analize.
-    '''
-
-    max = np.argmax(raw); i_idx = 0; f_idx = 0
-    for j in range(len(raw[max:])):               # Before the peak
-        if raw[max+j] < 0: f_idx = max+j;   break # Looks for the change of sign
-    for j in range(len(raw[:max])):               # After the peak
-        if raw[max-j] < 0: i_idx = max-j+1; break # Looks for the change of sign
-    
-    return i_idx,f_idx
-
-def find_amp_decrease(raw,thrld):
-    '''
-    It finds bin where the amp has fallen above a certain threshold relative to the main peak. It returns the index of both bins.
-    VARIABLES:
-       \n - raw: the np array that you want to analize.
-       \n - thrld: the relative amp that you want to analize.
-    '''
-
-    max = np.argmax(raw); i_idx = 0; f_idx = 0
-    for j in range(len(raw[max:])):                               # Before the peak
-        if raw[max+j] < np.max(raw)*thrld: f_idx = max+j;   break # Looks for the change of sign (including thrld)
-    for j in range(len(raw[:max])):                               # After the peak
-        if raw[max-j] < np.max(raw)*thrld: i_idx = max-j+1; break # Looks for the change of sign (including thrld)
-
-    return i_idx,f_idx
+#===========================================================================#
+#********************** AVERAGING FUCNTIONS ********************************#
+#===========================================================================# 
 
 def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label="", OPT={}):
     '''
     It calculates the average waveform of a run. Select centering:
-       \n - "NONE"      -> AveWvf: each event is added without centering.
-       \n - "PEAK"      -> AveWvfPeak: each event is centered according to wvf argmax. 
-       \n - "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
+    
+    - "NONE"      -> AveWvf: each event is added without centering.
+    - "PEAK"      -> AveWvfPeak: each event is centered according to wvf argmax. 
+    - "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
     '''
 
     # Import from other libraries
@@ -95,7 +69,7 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", threshold=0, cut_label=""
 def expo_average(my_run, alpha):
     ''' 
     This function calculates the exponential average with a given alpha.
-    **returns: average[i+1] = (1-alpha) * average[i] + alpha * my_run[i+1]
+    **returns**: average[i+1] = (1-alpha) * average[i] + alpha * my_run[i+1]
     '''
 
     v_averaged = np.zeros(len(my_run)); v_averaged[0] = my_run[0]
@@ -106,7 +80,7 @@ def expo_average(my_run, alpha):
 def unweighted_average(my_run):
     ''' 
     This function calculates the unweighted average.
-    **returns: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3
+    **returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3
     '''
 
     v_averaged     = np.zeros(len(my_run))
@@ -118,20 +92,63 @@ def unweighted_average(my_run):
 def smooth(my_run, alpha):
     ''' 
     This function calculates the exponential average and then the unweighted average.
-    **returns: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 with my_run = (1-alpha) * average[i] + alpha * my_run[i+1]
+    **returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 with my_run = (1-alpha) * average[i] + alpha * my_run[i+1]
     '''
 
     my_run = expo_average(my_run, alpha)
     my_run = unweighted_average(my_run)
     return my_run
 
+#===========================================================================#
+#********************** INTEGRATION FUNCTIONS ******************************#
+#===========================================================================# 
+
+def find_baseline_cuts(raw):
+    '''
+    It finds the cuts with the x-axis. It returns the index of both bins.
+    
+    **VARIABLES:**
+
+    - raw: the .root that you want to analize.
+    '''
+
+    max = np.argmax(raw); i_idx = 0; f_idx = 0
+    for j in range(len(raw[max:])):               # Before the peak
+        if raw[max+j] < 0: f_idx = max+j;   break # Looks for the change of sign
+    for j in range(len(raw[:max])):               # After the peak
+        if raw[max-j] < 0: i_idx = max-j+1; break # Looks for the change of sign
+    
+    return i_idx,f_idx
+
+def find_amp_decrease(raw,thrld):
+    '''
+    It finds bin where the amp has fallen above a certain threshold relative to the main peak. It returns the index of both bins.
+
+    **VARIABLES:**
+
+    - raw: the np array that you want to analize.
+    - thrld: the relative amp that you want to analize.
+    '''
+
+    max = np.argmax(raw); i_idx = 0; f_idx = 0
+    for j in range(len(raw[max:])):                               # Before the peak
+        if raw[max+j] < np.max(raw)*thrld: f_idx = max+j;   break # Looks for the change of sign (including thrld)
+    for j in range(len(raw[:max])):                               # After the peak
+        if raw[max-j] < np.max(raw)*thrld: i_idx = max-j+1; break # Looks for the change of sign (including thrld)
+
+    return i_idx,f_idx
+
+
 def integrate_wvfs(my_runs, info = {}, key = "",cut_label=""):
     '''
     This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
-    VARIABLES:
-       \n - my_runs: run(s) we want to use
-       \n - info: input information from .txt with DAQ characteristics and Charge Information.
-       \n - key: waveform we want to integrate (by default any ADC)
+    
+    **VARIABLES:**
+
+    - my_runs: run(s) we want to use
+    - info: input information from .txt with DAQ characteristics and Charge Information.
+    - key: waveform we want to integrate (by default any ADC)
+    
     In txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
     If I_RANGE == -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
     If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.

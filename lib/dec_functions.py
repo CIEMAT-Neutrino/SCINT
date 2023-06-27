@@ -12,9 +12,12 @@ from curve          import Curve
 def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
     ''' 
     This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
-       \n - my_runs: DICTIONARY containing the wvf to be deconvolved.
-       \n - dec_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
-       \n - SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
+
+    **VARIABLES:**
+
+    - my_runs: DICTIONARY containing the wvf to be deconvolved.
+    - dec_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
+    - SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
     '''
 
     #Imports from other libraries
@@ -34,11 +37,13 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
     ''' 
     This function deconvolves any given number of arrays according to a provided SPE template.
     By default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
-    VARIABLES:
-       \n - my_runs: DICTIONARY containing the wvf to be deconvolved.
-       \n - keys: LIST containing the keys of [wvf, template, outputkey].
-       \n - peak_buffer: INT with left distance from peak to calculate baseline.
-       \n - OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).  
+
+    **VARIABLES:**
+
+    - my_runs: DICTIONARY containing the wvf to be deconvolved.
+    - keys: LIST containing the keys of [wvf, template, outputkey].
+    - peak_buffer: INT with left distance from peak to calculate baseline.
+    - OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).  
     '''
 
     # Imports from other libraries

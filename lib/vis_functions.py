@@ -16,19 +16,21 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
     '''
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
-    VARIABLES:
-       \n - my_run: run(s) we want to check
-       \n - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
-       \n - OPT: several options that can be True or False. Type: List
-           \n a) MICRO_SEC: if True we multiply Sampling by 1e6
-           \n b) NORM: True if we want normalized waveforms
-           \n c) LOGY: True if we want logarithmic y-axis
-           \n d) SHOW_AVE: if computed and True, it will show average
-           \n e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
-           \n f) CHARGE_KEY: if computed and True, it will show the parametre value
-           \n g) PEAK_FINDER: True if we want to check how many peaks are
-       \n - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
-       \n - same_plot: True if we want to plot different channels in the SAME plot
+    
+    **VARIABLES:**
+
+    - my_run: run(s) we want to check
+    - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
+    - OPT: several options that can be True or False. Type: List
+      (a) MICRO_SEC: if True we multiply Sampling by 1e6
+      (b) NORM: True if we want normalized waveforms
+      (c) LOGY: True if we want logarithmic y-axis
+      (d) SHOW_AVE: if computed and True, it will show average
+      (e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
+      (f) CHARGE_KEY: if computed and True, it will show the parametre value
+      (g) PEAK_FINDER: True if we want to check how many peaks are
+    - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
+    - same_plot: True if we want to plot different channels in the SAME plot
     '''
 
     # Imports from other libraries
@@ -245,16 +247,18 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
 def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
     '''
     This function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
-    VARIABLES:
-        - my_run: run(s) we want to check
-        - KEYS: waveform to plot (AveWvf, AveWvdSPE, ...). Type: List
-        - OPT: several options that can be True or False.  Type: List
-            a) MICRO_SEC: if True we multiply Sampling by 1e6
-            b) NORM: True if we want normalized waveforms
-            c) LOGY: True if we want logarithmic y-axis
-        - compare: 
-            a) "RUNS" to get a plot for each channel and the selected runs. Type: String
-            b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
+    
+    **VARIABLES:**
+
+    - my_run: run(s) we want to check
+    - KEYS: waveform to plot (AveWvf, AveWvdSPE, ...). Type: List
+    - OPT: several options that can be True or False.  Type: List
+      (a) MICRO_SEC: if True we multiply Sampling by 1e6
+      (b) NORM: True if we want normalized waveforms
+      (c) LOGY: True if we want logarithmic y-axis
+    - compare: 
+      (a) "RUNS" to get a plot for each channel and the selected runs. Type: String
+      (b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     '''
 
     # Imports from other libraries
@@ -329,13 +333,16 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
     It returns values of counts, bins and bars from the histogram to be used in other function.
-    VARIABLES:
-       \n - my_run: run(s) we want to check
-       \n - keys: variables we want to plot as histograms. Type: List
-           \n a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
-           \n b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
-           \n c) Other variable: any other variable. Here we reject outliers.
-       \n - percentile: percentile used for outliers removal
+    
+    **VARIABLES:**
+
+    - my_run: run(s) we want to check
+    - keys: variables we want to plot as histograms. Type: List
+      (a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
+      (b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
+      (c) Other variable: any other variable. Here we reject outliers.
+    - percentile: percentile used for outliers removal
+    
     WARNING! Maybe the binning stuff should be studied in more detail.
     '''
 
@@ -424,11 +431,13 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
     '''
     This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     It plots values below and above the indicated percetiles, but values are not removed from data.
-    VARIABLES:
-       \n - my_run: run(s) we want to check
-       \n - keys: variables we want to plot as histograms. Type: List
-       \n - percentile: percentile used for outliers removal
-       \n - select_range: if we still have many outliers we can select the ranges in x and y axis.
+    
+    **VARIABLES:**
+
+    - my_run: run(s) we want to check
+    - keys: variables we want to plot as histograms. Type: List
+    - percentile: percentile used for outliers removal
+    - select_range: if we still have many outliers we can select the ranges in x and y axis.
     '''
 
     # Imports from other libraries
