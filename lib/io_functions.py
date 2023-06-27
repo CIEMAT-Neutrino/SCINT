@@ -7,6 +7,9 @@ import numpy as np
 from itertools import product
 
 def color_list(color):
+    '''
+    Function which returns the color in ascii.
+    '''
     colors = {
               "DEBUG":   '\033[35m', #PURPLE
               "ERROR":   '\033[91m', #RED
@@ -36,37 +39,6 @@ def print_colored(string, color, bold=False, end = "\n"):
 #===========================================================================#
 #************************** INPUT FILE *************************************#
 #===========================================================================#
-def list_to_string(input_list):
-    '''
-    Convert a list to a string to be written in a .txt file
-    '''
-
-    string = str(input_list).replace("[","") 
-    string = string.replace("]","") 
-    string = string.replace("'","") 
-    string = string.replace(" ","") 
-
-    return string 
-
-def generate_input_file(input_file,info,path="../input/",label="",debug=False):
-    '''
-    Generate a .txt file with the information needed to load the runs and channels.
-    '''
-
-    file = open(path+label+str(input_file)+".txt", 'w+')
-    for branch in info:
-        if branch == "LOAD_PRESET":
-            if label == "Gauss" or label == "Wiener":
-                info[branch][3] = "DEC"; file.write(branch+": "+list_to_string(info[branch])+"\n")
-        elif branch == "REF":
-            if label == "Gauss" or label == "Wiener": 
-                info[branch][0] = label+"AveWvf"; file.write(branch+": "+list_to_string(info[branch])+"\n")
-        elif branch == "LIGHT_RUNS" or branch == "CALIB_RUNS" or branch == "MUON_RUNS":    
-            if label == "Gauss" or label == "Wiener": 
-                info[branch] = []; file.write(branch+": "+list_to_string(info[branch])+"\n")
-        else:
-            file.write(branch+": "+list_to_string(info[branch])+"\n")
-
 def read_input_file(input, path = "../input/", debug = False):
     '''
     Obtain the information stored in a .txt input file to load the runs and channels needed.
@@ -115,19 +87,52 @@ def read_input_file(input, path = "../input/", debug = False):
 
     return info
 
+def list_to_string(input_list):
+    '''
+    Convert a list to a string to be written in a .txt file
+    Used in generate_input_file.
+    '''
+
+    string = str(input_list).replace("[","") 
+    string = string.replace("]","") 
+    string = string.replace("'","") 
+    string = string.replace(" ","") 
+
+    return string 
+
+def generate_input_file(input_file,info,path="../input/",label="",debug=False):
+    '''
+    Generate a .txt file with the information needed to load the runs and channels.
+    Used when deconvolving signals to be able to re-start the analysis workflow with the deconvolved waveforms.
+    '''
+
+    file = open(path+label+str(input_file)+".txt", 'w+')
+    for branch in info:
+        if branch == "LOAD_PRESET":
+            if label == "Gauss" or label == "Wiener":
+                info[branch][3] = "DEC"; file.write(branch+": "+list_to_string(info[branch])+"\n")
+        elif branch == "REF":
+            if label == "Gauss" or label == "Wiener": 
+                info[branch][0] = label+"AveWvf"; file.write(branch+": "+list_to_string(info[branch])+"\n")
+        elif branch == "LIGHT_RUNS" or branch == "CALIB_RUNS" or branch == "MUON_RUNS":    
+            if label == "Gauss" or label == "Wiener": 
+                info[branch] = []; file.write(branch+": "+list_to_string(info[branch])+"\n")
+        else:
+            file.write(branch+": "+list_to_string(info[branch])+"\n")
+
+
 def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1], path = "../fit_data/"):
     '''
     General function to write a txt file with the outputs obtained.
-    \n The file name is defined by the given "filename" variable + _chX. 
-    \n If the file existed previously it appends the new fit values (it save the run for each introduced row)
-    \n By default we dont save the height of the fitted gaussian in the txt.
+    The file name is defined by the given "filename" variable + _chX. 
+    If the file existed previously it appends the new fit values (it save the run for each introduced row)
+    By default we dont save the height of the fitted gaussian in the txt.
     '''
     
     fitted_peaks = len(output)
     par_list = list(range(len(output[0])))
     for p in not_saved:
             par_list.remove(p) #removing parameters before saving in txt (height by default)
-
 
     confirmation = input(color_list("magenta")+"\nConfirmation to save in"+path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n) ?"%ch+color_list("end"))
     if "y" in confirmation:
@@ -152,57 +157,11 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
 #************************* RAW TO NUMPY ************************************#
 #===========================================================================#
 
-### DEPRECATED --- UPDATE ###
-def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BINARIO ###
-    '''
-    Dumper from .root format to npy tuples. 
-    Input are root input file path and npy outputfile as strings. 
-    \n Depends on uproot, awkward and numpy. 
-    \n Size increases x2 times. 
-    '''
-
-    in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
-    out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
-    for run, ch in product (runs.astype(int),channels.astype(int)):
-        i = np.where(runs == run)[0][0]
-        j = np.where(channels == ch)[0][0]
-
-        in_file  = "run"+str(run).zfill(2)+"_ch"+str(ch)+".root" # Name of the input file
-        out_file = "run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"  # Name of the output file
-        
-        try:
-            my_dict = {}; f = uproot.open(in_path+in_file) # Open the file and dump it in a dictionary
-            
-            if debug:
-                print_colored("----------------------", "DEBUG")
-                print_colored("Dumping file:"+str(in_path+in_file), "DEBUG")
-            
-            for branch in f["IR02"].keys():
-                if debug: print_colored("dumping brach:"+str(branch), "DEBUG")
-                my_dict[branch]=f["IR02"][branch].array().to_numpy()
-            
-            # additional useful info
-            my_dict["RawADC"] = my_dict["ADC"]
-            del my_dict["ADC"]
-            my_dict["NBinsWvf"]    = my_dict["RawADC"][0].shape[0]
-            my_dict["Sampling"]    = info["SAMPLING"][0]
-            my_dict["Label"]       = info["CHAN_LABEL"][j]
-            my_dict["RawPChannel"] = int(info["CHAN_POLAR"][j])
-
-            np.save(out_path+out_file,my_dict)
-            
-            if debug:
-                print_colored(my_dict.keys(), "DEBUG")
-                print_colored("Saved data in:" +str(out_path+out_file), "DEBUG")
-                print_colored("----------------------\n", "DEBUG")
-
-        except FileNotFoundError: print("--- File %s was not foud!!! \n"%in_file)
-
 def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_lines=6, force=False):
     '''
     Dumper from binary format to npy tuples. 
     Input are binary input file path and npy outputfile as strings. 
-    \n Depends numpy. 
+    Depends numpy. 
     '''
 
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
@@ -288,6 +247,54 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
         except FileNotFoundError: print("--- File %s was not foud!!! \n"%(in_path+in_file))
 
 
+### DEPRECATED --- UPDATE ###
+def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BINARIO ###
+    '''
+    Dumper from .root format to npy tuples. 
+    Input are root input file path and npy outputfile as strings. 
+    Depends on uproot, awkward and numpy. 
+    Size increases x2 times. 
+    NEEDS UPDATE!! (see binary2npy)
+    '''
+
+    in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
+    out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
+    for run, ch in product (runs.astype(int),channels.astype(int)):
+        i = np.where(runs == run)[0][0]
+        j = np.where(channels == ch)[0][0]
+
+        in_file  = "run"+str(run).zfill(2)+"_ch"+str(ch)+".root" # Name of the input file
+        out_file = "run"+str(run).zfill(2)+"_ch"+str(ch)+".npy"  # Name of the output file
+        
+        try:
+            my_dict = {}; f = uproot.open(in_path+in_file) # Open the file and dump it in a dictionary
+            
+            if debug:
+                print_colored("----------------------", "DEBUG")
+                print_colored("Dumping file:"+str(in_path+in_file), "DEBUG")
+            
+            for branch in f["IR02"].keys():
+                if debug: print_colored("dumping brach:"+str(branch), "DEBUG")
+                my_dict[branch]=f["IR02"][branch].array().to_numpy()
+            
+            # additional useful info
+            my_dict["RawADC"] = my_dict["ADC"]
+            del my_dict["ADC"]
+            my_dict["NBinsWvf"]    = my_dict["RawADC"][0].shape[0]
+            my_dict["Sampling"]    = info["SAMPLING"][0]
+            my_dict["Label"]       = info["CHAN_LABEL"][j]
+            my_dict["RawPChannel"] = int(info["CHAN_POLAR"][j])
+
+            np.save(out_path+out_file,my_dict)
+            
+            if debug:
+                print_colored(my_dict.keys(), "DEBUG")
+                print_colored("Saved data in:" +str(out_path+out_file), "DEBUG")
+                print_colored("----------------------\n", "DEBUG")
+
+        except FileNotFoundError: print("--- File %s was not foud!!! \n"%in_file)
+
+
 #===========================================================================#
 #***************************** KEYS ****************************************#
 #===========================================================================#
@@ -295,7 +302,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
 def check_key(OPT, key):
     ''' 
     Checks if the given key is included in the dictionary OPT.
-    \n Returns a bool. (True if it finds the key)
+    Returns a bool. (True if it finds the key)
     '''
 
     try:   OPT[key]; return True   # If the key is found, return True 
@@ -322,24 +329,33 @@ def delete_keys(my_runs, keys):
         try:   del my_runs[run][ch][key]      # Delete the key
         except KeyError: print_colored("*EXCEPTION: [Run%i - Ch%i - %s] key combination is not found in my_runs"%(run,ch,key), "WARNING")   
 
+#===========================================================================#
+#************************** LOAD/SAVE NPY **********************************#
+#===========================================================================# 
+
 def get_preset_list(my_run, path, folder, preset, option, debug = False):
     '''
     Return as output presets lists for load/save npy files.
-    VARIABLES:
-       \n - my_run: my_runs[run][ch]
-       \n - path: saving path
-       \n - folder: saving in/out folder
-       \n - preset: 
-            (a) "ALL": all the existing keys/branches
-            (b) "ANA": only Ana keys/branches (removing RAW info)
-            (c) "INT": only Charge*, Ave* keys/branches
-            (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
-            (e) "EVA": all the existing keys/branches EXCEPT ADC
-            (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
-            (g) "CAL": only Charge* keys
-       \n - option:
-            (a) "LOAD": takes the os.listdir(path+folder) as brach_list (IN)
-            (b) "SAVE": takes the my_run.keys() as branch list (OUT)
+
+    **VARIABLES**:
+
+    - my_run: my_runs[run][ch]
+    - path: saving path
+    - folder: saving in/out folder
+    - preset: 
+
+      (a) "ALL": all the existing keys/branches
+      (b) "ANA": only Ana keys/branches (removing RAW info)
+      (c) "INT": only Charge*, Ave* keys/branches
+      (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
+      (e) "EVA": all the existing keys/branches EXCEPT ADC
+      (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
+      (g) "CAL": only Charge* keys
+
+    - option:
+    
+      (a) "LOAD": takes the os.listdir(path+folder) as brach_list (IN)
+      (b) "SAVE": takes the my_run.keys() as branch list (OUT)
     '''
 
     dict_option = dict()
@@ -393,15 +409,11 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     if debug: print_colored("\nPreset branch_list:" + str(branch_list), "DEBUG")
     return branch_list
 
-#===========================================================================#
-#************************** LOAD/SAVE NPY **********************************#
-#===========================================================================# 
-
 def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False, compressed=True):
     '''
     Structure: run_dict[runs][channels][BRANCH] 
-    \n Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
-    \n Presets can be used to only load a subset of desired branches. ALL is default.
+    Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
+    Presets can be used to only load a subset of desired branches. ALL is default.
     '''
 
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
@@ -438,14 +450,16 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
 def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, force=False, debug = False, compressed=True):
     '''
     Saves the processed variables an npx file.
-    VARIABLES:
-    \n - my_runs: dictionary with the runs and channels to be saved
-    \n - preset: preset to be used to save the variables
-    \n - branch_list: list of branches to be saved
-    \n - info: dictionary with the path and month to be used
-    \n - force: if True, the files will be overwritten
-    \n - debug: if True, the function will print the branches that are being saved
-    \n - compressed: if True, the files will be saved as npz, if False, as npy
+    
+    **VARIABLES**:
+    
+    - my_runs: dictionary with the runs and channels to be saved
+    - preset: preset to be used to save the variables
+    - branch_list: list of branches to be saved
+    - info: dictionary with the path and month to be used
+    - force: if True, the files will be overwritten
+    - debug: if True, the function will print the branches that are being saved
+    - compressed: if True, the files will be saved as npz, if False, as npy
     '''
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
