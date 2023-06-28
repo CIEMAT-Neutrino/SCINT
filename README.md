@@ -1,6 +1,8 @@
 # CYTHON_TOOLS
 
-:book: :page_with_curl: Access the [DOCUMENTATION](https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS/wiki) for more information :page_with_curl: :book:
+[![Documentation Status](https://readthedocs.org/projects/cython-tools/badge/?version=latest)](https://cython-tools.readthedocs.io/en/latest/?badge=latest)
+
+:book: :page_with_curl: Access the [DOCUMENTATION](https://cython-tools.readthedocs.io/en/latest/) for more information :page_with_curl: :book:
 
 :construction:
 Work in progress (check [TO DO LIST](https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS/blob/main/To_Do.md))
