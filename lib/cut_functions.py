@@ -13,12 +13,15 @@ from shapely.geometry.polygon import Polygon
 def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False):
     """
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-    VARIABLES:
-       \n - keys: a LIST of variables you want to constrain
-       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-       \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
-       \n - chs_cut: a LIST with the affected channels.
-       \n - apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
+    
+    **VARIABLES:**
+
+    - keys: a LIST of variables you want to constrain
+    - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+    - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+    - chs_cut: a LIST with the affected channels.
+    - apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
+    
     Important! Each key works independently. If one key gives True and the other False, it remains False.
     Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
     """
@@ -76,12 +79,15 @@ def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False):
     '''
     This is a fuction for a cut in the PedSTD. It uses the median as reference and eliminates events with
     PedSTD > median + n_std*std, where std is the Standard Deviation of the PedSTD distribution (previously filtered
-    with percentiles). VARIABLES:
-    \n - keys: a LIST of variables you want to constrain
-    \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    \n - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
-    \n - chs_cut: a LIST with the affected channels.
-    \n - apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
+    with percentiles). 
+
+    **VARIABLES:**
+
+    - keys: a LIST of variables you want to constrain
+    - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+    - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+    - chs_cut: a LIST with the affected channels.
+    - apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
     '''
 
     #Import from other libraries
@@ -139,10 +145,12 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
     '''
     This is a function to cut manually with a polygonal figure on two variables. You can do any polygonal figure (avoid strange figures with crossed lines).
     "Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
-    VARIABLES:
-       \n - keys: a LIST of variables you want to plot and cut
-       \n - compare: NONE, RUNS, CHANNELS to decide the histogram to use
-       \n - percentile: the percentile used to reject outliers in the histogram
+
+    **VARIABLES:**
+
+    - keys: a LIST of variables you want to plot and cut
+    - compare: NONE, RUNS, CHANNELS to decide the histogram to use
+    - percentile: the percentile used to reject outliers in the histogram
     '''
 
     #Import from other libraries
@@ -212,7 +220,8 @@ def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
     """
     This is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes)
     and set the threshold in 3/4 of the SPE max. Other way it takes into account the Max value in Pedestal (this works well for laser runes).
-    \n WARNING! Maybe the values of width, prominence and distance may be changed.
+    
+    WARNING! Maybe the values of width, prominence and distance may be changed.
     """
 
     #Import from other libraries
@@ -244,9 +253,12 @@ def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
 def cut_min_max_sim(my_runs, keys, limits):
     '''
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-    VARIABLES:
-       \n - keys: a LIST of variables you want to constrain at the same time
-       \n - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+
+    **VARIABLES:**
+
+    - keys: a LIST of variables you want to constrain at the same time
+    - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+    
     Important! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
     Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
     '''

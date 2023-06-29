@@ -22,6 +22,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
     - my_run: run(s) we want to check
     - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
     - OPT: several options that can be True or False. Type: List
+
       (a) MICRO_SEC: if True we multiply Sampling by 1e6
       (b) NORM: True if we want normalized waveforms
       (c) LOGY: True if we want logarithmic y-axis
@@ -29,6 +30,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
       (e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
       (f) CHARGE_KEY: if computed and True, it will show the parametre value
       (g) PEAK_FINDER: True if we want to check how many peaks are
+
     - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
     - same_plot: True if we want to plot different channels in the SAME plot
     '''
@@ -253,10 +255,13 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
     - my_run: run(s) we want to check
     - KEYS: waveform to plot (AveWvf, AveWvdSPE, ...). Type: List
     - OPT: several options that can be True or False.  Type: List
+
       (a) MICRO_SEC: if True we multiply Sampling by 1e6
       (b) NORM: True if we want normalized waveforms
       (c) LOGY: True if we want logarithmic y-axis
+
     - compare: 
+
       (a) "RUNS" to get a plot for each channel and the selected runs. Type: String
       (b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     '''
@@ -338,9 +343,11 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
 
     - my_run: run(s) we want to check
     - keys: variables we want to plot as histograms. Type: List
+
       (a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
       (b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
       (c) Other variable: any other variable. Here we reject outliers.
+      
     - percentile: percentile used for outliers removal
     
     WARNING! Maybe the binning stuff should be studied in more detail.
