@@ -1,13 +1,11 @@
-import math
 import numpy                as np
+import pandas               as pd
 import plotly.express       as px
+import plotly.graph_objs    as go 
 import plotly.offline       as pyoff
 import matplotlib.pyplot    as plt
+import ipywidgets           as widgets
 
-from matplotlib.colors  import LogNorm
-from matplotlib.cm      import viridis
-from itertools          import product
-from scipy.signal           import find_peaks
 
 def custom_legend_name(fig_px,new_names):
     for i, new_name in enumerate(new_names): fig_px.data[i].name = new_name
@@ -31,6 +29,26 @@ def show_html(fig_px):
 def save_html(fig_px,name):
     return fig_px.write_html(name, include_mathjax = 'cdn')
 
+def vis_event(in_file):
+
+    #Import from other libraries
+    from .io_functions import binary2npy_express
+
+    adc,timestamp = binary2npy_express(in_file,debug=False)
+    df = pd.DataFrame(adc,timestamp)
+    col_names  = (list(range(1,len(df.columns)+1))); df.columns = col_names
+    
+    def update_plot(column):
+        fig = go.Figure()
+        if column in df.columns.to_list(): 
+            fig.add_trace(go.Scatter(x=df.index.to_list(), y=df[column].to_list()))
+            fig.update_layout(title='Raw Waveform - Event %i'%column, xaxis_title='Time [s]', yaxis_title='ADC')
+            return fig
+            
+    column_input = widgets.IntText(value=0, description='#Event:')
+    widgets.interact(update_plot, column=column_input)
+
+    return None
 
 # def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}):
 #     '''

@@ -156,11 +156,44 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
 #===========================================================================#
 #************************* RAW TO NUMPY ************************************#
 #===========================================================================#
+def binary2npy_express(in_file, header_lines=6, debug=False):
+    '''
+    Dumper from binary format to npy tuples. 
+    Input are binary input file path and npy outputfile as strings. 
+    
+    Depends numpy. 
+    '''
+
+    headers    = np.fromfile(in_file, dtype='I') # Reading .dat file as uint32
+    header     = headers[:6]                             # Read first event header
+
+    NSamples   = int(header[0]/2-header_lines*2)         # Number of samples per event (as uint16)
+    Event_size = header_lines*2+NSamples                 # Number of uint16 per event
+    data       = np.fromfile(in_file, dtype='H') # Reading .dat file as uint16
+    N_Events   = int(data.shape[0]/Event_size)           # Number of events in the file
+
+    #reshape everything, delete unused header
+    ADC        = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]              # Data reshaped as (N_Events,NSamples)
+    headers    = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines] # Headers reshaped as (N_Events,header_lines)
+    TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9                               # Unidades TriggerTimeStamp(PC_Units) * 8e-9
+        
+    if debug:
+        print_colored("#####################################################################","DEBUG")
+        print_colored("Header:"+str(header),"DEBUG")
+        print_colored("Waveform Samples:"+str(NSamples),"DEBUG")
+        print_colored("Event_size(wvf+header):"+str(Event_size),"DEBUG")
+        print_colored("N_Events:"+str(N_Events),"DEBUG")
+        print_colored("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" ,"DEBUG")
+        print_colored("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" ,"DEBUG")
+        print_colored("#####################################################################\n","DEBUG")
+
+    return ADC, TIMESTAMP
 
 def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_lines=6, force=False):
     '''
     Dumper from binary format to npy tuples. 
     Input are binary input file path and npy outputfile as strings. 
+    
     Depends numpy. 
     '''
 
@@ -178,36 +211,13 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
         try:
             os.mkdir(out_path+out_folder)
             os.chmod(out_path+out_folder, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-
         except FileExistsError: print_colored("DATA STRUCTURE ALREADY EXISTS", "WARNING") 
+
         try:
-            headers    = np.fromfile(in_path+in_file, dtype='I') # Reading .dat file as uint32
-            header     = headers[:6]                             # Read first event header
-            
-            NSamples   = int(header[0]/2-header_lines*2)         # Number of samples per event (as uint16)
-            Event_size = header_lines*2+NSamples                 # Number of uint16 per event
-            data       = np.fromfile(in_path+in_file, dtype='H') # Reading .dat file as uint16
-            N_Events   = int(data.shape[0]/Event_size)           # Number of events in the file
-
-            #reshape everything, delete unused header
-            ADC        = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]              # Data reshaped as (N_Events,NSamples)
-            headers    = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines] # Headers reshaped as (N_Events,header_lines)
-            TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9                               # Unidades TriggerTimeStamp(PC_Units) * 8e-9
-                
-            branches   = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]                                 # Branches to be saved
-            content    = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])] # Content to be saved
-            files      = os.listdir(out_path+out_folder)                                                                       # List of files in the output folder
-
-            if debug:
-                print_colored("#####################################################################","DEBUG")
-                print_colored("Header:"+str(header),"DEBUG")
-                print_colored("Waveform Samples:"+str(NSamples),"DEBUG")
-                print_colored("Event_size(wvf+header):"+str(Event_size),"DEBUG")
-                print_colored("N_Events:"+str(N_Events),"DEBUG")
-                print_colored("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" ,"DEBUG")
-                print_colored("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" ,"DEBUG")
-                print_colored("#####################################################################\n","DEBUG")
-
+            ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug)                       # Read the file
+            branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]                                 # Branches to be saved
+            content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])] # Content to be saved
+            files          = os.listdir(out_path+out_folder)                                                                       # List of files in the output folder
             for i, branch in enumerate(branches):
                 try:
                     # If the file already exists and force is True, overwrite it

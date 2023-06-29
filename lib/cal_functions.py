@@ -15,6 +15,7 @@ def vis_persistence(my_run, OPT = {}):
     It perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
     Binning is fixed (x=5000, y=1000) [study upgrade].
     X_data (time) and Y_data (waveforms) are deleted after the plot to save space.
+    
     WARNING! flattening long arrays leads to MEMORY problems :/
     '''
 
@@ -53,12 +54,15 @@ def calibrate(my_runs, keys, OPT={}):
     '''
     Computes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as 
     a return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
-    \n VARIABLES:
-       \n - my_run: run(s) we want to check
-       \n - keys: variables we want to plot as histograms. Type: List
-       \n - OPT: several options that can be True or False. Type: List
-           \n a) LOGY: True if we want logarithmic y-axis
-           \n b) SHOW: if True, it will show the calibration plot
+    
+    **VARIABLES:**
+
+    - my_run: run(s) we want to check
+    - keys: variables we want to plot as histograms. Type: List
+    - OPT: several options that can be True or False. Type: List
+
+      (a) LOGY: True if we want logarithmic y-axis
+      (b) SHOW: if True, it will show the calibration plot
     '''
 
     # Imports from other libraries
@@ -150,12 +154,14 @@ def calibrate(my_runs, keys, OPT={}):
 def calibration_txt(run, ch, popt, pcov, filename, info):
     '''
     Computes calibration parameters for each peak.
-       \n Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
-       \n It returns an array of arrays: 
-       save_calibration = [ [[mu,dmu],[height,dheight],[height,dheight],[sigma,dsigma],
-                            [gain,dgain],[sn0,dsn0],[sn1,dsn1],[sn2,dsn2]], [PEAK 1], [PEAK 2],...]
-       \nSave in a txt the calibration parameters to be exported directly.
-       \nTakes as input an array of arrays with the computed parameters (see compute_cal_parameters())
+    
+    Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
+    It returns an array of arrays: 
+    save_calibration = [ [[mu,dmu],[height,dheight],[height,dheight],[sigma,dsigma],
+    [gain,dgain],[sn0,dsn0],[sn1,dsn1],[sn2,dsn2]], [PEAK 1], [PEAK 2],...]
+    
+    Save in a txt the calibration parameters to be exported directly.
+    Takes as input an array of arrays with the computed parameters (see compute_cal_parameters())
     '''
 
     # Imports from other libraries
@@ -209,11 +215,13 @@ def calibration_txt(run, ch, popt, pcov, filename, info):
 def scintillation_txt(run, ch, popt, pcov, filename, info):
     '''
     Computes charge parameters.
-        \n Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
-        \n It returns an array of arrays: 
-            save_scintillation = [ [[mu,dmu],[height,dheight],[sigma,dsigma], [nevents,dnevents]] ]
-        \nSave in a txt the calibration parameters to be exported directly.
-        \nTakes as input an array of arrays with the computed parameters (see compute_charge_parameters())
+    
+    Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
+    It returns an array of arrays: 
+    save_scintillation = [ [[mu,dmu],[height,dheight],[sigma,dsigma], [nevents,dnevents]] ]
+    
+    Save in a txt the calibration parameters to be exported directly.
+    Takes as input an array of arrays with the computed parameters (see compute_charge_parameters())
     '''
 
     # Imports from other libraries
@@ -245,12 +253,15 @@ def charge_fit(my_runs, keys, OPT={}):
     '''
     Computes charge hist of a collection of runs. A fit is performed (1 gaussian) and we have as 
     a return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
-    \n VARIABLES:
-       \n - my_run: run(s) we want to check
-       \n - keys: variables we want to plot as histograms. Type: List
-       \n - OPT: several options that can be True or False. Type: List
-            \n a) LOGY: True if we want logarithmic y-axis
-            \n b) SHOW: if True, it will show the calibration plot
+    
+    **VARIABLES:**
+
+    - my_run: run(s) we want to check
+    - keys: variables we want to plot as histograms. Type: List
+    - OPT: several options that can be True or False. Type: List
+    
+      (a) LOGY: True if we want logarithmic y-axis
+      (b) SHOW: if True, it will show the calibration plot
     '''
 
     # Imports from other libraries

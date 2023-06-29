@@ -111,7 +111,7 @@ def compute_pedestal_variables_sliding_window(my_runs, key = "ADC", label = "", 
     '''
     Computes the pedestal variables of a collection of a run's collection in several windows.
     
-    ** VARIABLES:**
+    **VARIABLES:**
 
     - label: string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD
     - ped_lim: size in bins of the sliding window
