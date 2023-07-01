@@ -21,6 +21,7 @@ runs = np.append(runs,info["CALIB_RUNS"])
 runs = np.append(runs,info["LIGHT_RUNS"])
 runs = np.append(runs,info["ALPHA_RUNS"])
 runs = np.append(runs,info["MUONS_RUNS"])
+runs = np.append(runs,info["NOISE_RUNS"])
 
 channels = np.append(channels,info["CHAN_TOTAL"])
 
