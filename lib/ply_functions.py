@@ -26,8 +26,9 @@ def custom_plotly_layout(fig_px, xaxis_title="", yaxis_title="", title="",barmod
 def show_html(fig_px):
     return pyoff.plot(fig_px, include_mathjax='cdn')
 
-def save_html(fig_px,name):
-    return fig_px.write_html(name, include_mathjax = 'cdn')
+def save_plot(fig_px,name):
+    if ".hmtl" in name: return fig_px.write_html(name, include_mathjax = 'cdn')
+    if ".json" in name: return fig_px.write_json(name)
 
 def vis_event(in_file):
 
