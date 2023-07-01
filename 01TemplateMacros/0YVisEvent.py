@@ -12,13 +12,12 @@ from dash import html
 jupyter_mode = None
 if 'ipykernel' in os.sys.modules:
     from IPython import get_ipython
-
     if get_ipython() is not None: jupyter_mode = "inline"
 
 app = dash.Dash(__name__)
 app.layout = html.Div([
                 html.H1("Waveform Visualization"),
-                html.Div([ html.Label("Select Waveform File"), dcc.Upload(id='upload-data', children=html.Button('Browse')),
+                html.Div([ html.Label("Select Waveform File"), dcc.Upload(id='upload-data', children=html.Button('Browse')), 
                         html.Br(), 
                         html.Label("Select the extension of the browsed file"), dcc.Dropdown([".dat",".npx"], ".dat",id='extension'),
                         html.Br(),
