@@ -17,8 +17,8 @@ channels = np.append(channels,info["CHAN_TOTAL"])
 
 int_key = ["ChargeAveRange"]
 OPT = {
-    "LOGY": True,
-    "SHOW": True
+    "LOGY": True, # Runs can be displayed in logy (True/False)
+    "SHOW": True  # Shows plot legend (True/False)
     }
 
 for run, ch in product(runs.astype(int),channels.astype(int)):
@@ -32,13 +32,19 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     # cut_peak_finder(my_runs, ["ADC"], 2)
     #####################
 
+
     ## Persistence Plot ##
     # vis_persistence(my_runs)
+    #####################
+
+
     ## Calibration ##
     print("Run ", run, "Channel ", ch)
     popt, pcov, perr = calibrate(my_runs,int_key,OPT)
+
     # Calibration parameters = mu,height,sigma,gain,sn0,sn1,sn2 ##
     calibration_txt(run, ch, popt, pcov, filename="gain",info=info)
+    #####################
     
     ## SPE Average Waveform ##
     if all(x !=-99 for x in popt):
@@ -50,3 +56,4 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
         average_wvfs(my_runs,centering="NONE",cut_label="SPE")
 
         save_proccesed_variables(my_runs,info=info,branch_list=["AveWvfSPE"], force = True)
+    ##########################
