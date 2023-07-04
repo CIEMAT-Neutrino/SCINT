@@ -59,8 +59,6 @@ def update_waveform(plot_clicks, prev_clicks, next_clicks, extension, contents, 
             if extension == ".npx":
                 adc = np.load(io.BytesIO(decoded_content),allow_pickle=True, mmap_mode="w+")["arr_0"] 
                 df = pd.DataFrame(adc)
-                print(adc)
-                print(df.iloc[0])
 
             if next_clicks is None: next_clicks = 0
             if prev_clicks is None: prev_clicks = 0

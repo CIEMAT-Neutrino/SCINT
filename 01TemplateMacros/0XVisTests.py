@@ -24,13 +24,13 @@ channels = [int(c) for c in input_channels.split(",")]
 
 OPT  = {
     "MICRO_SEC":   True,
-    "NORM":        False,                # Runs can be displayed normalised (True/False)
+    "NORM":        False,               # Runs can be displayed normalised (True/False)
     "ALIGN":       False,
     "LOGY":        False,               # Runs can be displayed in logy (True/False)
-    "SHOW_AVE":    "",             # If computed, vis will show average (AveWvf,AveWvfSPE,etc.)
-    "SHOW_PARAM":  False,                 # Print terminal information (True/False)
-    "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
-    "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False)
+    "SHOW_AVE":    "",                  # If computed, vis will show average (AveWvf,AveWvfSPE,etc.)
+    "SHOW_PARAM":  False,               # Print terminal information (True/False)
+    "CHARGE_KEY":  "ChargeAveRange",    # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
+    "PEAK_FINDER": False,               # Finds possible peaks in the window (True/False)
     "LEGEND":      True,                # Shows plot legend (True/False)
     "SHOW":        True,
     "CHARGEDICT":  False
