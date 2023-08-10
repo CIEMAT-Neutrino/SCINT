@@ -40,6 +40,13 @@ def print_colored(string, color, bold=False, end = "\n"):
     
     print(output, end = end)
 
+def print_dict(dictionary, debug=False):
+    '''
+    Print the keys and values of a dictionary.
+    '''
+    
+    for key, value in dictionary.items(): print(str(key) + ": " + str(value))
+
 #===========================================================================#
 #************************** INPUT FILE *************************************#
 #===========================================================================#
@@ -194,12 +201,15 @@ def binary2npy_express(in_file, header_lines=6, debug=False):
     Depends numpy. 
     '''
 
-    headers    = np.fromfile(in_file, dtype='I') # Reading .dat file as uint32
-    header     = headers[:6]                             # Read first event header
+    try:    headers = np.fromfile(in_file, dtype='I')               # Reading .dat file as uint32
+    except: headers = np.frombuffer(in_file.getbuffer(), dtype='I') # io.UnsupportedOperation: fileno --> when browsing file
 
+    try:    data = np.fromfile(in_file, dtype='H')               # Reading .dat file as uint16
+    except: data = np.frombuffer(in_file.getbuffer(), dtype='H') # io.UnsupportedOperation: fileno --> when browsing file
+    
+    header     = headers[:6]                             # Read first event header
     NSamples   = int(header[0]/2-header_lines*2)         # Number of samples per event (as uint16)
     Event_size = header_lines*2+NSamples                 # Number of uint16 per event
-    data       = np.fromfile(in_file, dtype='H') # Reading .dat file as uint16
     N_Events   = int(data.shape[0]/Event_size)           # Number of events in the file
 
     #reshape everything, delete unused header
@@ -244,7 +254,7 @@ def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_line
         except FileExistsError: print_colored("DATA STRUCTURE ALREADY EXISTS", "WARNING") 
 
         try:
-            ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug)                       # Read the file
+            ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug)                           # Read the file
             branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]                                 # Branches to be saved
             content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])] # Content to be saved
             files          = os.listdir(out_path+out_folder)                                                                       # List of files in the output folder

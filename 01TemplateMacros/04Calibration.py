@@ -37,10 +37,15 @@ for run, ch in product(runs.astype(int),channels.astype(int)):
     # cut_peak_finder(my_runs, ["ADC"], 2)
     #####################
 
+
     ## Persistence Plot ##
     # vis_persistence(my_runs)
+    #####################
+
+
     ## Calibration ##
     print("Run ", run, "Channel ", ch)
+
     popt, pcov, perr = calibrate(my_runs,[info["ANA_LABEL"][0]+int_key[0]],OPT, debug=debug)
     # Calibration parameters = mu,height,sigma,gain,sn0,sn1,sn2 ##
     calibration_txt(run, ch, popt, pcov, filename=info["ANA_LABEL"][0]+"gain", info=info, debug=debug)
