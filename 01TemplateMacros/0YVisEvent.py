@@ -96,4 +96,5 @@ if __name__ == '__main__':
     from lib.io_functions  import binary2npy_express;
     from lib.ply_functions import *
 
-    app.run(jupyter_mode=jupyter_mode,debug=True)
+    app.run(debug=True)
+    # app.run(jupyter_mode=jupyter_mode,debug=True)

@@ -1,25 +1,17 @@
-# ---------------------------------------------------------------------------------------------------------------------- #
-#  ========================================= RUN:$ python3 0XVisEvent.py 0 0,1,2 ======================================= #
-# This macro will show the individual EVENTS of the introduced runs and channels to see if everything is working fine    #
-# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
-# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
-# ---------------------------------------------------------------------------------------------------------------------- #
+import sys; sys.path.insert(0, '../'); from lib import *
+user_input = initialize_macro("0XVisEvent")
+input_file = user_input["input_file"]
+debug = user_input["debug"]
+info = read_input_file(input_file)
 
-import sys; sys.path.insert(0, '../'); from lib import *; print_header()
+for key_label in ["runs","channels"]:
+    if check_key(user_input, key_label) == False:
+        user_input[key_label]= input("Please select %s (separated with commas): "%key_label).split(",")
+    else:
+        if debug: print("Using %s from user input"%key_label)
 
-##### INPUT RUNS AND OPTIONS #####
-try:
-    input_file     = sys.argv[1]
-    input_runs     = sys.argv[2]
-    input_channels = sys.argv[3]
-except IndexError:
-    input_file     = input("Please select input file (e.g Feb22_2): ")
-    input_runs     = input("Please select RUNS (separated with commas): ")
-    input_channels = input("Please select CHANNELS (separated with commas): ")
-
-info     = read_input_file(input_file)
-runs     = [int(r) for r in input_runs.split(",")]
-channels = [int(c) for c in input_channels.split(",")]
+runs     = [int(r) for r in user_input["runs"]]
+channels = [int(c) for c in user_input["channels"]]
 
 OPT  = {
     "MICRO_SEC":   True,
@@ -38,5 +30,5 @@ my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True) # prese
 #####################
 
 ##### EVENT VISUALIZER #####
-vis_npy(my_runs, ["ADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
+vis_npy(my_runs, ["GaussADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
 ############################

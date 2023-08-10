@@ -1,43 +1,20 @@
-# ---------------------------------------------------------------------------------------------------------------------- #
-#  ======================================== RUN:$ python3 05Scintillation.py TEST ====================================== #
-# This macro allow us to visualize average waveforms comparing ch or runs with vis_compare_wvf.                          #
-# It also loads the "ChargeAveRange" computed in 02Process for the scintillation runs and plot the charge histogram      #
-# The histogram is fitted to a Gaussian and the results can be stored in a txt in ../fit_data/filename_chX.txt           #
-# TO DO --> plot histograms/fit same plot + Scintillation profiles with fits (tau_slow etc)                              #
-# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
-# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
-# ---------------------------------------------------------------------------------------------------------------------- #
+import sys; sys.path.insert(0, '../'); from lib import *
+user_input = initialize_macro("05Scintillation")
+input_file = user_input["input_file"]
+debug = user_input["debug"]
+info = read_input_file(input_file)
 
-import sys; sys.path.insert(0, '../'); from lib import *; print_header()
+for key_label in ["runs","channels"]:
+    if check_key(user_input, key_label) == False:
+        user_input[key_label]= input("Please select %s (separated with commas): "%key_label).split(",")
+    else:
+        if debug: print("Using %s from user input"%key_label)
 
-# try:
-#     input_file = sys.argv[1]
-# except IndexError:
-#     input_file = input("Please select input File: ")
+runs     = [int(r) for r in user_input["runs"]]
+channels = [int(c) for c in user_input["channels"]]
 
-# info = read_input_file(input_file)
-# runs = []; channels = []
-# runs = np.append(runs,info["ALPHA_RUNS"])
-# # runs = np.append(runs,info["MUONS_RUNS"])
-
-# channels = np.append(channels,info["CHAN_TOTAL"])
-
-try:
-    input_file     = sys.argv[1]
-    input_runs     = sys.argv[2]
-    input_channels = sys.argv[3]
-except IndexError:
-    input_file     = input("Please select input file (e.g Feb22_2): ")
-    input_runs     = input("Please select RUNS (separated with commas): ")
-    input_channels = input("Please select CHANNELS (separated with commas): ")
-
-info     = read_input_file(input_file)
-# info     = [read_input_file(in_fi) for in_fi in input_file.split(",")]
-runs     = [int(r) for r in input_runs.split(",")]
-channels = [int(c) for c in input_channels.split(",")]
-
-# int_key = ["ChargeAveRange"]
-int_key = ["ChargeRange0"]
+int_key = ["ChargeAveRange"]
+# int_key = ["ChargeRange0"]
 OPT = {
     "LOGY": True,
     "NORM": True,
@@ -57,7 +34,7 @@ OPT = {
 
 # for run, ch in product(runs.astype(int),channels.astype(int)):
 # my_runs = load_npy([run],[ch], branch_list=["ADC","TimeStamp","Label","Sampling","ChargeAveRange","ChargeRange0", "NEventsChargeAveRange","AveWvf"], info=info,compressed=True) #preset="ANA"
-my_runs = load_npy(runs, channels,preset="EVA",info=info,compressed=True) # Fast load (no ADC)
+my_runs = load_npy(runs, channels,preset=str(info["LOAD_PRESET"][5]),info=info,compressed=True) # Fast load (no ADC)
 # my_runs = load_npy([run],[ch], preset="INT", info=info,compressed=True) #preset="ANA"
 print_keys(my_runs)
 
