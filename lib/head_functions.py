@@ -1,32 +1,45 @@
 import sys
 
 def initialize_macro(macro):
-    debug = False
+    user_input = dict()
+    user_input["debug"] = False
     if len(sys.argv) > 1:
         for arg in sys.argv:
             if arg == "-h" or arg == "--help":
                 print_macro_info(macro)
-                print("Usage: python3 03Integration.py config_file")
+                print("Usage: python3 %s.py config_file"%macro)
                 exit()
             
             if arg == "-d" or arg == "--debug":
                 debug = True
+                user_input["debug"] = debug
                 print("Debug mode activated")
             
-            else:
-                input_file = sys.argv[1]
+            if arg == "-i" or arg == "--input":
+                input_file = sys.argv[sys.argv.index(arg)+1]
+                user_input["input_file"] = input_file
+                print("Input file: %s"%input_file)
+            
+            if arg == "-r" or arg == "--run":
+                run = sys.argv[sys.argv.index(arg)+1].split(",")
+                user_input["runs"] = run
+                print("Run: %s"%run)
 
+            if arg == "-c" or arg == "--channel":
+                channel = sys.argv[sys.argv.index(arg)+1].split(",")
+                user_input["channels"] = channel
+                print("Channel: %s"%channel)
     else: 
-        input_file = input("Please select input File: ")
-        debug = input("Debug mode? (y/n): ")
-        if debug == "y":
-            debug = True
+        user_input["input_file"] = input("Please select input File: ")
+        debug_answer = input("Debug mode? (y/n): ")
+        if debug_answer == "y":
+            user_input["debug"] = True
             print("Debug mode activated")
         else:
             print("Debug mode deactivated")
             
     print_header()
-    return input_file, debug
+    return user_input
 
 def print_macro_info(macro,debug=False):
     f = open('../info/'+macro+'.txt', 'r')
