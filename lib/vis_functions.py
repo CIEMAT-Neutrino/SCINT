@@ -11,7 +11,7 @@ from itertools                   import product
 from scipy.signal                import find_peaks
 from scipy.ndimage.interpolation import shift
 
-from .io_functions  import check_key,print_colored
+from .io_functions  import print_colored
 
 def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = False):
     '''
