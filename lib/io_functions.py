@@ -3,7 +3,10 @@
 #================================================================================================================================================#
 
 import os, gc, uproot, copy, stat
+import ROOT
 import numpy as np
+import pandas as pd
+
 from itertools import product
 
 def color_list(color):
@@ -15,7 +18,7 @@ def color_list(color):
               "ERROR":   '\033[91m', #RED
               "SUCCESS": '\033[92m', #GREEN
               "WARNING": '\033[93m', #YELLOW
-              "blue":    '\033[94m',
+              "INFO":    '\033[94m', #BLUE
               "magenta": '\033[95m',
               "cyan":    '\033[96m',
               "white":   '\033[97m',
@@ -42,8 +45,12 @@ def print_colored(string, color, bold=False, end = "\n"):
 def read_input_file(input, path = "../input/", debug = False):
     '''
     Obtain the information stored in a .txt input file to load the runs and channels needed.
+    VARIABLES:
+        - input: name of the input file
+        - path: path to the input file
+        - debug: if True, print debug messages
     '''
-
+    if debug: print_colored("\nReading input file: "+str(input)+".txt\n", "DEBUG")
     # Using readlines()
     file  = open(path+input+".txt", 'r')
     lines = file.readlines()
@@ -127,13 +134,18 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
     for branch in info:
         if branch == "LOAD_PRESET":
             if label == "Gauss" or label == "Wiener":
-                info[branch][3] = "DEC"; file.write(branch+": "+list_to_string(info[branch])+"\n")
+                info[branch][3] = "DEC"
+                info[branch][4] = "DEC"
+                file.write(branch+": "+list_to_string(info[branch])+"\n")
         elif branch == "REF":
             if label == "Gauss" or label == "Wiener": 
                 info[branch][0] = label+"AveWvf"; file.write(branch+": "+list_to_string(info[branch])+"\n")
-        elif branch == "LIGHT_RUNS" or branch == "CALIB_RUNS" or branch == "MUON_RUNS":    
+        # elif branch == "LIGHT_RUNS" or branch == "CALIB_RUNS" or branch == "MUON_RUNS":    
+        #     if label == "Gauss" or label == "Wiener": 
+        #         info[branch] = []; file.write(branch+": "+list_to_string(info[branch])+"\n")
+        elif branch == "ANA_LABEL":
             if label == "Gauss" or label == "Wiener": 
-                info[branch] = []; file.write(branch+": "+list_to_string(info[branch])+"\n")
+                info[branch] = label; file.write(branch+": "+list_to_string(info[branch])+"\n")
         else:
             file.write(branch+": "+list_to_string(info[branch])+"\n")
 
@@ -151,7 +163,7 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
     for p in not_saved:
             par_list.remove(p) #removing parameters before saving in txt (height by default)
 
-    confirmation = input(color_list("magenta")+"\nConfirmation to save in"+path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n) ?"%ch+color_list("end"))
+    confirmation = input(color_list("magenta")+"\nConfirmation to save in"+path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch+color_list("end"))
     if "y" in confirmation:
         print("\n----------- Saving -----------")
 
@@ -335,19 +347,19 @@ def check_key(OPT, key):
     try:   OPT[key]; return True   # If the key is found, return True 
     except KeyError: return False  # If the key is not found, return False
 
-def print_keys(my_runs):
+def print_keys(my_runs, debug=False):
     '''
     Prints the keys of the run_dict which can be accesed with run_dict[runs][channels][BRANCH] 
     '''
-
     try:
         for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
             print("------------------------------------------------------------------------------------------------------------------------------------------------------")
             print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
             print("------------------------------------------------------------------------------------------------------------------------------------------------------\n")
     except KeyError: print_colored("Empty dictionary. No keys to print.", "ERROR")
+    if debug: print_colored("Keys printed", "DEBUG")
 
-def delete_keys(my_runs, keys):
+def delete_keys(my_runs, keys, debug=False):
     '''
     Delete the keys list introduced as 2nd variable
     '''
@@ -355,6 +367,7 @@ def delete_keys(my_runs, keys):
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
         try:   del my_runs[run][ch][key]      # Delete the key
         except KeyError: print_colored("*EXCEPTION: [Run%i - Ch%i - %s] key combination is not found in my_runs"%(run,ch,key), "WARNING")   
+    if debug: print_colored("Keys deleted: %s"%keys, "DEBUG")
 
 #===========================================================================#
 #************************** LOAD/SAVE NPY **********************************#
@@ -363,26 +376,21 @@ def delete_keys(my_runs, keys):
 def get_preset_list(my_run, path, folder, preset, option, debug = False):
     '''
     Return as output presets lists for load/save npy files.
-
-    **VARIABLES**:
-
-    - my_run: my_runs[run][ch]
-    - path: saving path
-    - folder: saving in/out folder
-    - preset: 
-
-      (a) "ALL": all the existing keys/branches
-      (b) "ANA": only Ana keys/branches (removing RAW info)
-      (c) "INT": only Charge*, Ave* keys/branches
-      (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
-      (e) "EVA": all the existing keys/branches EXCEPT ADC
-      (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
-      (g) "CAL": only Charge* keys
-
-    - option:
-    
-      (a) "LOAD": takes the os.listdir(path+folder) as brach_list (IN)
-      (b) "SAVE": takes the my_run.keys() as branch list (OUT)
+    VARIABLES:
+        - my_run: my_runs[run][ch]
+        - path: saving path
+        - folder: saving in/out folder
+        - preset: 
+            (a) "ALL": all the existing keys/branches
+            (b) "ANA": only Ana keys/branches (removing RAW info)
+            (c) "INT": only Charge*, Ave* keys/branches
+            (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
+            (e) "EVA": all the existing keys/branches EXCEPT ADC
+            (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
+            (g) "CAL": only Charge* keys
+        - option: 
+            (a) "LOAD": takes the os.listdir(path+folder) as brach_list (IN)
+            (b) "SAVE": takes the my_run.keys() as branch list (OUT)
     '''
 
     dict_option = dict()
@@ -424,7 +432,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = dict_option[option]
         aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label", "SER"]
         for key in branch_list:
-            if "Gauss" in key or "Wiener" in key or "Dec" in key or "Charge" in key: aux.append(key) # and key not in aux # add??
+            if "Gauss" in key or "Wiener" in key or "Dec" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "CAL": # Save aux + Charge* branches
@@ -441,8 +449,22 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
     Structure: run_dict[runs][channels][BRANCH] 
     Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
     Presets can be used to only load a subset of desired branches. ALL is default.
+    VARIABLES:
+        - runs: list of runs to load
+        - channels: list of channels to load
+        - preset:
+            (a) "ALL": all the existing keys/branches
+            (b) "ANA": only Ana keys/branches (removing RAW info)
+            (c) "INT": only Charge*, Ave* keys/branches
+            (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
+            (e) "EVA": all the existing keys/branches EXCEPT ADC
+            (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
+            (g) "CAL": only Charge* keys
+        - branch_list: list of branches to load
+        - info: dictionary with the info of the run
+        - debug: if True, print debug info
     '''
-
+    if debug: print_colored("\nLoading npy files...", "INFO")
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
 
     my_runs = dict()
@@ -457,18 +479,12 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
             if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug) # Get the branch list if preset is used
             for branch in branch_list:   
                 try:
-                    # if "Dict" in branch: #BORRAR A NO SER QUE ALGUNA VEZ QUERAMOS CARGAR ALGUN DICCIONARIO
-                    #     my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()   
-                    # else:
                     if compressed:
                         my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
                         if branch.__contains__("ADC"):my_runs[run][ch][branch.replace(".npz","")]=my_runs[run][ch][branch.replace(".npz","")].astype(float)
                     else:
                         my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
                         if branch.__contains__("ADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
-
-                    if debug: print_colored("\nLoaded %s run with keys:"%branch + str(my_runs.keys()), "DEBUG")
-                    if debug: print_colored("-----------------------------------------------", "DEBUG")
                 except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
             print_colored("load_npy --> DONE!\n", "SUCCESS")
             del branch_list # Delete the branch list to avoid loading the same branches again
@@ -479,14 +495,13 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
     Saves the processed variables an npx file.
     
     **VARIABLES**:
-    
-    - my_runs: dictionary with the runs and channels to be saved
-    - preset: preset to be used to save the variables
-    - branch_list: list of branches to be saved
-    - info: dictionary with the path and month to be used
-    - force: if True, the files will be overwritten
-    - debug: if True, the function will print the branches that are being saved
-    - compressed: if True, the files will be saved as npz, if False, as npy
+        - my_runs: dictionary with the runs and channels to be saved
+        - preset: preset to be used to save the variables
+        - branch_list: list of branches to be saved
+        - info: dictionary with the path and month to be used
+        - force: if True, the files will be overwritten
+        - debug: if True, the function will print the branches that are being saved
+        - compressed: if True, the files will be saved as npz, if False, as npy
     '''
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
@@ -546,3 +561,38 @@ def copy_single_run(my_runs, runs, channels, keys):
             my_run[run][ch][key] = my_runs[run][ch][key]
         except KeyError: print_colored(str(run) + str(ch)  +str(key) + " key combination is not found in my_runs", "ERROR")
     return my_run
+
+def npy2root(my_runs, debug = False):
+    '''
+    Converts the npy files to root TTree files by converting the dictionaries to a RDataFrame from ROOT & using the snapshot method.
+    **VARIABLES:**
+        - my_runs: dictionary with the runs and channels to be saved
+        - debug: if True, the function will print the branches that are being saved
+    '''
+    # Create the ROOT dataframe
+    df = ROOT.RDF.FromNumpy(my_runs)
+    # Create the ROOT file
+    f = ROOT.TFile.Open("test.root","RECREATE")
+    # Create the ROOT tree
+    tree = df.Snapshot("tree", "test.root")
+    # Save the ROOT file
+    f.Write()
+    f.Close()
+    if debug: print_colored("npy2root --> DONE!\n", "SUCCESS")
+    return tree
+
+def npy2df(my_runs, debug = False):
+    '''
+    Converts the npy files to a pandas dataframe.
+    **VARIABLES:**
+        - my_runs: dictionary with the runs and channels to be saved
+        - debug: if True, the function will print the branches that are being saved
+    '''
+    df = pd.DataFrame.from_dict({
+        (i,j): my_runs[i][j] 
+        for i in my_runs.keys() 
+        for j in my_runs[i].keys()},
+        orient='index')
+    
+    if debug: print_colored("npy2df --> DONE!\n", "SUCCESS")
+    return df
