@@ -19,6 +19,7 @@ def color_list(color):
               "SUCCESS": '\033[92m', #GREEN
               "WARNING": '\033[93m', #YELLOW
               "INFO":    '\033[94m', #BLUE
+              "blue":    '\033[94m', #BLUE
               "magenta": '\033[95m',
               "cyan":    '\033[96m',
               "white":   '\033[97m',
@@ -45,7 +46,7 @@ def print_colored(string, color, bold=False, end = "\n"):
 def read_input_file(input, path = "../input/", debug = False):
     '''
     Obtain the information stored in a .txt input file to load the runs and channels needed.
-    VARIABLES:
+    **VARIABLES**:
         - input: name of the input file
         - path: path to the input file
         - debug: if True, print debug messages
@@ -376,7 +377,7 @@ def delete_keys(my_runs, keys, debug=False):
 def get_preset_list(my_run, path, folder, preset, option, debug = False):
     '''
     Return as output presets lists for load/save npy files.
-    VARIABLES:
+    **VARIABLES**:
         - my_run: my_runs[run][ch]
         - path: saving path
         - folder: saving in/out folder
@@ -449,7 +450,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
     Structure: run_dict[runs][channels][BRANCH] 
     Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
     Presets can be used to only load a subset of desired branches. ALL is default.
-    VARIABLES:
+    **VARIABLES**:
         - runs: list of runs to load
         - channels: list of channels to load
         - preset:
