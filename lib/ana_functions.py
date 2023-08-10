@@ -50,8 +50,6 @@ def generate_cut_array(my_runs,ref="ADC",debug=False):
                     if len(my_runs[run][ch][key]) > 1:
                         print_colored("Found viable reference variable: "+key, "WARNING")
                         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][key]),dtype=bool)
-                        ref = key
-                        my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]),dtype=bool)
                         break
                 except TypeError:
                     if debug: print_colored("Key "+key+" is not a numpy array", "DEBUG")
@@ -65,7 +63,7 @@ def generate_cut_array(my_runs,ref="ADC",debug=False):
 def get_units(my_runs, debug = False):
     '''
     Computes and store in a dictionary the units of each variable.  
-    VARIABLES:
+    **VARIABLES**:
         - my_runs: dictionary containing the data
         - debug:   boolean to print debug messages
     '''
@@ -104,7 +102,7 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
 def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
     '''
     Computes the pedestal variables of a collection of a run's collection in standard format
-    VARIABLES:
+    **VARIABLES**:
         - my_runs: dictionary containing the data
         - key:     key of the variable to be used
         - label:   label to be added to the variable name
