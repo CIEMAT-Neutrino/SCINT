@@ -133,8 +133,8 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
     # return x, popt, pcov, perr, chi2 # UPLOAD WHEN POSSIBLE MERGING IN MAIN BRANCH; upgrade all the fit functions
 
 
-def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
-    '''
+def gaussian_train_fit(counts, bins, bars, params, debug=False):
+    ''' 
     This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
     **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     And return the parameters of the fit (if performed)
@@ -145,10 +145,11 @@ def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
 
     ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
-    wdth   = 15
-    prom   = 0.5
-    acc    = 1000
-    
+    thresh       = params["THRESHOLD"]
+    wdth         = params["WIDTH"]
+    prom         = params["PROMINENCE"]
+    acc          = params["ACCURACY"]
+    fit_function = params["FIT"]
     ## Create linear interpolation between bins to search peaks in these variables ##
     x = np.linspace(bins[1],bins[-2],acc)
     y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
@@ -164,13 +165,19 @@ def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
 
     n_peaks = 6
     initial = []                   #Saving for input to the TRAIN FIT
-    if len(peak_idx)-1 < n_peaks:
-        n_peaks = len(peak_idx)-1  #Number of peaks found by find_peak
+    if len(peak_idx) < n_peaks:
+        n_peaks = len(peak_idx)  #Number of peaks found by find_peak
     
     for i in range(n_peaks):
-        x_space = np.linspace(x[peak_idx[i]], x[peak_idx[i+1]], acc) #Array with values between the x_coord of 2 consecutives peaks
-        step    = x_space[1]-x_space[0]
-        x_gauss = x_space-int(acc/2)*step
+        try:
+            x_space = np.linspace(x[peak_idx[i]], x[peak_idx[i+1]], acc) #Array with values between the x_coord of 2 consecutives peaks
+            step = x_space[1]-x_space[0]
+            x_gauss = x_space-int(acc/2)*step
+        except IndexError:
+            x_space = np.linspace(x[peak_idx[i-1]], x[i], acc)
+            step = x_space[1]-x_space[0]
+            x_gauss = x_space+int(acc/2)*step
+
         x_gauss = x_gauss[x_gauss >= bins[0]]
         y_gauss = y_intrp(x_gauss)
         # plt.plot(x_gauss,y_gauss,ls="--",alpha=0.9)
@@ -193,8 +200,8 @@ def gaussian_train_fit(counts, bins, bars, thresh, fit_function="gaussian"):
 
     try:
         ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
-        if fit_function == "gaussian":    popt, pcov = curve_fit(gaussian_train,x[:peak_idx[-1]], y[:peak_idx[-1]], p0=initial) 
-        if fit_function == "loggaussian": popt, pcov = curve_fit(loggaussian_train,x[:peak_idx[-1]],np.log10(y[:peak_idx[-1]]),p0=initial)
+        if fit_function == "gaussian":    popt, pcov = curve_fit(gaussian_train,x, y, p0=initial) 
+        if fit_function == "loggaussian": popt, pcov = curve_fit(loggaussian_train,x,np.log10(y),p0=initial)
         
         perr = np.sqrt(np.diag(pcov))
     except:

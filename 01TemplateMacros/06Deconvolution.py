@@ -1,18 +1,10 @@
-# ---------------------------------------------------------------------------------------------------------------------- #
-#  ======================================== RUN:$ python3 06Deconvolution.py TEST ====================================== #
-# This macro will deconvolve your scintillation signals according to a rescaled (to SPE) detector response template.      #
-# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
-# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
-# ---------------------------------------------------------------------------------------------------------------------- #
-
-import sys; sys.path.insert(0, '../'); from lib import *; print_header()
-try:               input_file = sys.argv[1]
-except IndexError: input_file = input("Please select input File: ")
-
+import sys; sys.path.insert(0, '../'); from lib import *
+user_input = initialize_macro("06Deconvolution")
+input_file = user_input["input_file"]
+debug = user_input["debug"]
 info = read_input_file(input_file)
 
-channels = []
-raw_runs = np.asarray(info["ALPHA_RUNS"]).astype(int)
+raw_runs = np.asarray(info["CALIB_RUNS"]).astype(int)
 dec_runs = np.asarray(info["LIGHT_RUNS"]).astype(int)
 ref_runs = np.asarray(info["CALIB_RUNS"]).astype(int)
 noi_runs = np.asarray(info["NOISE_RUNS"]).astype(int)
@@ -37,7 +29,7 @@ for idx, run in enumerate(raw_runs):
         keys = ["AveWvf","SER","AveWvf"] # keys contains the 3 labels required for deconvolution keys[0] = raw, keys[1] = det_response and keys[2] = deconvolution 
         # Entrada, deconvolucion, salida. That is: alpha wvf, SPE - Laser result (see in generate_SER to select type of wvf), name for dec wvf (Gauss + str) 
         generate_SER(my_runs, light_runs, single_runs)
-        # my_runs[run][ch]["GaussCutOff"] = 120 # El límite del limite de frecuencias
+        # my_runs[run][ch]["GaussCutOff"] = 140 # El límite del limite de frecuencias
         OPT = {
             "NOISE_AMP": 1,
             "FIX_EXP":True,
@@ -58,14 +50,14 @@ for idx, run in enumerate(raw_runs):
 
         deconvolve(my_runs,keys=keys, noise_run=[], OPT=OPT)
 
-        # OPT = {
-        #     "SHOW": False,f
-        #     "FIXED_CUTOFF": True
-        #     }
+        OPT = {
+            "SHOW": False,
+            "FIXED_CUTOFF": True
+        }
 
-        # keys[0] = "ADC"
-        # keys[2] = "ADC"
-        # deconvolve(my_runs,keys=keys,OPT=OPT)
+        keys[0] = "ADC"
+        keys[2] = "ADC"
+        deconvolve(my_runs,keys=keys,OPT=OPT)
 
         save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][6]),info=info,force=True)
         del my_runs,light_runs,single_runs

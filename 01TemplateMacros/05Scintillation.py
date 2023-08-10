@@ -1,29 +1,20 @@
-# ---------------------------------------------------------------------------------------------------------------------- #
-#  ============================== RUN:$ python3 05Scintillation.py TEST run channel ==================================== #
-# This macro allow us to visualize average waveforms comparing ch or runs with vis_compare_wvf.                          #
-# It also loads the "ChargeAveRange" computed in 02Process for the scintillation runs and plot the charge histogram      #
-# The histogram is fitted to a Gaussian and the results can be stored in a txt in ../fit_data/filename_chX.txt           #
-# TO DO --> plot histograms/fit same plot + Scintillation profiles with fits (tau_slow etc)                              #
-# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
-# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
-# ---------------------------------------------------------------------------------------------------------------------- #
+import sys; sys.path.insert(0, '../'); from lib import *
+user_input = initialize_macro("05Scintillation")
+input_file = user_input["input_file"]
+debug = user_input["debug"]
+info = read_input_file(input_file)
 
-import sys; sys.path.insert(0, '../'); from lib import *; print_header()
+for key_label in ["runs","channels"]:
+    if check_key(user_input, key_label) == False:
+        user_input[key_label]= input("Please select %s (separated with commas): "%key_label).split(",")
+    else:
+        if debug: print("Using %s from user input"%key_label)
 
-try:
-    input_file     = sys.argv[1]
-    input_runs     = sys.argv[2]
-    input_channels = sys.argv[3]
-except IndexError:
-    input_file     = input("Please select input file (e.g Feb22_2): ")
-    input_runs     = input("Please select RUNS (separated with commas): ")
-    input_channels = input("Please select CHANNELS (separated with commas): ")
+runs     = [int(r) for r in user_input["runs"]]
+channels = [int(c) for c in user_input["channels"]]
 
-info     = read_input_file(input_file)
-runs     = [int(r) for r in input_runs.split(",")]
-channels = [int(c) for c in input_channels.split(",")]
+int_key = ["ChargeAveRange"]
 
-int_key = ["ChargeRange0"] #"ChargeAveRange"
 OPT = {
     "LOGY": True,       # Runs can be displayed in logy (True/False)
     "NORM": True,       # Runs can be displayed normalised (True/False)
@@ -40,8 +31,6 @@ OPT = {
 # my_runs = load_npy([25],[0],branch_list=["Label","Sampling","AveWvf"],info=info,compressed=True) #Remember to LOAD your wvf
 # vis_compare_wvf(my_runs, ["AveWvf"], compare="RUNS", OPT=OPT)
 #################################################
-
-    ### FITTING --> tau slow etc
 
 # for run, ch in product(runs.astype(int),channels.astype(int)):
 my_runs = load_npy(runs, channels,preset=str(info["LOAD_PRESET"][5]),info=info,compressed=True)
