@@ -50,7 +50,6 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
     from .io_functions  import print_colored, check_key
     from .wvf_functions import find_baseline_cuts, smooth
     from .ana_functions import compute_power_spec
-    from .fit_functions import gauss
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = []; trimm = 0 
@@ -158,8 +157,8 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
                 
                 # Generate gauss filter and filtered signal
                 fft_gauss = gauss(np.arange(len(fft_signal)), *params)
-                if check_key(OPT,  "PRO_RODRIGO") ==  True and OPT["PRO_RODRIGO"] ==  True:
-                    fft_gauss[0] = 0
+                fft_gauss[0] = 0
+                # if check_key(OPT,  "PRO_RODRIGO") ==  True and OPT["PRO_RODRIGO"] ==  True:
             
                 fft_filter_signal = fft_signal*fft_gauss
                 filter_signal = np.fft.irfft(fft_filter_signal)
@@ -411,10 +410,8 @@ def logconv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
 
 def gauss(f, fc, n):
     y = np.exp(-0.5*(f/fc)**n)
-
     return y
 
 def fit_gauss(f, fc, n):
     y = np.log10(gauss(f, fc, n)); y[0] = 0
-
     return y
