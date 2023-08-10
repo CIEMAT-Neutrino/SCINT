@@ -50,7 +50,7 @@ def vis_persistence(my_run, OPT = {}):
     plt.ioff()
     plt.clf()
 
-def calibrate(my_runs, keys, OPT={}):
+def calibrate(my_runs, keys, OPT={}, debug=False):
     '''
     Computes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as 
     a return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
@@ -82,11 +82,15 @@ def calibrate(my_runs, keys, OPT={}):
         else: 
             label = my_runs[run][ch]["Label"]
 
-            if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs) # If cuts not generated, generate them
+            if check_key(my_runs[run][ch], "MyCuts") == False:
+                if debug: print_colored("Cuts not generated. Generating them...", "WARNING")
+                generate_cut_array(my_runs,debug=debug) # If cuts not generated, generate them
+                if debug: print(run, ch, my_runs[run][ch]["MyCuts"])
+                
             if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
-
+                
             # try:
-            counts, bins, bars = vis_var_hist(my_runs, [key], compare="NONE",OPT=OPT)
+            counts, bins, bars = vis_var_hist(my_runs, [key], compare="NONE", OPT=OPT)
             plt.close()
 
             ## New Figure with the fit ##
@@ -100,15 +104,26 @@ def calibrate(my_runs, keys, OPT={}):
             if label != "PMT": #Fit for SiPMs/SC
                 ### --- Nx GAUSSIAN FIT --- ### 
                 # thresh = int(len(my_runs[run][ch][key])/2000)
-                thresh = 10
-                x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, thresh,fit_function="gaussian")
-                # x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, thresh,fit_function="loggaussian")
-                ## Plot threshold, peaks (red) and valleys (blue) ##
-                ax_cal.axhline(thresh, ls='--')
+                params = {"THRESHOLD": 10, "WIDTH": 15, "PROMINENCE": 0.5, "ACCURACY": 500, "FIT": "gaussian"}
+                new_params = {}
+                for i,param in enumerate(params.keys()):
+                    if check_key(OPT,param) == True:
+                        new_params[param] = OPT[param]
+                    else:
+                        new_params[param] = params[param]
+
+                # try:
+                x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, new_params, debug=debug)
+                ax_cal.axhline(new_params["THRESHOLD"], ls='--')
                 ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
                 ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-                ## Plot the fit ##
-                ax_cal.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
+                ax_cal.plot(x,gaussian_train(x, *popt), label="")
+
+                # except UnboundLocalError:
+                #     print_colored("UnboundLocalError. Looking for the next", "WARNING")
+                #     popt = [-99, -99, -99]; pcov= [-99, -99, -99]; perr = [-99, -99, -99]
+                #     plt.clf()
+                #     continue
 
                 ## Repeat customized fit ## Ver si necesario -- añadir opcion customizar a gaussian_train_fit
                 # confirmation = input("Are you happy with the fit? (y/n) ")
@@ -130,7 +145,7 @@ def calibrate(my_runs, keys, OPT={}):
                 ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
                 ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
                 ## Plot the fit ##
-                ax_cal.plot(x[:peak_idx[-1]],gaussian_train(x[:peak_idx[-1]], *popt), label="")
+                ax_cal.plot(x,gaussian_train(x, *popt), label="")
 
             if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True: ax_cal.legend()
             if check_key(OPT,"LOGY")   == True and OPT["LOGY"]   == True: ax_cal.semilogy(); ax_cal.set_ylim(1)
@@ -138,20 +153,22 @@ def calibrate(my_runs, keys, OPT={}):
                 while not plt.waitforbuttonpress(-1): pass
             plt.clf()
 
-            my_runs[run][ch]["Gain"] = popt[3]-abs(popt[0])
-            my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
-            my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
-            # print("SPE min charge for run %i ch %i = %.2E"%(run,ch,popt[3] - abs(popt[5])))
+            try:
+                my_runs[run][ch]["Gain"] = popt[3]-abs(popt[0])
+                my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
+                my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
+            except IndexError:
+                print_colored("Fit failed to find min of 3 calibration peaks!", "WARNING")
+                my_runs[run][ch]["Gain"] = -99
+                my_runs[run][ch]["MaxChargeSPE"] = -99
+                my_runs[run][ch]["MinChargeSPE"] = -99
 
-            # except KeyError:
-            #     print("Empty dictionary. No calibration to show.")
-        # plt.ioff()
         plt.clf()
         plt.close()
     
     return popt, pcov, perr
 
-def calibration_txt(run, ch, popt, pcov, filename, info):
+def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
     '''
     Computes calibration parameters for each peak.
     
@@ -218,7 +235,7 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
     
     Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
     It returns an array of arrays: 
-    save_scintillation = [ [[mu,dmu],[height,dheight],[sigma,dsigma], [nevents,dnevents]] ]
+    save_scintillation = [ [[mu,dmu],[height,dheight],[sigma,dsigma],] ]
     
     Save in a txt the calibration parameters to be exported directly.
     Takes as input an array of arrays with the computed parameters (see compute_charge_parameters())
@@ -234,9 +251,7 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
     mu       = [popt[1], perr0[1]]  # mu +- dmu
     height   = [popt[0], perr0[0]]  # height +- dheight (not saving in txt by default)
     sigma    = [abs(popt[2]), perr0[2]]  # sigma +- dsigma
-    # nevents  = [popt[1],    perr1[0][0]]  # nevents/s +- dnevents/s #HACER BIEN#
-    nevents  = [popt[2], perr0[2]]  # nevents/s +- dnevents/s #HACER BIEN#
-    charge_parameters.append([mu,height,sigma,nevents])
+    charge_parameters.append([mu,height,sigma])
     
     print(len(charge_parameters))
     print(charge_parameters)
@@ -244,9 +259,8 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
     print("MU +- DMU:",               ['{:.2f}'.format(item) for item in charge_parameters[0][0]])
     print("HEIGHT +- DHEIGHT:",       ['{:.2f}'.format(item) for item in charge_parameters[0][1]])
     print("SIGMA +- DSIGMA:",         ['{:.2f}'.format(item) for item in charge_parameters[0][2]])
-    print("NEVENTS/s +- DNEVENTS/s:(HAY QUE CALCULARLO BIEN)", ['{:.2f}'.format(item) for item in charge_parameters[0][3]])
     
-    write_output_file(run, ch, charge_parameters, filename, info, header_list=["RUN","MU","DMU","SIG","DSIG","NEVENTS","DNEVENTS"])
+    write_output_file(run, ch, charge_parameters, filename, info, header_list=["RUN","MU","DMU","SIG","DSIG"])
 
 
 def charge_fit(my_runs, keys, OPT={}):
@@ -299,6 +313,7 @@ def charge_fit(my_runs, keys, OPT={}):
             ax_ch.legend()
         if check_key(OPT,"LOGY") == True and OPT["LOGY"] == True:
             ax_ch.semilogy()
+            plt.ylim(ymin=1, ymax=1.2*max(counts))
 
         ## Repeat customized fit ##
         confirmation = input(color_list("magenta")+"Are you happy with the fit? (y/n) "+color_list("end"))
