@@ -11,6 +11,7 @@ from itertools                   import product
 from scipy.signal                import find_peaks
 from scipy.ndimage.interpolation import shift
 
+from .io_functions  import print_colored
 
 def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = False):
     '''
@@ -211,13 +212,20 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     
                 if check_key(OPT, "SHOW_PARAM") == True and OPT["SHOW_PARAM"]:
                     print_colored("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]), "white", bold=True)
-                    print("- Sampling: {:.0E}".format(sampling))
-                    print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]][label+"PedMean"][idx]))
-                    print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]][label+"PedSTD"][idx]))
-                    print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch_list[j]][label+"PedMin"][idx],my_run[run][ch_list[j]][label+"PedMax"][idx]))
-                    print("- Pedestal time limit: {:.4E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PedLim"]))
-                    print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch_list[j]][label+"PeakAmp"][idx]))
-                    print("- Max Peak Time: {:.2E}".format(my_run[run][ch_list[j]][label+"PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
+                    try: print("- Sampling: {:.0E}".format(sampling))
+                    except KeyError: print_colored("Variable not found!", color="ERROR")
+                    try: print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]][label+"PedMean"][idx]))
+                    except KeyError: print_colored("Variable not found!", color="ERROR")
+                    try: print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]][label+"PedSTD"][idx]))
+                    except KeyError: print_colored("Variable not found!", color="ERROR")
+                    try: print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch_list[j]][label+"PedMin"][idx],my_run[run][ch_list[j]][label+"PedMax"][idx]))
+                    except KeyError: print_colored("Variable not found!", color="ERROR")
+                    try: print("- Pedestal time limit: {:.4E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PedLim"]))
+                    except KeyError: print_colored("Variable not found!", color="ERROR")
+                    try: print("- Max Peak Amplitude: {:.4f}".format(my_run[run][ch_list[j]][label+"PeakAmp"][idx]))
+                    except KeyError: print_colored("Variable not found!", color="ERROR")
+                    try: print("- Max Peak Time: {:.2E}".format(my_run[run][ch_list[j]][label+"PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
+                    except KeyError: print_colored("Variable not found!", color="ERROR")
                     try:    print("-",OPT["CHARGE_KEY"],"{:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
                     except:
                         if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"], "WARNING")
@@ -333,7 +341,7 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         except: axs.clear()
         plt.close()   
 
-def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False):
+def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False, debug = False):
     '''
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
@@ -377,28 +385,38 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
             if compare == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
             if compare == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
             
-            if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run)
+            # print(my_run[run][ch]["MyCuts"] == True)
+            if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run,debug=True)
             if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
             
             if compare == "NONE": fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
+            
+            binning = 0
+            if check_key(OPT, "ACCURACY") == True: binning = OPT["ACCURACY"]
+
             for k in key:
-                aux_data = my_run[run][ch][k][my_run[run][ch]["MyCuts"] == True]
+                # Debug the following line
+                if debug: print_colored("Plotting variable: ", k, color="INFO")
+                aux_data = np.asarray(my_run[run][ch][k])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
                 aux_data = aux_data[~np.isnan(aux_data)]
+                
                 if k == "PeakAmp":
                     data = aux_data
                     max_amp = np.max(data)
                     # binning = int(max_amp)+1
-                    binning = 1000
+                    if binning == 0: binning = 1000
+                
                 elif k == "PeakTime":
                     data = my_run[run][ch]["Sampling"]*aux_data
-                    binning = int(my_run[run][ch]["NBinsWvf"]/10)
+                    if binning == 0: binning = int(my_run[run][ch]["NBinsWvf"]/10)
+                    
                 else:
                     data = aux_data
                     ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
                     ypad = 0.2*(yptop - ypbot)
                     ymin = ypbot - ypad; ymax = yptop + ypad
                     data = [i for i in data if ymin<i<ymax]
-                    binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
+                    if binning == 0: binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
                 
                 if len(key) > 1:
                     fig.supxlabel(my_run[run][ch]["UnitsDict"][k]); fig.supylabel("Counts")

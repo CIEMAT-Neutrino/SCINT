@@ -10,7 +10,7 @@ from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
 # import statistics as stat
 
-def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False):
+def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False, debug = False):
     """
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
     
@@ -40,7 +40,8 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
 
         initial_evts = len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True])
         if run != my_runs["NRun"][0] and ch == chs_cut[0] and key == keys[0]: idx_list = []; print_colored("... NEW RUN ...", color = "WARNING")
-        print("--- CUTTING events with ",end ="");print_colored(key, color = "cyan" ,end = "");print(" in ("+str(limits[key][0])+", "+str(limits[key][1])+")",my_runs[run][ch]["UnitsDict"][key], "for Ch", ch, "Run",run," ---")
+        print("--- CUTTING events with ",end ="")
+        print_colored(key, color = "cyan" ,end = "");print(" in ("+str(limits[key][0])+", "+str(limits[key][1])+")",my_runs[run][ch]["UnitsDict"][key], "for Ch", ch, "Run",run," ---")
         print("Nº events before cut: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         if check_key(my_runs[run][ch], key) == True:
             rep_idx = 0
@@ -74,6 +75,7 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
                 for i in idx_list: my_runs[run][ch]["MyCuts"][i] = False
             
             print("Nº total final events in ALL Chs:", initial_evts - len(idx_list),"\n")
+    if debug == True: print("... Cuts finished ...")
 
 def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False):
     '''
@@ -250,7 +252,7 @@ def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
         print("Nº total final events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
 
-def cut_min_max_sim(my_runs, keys, limits):
+def cut_min_max_sim(my_runs, keys, limits, debug = False):
     '''
     This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
 
@@ -287,3 +289,4 @@ def cut_min_max_sim(my_runs, keys, limits):
                 print("Final result is", my_runs[run][ch]["MyCuts"][i])
 
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
+    if debug == True: print_colored("---- END OF CUTS ----", color = "cyan", bold=True)

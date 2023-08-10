@@ -27,7 +27,7 @@ def insert_variable(my_runs, var, key, debug = False):
         except KeyError: 
             if debug: print_colored("Inserting value...", "DEBUG")
 
-def generate_cut_array(my_runs,debug=False):
+def generate_cut_array(my_runs,ref="ADC",debug=False):
     '''
     This function generates an array of bool = True with length = NEvts. 
     If cuts are applied and then you run this function, it resets the cuts.
@@ -38,20 +38,36 @@ def generate_cut_array(my_runs,debug=False):
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
-        for key in my_runs[run][ch].keys():
-            # if debug: print("Output of find function for key: ",key,key.find("ADC"))
-            # if key.find("ADC") == 0:
-            if "ADC" in key:      ADC_key = key
-            elif "Charge" in key: ADC_key = key
-            elif "Peak" in key:   ADC_key = key
-        my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ADC_key]),dtype=bool)
+
+        try:
+            if debug: print("Check cut array ref: ",my_runs[run][ch][ref])
+            my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]),dtype=bool)
+        except KeyError:
+            print_colored("WARNING: Reference variable for cut array generation not found!", "WARNING")
+            print("Searching for viable reference variable...")
+            for key in my_runs[run][ch].keys():
+                try:
+                    if len(my_runs[run][ch][key]) > 1:
+                        print_colored("Found viable reference variable: "+key, "WARNING")
+                        my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][key]),dtype=bool)
+                        break
+                except TypeError:
+                    if debug: print_colored("Key "+key+" is not a numpy array", "DEBUG")
+                    pass
+                except KeyError:
+                    if debug: print_colored("Key "+key+" does not exist", "DEBUG")
+                    pass
+        
         if debug: print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
 
 def get_units(my_runs, debug = False):
     '''
     Computes and store in a dictionary the units of each variable.  
+    **VARIABLES**:
+        - my_runs: dictionary containing the data
+        - debug:   boolean to print debug messages
     '''
-
+    if debug: print("Getting units...")
     for run, ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         keys = my_runs[run][ch].keys()
         aux_dic = {}
@@ -86,6 +102,12 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
 def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
     '''
     Computes the pedestal variables of a collection of a run's collection in standard format
+    **VARIABLES**:
+        - my_runs: dictionary containing the data
+        - key:     key of the variable to be used
+        - label:   label to be added to the variable name
+        - buffer:  number of samples to be used for the pedestal computation
+        - debug:   boolean to print debug messages
     '''
 
     # Import from other libraries
@@ -168,8 +190,7 @@ def compute_ana_wvfs(my_runs, debug = False):
         my_runs[run][ch]["ADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
         print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
-
-        del my_runs[run][ch]["RawADC"] # After ADC is computed, delete RawADC from memory
+        
 
 def compute_power_spec(ADC, timebin, debug = False):
     ''' 
