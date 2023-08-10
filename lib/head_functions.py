@@ -1,4 +1,5 @@
 import sys
+from lib.io_functions import check_key
 
 def initialize_macro(macro):
     user_input = dict()
@@ -54,3 +55,13 @@ def print_header():
     print (file_contents)
     f.close
     print("----- Starting macro -----")
+
+def update_user_input(user_input,new_input_list,debug=False):
+    new_user_input = user_input.copy()
+    for key_label in new_input_list:
+        if check_key(user_input, key_label) == False:
+            new_user_input[key_label]= input("Please select %s (separated with commas): "%key_label).split(",")
+        else:
+            if debug: print("Using %s from user input"%key_label)
+    
+    return new_user_input
