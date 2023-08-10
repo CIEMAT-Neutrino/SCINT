@@ -50,40 +50,57 @@ def read_input_file(input, path = "../input/", debug = False):
     info = dict()
     NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF"]
+    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_LABEL"]
     
     # Strips the newline character
     for line in lines:
         for LABEL in DOUBLES: 
             if line.startswith(LABEL):
-                info[LABEL] = []; numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                # if debug: print_colored(line, "DEBUG")
+                try:
+                    info[LABEL] = []
+                    numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                except IndexError:
+                    if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
+                    continue
+
                 for i in numbers.split(","):
                     try:   info[LABEL].append(float(i)) # Try to convert to float and append to LABEL list
                     except ValueError: 
-                        if debug == True: print_colored("Error when reading: " + str(info[LABEL]), "ERROR")
-                    if debug: print_colored(str(info[LABEL]), "DEBUG")
+                        if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
+                if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
         for LABEL in NUMBERS:
             if line.startswith(LABEL):
-                info[LABEL] = []; numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                # if debug: print_colored(line, "DEBUG")
+                try:
+                    info[LABEL] = []
+                    numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                except IndexError:
+                    if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
+                    continue
+
                 for i in numbers.split(","):
                     try:   info[LABEL].append(int(i)) # Try to convert to int and append to LABEL list
                     except ValueError:
-                        if debug == True: print_colored("Error when reading: " + str(info[LABEL]), "ERROR")
-                    if debug: print_colored(str(info[LABEL]), "DEBUG")
+                        if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
+                if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
         for LABEL in STRINGS:
             if line.startswith(LABEL):
-                info[LABEL] = []; numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                # if debug: print_colored(line, "DEBUG")
+                try:
+                    info[LABEL] = []
+                    numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                except IndexError:
+                    if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
+                    continue
+
                 for i in numbers.split(","):
                     try:   info[LABEL].append(i) # Try to append the string to LABEL list
                     except ValueError:
-                        if debug == True: print_colored("Error when reading: " + str(info[LABEL]), "ERROR")
-                    
-                    if debug: print_colored(str(info[LABEL]), "DEBUG")
-    print("\n")
-    print(info.keys())
-    print("\n")
+                        if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
+                if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
     return info
 
