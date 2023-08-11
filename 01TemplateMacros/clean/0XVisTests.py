@@ -8,7 +8,7 @@ channels = [int(c) for c in user_input["channels"]]
 
 OPT  = {
     "MICRO_SEC":   True,
-    "NORM":        False,                # Runs can be displayed normalised (True/False)
+    "NORM":        False,               # Runs can be displayed normalised (True/False)
     "ALIGN":       False,
     "LOGY":        False,               # Runs can be displayed in logy (True/False)
     "SHOW_AVE":    "AveWvf",             # If computed, vis will show average (AveWvf,AveWvfSPE,etc.)
