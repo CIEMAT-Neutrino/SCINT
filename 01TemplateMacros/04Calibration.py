@@ -23,6 +23,7 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     # cut_peak_finder(my_runs, ["ADC"], 2)
     #####################
 
+
     ## Persistence Plot ##
     # vis_persistence(my_runs)
     

@@ -1,4 +1,4 @@
-# CYTHON_TOOLS
+# SCINT (Sensor Calibration Interface for Neutrino Team!)
 
 [![Documentation Status](https://readthedocs.org/projects/cython-tools/badge/?version=latest)](https://cython-tools.readthedocs.io/en/latest/?badge=latest)
 
