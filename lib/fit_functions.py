@@ -64,6 +64,14 @@ def func3(t, p, t0, sigma, a1, tau1, a2, tau2, a3, tau3):
 def scfunc(t, a, b, c, d, e, f):
     return (a*np.exp(-(t-c)/b)/np.power(2*np.pi, 0.5)*np.exp(-d**2/(b**2)))*(1-erf(((c-t)/d+d/b)/np.power(2, 0.5))) + (e*np.exp(-(t-c)/f)/np.power(2*np.pi, 0.5)*np.exp(-d**2/(f**2)))*(1-erf(((c-t)/d+d/f)/np.power(2, 0.5)))
 
+def dec_gauss(f, fc, n):
+    y = np.exp(-0.5*(f/fc)**n)
+    return y
+
+def fit_dec_gauss(f, fc, n):
+    y = np.log10(dec_gauss(f, fc, n)); y[0] = 0
+    return y
+
 #===========================================================================#
 #*********************** FITTING FUNCTIONS *********************************#
 #===========================================================================#
