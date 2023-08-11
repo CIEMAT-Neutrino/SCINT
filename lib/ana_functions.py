@@ -2,10 +2,11 @@
 # This library contains functions to compute variables from the raw data. They are mostky used in the *Process.py macros.                        #
 #================================================================================================================================================#
 
-import numpy as np
 import numba
+import numpy as np
 from itertools import product
-# from scipy     import stats as st
+
+from .io_functions import print_colored
 
 #===========================================================================#
 #************************ GENERAL FUNCTIONS ********************************#
@@ -99,7 +100,7 @@ def compute_peak_variables(my_runs, key = "ADC", label = "", debug = False):
         except KeyError: 
             if debug: print_colored("*EXCEPTION: for %i, %i, %s peak variables could not be computed"%(run,ch,key), "WARNING")
 
-def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
+def old_compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, debug = False):
     '''
     Computes the pedestal variables of a collection of a run's collection in standard format
     **VARIABLES**:
@@ -129,7 +130,7 @@ def compute_pedestal_variables(my_runs, key = "ADC", label = "", buffer = 200, d
         except KeyError: 
             if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")
 
-def compute_pedestal_variables_sliding_window(my_runs, key = "ADC", label = "", ped_lim = 400,sliding=50,pretrigger=800, start = 0, debug = False):
+def compute_pedestal_variables(my_runs, key="ADC", label="", buffer=20, sliding=100, debug=False):
     '''
     Computes the pedestal variables of a collection of a run's collection in several windows.
     
@@ -147,36 +148,45 @@ def compute_pedestal_variables_sliding_window(my_runs, key = "ADC", label = "", 
     
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         try:
-            ADCs_aux=my_runs[run][ch][key]
-            ADCs_s=compute_pedestal_sliding_windows(ADCs_aux,ped_lim=ped_lim,sliding=sliding,pretrigger=pretrigger)
+            values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
+            ped_lim = values[np.argmax(counts)]-buffer
             
-            my_runs[run][ch][label+"PedSTD"]  = np.std (ADCs_s[:,start:(start+ped_lim)],axis=1)
-            my_runs[run][ch][label+"PedMean"] = np.mean(ADCs_s[:,start:(start+ped_lim)],axis=1)
-            my_runs[run][ch][label+"PedMax"]  = np.max (ADCs_s[:,start:(start+ped_lim)],axis=1)
-            my_runs[run][ch][label+"PedMin"]  = np.min (ADCs_s[:,start:(start+ped_lim)],axis=1)
-            my_runs[run][ch][label+"PedLim"]  = ped_lim
+            ADC_aux=my_runs[run][ch][key]
+            ADC, start_window=compute_pedestal_sliding_windows(ADC_aux, ped_lim=ped_lim, sliding=sliding)
+            
+            my_runs[run][ch][label+"PedSTD"]   = np.std (ADC[:,:sliding],axis=1)
+            my_runs[run][ch][label+"PedMean"]  = np.mean(ADC[:,:sliding],axis=1)
+            my_runs[run][ch][label+"PedMax"]   = np.max (ADC[:,:sliding],axis=1)
+            my_runs[run][ch][label+"PedMin"]   = np.min (ADC[:,:sliding],axis=1)
+            my_runs[run][ch][label+"PedLim"]   = ped_lim
+            my_runs[run][ch][label+"PedStart"] = start_window
+            my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
             # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADCs_s[:,start:(start+ped_lim)]**2),axis=1))
             print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
         except KeyError: 
             if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")
 
-def compute_pedestal_sliding_windows(ADC,ped_lim=400,sliding=50,pretrigger=800, start = 0):
+def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=100, debug=False):
     '''
     Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
     It checks for the best window.
     '''
     
-    pedestal_vars=dict();
-    slides=int((pretrigger-ped_lim)/sliding);
-    N_wvfs=ADC.shape[0];
-    aux=np.zeros((N_wvfs,slides))
-    for i in range(slides): aux[:,i]=np.std (ADC[:,(i*sliding+start):(i*sliding+ped_lim+start)],axis=1)
-    #put first in the wvf the appropiate window, the one with less std:
-    shifts= np.argmin (aux,axis=1)*(-1)*sliding
-    ADC_s = shift_ADCs(ADC,shifts)
-    #compute all ped variables, now with the best window available
+    slides=int(ped_lim/sliding);
+    nwvfs=ADC.shape[0];
+    aux=np.zeros((nwvfs,slides))
 
-    return ADC_s
+    for i in range(slides): aux[:,i]=np.std(ADC[:,(i*sliding):((i+1)*sliding)],axis=1)
+    try:
+        start_window = np.argmin(aux,axis=1)*sliding
+    except ValueError:
+        print_colored("ERROR: There is a problem with the pedestal computation. Check the data!", "ERROR")
+        start_window = np.zeros(nwvfs)
+    
+    ADC_s = shift_ADCs(ADC,(-1)*start_window)
+
+    if debug: print_colored("Calculating pedestal variables from sliding window of %i bins"%(sliding), "INFO")
+    return ADC_s, start_window
 
 def compute_ana_wvfs(my_runs, debug = False):
     '''
