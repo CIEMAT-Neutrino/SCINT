@@ -7,7 +7,7 @@ from .io_functions import print_colored
 #********************** AVERAGING FUCNTIONS ********************************#
 #===========================================================================# 
 
-def average_wvfs(my_runs, centering="NONE", key="", label="", threshold=0, cut_label="", OPT={}, debug=False):
+def average_wvfs(my_runs, centering="NONE", key="ADC", label="", threshold=0, cut_label="", OPT={}, debug=False):
     '''
     It calculates the average waveform of a run. Select centering:
     
@@ -184,48 +184,59 @@ def integrate_wvfs(my_runs, info = {}, key = "", cut_label="", debug = False):
                 i_idx,f_idx = find_baseline_cuts(ave[i])
                 t0 = i_idx * my_runs[run][ch]["Sampling"]
                 tf = f_idx * my_runs[run][ch]["Sampling"]
-                # [my_runs[r][ch][charge]] = pC = s * [ADC] * [V/ADC] * [A/V] * [1e12 pC/1 C]
-                if key == "GaussADC" or key == "WienerADC": 
-                    if debug: print_colored("Integrating %s from %.2E to %.2E"%(key,t0,tf),"INFO")
-                    my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) # Integrated charge from the DECONVOLUTED average waveform
-                else:
-                    if debug: print_colored("Integrating %s from %.2E to %.2E"%(key,t0,tf),"INFO")
-                    my_runs[run][ch][label+typ+cut_label] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
+                # if key == "GaussADC" or key == "WienerADC": 
+                if debug: print_colored("Integrating %s from %.2E to %.2E"%(key,t0,tf),"INFO")
+                my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) # Integrated charge from the DECONVOLUTED average waveform
+                # else:
+                #     [my_runs[r][ch][charge]] = pC = s * [ADC] * [V/ADC] * [A/V] * [1e12 pC/1 C]
+                #     if debug: print_colored("Integrating %s from %.2E to %.2E"%(key,t0,tf),"INFO")
+                #     my_runs[run][ch][label+typ+cut_label] = my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx],axis=1) * conversion_factor/ch_amp[ch]*1e12
 
                 # new_key = {typ+cut_label: [t0,tf]}
                 # my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
-        if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
-            confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file? [y/n]]")
-            if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
-            elif confirmation in ["y","Y","yes","YES"]: continue
-            else: 
-                # Create a loop to avoid wrong inputs
-                while confirmation not in ["y","Y","yes","YES","n","N","no","NO","q"]:
-                    confirmation = input("Wrong input. Please, try again. [y/n] ")
-                    if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
+        # if typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and key =="ADC": 
+        #     confirmation = input("**WARNING: SC** Do you want to continue with the integration ranges introduced in the input file? [y/n]]")
+        #     if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
+        #     elif confirmation in ["y","Y","yes","YES"]: continue
+        #     else: 
+        #         # Create a loop to avoid wrong inputs
+        #         while confirmation not in ["y","Y","yes","YES","n","N","no","NO","q"]:
+        #             confirmation = input("Wrong input. Please, try again. [y/n] ")
+        #             if confirmation in ["n","N","no","NO","q"]: break # Avoid range integration for SC (save time)
 
 
-    if (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC") or (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and confirmation not in ["n","N","no","NO","q"]):
-        for j in range(len(f_range)):
-            my_runs[run][ch][typ+str(j)+cut_label] = []
-            if i_range[j] < 0: # Integration with fixed ranges
-                t0 = np.argmax(my_runs[run][ch][ref])*my_runs[run][ch]["Sampling"] + i_range[j]
-                tf = np.argmax(my_runs[run][ch][ref])*my_runs[run][ch]["Sampling"] + f_range[j]
-            else: # Integration with custom ranges
-                t0 = i_range[j]; tf = f_range[j]
-            i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"])); f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
-            my_runs[run][ch][typ+str(j)+cut_label]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
-            if key == "GaussADC" or key == "WienerADC":
-                my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+        # if (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]!="SC") or (typ.startswith("ChargeRange") and my_runs[run][ch]["Label"]=="SC" and confirmation not in ["n","N","no","NO","q"]):
+        #     for j in range(len(f_range)):
+        #         my_runs[run][ch][typ+str(j)+cut_label] = []
+        #         if i_range[j] < 0: # Integration with fixed ranges
+        #             t0 = np.argmax(my_runs[run][ch][ref])*my_runs[run][ch]["Sampling"] + i_range[j]
+        #             tf = np.argmax(my_runs[run][ch][ref])*my_runs[run][ch]["Sampling"] + f_range[j]
+        #         else: # Integration with custom ranges
+        #             t0 = i_range[j]; tf = f_range[j]
+                
+        #         i_idx = int(np.round(t0/my_runs[run][ch]["Sampling"]))
+        #         f_idx = int(np.round(tf/my_runs[run][ch]["Sampling"]))
+                
+        #         my_runs[run][ch][typ+str(j)+cut_label]= my_runs[run][ch]["Sampling"]*np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) * conversion_factor/ch_amp[ch]*1e12
+        #         if key == "GaussADC" or key == "WienerADC":
+        #             my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
 
-            # new_key = {typ+str(j)+cut_label: [t0,tf]}
-            # my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
+        #         # new_key = {typ+str(j)+cut_label: [t0,tf]}
+        #         # my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
-            print_colored("======================================================================", "SUCCESS")
-            print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")
-            print_colored("========== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs =========="%(t0*1E6,tf*1E6), "SUCCESS")
-            print_colored("======================================================================", "SUCCESS")
+        #         print_colored("======================================================================", "SUCCESS")
+        #         print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")
+        #         print_colored("========== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs =========="%(t0*1E6,tf*1E6), "SUCCESS")
+        #         print_colored("======================================================================", "SUCCESS")
+        
+        if typ == "ChargeRangeFromPed":
+            for j in range(len(f_range)):
+                # Convert f_range to indices
+                i_idx = my_runs[run][ch]["PedLim"]
+                f_idx = i_idx + int(np.round(f_range[j]/my_runs[run][ch]["Sampling"]))
+                my_runs[run][ch][typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+
 
     if debug: print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")
     return my_runs

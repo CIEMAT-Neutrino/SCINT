@@ -5,11 +5,13 @@
 import numpy             as np
 import matplotlib.pyplot as plt
 import scipy.interpolate
+
 from scipy.optimize import curve_fit
 from itertools      import product
 from curve          import Curve
 
-def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
+
+def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Area", debug=False):
     ''' 
     This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
 
@@ -21,19 +23,24 @@ def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Amplitude"):
     '''
 
     #Imports from other libraries
+    from .io_functions  import print_colored
     from .wvf_functions import find_amp_decrease
 
     for ii in range(len(my_runs["NRun"])):
         for jj in range(len(my_runs["NChannel"])):
             det_response =    dec_runs[dec_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvf"][0]
             single_response = SPE_runs[SPE_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvfSPE"][0]
+            
             if scaling_type == "Amplitude": SER = np.max(single_response)*det_response/np.max(det_response)
-            if scaling_type == "Charge":    SER = np.sum(single_response)*det_response/np.sum(det_response)
+            if scaling_type == "Area":      SER = np.sum(single_response)*det_response/np.sum(det_response)
+            
             i_idx,f_idx = find_amp_decrease(SER, 1e-4)
             SER = np.roll(SER,-i_idx)
             my_runs[my_runs["NRun"][ii]][my_runs["NChannel"][jj]]["SER"] = [SER]
+    
+    if debug: print_colored("\n---SER generated!", "SUCCESS")
 
-def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
+def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, debug=False):
     ''' 
     This function deconvolves any given number of arrays according to a provided SPE template.
     By default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
@@ -48,6 +55,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
 
     # Imports from other libraries
     from .io_functions  import print_colored, check_key
+    from .fit_functions import dec_gauss, fit_dec_gauss
     from .wvf_functions import find_baseline_cuts, smooth
     from .ana_functions import compute_power_spec
 
@@ -136,7 +144,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
                         if check_key(OPT, "FREE_EXP") == False or OPT["FREE_EXP"] == False:
                             p0 = 200
                             lim = [10,2000]
-                            popt, cov = curve_fit(lambda f, fc: fit_gauss(f,fc,2),np.arange(len(fft_signal_X))[:env_wiener_min],np.log10(-1*(env_wiener_Y[:env_wiener_min]-2)),p0=p0,bounds=lim)
+                            popt, cov = curve_fit(lambda f, fc: fit_dec_gauss(f,fc,2),np.arange(len(fft_signal_X))[:env_wiener_min],np.log10(-1*(env_wiener_Y[:env_wiener_min]-2)),p0=p0,bounds=lim)
                             perr = np.sqrt(np.diag(cov))
                             params = [popt,2]
                             print("\n-------------- GAUSS FILTER FIT VALUES --------------")
@@ -148,7 +156,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
                         elif check_key(OPT, "FREE_EXP") ==  True and OPT["FREE_EXP"] ==  True:
                             p0 = [50, 2]
                             lim = [[10, 1], [500, 8]]
-                            params, cov = curve_fit(fit_gauss,  np.arange(len(fft_signal_X))[:env_wiener_min],  np.log10(-1*(env_wiener_Y[:env_wiener_min]-2)),p0=p0,bounds=lim)
+                            params, cov = curve_fit(fit_dec_gauss,  np.arange(len(fft_signal_X))[:env_wiener_min],  np.log10(-1*(env_wiener_Y[:env_wiener_min]-2)),p0=p0,bounds=lim)
                     
                     except:
                         params = [50, 2]
@@ -156,7 +164,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}):
                         print("Filter strengh %f and exp %f"%(params[0], params[1]))
                 
                 # Generate gauss filter and filtered signal
-                fft_gauss = gauss(np.arange(len(fft_signal)), *params)
+                fft_gauss = dec_gauss(np.arange(len(fft_signal)), *params)
                 fft_gauss[0] = 0
                 # if check_key(OPT,  "PRO_RODRIGO") ==  True and OPT["PRO_RODRIGO"] ==  True:
             
@@ -407,11 +415,3 @@ def logconv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
     conv_max = np.argmax(conv)
 
     return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
-
-def gauss(f, fc, n):
-    y = np.exp(-0.5*(f/fc)**n)
-    return y
-
-def fit_gauss(f, fc, n):
-    y = np.log10(gauss(f, fc, n)); y[0] = 0
-    return y

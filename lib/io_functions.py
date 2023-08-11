@@ -229,13 +229,14 @@ def binary2npy_express(in_file, header_lines=6, debug=False):
 
     return ADC, TIMESTAMP
 
-def binary2npy(runs, channels, info={}, debug=True, compressed=True, header_lines=6, force=False):
+def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_lines=6, force=False):
     '''
     Dumper from binary format to npy tuples. 
     Input are binary input file path and npy outputfile as strings. 
     
     Depends numpy. 
     '''
+    info = read_input_file(user_input["input_file"],debug=user_input["debug"])
 
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
@@ -416,7 +417,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     elif preset == "ANA": # Remove Raw, Dict and Cuts branches
         branch_list = dict_option[option]; aux = []
         for key in branch_list:
-            if not "Raw" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
+            if not "Raw" in key and not "Dict" in key and not "Cuts" in key and not "Gauss" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "RAW":  # Save aux + Raw branches
@@ -452,10 +453,10 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Charge" in key and key not in aux: aux.append(key)
         branch_list = aux
 
-    if debug: print_colored("\nPreset branch_list:" + str(branch_list), "DEBUG")
+    # if debug: print_colored("\nPreset branch_list:" + str(branch_list), "DEBUG")
     return branch_list
 
-def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False, compressed=True):
+def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):
     '''
     Structure: run_dict[runs][channels][BRANCH] 
     Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
@@ -501,7 +502,7 @@ def load_npy(runs, channels, preset="", branch_list = [], info={}, debug = False
             del branch_list # Delete the branch list to avoid loading the same branches again
     return my_runs
 
-def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, force=False, debug = False, compressed=True):
+def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, debug = False, compressed=True):
     '''
     Saves the processed variables an npx file.
     
@@ -516,6 +517,7 @@ def save_proccesed_variables(my_runs, preset = "", branch_list = [], info={}, fo
     '''
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
+    
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     # opath = info["OPATH"][0]+info["MONTH"][0]+"/npy/"
 
