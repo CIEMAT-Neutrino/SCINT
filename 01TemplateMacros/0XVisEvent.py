@@ -1,17 +1,6 @@
 import sys; sys.path.insert(0, '../'); from lib import *
-user_input = initialize_macro("0XVisEvent")
-input_file = user_input["input_file"]
-debug = user_input["debug"]
-info = read_input_file(input_file)
-
-for key_label in ["runs","channels"]:
-    if check_key(user_input, key_label) == False:
-        user_input[key_label]= input("Please select %s (separated with commas): "%key_label).split(",")
-    else:
-        if debug: print("Using %s from user input"%key_label)
-
-runs     = [int(r) for r in user_input["runs"]]
-channels = [int(c) for c in user_input["channels"]]
+default_dict = {}
+user_input = initialize_macro("00Raw2Np",["input_file","key","runs","channels","debug"],default_dict=default_dict, debug=True)
 
 OPT  = {
     "MICRO_SEC":   True,
@@ -22,13 +11,8 @@ OPT  = {
     "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False)
     "LEGEND":      False                 # Shows plot legend (True/False)
-    }
-###################################
+}
 
-##### LOAD RUNS #####
-my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True) # preset could be RAW or ANA
-#####################
-
-##### EVENT VISUALIZER #####
-vis_npy(my_runs, ["GaussADC"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
-############################
+info = read_input_file(user_input["input_file"], debug=user_input["debug"])
+my_runs = load_npy(user_input["runs"],user_input["channels"],preset="RAW",info=info,compressed=True) # preset could be RAW or ANA
+vis_npy(my_runs, user_input["key"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
