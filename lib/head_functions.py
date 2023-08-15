@@ -163,26 +163,34 @@ def apply_cuts(user_input, debug=False):
     new_user_input = user_input.copy()
     if check_key(user_input, "cuts") == False:
         cuts_choices = ["cut_min_max","cut_ped_std","cut_lin_rel","cut_peak_finder","cut_min_max_sim"]
-        channels2cut = ["cut_min_max","cut_ped_std","cut_lin_rel","cut_peak_finder","cut_min_max_sim"]
         q = [ inquirer.Checkbox("cuts", message="Please select input file", choices=cuts_choices) ]
         my_cuts = [inquirer.prompt(q)["cuts"]][0]
-        cut_dict = dict.fromkeys(cuts_choices+["ch2cut","apply"])
-        chann2cut = [ inquirer.Text("ch2cut", message="Please select the CHANNELS to be cut", default="0,1") ]
-        apply_all = [ inquirer.Text("apply",  message="Do you what the cuts to be applied to all the LOADED channels?", default="y") ]
-        cut_dict["ch2cut"] = list(map(int, inquirer.prompt(chann2cut)["ch2cut"].split(',')))
-        cut_dict["apply"] = inquirer.prompt(apply_all)["apply"].lower() in ['true', '1', 't', 'y', 'yes']
+        cut_dict = dict.fromkeys(cuts_choices)
         for cut in cuts_choices:
             if cut in my_cuts:
                 if cut == "cut_min_max":
                     key = [ inquirer.Text("key", message="Please select key for applying **%s**"%cut, default="PedSTD") ]
                     lim = [ inquirer.Text("lim", message="Please select limits for applying **%s**"%cut, default="-1,7.5") ]
-                    cut_dict[cut] = [True, inquirer.prompt(key)["key"], list(map(float, inquirer.prompt(lim)["lim"].split(',')))]
+                    chann2cut = [ inquirer.Text("ch2cut", message="Please select the CHANNELS to be cut", default="0,1") ]
+                    apply_all = [ inquirer.Text("apply",  message="Do you what the cuts to be applied to all the LOADED channels?", default="y") ]
+                    cut_dict[cut] = [True, inquirer.prompt(key)["key"], list(map(float, inquirer.prompt(lim)["lim"].split(','))), list(map(int, inquirer.prompt(chann2cut)["ch2cut"].split(','))), inquirer.prompt(apply_all)["apply"].lower() in ['true', '1', 't', 'y', 'yes']]
                 if cut == "cut_ped_std":
                     n_std = [ inquirer.Text("n_std", message="Please select number of std for applying **%s**"%cut, default="2") ]
-                    cut_dict[cut] = [True, int(inquirer.prompt(n_std)["n_std"])]
+                    chann2cut = [ inquirer.Text("ch2cut", message="Please select the CHANNELS to be cut", default="0,1") ]
+                    apply_all = [ inquirer.Text("apply",  message="Do you what the cuts to be applied to all the LOADED channels?", default="y") ]
+                    cut_dict[cut] = [True, int(inquirer.prompt(n_std)["n_std"]),list(map(int, inquirer.prompt(chann2cut)["ch2cut"].split(','))), inquirer.prompt(apply_all)["apply"].lower() in ['true', '1', 't', 'y', 'yes']]
                 if cut == "cut_lin_rel":
                     key = [ inquirer.Text("key", message="Please select 2 keys for applying **%s**"%cut, default="PeakAmp,ChargeAveRange") ]
-                    cut_dict[cut] = [True, inquirer.prompt(key)["key"].split(',')]
+                    compare = [ inquirer.Text("compare", message="NONE, RUNS, CHANNELS to decide the histogram to use", default="NONE") ]
+                    cut_dict[cut] = [True, inquirer.prompt(key)["key"].split(','), inquirer.prompt(compare)["compare"]]
+                if cut == "cut_peak_finder":
+                    n_peaks = [ inquirer.Text("n_peaks", message="Please select number of peaks for applying **%s**"%cut, default="1") ]
+                    cut_dict[cut] = [True, inquirer.prompt(n_peaks)["n_peaks"]]
+                if cut == "cut_min_max_sim":
+                    key = [ inquirer.Text("key", message="Please select key for applying **%s**"%cut, default="PeakAmp") ]
+                    lim = [ inquirer.Text("lim", message="Please select limits for applying **%s**"%cut, default="20,50") ]
+                    cut_dict[cut] = [True, inquirer.prompt(key)["key"].split(','), inquirer.prompt(lim)["lim"]]
+
             else: cut_dict[cut] = [False]
 
         new_user_input["cuts"] = cut_dict
