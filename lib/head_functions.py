@@ -1,5 +1,5 @@
-import sys
-from lib.io_functions import check_key, print_colored, read_input_file
+import sys, inquirer, os
+import numpy as np
 
 def get_flag_dict():
     '''
@@ -26,6 +26,8 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
 
         - **macro** (*str*) - Name of the macro to be executed.
     '''
+    from .io_functions import print_colored
+
     flag_dict = get_flag_dict()
     user_input = dict()
     
@@ -47,10 +49,11 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
                         user_input[flag[1].split("--")[1]] = sys.argv[sys.argv.index(arg)+1].split(",")
                         print_colored("Using %s from command line"%flag_dict[flag],"INFO")
                     except IndexError:
-                        print("Please provide agument for flag %s"%flag_dict[flag])
+                        print("Please provide argument for flag %s"%flag_dict[flag])
                         exit()
 
     user_input = select_input_file(user_input, debug=debug)
+    if "cuts" in input_list: user_input = apply_cuts(user_input, debug=debug)
     user_input = update_user_input(user_input,input_list,debug=debug)
     
     user_input["input_file"] = user_input["input_file"][0]
@@ -69,6 +72,8 @@ def update_user_input(user_input,new_input_list,debug=False):
         - **user_input** (*dict*) - Dictionary with the user input.
         - **new_input_list** (*list*) - List with the keys of the user input that need to be updated.
     '''
+    from .io_functions import check_key
+
     new_user_input = user_input.copy()
     for key_label in new_input_list:
         if check_key(user_input, key_label) == False:
@@ -86,8 +91,7 @@ def select_input_file(user_input, debug=False):
 
         - **user_input** (*dict*) - Dictionary with the user input.
     '''
-    import inquirer
-    import os
+    from .io_functions import check_key, print_colored
     
     new_user_input = user_input.copy()
     if check_key(user_input, "input_file") == False:
@@ -106,8 +110,7 @@ def use_default_input(user_input, default_dict, debug=False):
         - **user_input** (*dict*) - Dictionary with the user input.
         - **info** (*dict*) - Dictionary with the information from the input file.
     '''
-
-    import numpy as np
+    from .io_functions import check_key, print_colored, read_input_file
     
     info = read_input_file(user_input["input_file"])
 
@@ -146,3 +149,43 @@ def print_header():
     print (file_contents)
     f.close
     print("----- Starting macro -----")
+
+def apply_cuts(user_input, debug=False):
+    '''
+    This function asks the user to select the cuts to be apply to your events.
+
+    **VARIABLES:**
+
+        - **user_input** (*dict*) - Dictionary with the user input.
+    '''
+    from .io_functions import check_key, print_colored
+    
+    new_user_input = user_input.copy()
+    if check_key(user_input, "cuts") == False:
+        cuts_choices = ["cut_min_max","cut_ped_std","cut_lin_rel","cut_peak_finder","cut_min_max_sim"]
+        channels2cut = ["cut_min_max","cut_ped_std","cut_lin_rel","cut_peak_finder","cut_min_max_sim"]
+        q = [ inquirer.Checkbox("cuts", message="Please select input file", choices=cuts_choices) ]
+        my_cuts = [inquirer.prompt(q)["cuts"]][0]
+        cut_dict = dict.fromkeys(cuts_choices+["ch2cut","apply"])
+        chann2cut = [ inquirer.Text("ch2cut", message="Please select the CHANNELS to be cut", default="0,1") ]
+        apply_all = [ inquirer.Text("apply",  message="Do you what the cuts to be applied to all the LOADED channels?", default="y") ]
+        cut_dict["ch2cut"] = list(map(int, inquirer.prompt(chann2cut)["ch2cut"].split(',')))
+        cut_dict["apply"] = inquirer.prompt(apply_all)["apply"].lower() in ['true', '1', 't', 'y', 'yes']
+        for cut in cuts_choices:
+            if cut in my_cuts:
+                if cut == "cut_min_max":
+                    key = [ inquirer.Text("key", message="Please select key for applying **%s**"%cut, default="PedSTD") ]
+                    lim = [ inquirer.Text("lim", message="Please select limits for applying **%s**"%cut, default="-1,7.5") ]
+                    cut_dict[cut] = [True, inquirer.prompt(key)["key"], list(map(float, inquirer.prompt(lim)["lim"].split(',')))]
+                if cut == "cut_ped_std":
+                    n_std = [ inquirer.Text("n_std", message="Please select number of std for applying **%s**"%cut, default="2") ]
+                    cut_dict[cut] = [True, int(inquirer.prompt(n_std)["n_std"])]
+                if cut == "cut_lin_rel":
+                    key = [ inquirer.Text("key", message="Please select 2 keys for applying **%s**"%cut, default="PeakAmp,ChargeAveRange") ]
+                    cut_dict[cut] = [True, inquirer.prompt(key)["key"].split(',')]
+            else: cut_dict[cut] = [False]
+
+        new_user_input["cuts"] = cut_dict
+        print(new_user_input)
+    if debug: print_colored("Using cuts options %s"%new_user_input["cuts"],"INFO")
+    return new_user_input

@@ -77,7 +77,7 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
             print("Nº total final events in ALL Chs:", initial_evts - len(idx_list),"\n")
     if debug == True: print("... Cuts finished ...")
 
-def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False):
+def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False, debug=False):
     '''
     This is a fuction for a cut in the PedSTD. It uses the median as reference and eliminates events with
     PedSTD > median + n_std*std, where std is the Standard Deviation of the PedSTD distribution (previously filtered
@@ -115,7 +115,7 @@ def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False):
         # moda = stat.mode(data)
         mediana = np.median(data)
         std = np.std(data)
-        print("--- CUTTING evetns with ", end = "");print_colored("PedSTD",color="cyan",end = "");print(" <",str(n_std)+"* std (of the distribution) for Ch", ch, "Run",run," ---")
+        print("--- CUTTING events with ", end = "");print_colored("PedSTD",color="cyan",end = "");print(" <",str(n_std)+"* std (of the distribution) for Ch", ch, "Run",run," ---")
         print("Nº events before cut: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]))
         ch_idx_list = 0
         rep_idx = 0
