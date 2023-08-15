@@ -9,15 +9,11 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     
     #### CUT SECTION ####
     label, my_runs = cut_selector(my_runs, user_input)
-    # cut_min_max(my_runs, ["PedSTD"], {"PedSTD": [-1,7.5]]})
-    # cut_lin_rel(my_runs, ["PeakAmp","ChargeAveRange"])
-    # cut_peak_finder(my_runs, ["ADC"], 2)
-    #####################
 
     #### Align indivual waveforms + Average ####
     average_wvfs(my_runs, key=user_input["key"][0], label=label, centering="PEAK", debug=user_input["debug"])
 
-    ## Charge Integration ##
+    #### Charge Integration ####
     integrate_wvfs(my_runs, info=info, debug=user_input["debug"])
 
     delete_keys(my_runs,user_input["key"])
