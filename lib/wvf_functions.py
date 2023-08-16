@@ -39,7 +39,7 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", label="", threshold=0, cu
         # centering none
         if centering == "NONE":
             my_runs[run][ch][label+"AveWvf"+cut_label] = [mean_ana_ADC] # It saves the average waveform as "AveWvf_*"
-        
+            if debug: print_colored("Averaging wvf: "+label+"AveWvf"+cut_label, "INFO")
         # centering peak
         if centering == "PEAK":
             bin_max_peak = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
@@ -47,7 +47,7 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", label="", threshold=0, cu
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii]) # It centers the waveform using the peak
             my_runs[run][ch][label+"AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]     # It saves the average waveform as "AveWvfPeak_*"
-
+            if debug: print_colored("Averaging wvf: "+label+"AveWvfPeak"+cut_label, "INFO")
         # centering thld
         if centering == "THRESHOLD":
             if threshold == 0: threshold = np.max(mean_ana_ADC)/2
@@ -59,10 +59,9 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", label="", threshold=0, cu
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])    # It centers the waveform using the threshold
             my_runs[run][ch][label+"AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]  # It saves the average waveform as "AveWvfThreshold_*"
+            if debug: print_colored("Averaging wvf: "+label+"AveWvfThreshold"+cut_label, "INFO")
 
     if debug: print_colored("Average waveform calculated", "SUCCESS")
-        # except KeyError:
-        #     print("Empty dictionary. No average to compute.")
 
 def expo_average(my_run, alpha):
     ''' 

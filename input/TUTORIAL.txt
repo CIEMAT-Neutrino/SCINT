@@ -41,7 +41,7 @@ SAVE_PRESET: NON,ALL,ANA,INT,CAL,NON,DEC
 ####  CHARGE INFO   ####
 ########################
 TYPE: ChargeAveRange,ChargeRange
-REF: AveWvf
+REF: AveWvfPeak
 I_RANGE: -1
 F_RANGE: 8
 
