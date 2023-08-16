@@ -10,6 +10,8 @@ def get_flag_dict():
         - **flag_dict** (*dict*) - Dictionary with the available flags for the macros.
     '''
     flag_dict = {("-i","--input_file"):"input_file",
+        ("-l","--load_preset"):"load_preset \t(RAW, ANA, etc.)",
+        ("-s","--save_preset"): "save_preset \t(RAW, ANA, etc.)",
         ("-k","--key"):"key \t(ADC, RawADC, etc.)",
         ("-v","--variables"): "variables \t(ChargeAveRange, ChargeRange0, etc.)",
         ("-r","--runs"):"runs \t(optional)",
@@ -79,7 +81,8 @@ def update_user_input(user_input,new_input_list,debug=False):
         if check_key(user_input, key_label) == False:
             new_user_input[key_label]= input("Please select %s (separated with commas): "%key_label).split(",")
         else:
-            if debug: print("Using %s from user input"%key_label)
+            # if debug: print("Using %s from user input"%key_label)
+            pass
     
     return new_user_input
 
