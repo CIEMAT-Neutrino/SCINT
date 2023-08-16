@@ -3,7 +3,7 @@ default_dict = {"runs":["CALIB_RUNS"],"channels":["CHAN_TOTAL"]}
 user_input = initialize_macro("04Calibration",["input_file","debug"],default_dict=default_dict, debug=True)
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
     
-int_key = ["ChargeRangeFromPed0"]
+int_key = ["ChargeAveRange"]
 OPT = {
     "LOGY":       True,
     "SHOW":       True,
