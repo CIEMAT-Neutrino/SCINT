@@ -80,7 +80,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
             popt = [-99, -99, -99]; pcov= [-99, -99, -99]; perr = [-99, -99, -99]
         
         else: 
-            label = my_runs[run][ch]["Label"]
+            det_label = my_runs[run][ch]["Label"]
 
             if check_key(my_runs[run][ch], "MyCuts") == False:
                 if debug: print_colored("Cuts not generated. Generating them...", "WARNING")
@@ -101,7 +101,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
             ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step")
             fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
         
-            if label != "PMT": #Fit for SiPMs/SC
+            if det_label != "PMT": #Fit for SiPMs/SC
                 ### --- Nx GAUSSIAN FIT --- ### 
                 # thresh = int(len(my_runs[run][ch][key])/2000)
                 params = {"THRESHOLD": 10, "WIDTH": 15, "PROMINENCE": 0.5, "ACCURACY": 500, "FIT": "gaussian"}

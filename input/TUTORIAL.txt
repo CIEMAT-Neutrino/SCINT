@@ -34,7 +34,7 @@ CHAN_AMPLI: 250,1030
 ####   BRANCH INFO  ####
 ########################
 #PRESETS USED: 0,  1,  2,  3,  4,  5,  6
-LOAD_PRESET: NON,RAW,ALL,ANA,CAL,EVA,ANA
+LOAD_PRESET: NON,RAW,NON,RAW,RAW,EVA,ANA
 SAVE_PRESET: NON,ALL,ANA,INT,CAL,NON,DEC
 
 ########################
@@ -43,9 +43,9 @@ SAVE_PRESET: NON,ALL,ANA,INT,CAL,NON,DEC
 TYPE: ChargeAveRange,ChargeRange
 REF: AveWvfPeak
 I_RANGE: -1
-F_RANGE: 8
+F_RANGE: 1,2,3
 
 ########################
 ####  ANALYSIS INFO ####
 ########################
-ANA_LABEL: 
+ANA_KEY: RawADC

@@ -65,7 +65,7 @@ def read_input_file(input, path = "../input/", debug = False):
     info = dict()
     NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_LABEL"]
+    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY"]
     
     # Strips the newline character
     for line in lines:

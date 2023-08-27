@@ -12,7 +12,7 @@ def get_flag_dict():
     flag_dict = {("-i","--input_file"):"input_file",
         ("-l","--load_preset"):"load_preset \t(RAW, ANA, etc.)",
         ("-s","--save_preset"): "save_preset \t(RAW, ANA, etc.)",
-        ("-k","--key"):"key \t(ADC, RawADC, etc.)",
+        ("-k","--key"):"key \t(AnaADC, RawADC, etc.)",
         ("-v","--variables"): "variables \t(ChargeAveRange, ChargeRange0, etc.)",
         ("-r","--runs"):"runs \t(optional)",
         ("-c","--channels"):"channels \t(optional)",
@@ -118,25 +118,26 @@ def use_default_input(user_input, default_dict, debug=False):
     info = read_input_file(user_input["input_file"])
 
     new_user_input = user_input.copy()
-    if check_key(new_user_input, "runs") == False:
-        runs = []
-        for key in default_dict["runs"]:
-            if check_key(info, key):
-                for run in info[key]:
-                    if run not in runs:
-                        runs.append(run)
-        new_user_input["runs"] = runs
-        if new_user_input["debug"]:print_colored("No runs provided. Using all runs from input file. %s"%runs,"WARNING")
+    for default_key in default_dict:
+        if check_key(new_user_input, default_key) == False:
+            runs = []
+            for key in default_dict[default_key]:
+                if check_key(info, key):
+                    for run in info[key]:
+                        if run not in runs:
+                            runs.append(run)
+            new_user_input[default_key] = runs
+            if new_user_input["debug"]:print_colored("No runs provided. Using all %s from input file. %s"%(default_key,runs),"WARNING")
 
-    if check_key(user_input, "channels") == False:
-        channels = []
-        for key in default_dict["channels"]:
-            if check_key(info, key):
-                for channel in info[key]:
-                    if channel not in channels:
-                        channels.append(channel)
-        new_user_input["channels"] = channels
-        if new_user_input["debug"]: print_colored("No channels provided. Using all channels from input file. %s"%channels,"WARNING")
+    # if check_key(user_input, "channels") == False:
+    #     channels = []
+    #     for key in default_dict["channels"]:
+    #         if check_key(info, key):
+    #             for channel in info[key]:
+    #                 if channel not in channels:
+    #                     channels.append(channel)
+    #     new_user_input["channels"] = channels
+    #     if new_user_input["debug"]: print_colored("No channels provided. Using all channels from input file. %s"%channels,"WARNING")
     return new_user_input
 
 def print_macro_info(macro, debug=False):

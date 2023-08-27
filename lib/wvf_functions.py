@@ -1,13 +1,14 @@
 import numpy as np
 from itertools import product
 
-from .io_functions import print_colored
+from .io_functions import print_colored, check_key
+from .ana_functions import generate_cut_array, get_units, get_wvf_label
 
 #===========================================================================#
 #********************** AVERAGING FUCNTIONS ********************************#
 #===========================================================================# 
 
-def average_wvfs(my_runs, centering="NONE", key="ADC", label="", threshold=0, cut_label="", OPT={}, debug=False):
+def average_wvfs(my_runs, centering="NONE", key="", label="", threshold=0, cut_label="", OPT={}, debug=False):
     '''
     It calculates the average waveform of a run. Select centering:
     
@@ -15,13 +16,9 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", label="", threshold=0, cu
     - "PEAK"      -> AveWvfPeak: each event is centered according to wvf argmax. 
     - "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
     '''
-
-    # Import from other libraries
-    from .io_functions import check_key
-    from .ana_functions import generate_cut_array, get_units
-
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        # try:
+        key, label = get_wvf_label(my_runs, key, label, debug = False)
+        
         if check_key(my_runs[run][ch], "MyCuts") == True:
             print("Calculating average wvf with cuts")
         else:
@@ -30,31 +27,33 @@ def average_wvfs(my_runs, centering="NONE", key="ADC", label="", threshold=0, cu
             get_units(my_runs)
 
         buffer = 100  
-        mean_ana_ADC = np.mean(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=0)
         aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
-        # bin_ref_peak = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), keepdims=True) # Deprecated function st.mode()
-        values, counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True],axis=1), return_counts=True) #using the mode peak as reference
+        if label == "Raw":
+            # from compute_ana_wvfs: my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
+            aux_ADC = my_runs[run][ch][label+"PChannel"]*((aux_ADC.T-my_runs[run][ch][label+"PedMean"][my_runs[run][ch]["MyCuts"] == True]).T)
+        mean_ana_ADC = np.mean(aux_ADC,axis=0)
+        # bin_ref_peak = st.mode(np.argmax(aux_ADC,axis=1), keepdims=True) # Deprecated function st.mode()
+        values, counts = np.unique(np.argmax(aux_ADC,axis=1), return_counts=True) #using the mode peak as reference
         bin_ref_peak = values[np.argmax(counts)]
         
-        # centering none
         if centering == "NONE":
             my_runs[run][ch][label+"AveWvf"+cut_label] = [mean_ana_ADC] # It saves the average waveform as "AveWvf_*"
             if debug: print_colored("Averaging wvf: "+label+"AveWvf"+cut_label, "INFO")
-        # centering peak
+        
         if centering == "PEAK":
-            bin_max_peak = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
+            bin_max_peak = np.argmax(aux_ADC[:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
             bin_max_peak = bin_max_peak + bin_ref_peak - buffer
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii]) # It centers the waveform using the peak
             my_runs[run][ch][label+"AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]     # It saves the average waveform as "AveWvfPeak_*"
             if debug: print_colored("Averaging wvf: "+label+"AveWvfPeak"+cut_label, "INFO")
-        # centering thld
+        
         if centering == "THRESHOLD":
             if threshold == 0: threshold = np.max(mean_ana_ADC)/2
-            # bin_ref_thld = st.mode(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), keepdims=True) # Deprecated st.mode()
-            values,counts = np.unique(np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]>threshold,axis=1), return_counts=True) #using the mode peak as reference
+            # bin_ref_thld = st.mode(np.argmax(aux_ADC>threshold,axis=1), keepdims=True) # Deprecated st.mode()
+            values,counts = np.unique(np.argmax(aux_ADC>threshold,axis=1), return_counts=True) #using the mode peak as reference
             bin_ref_thld = values[np.argmax(counts)] # It is an int
-            bin_max_thld = np.argmax(my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True][:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
+            bin_max_thld = np.argmax(aux_ADC[:,bin_ref_peak-buffer:bin_ref_peak+buffer]>threshold,axis=1)
             bin_max_thld = bin_max_thld + bin_ref_thld - buffer
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])    # It centers the waveform using the threshold
@@ -68,7 +67,6 @@ def expo_average(my_run, alpha):
     This function calculates the exponential average with a given alpha.
     **returns**: average[i+1] = (1-alpha) * average[i] + alpha * my_run[i+1]
     '''
-
     v_averaged = np.zeros(len(my_run)); v_averaged[0] = my_run[0]
     for i in range (len(my_run) - 1):   v_averaged[i+1] = (1-alpha) * v_averaged[i] + alpha * my_run[i+1] # e.g. alpha = 0.1  ->  average[1] = 0.9 * average[0] + 0.1 * my_run[1]
     
@@ -79,8 +77,7 @@ def unweighted_average(my_run):
     This function calculates the unweighted average.
     **returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3
     '''
-
-    v_averaged     = np.zeros(len(my_run))
+    v_averaged    = np.zeros(len(my_run))
     v_averaged[0] = my_run[0]; v_averaged[-1] = my_run[-1]
 
     for i in range (len(my_run) - 2): v_averaged[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 #e.g. average[1] = (my_run[0] + my_run[1] + my_run[2]) / 3
@@ -91,7 +88,6 @@ def smooth(my_run, alpha):
     This function calculates the exponential average and then the unweighted average.
     **returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 with my_run = (1-alpha) * average[i] + alpha * my_run[i+1]
     '''
-
     my_run = expo_average(my_run, alpha)
     my_run = unweighted_average(my_run)
     return my_run
@@ -136,7 +132,7 @@ def find_amp_decrease(raw,thrld):
     return i_idx,f_idx
 
 
-def integrate_wvfs(my_runs, info = {}, key = "", cut_label="", debug = False):
+def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug = False):
     '''
     This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
     **VARIABLES**:
@@ -149,10 +145,6 @@ def integrate_wvfs(my_runs, info = {}, key = "", cut_label="", debug = False):
     If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
     I_RANGE must have same length than F_RANGE!
     '''
-
-    # Import from other libraries
-    from .io_functions import check_key, print_colored
-    from .ana_functions import generate_cut_array, get_units
 
     conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
     channels = []; channels = np.append(channels,info["CHAN_TOTAL"])
@@ -167,17 +159,17 @@ def integrate_wvfs(my_runs, info = {}, key = "", cut_label="", debug = False):
             generate_cut_array(my_runs)
             cut_label = ""
 
+        print("\n--- Integrating RUN%i CH%i TYPE%s, REF%s ---"%(run,ch,typ,label+ref))
+        key, label = get_wvf_label(my_runs, key, label, debug = debug)
+        ave = my_runs[run][ch][label+ref] # Load the reference average waveform
+        
         if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs) # If there are no units, it calculates them
-        if check_key(my_runs[run][ch], "ChargeRangeDict") == False: my_runs[run][ch]["ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
+        if check_key(my_runs[run][ch], label+"ChargeRangeDict") == False: my_runs[run][ch][label+"ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             
-        print("\n--- Integrating RUN%i CH%i TYPE%s, REF%s ---"%(run,ch,typ,ref))
-        if key == "":
-            for branch in my_runs[run][ch].keys():
-                if "ADC" in str(branch): key = str(branch); label = key.replace("ADC","") # If key is not specified, it takes the first ADC branch
-        ave = my_runs[run][ch][ref] # Load the reference average waveform
-        
-        if debug == True: print("Integrating %s wrt ref %s"%(key,ref))
-        
+        if debug == True: print("Integrating %s wrt ref %s"%(key,label+ref))
+        aux_ADC = my_runs[run][ch][key]
+        if label == "Raw": aux_ADC = my_runs[run][ch][label+"PChannel"]*((aux_ADC.T-my_runs[run][ch][label+"PedMean"]).T)
+
         for i in range(len(ave)):
             if typ == "ChargeAveRange": # Integrated charge from the average waveform
                 i_idx,f_idx = find_baseline_cuts(ave[i])
@@ -185,7 +177,7 @@ def integrate_wvfs(my_runs, info = {}, key = "", cut_label="", debug = False):
                 tf = f_idx * my_runs[run][ch]["Sampling"]
                 # if key == "GaussADC" or key == "WienerADC": 
                 if debug: print_colored("Integrating %s from %.2E to %.2E"%(key,t0,tf),"INFO")
-                my_runs[run][ch][label+typ+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1) # Integrated charge from the DECONVOLUTED average waveform
+                my_runs[run][ch][label+typ+cut_label] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1) # Integrated charge from the DECONVOLUTED average waveform
                 # else:
                 #     [my_runs[r][ch][charge]] = pC = s * [ADC] * [V/ADC] * [A/V] * [1e12 pC/1 C]
                 #     if debug: print_colored("Integrating %s from %.2E to %.2E"%(key,t0,tf),"INFO")
@@ -232,10 +224,9 @@ def integrate_wvfs(my_runs, info = {}, key = "", cut_label="", debug = False):
         if typ == "ChargeRangeFromPed":
             for j in range(len(f_range)):
                 # Convert f_range to indices
-                i_idx = my_runs[run][ch]["PedLim"]
+                i_idx = my_runs[run][ch][label+"PedLim"]
                 f_idx = i_idx + int(np.round(f_range[j]/my_runs[run][ch]["Sampling"]))
-                my_runs[run][ch][typ+str(j)+cut_label] = np.sum(my_runs[run][ch][key][:,i_idx:f_idx], axis = 1)
+                my_runs[run][ch][typ+str(j)+cut_label] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1)
 
-
-    if debug: print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")
+        if debug: print_colored("Integrated wvfs according to **%s** baseline integration limits"%(label+ref), "SUCCESS")
     return my_runs
