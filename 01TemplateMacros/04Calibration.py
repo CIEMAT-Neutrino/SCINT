@@ -1,9 +1,9 @@
 import sys; sys.path.insert(0, '../'); from lib import *
-default_dict = {"runs":["CALIB_RUNS"],"channels":["CHAN_TOTAL"]}
-user_input = initialize_macro("04Calibration",["input_file","debug"],default_dict=default_dict, debug=True)
+default_dict = {"runs":["CALIB_RUNS"],"channels":["CHAN_TOTAL"],"key":["ANA_KEY"],"variables":["TYPE"]}
+user_input = initialize_macro("04Calibration",["input_file","variables","debug"],default_dict=default_dict, debug=True)
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
     
-int_key = ["ChargeAveRange"]
+int_key = user_input["variables"]
 OPT = {
     "LOGY":       True,
     "SHOW":       True,
@@ -28,8 +28,8 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     # vis_persistence(my_runs)
     
     ## Calibration ##
-    popt, pcov, perr = calibrate(my_runs,[info["ANA_LABEL"][0]+int_key[0]],OPT, debug=user_input["debug"])
-    calibration_txt(run, ch, popt, pcov, filename=info["ANA_LABEL"][0]+"gain", info=info, debug=user_input["debug"])
+    popt, pcov, perr = calibrate(my_runs,[user_input["key"][0].split("ADC")[0]+int_key[0]],OPT, debug=user_input["debug"])
+    calibration_txt(run, ch, popt, pcov, filename=user_input["key"][0].split("ADC")[0]+"gain", info=info, debug=user_input["debug"])
     
     ## SPE Average Waveform ##
     if all(x !=-99 for x in popt):
@@ -38,10 +38,10 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
             print("SPE_min_charge: ",SPE_min_charge)
             SPE_max_charge = popt[3]+abs(popt[5])
             print("SPE_max_charge: ",SPE_max_charge)
-            cut_min_max(my_runs, [info["ANA_LABEL"][0]+int_key[0]], limits = {info["ANA_LABEL"][0]+int_key[0]: [SPE_min_charge,SPE_max_charge]}, debug=user_input["debug"])
-            average_wvfs(my_runs, centering="NONE", key=info["ANA_LABEL"][0]+"ADC", label = info["ANA_LABEL"][0], cut_label="SPE", debug=user_input["debug"])
+            cut_min_max(my_runs, [user_input["key"][0].split("ADC")[0]+int_key[0]], limits = {user_input["key"][0].split("ADC")[0]+int_key[0]: [SPE_min_charge,SPE_max_charge]}, debug=user_input["debug"])
+            average_wvfs(my_runs, centering="NONE", key=user_input["key"][0], label = user_input["key"][0].split("ADC")[0], cut_label="SPE", debug=user_input["debug"])
 
-            save_proccesed_variables(my_runs, info=info, branch_list=[info["ANA_LABEL"][0]+"AveWvfSPE"], force = True)
+            save_proccesed_variables(my_runs, info=info, branch_list=[user_input["key"][0].split("ADC")[0]+"AveWvfSPE"], force = True)
         
         except IndexError:
             print_colored("Fit did not converge, skipping SPE average waveform", color = "ERROR")
