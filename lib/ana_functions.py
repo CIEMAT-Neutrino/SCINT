@@ -172,15 +172,12 @@ def compute_peak_variables(my_runs, key = "", label = "", debug = False):
     '''
     key, label = get_wvf_label(my_runs, key, label, debug = debug)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
-        try:
-            my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
-            my_runs[run][ch][label+"PeakTime"] = np.argmax (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
-            print_colored("Peak variables have been computed for run %i ch %i"%(run,ch), "blue")
-        except KeyError: 
-            if debug: print_colored("*EXCEPTION: for %i, %i, %s peak variables could not be computed"%(run,ch,key), "WARNING")
+        my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
+        my_runs[run][ch][label+"PeakTime"] = np.argmax (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
+        print_colored("Peak variables have been computed for run %i ch %i"%(run,ch), "blue")
 
 
-def compute_pedestal_variables(my_runs, key="", label="", buffer=20, sliding=100, debug=False):
+def compute_pedestal_variables(my_runs, key="", label="", buffer=100, sliding=100, debug=False):
     '''
     Computes the pedestal variables of a collection of a run's collection in several windows.
     **VARIABLES:**
@@ -190,25 +187,23 @@ def compute_pedestal_variables(my_runs, key="", label="", buffer=20, sliding=100
         - pretrigger: amount of bins to study. Eg: ped_lim = 400, sliding = 50, pretrigger = 800 --> 8 windows to compute
         - start: the bin where starts the window. This way you can check the end of the window
     '''
+    key, label = get_wvf_label(my_runs, key, label, debug = False)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
-        try:
-            values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
-            ped_lim = values[np.argmax(counts)]-buffer
-            
-            ADC_aux=my_runs[run][ch][key]
-            ADC, start_window=compute_pedestal_sliding_windows(ADC_aux, ped_lim=ped_lim, sliding=sliding)
-            
-            my_runs[run][ch][label+"PedSTD"]   = np.std (ADC[:,:sliding],axis=1)
-            my_runs[run][ch][label+"PedMean"]  = np.mean(ADC[:,:sliding],axis=1)
-            my_runs[run][ch][label+"PedMax"]   = np.max (ADC[:,:sliding],axis=1)
-            my_runs[run][ch][label+"PedMin"]   = np.min (ADC[:,:sliding],axis=1)
-            my_runs[run][ch][label+"PedLim"]   = ped_lim
-            my_runs[run][ch][label+"PedStart"] = start_window
-            my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
-            # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADCs_s[:,start:(start+ped_lim)]**2),axis=1))
-            print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
-        except KeyError: 
-            if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")
+        values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
+        ped_lim = values[np.argmax(counts)]-buffer
+        
+        ADC_aux=my_runs[run][ch][key]
+        ADC, start_window=compute_pedestal_sliding_windows(ADC_aux, ped_lim=ped_lim, sliding=sliding)
+        
+        my_runs[run][ch][label+"PedSTD"]   = np.std (ADC[:,:sliding],axis=1)
+        my_runs[run][ch][label+"PedMean"]  = np.mean(ADC[:,:sliding],axis=1)
+        my_runs[run][ch][label+"PedMax"]   = np.max (ADC[:,:sliding],axis=1)
+        my_runs[run][ch][label+"PedMin"]   = np.min (ADC[:,:sliding],axis=1)
+        my_runs[run][ch][label+"PedLim"]   = ped_lim
+        my_runs[run][ch][label+"PedStart"] = start_window
+        my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
+        # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADC[:,start:(start+ped_lim)]**2),axis=1))
+        print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
 
 def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=100, debug=False):
     '''
@@ -240,7 +235,6 @@ def compute_ana_wvfs(my_runs, debug = False):
     from .io_functions import print_colored, print_keys
 
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
-
         my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
         print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
