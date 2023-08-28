@@ -16,10 +16,10 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     #####################
 
     #### Align indivual waveforms + Average ####
-    average_wvfs(my_runs, key=user_input["key"][0], centering="NONE", debug=user_input["debug"])
+    average_wvfs(my_runs, key=user_input["key"][0], label="Ana", centering="NONE", debug=user_input["debug"])
 
     ## Charge Integration ##
-    integrate_wvfs(my_runs, info=info, debug=user_input["debug"])
+    integrate_wvfs(my_runs, info=info, key=user_input["key"][0], label="Ana", debug=user_input["debug"])
 
     delete_keys(my_runs,user_input["key"])
     save_proccesed_variables(my_runs, preset=str(info["SAVE_PRESET"][3]),info=info, force=True, debug=user_input["debug"])
