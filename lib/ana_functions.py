@@ -151,7 +151,7 @@ def get_units(my_runs, debug = False):
         - debug:   boolean to print debug messages
     '''
     if debug: print("Getting units...")
-    for run, ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         keys = my_runs[run][ch].keys()
         aux_dic = {}
         for key in keys:
