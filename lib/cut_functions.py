@@ -8,7 +8,6 @@ from itertools                import product
 from scipy.signal             import find_peaks
 from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
-# import statistics as stat
 
 def cut_selector(my_runs, user_input):
     label = ""

@@ -1,6 +1,6 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"runs":["CALIB_RUNS"],"channels":["CHAN_TOTAL"],"key":["ANA_KEY"],"variables":["TYPE"]}
-user_input = initialize_macro("04Calibration",["input_file","variables","debug"],default_dict=default_dict, debug=True)
+user_input = initialize_macro("04Calibration",["input_file","variables","cuts","debug"],default_dict=default_dict, debug=True)
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
     
 int_key = user_input["variables"]
@@ -18,6 +18,8 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][4], compressed=True, debug=user_input["debug"])
 
     #### CUT SECTION ####
+    label, my_runs = cut_selector(my_runs, user_input)
+
     # cut_min_max(my_runs, ["PedSTD"], {"PedSTD": [-1,7.5]})
     # cut_lin_rel(my_runs, ["PeakAmp","ChargeAveRange"])
     # cut_peak_finder(my_runs, ["ADC"], 2)

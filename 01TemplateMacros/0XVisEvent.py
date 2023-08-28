@@ -1,6 +1,6 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {}
-user_input = initialize_macro("00Raw2Np",["input_file","load_preset","key","runs","channels","debug"],default_dict=default_dict, debug=True)
+user_input = initialize_macro("00Raw2Np",["input_file","load_preset","key","runs","channels","cuts","debug"],default_dict=default_dict, debug=True)
 
 OPT  = {
     "MICRO_SEC":   True,
@@ -15,4 +15,8 @@ OPT  = {
 
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
 my_runs = load_npy(user_input["runs"],user_input["channels"],preset=user_input["load_preset"][0],info=info,compressed=True) # preset could be RAW or ANA
+print(my_runs.keys())
+
+label, my_runs = cut_selector(my_runs, user_input)
+print(my_runs.keys())
 vis_npy(my_runs, user_input["key"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
