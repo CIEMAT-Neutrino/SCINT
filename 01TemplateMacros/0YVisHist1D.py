@@ -1,11 +1,11 @@
 import sys; sys.path.insert(0, '../'); from lib import *
-user_input = initialize_macro("0YVisHist1D",["input_file","variables","runs","channels","debug"],default_dict={}, debug=True)
+user_input = initialize_macro("0YVisHist1D",["input_file","variables","runs","channels","cuts","debug"],default_dict={}, debug=True)
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
 
 OPT  = {
-    "NORM":        False,                # Runs can be displayed normalised (True/False)
-    "LOGY":        True,               # Runs can be displayed in logy (True/False)
-    "SHOW_PARAM":  False,                 # Print terminal information (True/False)
+    "NORM":        False,               # Runs can be displayed normalised (True/False)
+    "LOGY":        True,                # Runs can be displayed in logy (True/False)
+    "SHOW_PARAM":  False,               # Print terminal information (True/False)
     "LEGEND":      True,                # Shows plot legend (True/False)
     "SHOW":        True,
     "CHARGEDICT":  False
@@ -26,5 +26,5 @@ label, my_runs = cut_selector(my_runs, user_input)
 # cut_peak_finder(my_runs, ["ADC"], 2)
 
 ##### VISUALIZE HISTOGRAMS #####
-vis_var_hist(my_runs, user_input["variables"], compare = "NONE", percentile = [0.1, 99.9],OPT = OPT, select_range=False)
+vis_var_hist(my_runs, user_input["variables"], compare = "RUNS", percentile = [0.1, 99.9],OPT = OPT, select_range=False)
 # vis_var_hist(my_runs, ["ChargeAveRange","ChargeRange0"], compare = "CHANNELS", percentile = [0.1,99.9], OPT = OPT, select_range=False) 
