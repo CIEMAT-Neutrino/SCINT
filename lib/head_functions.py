@@ -182,7 +182,7 @@ def apply_cuts(user_input, debug=False):
                     n_std = [ inquirer.Text("n_std", message="Please select number of std for applying **%s**"%cut, default="2") ]
                     chann2cut = [ inquirer.Text("ch2cut", message="Please select the CHANNELS to be cut", default="0,1") ]
                     apply_all = [ inquirer.Text("apply",  message="Do you what the cuts to be applied to all the LOADED channels?", default="y") ]
-                    cut_dict[cut] = [True, int(inquirer.prompt(n_std)["n_std"]),list(map(int, inquirer.prompt(chann2cut)["ch2cut"].split(','))), inquirer.prompt(apply_all)["apply"].lower() in ['true', '1', 't', 'y', 'yes']]
+                    cut_dict[cut] = [True, float(inquirer.prompt(n_std)["n_std"]),list(map(int, inquirer.prompt(chann2cut)["ch2cut"].split(','))), inquirer.prompt(apply_all)["apply"].lower() in ['true', '1', 't', 'y', 'yes']]
                 if cut == "cut_lin_rel":
                     key = [ inquirer.Text("key", message="Please select 2 keys for applying **%s**"%cut, default="PeakAmp,ChargeAveRange") ]
                     compare = [ inquirer.Text("compare", message="NONE, RUNS, CHANNELS to decide the histogram to use", default="NONE") ]
