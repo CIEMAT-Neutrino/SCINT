@@ -447,7 +447,11 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
                         try:    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
                         except: x1 = -1e6 
                     counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", range=(x1,x2)) # , zorder = 2 f
-                else: counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
+                    if check_key(OPT, "NORM") == True and OPT["NORM"] == True: counts = counts/np.sum(counts)
+                else:
+                    counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
+                    if check_key(OPT, "NORM") == True and OPT["NORM"] == True: counts = counts/np.sum(counts)
+                    
                 label = label.replace(" - " + k,"")
                 all_counts.append(counts)
                 all_bins.append(bins)
