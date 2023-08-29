@@ -229,13 +229,4 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
         #         print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")
         #         print_colored("========== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs =========="%(t0*1E6,tf*1E6), "SUCCESS")
         #         print_colored("======================================================================", "SUCCESS")
-        
-        if typ == "ChargeRangeFromPed":
-            for j in range(len(f_range)):
-                # Convert f_range to indices
-                i_idx = my_runs[run][ch][label+"PedLim"]
-                f_idx = i_idx + int(np.round(f_range[j]/my_runs[run][ch]["Sampling"]))
-                my_runs[run][ch][typ+str(j)+cut_label] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1)
-
-        if debug: print_colored("Integrated wvfs according to **%s** baseline integration limits"%(label+ref), "SUCCESS")
-    return my_runs
+    
