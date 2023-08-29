@@ -48,26 +48,24 @@ def cut_df(my_runs, channels, cut_dict={}, inclusive=True, debug=False):
 
     print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
 
-    for run  in (my_runs["NRun"]):
+    for run  in (np.asarray(my_runs["NRun"]).astype(int)):
         my_runs_df = pd.DataFrame(my_runs[run]).T
-        for ch_idx,ch in enumerate(channels):
+        for ch_idx,ch in enumerate(np.asarray(channels).astype(int)):
             my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
             try: my_runs[run][ch]
-            except KeyError: 
-                print("ERROR: Run",run,"or Ch",ch,"not found in loaded data")
-                exit()
+            except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()
 
             if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs); print("...Running generate_cut_array...")
             if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
             for key in cut_dict:
                 if check_key(my_runs[run][ch], key[0]) == True:
-                    print_colored("... Cutting events for run %s channel %s with %s %s %0.2f ..."%(run, ch, key[0],key[1],cut_dict[key]),"INFO")
+                    print_colored("... Cutting events for run %i channel %i with %s %s %0.2f ..."%(run, ch, key[0],key[1],cut_dict[key]),"INFO")
 
                     if key[1] == "bigger_than":    my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] >  cut_dict[key]); print_cut_info(my_cuts)
                     if key[1] == "smaller_than":   my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] <  cut_dict[key]); print_cut_info(my_cuts)
                     if key[1] == "equal_than":     my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] == cut_dict[key]); print_cut_info(my_cuts)
                     if key[1] == "not_equal_than": my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] != cut_dict[key]); print_cut_info(my_cuts)
-                else: print_colored("WARNING: Key %s not found in loaded data"%(key),"WARNING")
+                else: print_colored("WARNING: Key %s not found in loaded data"%(key[0]),"WARNING")
 
             this_channel_cut_array = my_cuts
             if ch_idx == 0: global_cut_array = this_channel_cut_array
