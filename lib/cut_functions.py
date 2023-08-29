@@ -4,6 +4,7 @@
 
 import numpy             as np
 import matplotlib.pyplot as plt
+import pandas            as pd
 from itertools                import product
 from scipy.signal             import find_peaks
 from shapely.geometry         import Point
@@ -11,23 +12,75 @@ from shapely.geometry.polygon import Polygon
 
 def cut_selector(my_runs, user_input):
     label = ""
-    if user_input["cuts"]["cut_min_max"][0]: 
-        label = "cut_min_max_"
-        cut_min_max(my_runs, keys=[user_input["cuts"]["cut_min_max"][1]], limits={user_input["cuts"]["cut_min_max"][1]: user_input["cuts"]["cut_min_max"][2]}, chs_cut=[], apply_all_chs=False ,debug=user_input["debug"]);
-    if user_input["cuts"]["cut_ped_std"][0]:
-        label = "cut_ped_std_"
-        cut_ped_std(my_runs, n_std=user_input["cuts"]["cut_ped_std"][1], chs_cut=[], apply_all_chs=False, debug=user_input["debug"]);
+    # if user_input["cuts"]["cut_min_max"][0]: 
+    #     label = "cut_min_max_"
+    #     cut_min_max(my_runs, keys=[user_input["cuts"]["cut_min_max"][1]], limits={user_input["cuts"]["cut_min_max"][1]: user_input["cuts"]["cut_min_max"][2]}, chs_cut=[], apply_all_chs=False ,debug=user_input["debug"]);
+    # if user_input["cuts"]["cut_ped_std"][0]:
+    #     label = "cut_ped_std_"
+    #     cut_ped_std(my_runs, n_std=user_input["cuts"]["cut_ped_std"][1], chs_cut=[], apply_all_chs=False, debug=user_input["debug"]);
+
+    if user_input["cuts"]["cut_df"][0]:
+        label = "cut_df_"
+        cut_dict={}
+        for kdx,key in enumerate(user_input["cuts"]["cut_df"][2]):
+            cut_dict[(key,user_input["cuts"]["cut_df"][3][kdx])] = float(user_input["cuts"]["cut_df"][4][kdx])
+        cut_df(my_runs, user_input["cuts"]["cut_df"][1], cut_dict=cut_dict, inclusive=user_input["cuts"]["cut_df"][5][0].lower() in ["yes","y","true","t"], debug=user_input["debug"])
     if user_input["cuts"]["cut_lin_rel"][0]: 
         label = "cut_lin_rel_"
         cut_lin_rel(my_runs, user_input["cuts"]["cut_lin_rel"][1])
     if user_input["cuts"]["cut_peak_finder"][0]:
         label = "cut_peak_finder_"
         cut_peak_finder(my_runs, user_input["cuts"]["cut_peak_finder"][1], user_input["cuts"]["cut_peak_finder"][2], debug=user_input["debug"])
-    if user_input["cuts"]["cut_min_max_sim"][0]:
-        label = "cut_min_max_sim_"
-        cut_min_max_sim(my_runs, keys=[user_input["cuts"]["cut_min_max_sim"][1]], limits={user_input["cuts"]["cut_min_max_sim"][1]: user_input["cuts"]["cut_min_max_sim"][2]}, debug=user_input["debug"])
+    # if user_input["cuts"]["cut_min_max_sim"][0]:
+    #     label = "cut_min_max_sim_"
+    #     cut_min_max_sim(my_runs, keys=[user_input["cuts"]["cut_min_max_sim"][1]], limits={user_input["cuts"]["cut_min_max_sim"][1]: user_input["cuts"]["cut_min_max_sim"][2]}, debug=user_input["debug"])
     
     return label, my_runs
+
+def print_cut_info(my_cuts):
+        print("Nº of selected events from total events: %i (%0.2f"%(np.sum(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)")
+
+
+
+def cut_df(my_runs, channels, cut_dict={}, inclusive=True, debug=False):
+    from .io_functions  import print_colored, check_key
+    from .ana_functions import generate_cut_array, get_units
+
+    print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
+
+    for run  in (my_runs["NRun"]):
+        my_runs_df = pd.DataFrame(my_runs[run]).T
+        for ch_idx,ch in enumerate(channels):
+            my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
+            try: my_runs[run][ch]
+            except KeyError: 
+                print("ERROR: Run",run,"or Ch",ch,"not found in loaded data")
+                exit()
+
+            if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs); print("...Running generate_cut_array...")
+            if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
+            for key in cut_dict:
+                if check_key(my_runs[run][ch], key[0]) == True:
+                    print_colored("... Cutting events for run %s channel %s with %s %s %0.2f ..."%(run, ch, key[0],key[1],cut_dict[key]),"INFO")
+
+                    if key[1] == "bigger_than":    my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] >  cut_dict[key]); print_cut_info(my_cuts)
+                    if key[1] == "smaller_than":   my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] <  cut_dict[key]); print_cut_info(my_cuts)
+                    if key[1] == "equal_than":     my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] == cut_dict[key]); print_cut_info(my_cuts)
+                    if key[1] == "not_equal_than": my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] != cut_dict[key]); print_cut_info(my_cuts)
+                else: print_colored("WARNING: Key %s not found in loaded data"%(key),"WARNING")
+
+            this_channel_cut_array = my_cuts
+            if ch_idx == 0: global_cut_array = this_channel_cut_array
+            else:
+                if inclusive: global_cut_array = global_cut_array + this_channel_cut_array
+                else:         global_cut_array = global_cut_array * this_channel_cut_array
+                
+                print("\nInclusive =", inclusive)
+                print_cut_info(global_cut_array)
+
+        for loaded_ch in my_runs["NChannel"]: 
+            my_runs[run][loaded_ch]["MyCuts"] = global_cut_array
+    
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False, debug = False):
     """

@@ -133,6 +133,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
                     axs[j].grid(True, alpha = 0.7)
                     try:
+                        axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedStart"][idx],my_run[run][ch_list[j]][label+"PedStart"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedEnd"][idx],my_run[run][ch_list[j]][label+"PedEnd"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
@@ -182,6 +183,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2,label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]).replace("#"," "))
                     axs.grid(True, alpha = 0.7)
                     try: 
+                        axs.scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedStart"][idx],my_run[run][ch_list[j]][label+"PedStart"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedEnd"][idx],my_run[run][ch_list[j]][label+"PedEnd"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
