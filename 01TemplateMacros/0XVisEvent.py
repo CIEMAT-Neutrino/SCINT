@@ -13,6 +13,7 @@ OPT  = {
     "LEGEND":      False                 # Shows plot legend (True/False)
 }
 
+# 0XVisEvent
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
 my_runs = load_npy(user_input["runs"],user_input["channels"],preset=user_input["load_preset"][0],info=info,compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input)

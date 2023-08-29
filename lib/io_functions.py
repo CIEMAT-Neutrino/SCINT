@@ -498,6 +498,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
                         my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
                         if branch.__contains__("ADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
                 except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
+            my_runs[run][ch]["Label"] = info["CHAN_LABEL"][np.where(channels == ch)[0][0]]
             print_colored("load_npy --> DONE!\n", "SUCCESS")
             del branch_list # Delete the branch list to avoid loading the same branches again
     return my_runs
