@@ -39,6 +39,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
     # Imports from other libraries
     from .io_functions  import check_key,print_colored
     from .fig_config    import figure_features
+    from .ana_functions import get_wvf_label
 
 
     figure_features()
@@ -50,6 +51,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
     ch_list = my_run["NChannel"]
     nch = len(my_run["NChannel"])
     axs = []
+    true_key, true_label = get_wvf_label(my_run, "", "", debug = False)
 
     for run, key in product(my_run["NRun"],keys):
         plt.ion()
@@ -65,7 +67,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
             fig, ax = plt.subplots(1 ,1, figsize = (8,6))
             axs = ax
         idx = 0
-        for i in range(len(my_run[run][ch_list[0]][key])):
+        for i in range(len(my_run[run][ch_list[0]][true_key])):
             try:
                 skip = 0
                 for ch in ch_list:
@@ -88,12 +90,14 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     label = "Raw"
                     if debug: print_colored("Using '%s' label"%label, "DEBUG")
 
-                elif(key == "ADC"):
-                    min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
-                    raw.append(my_run[run][ch_list[j]][key][idx])
+                elif(key == "AnaADC"):
+                    print_colored("AnaADC not saved but we compute it now :)", "WARNING")
+                    min.append(np.argmax(my_run[run][ch_list[j]][true_key][idx]))
+                    ana = my_run[run][ch_list[j]]["RawPChannel"]*((my_run[run][ch_list[j]]["RawADC"][idx].T-my_run[run][ch_list[j]]["RawPedMean"][idx]).T)
+                    raw.append(ana)
                     ped = 0
-                    std = my_run[run][ch_list[j]]["PedSTD"][idx]
-                    label = ""
+                    std = my_run[run][ch_list[j]]["AnaPedSTD"][idx]
+                    label = "Ana"
                     if debug: print_colored("Using '%s' label"%label, "DEBUG")
 
                 elif("ADC" in str(key)):
@@ -129,6 +133,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
                     axs[j].grid(True, alpha = 0.7)
                     try:
+                        axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedStart"][idx],my_run[run][ch_list[j]][label+"PedStart"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedEnd"][idx],my_run[run][ch_list[j]][label+"PedEnd"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
@@ -178,6 +183,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2,label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]).replace("#"," "))
                     axs.grid(True, alpha = 0.7)
                     try: 
+                        axs.scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedStart"][idx],my_run[run][ch_list[j]][label+"PedStart"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedEnd"][idx],my_run[run][ch_list[j]][label+"PedEnd"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
@@ -251,12 +257,12 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
-                if idx > len(my_run[run][ch_list[j]][key]): idx = len(my_run[run][ch_list[j]][key])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", bold=True)
+                if idx > len(my_run[run][ch_list[j]][true_key]): idx = len(my_run[run][ch_list[j]][true_key])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", bold=True)
             elif tecla == "p":
                 fig.savefig('run{}_evt{}.png'.format(run,idx), dpi = 500)
                 idx = idx+1
             else: idx = idx + 1
-            if idx == len(my_run[run][ch_list[j]][key]): break
+            if idx == len(my_run[run][ch_list[j]][true_key]): break
             try: [axs[j].clear() for j in range (nch)]
             except: axs.clear()
         try: [axs[j].clear() for j in range (nch)]
