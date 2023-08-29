@@ -415,9 +415,9 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         if "MyCuts" in branch_list: branch_list.remove("MyCuts")
 
     elif preset == "ANA": # Remove Raw, Dict and Cuts branches
-        branch_list = dict_option[option]; aux = []
+        branch_list = dict_option[option]; aux = ["RawADC"]
         for key in branch_list:
-            if not "Raw" in key and not "Dict" in key and not "Cuts" in key and not "Gauss" in key: aux.append(key)
+            if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Gauss" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "RAW":  # Save aux + Raw branches

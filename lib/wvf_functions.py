@@ -17,7 +17,7 @@ def average_wvfs(my_runs, centering="NONE", key="", label="", threshold=0, cut_l
     - "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
     '''
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        key, label = get_wvf_label(my_runs, key, label, debug = False)
+        true_key, true_label = get_wvf_label(my_runs, "", "", debug = False)
         
         if check_key(my_runs[run][ch], "MyCuts") == True:
             print("Calculating average wvf with cuts")
@@ -28,9 +28,10 @@ def average_wvfs(my_runs, centering="NONE", key="", label="", threshold=0, cut_l
 
         buffer = 100  
         aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
-        if label == "Raw":
+        if true_label == "Raw":
             # from compute_ana_wvfs: my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
-            aux_ADC = my_runs[run][ch][label+"PChannel"]*((aux_ADC.T-my_runs[run][ch][label+"PedMean"][my_runs[run][ch]["MyCuts"] == True]).T)
+            aux_ADC = my_runs[run][ch][true_label+"PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+"PedMean"][my_runs[run][ch]["MyCuts"] == True]).T)
+            print_colored("Computing ANA wvfs from RAW", "WARNING")
         mean_ana_ADC = np.mean(aux_ADC,axis=0)
         # bin_ref_peak = st.mode(np.argmax(aux_ADC,axis=1), keepdims=True) # Deprecated function st.mode()
         values, counts = np.unique(np.argmax(aux_ADC,axis=1), return_counts=True) #using the mode peak as reference
@@ -156,15 +157,15 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
             generate_cut_array(my_runs)
             cut_label = ""
 
-        print("\n--- Integrating RUN%i CH%i TYPE%s, REF%s ---"%(run,ch,typ,label+ref))
-        key, label = get_wvf_label(my_runs, key, label, debug = debug)
+        print("\n--- Integrating RUN %i CH %i TYPE %s, REF %s ---"%(run,ch,typ,label+ref))
+        true_key, true_label = get_wvf_label(my_runs, "", "", debug = debug)
         ave = my_runs[run][ch][label+ref] # Load the reference average waveform
         
         if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs) # If there are no units, it calculates them
         if check_key(my_runs[run][ch], label+"ChargeRangeDict") == False: my_runs[run][ch][label+"ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             
         aux_ADC = my_runs[run][ch][key]
-        if label == "Raw": aux_ADC = my_runs[run][ch][label+"PChannel"]*((aux_ADC.T-my_runs[run][ch][label+"PedMean"]).T)
+        if true_label == "Raw": aux_ADC = my_runs[run][ch][true_label+"PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+"PedMean"]).T)
 
         for i in range(len(ave)):
             if typ == "ChargeAveRange": # Integrated charge from the average waveform
@@ -224,7 +225,17 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
 #         # new_key = {typ+str(j)+cut_label: [t0,tf]}
 #         # my_runs[run][ch]["ChargeRangeDict"].update(new_key) # Update the dictionary
 
-#         print_colored("======================================================================", "SUCCESS")
-#         print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")
-#         print_colored("========== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs =========="%(t0*1E6,tf*1E6), "SUCCESS")
-#         print_colored("======================================================================", "SUCCESS")
+        #         print_colored("======================================================================", "SUCCESS")
+        #         print_colored("Integrated wvfs according to **%s** baseline integration limits"%info["REF"][0], "SUCCESS")
+        #         print_colored("========== INTEGRATION RANGES --> [%.2f, %.2f] \u03BCs =========="%(t0*1E6,tf*1E6), "SUCCESS")
+        #         print_colored("======================================================================", "SUCCESS")
+        
+        if typ == "ChargeRangeFromPed":
+            for j in range(len(f_range)):
+                # Convert f_range to indices
+                i_idx = my_runs[run][ch][label+"PedLim"]
+                f_idx = i_idx + int(np.round(f_range[j]/my_runs[run][ch]["Sampling"]))
+                my_runs[run][ch][typ+str(j)+cut_label] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1)
+
+        if debug: print_colored("Integrated wvfs according to **%s** baseline integration limits"%(label+ref), "SUCCESS")
+    return my_runs
