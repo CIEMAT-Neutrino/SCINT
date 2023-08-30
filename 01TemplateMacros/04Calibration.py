@@ -10,6 +10,7 @@ OPT = {
     "THRESHOLD":  1,
     "WIDTH":      15,
     "PROMINENCE": 0.4,
+    "COMPARE":    "NONE",
     "ACCURACY":   1000
 }
 
@@ -28,15 +29,15 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     calibration_txt(run, ch, popt, pcov, filename=user_input["key"][0].split("ADC")[0]+"gain", info=info, debug=user_input["debug"])
     
     ## SPE Average Waveform ##
-    if all(x !=-99 for x in popt):
-        try:
-            SPE_min_charge = popt[3]-abs(popt[5])
-            print("SPE_min_charge: ",SPE_min_charge)
-            SPE_max_charge = popt[3]+abs(popt[5])
-            print("SPE_max_charge: ",SPE_max_charge)
-            cut_min_max(my_runs, [user_input["key"][0].split("ADC")[0]+int_key[0]], limits = {user_input["key"][0].split("ADC")[0]+int_key[0]: [SPE_min_charge,SPE_max_charge]}, debug=user_input["debug"])
-            average_wvfs(my_runs, centering="NONE", key=user_input["key"][0], label = user_input["key"][0].split("ADC")[0], cut_label="SPE", debug=user_input["debug"])
+    # if all(x !=-99 for x in popt):
+    #     try:
+    #         SPE_min_charge = popt[3]-abs(popt[5])
+    #         print("SPE_min_charge: ",SPE_min_charge)
+    #         SPE_max_charge = popt[3]+abs(popt[5])
+    #         print("SPE_max_charge: ",SPE_max_charge)
+    #         cut_min_max(my_runs, [user_input["key"][0].split("ADC")[0]+int_key[0]], limits = {user_input["key"][0].split("ADC")[0]+int_key[0]: [SPE_min_charge,SPE_max_charge]}, debug=user_input["debug"])
+    #         average_wvfs(my_runs, centering="NONE", key=user_input["key"][0], label = user_input["key"][0].split("ADC")[0], cut_label="SPE", debug=user_input["debug"])
 
-            save_proccesed_variables(my_runs, info=info, branch_list=[user_input["key"][0].split("ADC")[0]+"AveWvfSPE"], force = True)
+    #         save_proccesed_variables(my_runs, info=info, branch_list=[user_input["key"][0].split("ADC")[0]+"AveWvfSPE"], force = True)
         
-        except IndexError: print_colored("Fit did not converge, skipping SPE average waveform", color = "ERROR")
+    #     except IndexError: print_colored("Fit did not converge, skipping SPE average waveform", color = "ERROR")
