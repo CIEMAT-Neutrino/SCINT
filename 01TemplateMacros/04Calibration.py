@@ -20,12 +20,6 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     #### CUT SECTION ####
     label, my_runs = cut_selector(my_runs, user_input)
 
-    # cut_min_max(my_runs, ["PedSTD"], {"PedSTD": [-1,7.5]})
-    # cut_lin_rel(my_runs, ["PeakAmp","ChargeAveRange"])
-    # cut_peak_finder(my_runs, ["ADC"], 2)
-    #####################
-
-
     ## Persistence Plot ##
     # vis_persistence(my_runs)
     
@@ -45,5 +39,4 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
 
             save_proccesed_variables(my_runs, info=info, branch_list=[user_input["key"][0].split("ADC")[0]+"AveWvfSPE"], force = True)
         
-        except IndexError:
-            print_colored("Fit did not converge, skipping SPE average waveform", color = "ERROR")
+        except IndexError: print_colored("Fit did not converge, skipping SPE average waveform", color = "ERROR")
