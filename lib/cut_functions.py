@@ -12,13 +12,6 @@ from shapely.geometry.polygon import Polygon
 
 def cut_selector(my_runs, user_input):
     label = ""
-    # if user_input["cuts"]["cut_min_max"][0]: 
-    #     label = "cut_min_max_"
-    #     cut_min_max(my_runs, keys=[user_input["cuts"]["cut_min_max"][1]], limits={user_input["cuts"]["cut_min_max"][1]: user_input["cuts"]["cut_min_max"][2]}, chs_cut=[], apply_all_chs=False ,debug=user_input["debug"]);
-    # if user_input["cuts"]["cut_ped_std"][0]:
-    #     label = "cut_ped_std_"
-    #     cut_ped_std(my_runs, n_std=user_input["cuts"]["cut_ped_std"][1], chs_cut=[], apply_all_chs=False, debug=user_input["debug"]);
-
     if user_input["cuts"]["cut_df"][0]:
         label = "cut_df_"
         cut_dict={}
@@ -31,9 +24,6 @@ def cut_selector(my_runs, user_input):
     if user_input["cuts"]["cut_peak_finder"][0]:
         label = "cut_peak_finder_"
         cut_peak_finder(my_runs, user_input["cuts"]["cut_peak_finder"][1], user_input["cuts"]["cut_peak_finder"][2], debug=user_input["debug"])
-    # if user_input["cuts"]["cut_min_max_sim"][0]:
-    #     label = "cut_min_max_sim_"
-    #     cut_min_max_sim(my_runs, keys=[user_input["cuts"]["cut_min_max_sim"][1]], limits={user_input["cuts"]["cut_min_max_sim"][1]: user_input["cuts"]["cut_min_max_sim"][2]}, debug=user_input["debug"])
     
     return label, my_runs
 

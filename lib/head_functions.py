@@ -16,6 +16,7 @@ def get_flag_dict():
         ("-v","--variables"): "variables \t(ChargeAveRange, ChargeRange0, etc.)",
         ("-r","--runs"):"runs \t(optional)",
         ("-c","--channels"):"channels \t(optional)",
+        ("-f","--filter"): "filter \t(optional)",
         ("-d","--debug"):"debug \t(True/False)"}
     
     return flag_dict
@@ -56,10 +57,10 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
 
     user_input = select_input_file(user_input, debug=debug)
     user_input["input_file"] = user_input["input_file"][0]
-    if "cuts" in input_list: user_input = apply_cuts(user_input, debug=debug)
     user_input = update_user_input(user_input,input_list,debug=debug)
     user_input["debug"] = user_input["debug"][0].lower() in ['true', '1', 't', 'y', 'yes']
     user_input = use_default_input(user_input, default_dict, debug=debug)
+    # if "cuts" in input_list: user_input = apply_cuts(user_input, debug=debug)
 
     if debug: print_colored("User input: %s"%user_input,"INFO")
     return user_input
@@ -80,13 +81,13 @@ def update_user_input(user_input,new_input_list,debug=False):
     flags = {"load_preset":"-l","save_preset":"-s","key":"-k","variables":"-v","runs":"-r","channels":"-c","debug":"-d"}
     for key_label in new_input_list:
         if check_key(user_input, key_label) == False:
-
-            q = [ inquirer.Text(key_label, message="Please select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
-            new_user_input[key_label] =  [inquirer.prompt(q)[key_label]]
+            if key_label != "cuts":
+                q = [ inquirer.Text(key_label, message="Please select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
+                new_user_input[key_label] =  inquirer.prompt(q)[key_label].split(",")
+            else: new_user_input["cuts"] = apply_cuts(user_input, debug=debug); print(new_user_input["cuts"])
             # new_user_input[key_label] = input("Please select %s (separated with commas): "%key_label).split(",")
         else: pass
             # if debug: print("Using %s from user input"%key_label)
-    
     return new_user_input
 
 def select_input_file(user_input, debug=False):
@@ -158,7 +159,6 @@ def apply_cuts(user_input, debug=False):
     '''
     from .io_functions import check_key, print_colored
     
-    new_user_input = user_input.copy()
     if check_key(user_input, "cuts") == False:
         cuts_choices = ["cut_df","cut_lin_rel","cut_peak_finder"]
         q = [ inquirer.Checkbox("cuts", message="Please select the cuts you want to apply", choices=cuts_choices) ]
@@ -183,7 +183,5 @@ def apply_cuts(user_input, debug=False):
 
             else: cut_dict[cut] = [False]
 
-        new_user_input["cuts"] = cut_dict
-        print(new_user_input)
-    if debug: print_colored("Using cuts options %s"%new_user_input["cuts"],"INFO")
-    return new_user_input
+    if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
+    return cut_dict
