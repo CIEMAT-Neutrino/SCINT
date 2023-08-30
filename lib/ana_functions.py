@@ -166,18 +166,24 @@ def get_units(my_runs, debug = False):
 #************************* PEAK + PEDESTAL *********************************#
 #===========================================================================# 
 
-def compute_peak_variables(my_runs, key = "", label = "", debug = False):
+def compute_peak_variables(my_runs, key = "", label = "", buffer = 25, debug = False):
     '''
     Computes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
     key, label = get_wvf_label(my_runs, key, label, debug = debug)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
-        my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
-        my_runs[run][ch][label+"PeakTime"] = np.argmax (my_runs[run][ch][key][:,:]*my_runs[run][ch][label+"PChannel"],axis=1)
+        aux_ADC = my_runs[run][ch][key]
+        my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][label+"PChannel"]*aux_ADC[:,:],axis=1)
+        my_runs[run][ch][label+"PeakTime"] = np.argmax (my_runs[run][ch][label+"PChannel"]*aux_ADC[:,:],axis=1)
+        # Compute valley amplitude in the buffer around the peak to avoid noise
+        i_idx = my_runs[run][ch][label+"PeakTime"]
+        i_idx[i_idx < 0] = 0
+        this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
+        my_runs[run][ch][label+"ValleyAmp" ] = np.min(my_runs[run][ch][label+"PChannel"]*this_aux_ADC[:,:buffer],axis=1)
+        my_runs[run][ch][label+"ValleyTime"] = i_idx + np.argmin(my_runs[run][ch][label+"PChannel"]*this_aux_ADC[:,:buffer],axis=1)
         print_colored("Peak variables have been computed for run %i ch %i"%(run,ch), "blue")
 
-
-def compute_pedestal_variables(my_runs, key="", label="", buffer=100, sliding=100, debug=False):
+def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=100, sliding=100, debug=False):
     '''
     Computes the pedestal variables of a collection of a run's collection in several windows.
     **VARIABLES:**
@@ -189,8 +195,9 @@ def compute_pedestal_variables(my_runs, key="", label="", buffer=100, sliding=10
     '''
     key, label = get_wvf_label(my_runs, key, label, debug = False)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
-        values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
-        ped_lim = values[np.argmax(counts)]-buffer
+        if type(ped_lim) != int:
+            values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
+            ped_lim = values[np.argmax(counts)]-buffer
         
         ADC_aux=my_runs[run][ch][key]
         ADC, start_window=compute_pedestal_sliding_windows(ADC_aux, ped_lim=ped_lim, sliding=sliding)

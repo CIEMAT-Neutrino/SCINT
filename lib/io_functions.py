@@ -421,13 +421,13 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = aux
 
     elif preset == "RAW":  # Save aux + Raw branches
-        branch_list = dict_option[option]; aux = ["NBinsWvf", "TimeStamp","Sampling", "Label"]
+        branch_list = dict_option[option]; aux = ["NBinsWvf", "TimeStamp","Sampling"]
         for key in branch_list:
             if "Raw" in key: aux.append(key) 
         branch_list = aux
 
     elif preset == "INT": # Save aux + Charge* and Ave* branches
-        branch_list = dict_option[option]; aux = ["NBinsWvf", "TimeStamp", "Sampling", "Label"]
+        branch_list = dict_option[option]; aux = ["NBinsWvf", "TimeStamp", "Sampling"]
         for key in branch_list:
             if "Charge" in key and key not in aux: aux.append(key)
             if "Ave" in key and key not in aux: aux.append(key)
@@ -435,20 +435,20 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     elif preset == "EVA": # Remove ADC, Dict and Cuts branches
         branch_list = dict_option[option]
-        aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label"]
+        aux = ["NBinsWvf",  "TimeStamp", "Sampling"]
         for key in branch_list:
             if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "DEC": # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
         branch_list = dict_option[option]
-        aux = ["NBinsWvf",  "TimeStamp", "Sampling", "Label", "SER"]
+        aux = ["NBinsWvf",  "TimeStamp", "Sampling", "SER"]
         for key in branch_list:
             if "Gauss" in key or "Wiener" in key or "Dec" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "CAL": # Save aux + Charge* branches
-        branch_list = dict_option[option]; aux = ["RawADC","PedLim","Label","Sampling"]
+        branch_list = dict_option[option]; aux = ["RawNBinsWvf", "TimeStamp", "PedLim", "Sampling"]
         for key in branch_list:
             if "Charge" in key and key not in aux: aux.append(key)
         branch_list = aux
