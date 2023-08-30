@@ -430,13 +430,21 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
                     ymin = ypbot - ypad; ymax = yptop + ypad
                     data = [i for i in data if ymin<i<ymax]
                     if binning == 0: binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
-                
+
+                density = False
+                y_label = "Counts"
+                if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
+                    y_label = "Normalized Counts"
+                    density = True
+
                 if len(key) > 1:
-                    fig.supxlabel(my_run[run][ch]["UnitsDict"][k]); fig.supylabel("Counts")
+                    fig.supxlabel(my_run[run][ch]["UnitsDict"][k]);
+                    fig.supylabel(y_label)
                     label = label + " - " + k
                     fig.suptitle(title)
                 else:
-                    fig.supxlabel(k+" ("+my_run[run][ch]["UnitsDict"][k]+")"); fig.supylabel("Counts")
+                    fig.supxlabel(k+" ("+my_run[run][ch]["UnitsDict"][k]+")"); 
+                    fig.supylabel(y_label)
                     fig.suptitle(title + " - {} histogram".format(k))
 
                 if select_range:
@@ -444,11 +452,8 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
                     while x1 == -1e6:
                         try:    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
                         except: x1 = -1e6 
-                    counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", range=(x1,x2)) # , zorder = 2 f
-                    if check_key(OPT, "NORM") == True and OPT["NORM"] == True: counts = counts/np.sum(counts)
-                else:
-                    counts, bins, bars = ax.hist(data,binning, label=label, histtype="step") # , zorder = 2 f
-                    if check_key(OPT, "NORM") == True and OPT["NORM"] == True: counts = counts/np.sum(counts)
+                    counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", range=(x1,x2), density=density) # , zorder = 2 f
+                else:counts, bins, bars = ax.hist(data,binning, label=label, histtype="step", density=density) # , zorder = 2 f
                     
                 label = label.replace(" - " + k,"")
                 all_counts.append(counts)
