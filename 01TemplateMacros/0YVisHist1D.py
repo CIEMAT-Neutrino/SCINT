@@ -7,11 +7,12 @@ OPT  = {
     "LOGY":        True,                # Runs can be displayed in logy (True/False)
     "SHOW_PARAM":  False,               # Print terminal information (True/False)
     "LEGEND":      True,                # Shows plot legend (True/False)
-    "SHOW":        True,
+    "SHOW":        True,                # Shows plot (True/False)
+    "COMPARE":    "CHANNELS",           # If you need to compare channels or runs (CHANNELS/RUNS) or NONE
     "CHARGEDICT":  False
     }
 
 ### 0YVisHist1D
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int),preset="EVA",info=info,compressed=True) # preset could be RAW or ANA
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(int), np.asarray(user_input["channels"]).astype(int), preset="EVA", info=info, compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input)
-vis_var_hist(my_runs, user_input["variables"], compare = "CHANNELS", percentile = [0.1, 99.9],OPT = OPT, select_range=False)
+vis_var_hist(my_runs, user_input["variables"], percentile = [0.1, 99.9], OPT = OPT, select_range=False)

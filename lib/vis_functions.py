@@ -13,7 +13,7 @@ from scipy.ndimage.interpolation import shift
 
 from .io_functions  import print_colored
 
-def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = False):
+def vis_npy(my_run, keys, OPT = {}, debug = False):
     '''
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -31,9 +31,8 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
       (e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
       (f) CHARGE_KEY: if computed and True, it will show the parametre value
       (g) PEAK_FINDER: True if we want to check how many peaks are
-
-    - evt_sel: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
-    - same_plot: True if we want to plot different channels in the SAME plot
+      (h) CUTTED_WVF: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
+      (i) SAME_PLOT: True if we want to plot different channels in the SAME plot
     '''
 
     # Imports from other libraries
@@ -41,6 +40,8 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
     from .fig_config    import figure_features
     from .ana_functions import get_wvf_label
 
+    if not check_key(OPT, "CUTTED_WVF"): OPT["CUTTED_WVF"] = -1; print_colored("CUTTED_WVF not defined, setting to -1", "WARNING")
+    if not check_key(OPT, "SAME_PLOT"): OPT["SAME_PLOT"] = False; print_colored("SAME_PLOT not defined, setting to False", "WARNING")
 
     figure_features()
     charge_key = "ChargeAveRange"
@@ -48,14 +49,13 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
     norm_ave = 1
     buffer = 100
 
-    ch_list = my_run["NChannel"]
-    nch = len(my_run["NChannel"])
+    ch_list = my_run["NChannel"]; nch = len(my_run["NChannel"])
     axs = []
     true_key, true_label = get_wvf_label(my_run, "", "", debug = False)
 
     for run, key in product(my_run["NRun"],keys):
         plt.ion()
-        if same_plot == False:
+        if OPT["SAME_PLOT"] == False:
             if nch < 4:
                 fig, ax = plt.subplots(nch ,1, figsize = (10,8))
                 if nch == 1: axs.append(ax)
@@ -71,8 +71,8 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
             try:
                 skip = 0
                 for ch in ch_list:
-                    if evt_sel == 0 and my_run[run][ch]["MyCuts"][idx] == False: skip = 1; break # To Skip Cutted events!!
-                    if evt_sel == 1 and my_run[run][ch]["MyCuts"][idx] == True:  skip = 1; break # To Get only Cutted events!!
+                    if OPT["CUTTED_WVF"] == 0 and my_run[run][ch]["MyCuts"][idx] == False: skip = 1; break # To Skip Cutted events!!
+                    if OPT["CUTTED_WVF"] == 1 and my_run[run][ch]["MyCuts"][idx] == True:  skip = 1; break # To Get only Cutted events!!
                 if skip == 1: idx = idx +1; continue
             except: pass
 
@@ -125,7 +125,7 @@ def vis_npy(my_run, keys, evt_sel = -1, same_plot = False, OPT = {}, debug = Fal
                     fig.supxlabel(r'Time [$\mu$s]')
                     my_run[run][ch_list[j]]["Sampling"] = my_run[run][ch_list[j]]["Sampling"]*1e6
 
-                if same_plot == False:
+                if OPT["SAME_PLOT"] == False:
                     if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
                         axs[j].semilogy()
                         std = 0 # It is ugly if we see this line in log plots
@@ -356,7 +356,7 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         except: axs.clear()
         plt.close()   
 
-def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False, debug = False):
+def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False, debug = False):
     '''
     This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
@@ -377,34 +377,32 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
     '''
 
     # Imports from other libraries
-    from .io_functions  import check_key
+    from .io_functions  import check_key, print_colored
     from .ana_functions import generate_cut_array, get_units
     from .fig_config    import figure_features, add_grid
 
     figure_features()
-    all_counts = []
-    all_bins = []
-    all_bars = []
-    r_list = my_run["NRun"]
-    ch_list = my_run["NChannel"]
-    if compare == "CHANNELS": a_list = r_list;  b_list = ch_list 
-    if compare == "RUNS":     a_list = ch_list; b_list = r_list
-    if compare == "NONE":     a_list = r_list;  b_list = ch_list
+    all_counts = []; all_bins = []; all_bars = []
+    r_list = my_run["NRun"]; ch_list = my_run["NChannel"]
+    if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
+    if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
+    if OPT["COMPARE"] == "RUNS":     a_list = ch_list; b_list = r_list
+    if OPT["COMPARE"] == "NONE":     a_list = r_list;  b_list = ch_list
 
     data = []
     for a in a_list:
-        if compare != "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
+        if OPT["COMPARE"] != "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
         for b in b_list:
-            if compare == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
-            if compare == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
-            if compare == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
+            if OPT["COMPARE"] == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
+            if OPT["COMPARE"] == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
+            if OPT["COMPARE"] == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
             
             # print(my_run[run][ch]["MyCuts"] == True)
             if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run,debug=True)
             if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
             
-            if compare == "NONE": fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
+            if OPT["COMPARE"] == "NONE": fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
             
             binning = 0
             if check_key(OPT, "ACCURACY") == True: binning = OPT["ACCURACY"]
@@ -459,19 +457,19 @@ def vis_var_hist(my_run, key, compare = "NONE", percentile = [0.1, 99.9], OPT = 
             
             if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:     ax.legend()
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: ax.semilogy()
-            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and compare == "NONE":
+            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
                 plt.ion()
                 plt.show()
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
-        if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and compare != "NONE":
+        if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] != "NONE":
             plt.show()
             while not plt.waitforbuttonpress(-1): pass
             plt.close()
 
     return all_counts, all_bins, all_bars
 
-def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], select_range = False, OPT={}):
+def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = False, OPT={}):
     '''
     This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     It plots values below and above the indicated percetiles, but values are not removed from data.
@@ -485,16 +483,16 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
     '''
 
     # Imports from other libraries
-    from .io_functions  import check_key
+    from .io_functions  import check_key, print_colored
     from .ana_functions import generate_cut_array, get_units
     from .fig_config    import figure_features, add_grid
 
     figure_features()
-    r_list = my_run["NRun"]
-    ch_list = my_run["NChannel"]
-    if compare == "CHANNELS": a_list = r_list;  b_list = ch_list 
-    if compare == "RUNS":     a_list = ch_list; b_list = r_list
-    if compare == "NONE":     a_list = r_list;  b_list = ch_list
+    r_list = my_run["NRun"]; ch_list = my_run["NChannel"]
+    if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
+    if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
+    if OPT["COMPARE"] == "RUNS":     a_list = ch_list; b_list = r_list
+    if OPT["COMPARE"] == "NONE":     a_list = r_list;  b_list = ch_list
 
     x_data = []; y_data = []
     for run in r_list:
@@ -507,17 +505,17 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
         for b in b_list:
             fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
-            if compare == "CHANNELS": 
+            if OPT["COMPARE"] == "CHANNELS": 
                 title = "Run_{} ".format(a);
                 label0 = "{}".format(my_run[a][ch_list[0]]["Label"]).replace("#","")
                 label1 = "{}".format(my_run[a][ch_list[1]]["Label"]).replace("#","")
                 aux_x_data = my_run[a][ch_list[0]][keys[0]][my_run[a][ch_list[0]]["MyCuts"] == True]; aux_y_data = my_run[a][ch_list[1]][keys[1]][my_run[a][ch_list[1]]["MyCuts"] == True]
-            if compare == "RUNS":
+            if OPT["COMPARE"] == "RUNS":
                 title = "Channel_{} ".format(a);
                 label0 = "{}".format(my_run[r_list[0]][a]["Label"]).replace("#","")
                 label1 = "{}".format(my_run[r_list[1]][a]["Label"]).replace("#","")
                 aux_x_data = my_run[r_list[0]][a][keys[0]][my_run[r_list[0]][a]["MyCuts"] == True]; aux_y_data = my_run[r_list[1]][a][keys[1]][my_run[r_list[1]][a]["MyCuts"] == True]
-            if compare == "NONE":
+            if OPT["COMPARE"] == "NONE":
                 title = "Run_{} Ch_{} - {} vs {} histogram".format(a,b,keys[0],keys[1])
                 label0 = ""; label1 = ""
                 aux_x_data = my_run[a][b][keys[0]][my_run[a][b]["MyCuts"] == True]; aux_y_data = my_run[a][b][keys[1]][my_run[a][b]["MyCuts"] == True]
@@ -559,6 +557,6 @@ def vis_two_var_hist(my_run, keys, compare = "NONE", percentile = [0.1, 99.9], s
                 plt.close()
             # else:
             #     plt.close()
-            if compare != "NONE": break
+            if OPT["COMPARE"] != "NONE": break
 
     return figures_list, axes_list

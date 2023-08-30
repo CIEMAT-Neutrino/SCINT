@@ -9,7 +9,9 @@ OPT  = {
     "SHOW_AVE":    "AnaAveWvf",          # If computed, vis will show average (RawAveWvf/AnaAveWvf,RawAveWvfSPE/AnaAveWvfSPE,etc.)
     "SHOW_PARAM":  True,                 # Print terminal information (True/False)
     "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
-    "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False)
+    "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False),
+    "CUTTED_WVF":  -1,                   # Shows all/un-cutted/cutted waveforms (True/False)
+    "SAME_PLOT":   False,                # True if we want to plot different channels in the SAME plot
     "LEGEND":      False                 # Shows plot legend (True/False)
 }
 
@@ -17,4 +19,4 @@ OPT  = {
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
 my_runs = load_npy(user_input["runs"],user_input["channels"],preset=user_input["load_preset"][0],info=info,compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input)
-vis_npy(my_runs, user_input["key"],-1,OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
+vis_npy(my_runs, user_input["key"],OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
