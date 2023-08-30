@@ -49,8 +49,13 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
             for flag in flag_dict:
                 if arg == flag[0] or arg == flag[1]:
                     try:
-                        user_input[flag[1].split("--")[1]] = sys.argv[sys.argv.index(arg)+1].split(",")
-                        print_colored("Using %s from command line"%flag_dict[flag],"INFO")
+                        if flag[1].split("--")[1] != "filter":
+                            user_input[flag[1].split("--")[1]] = sys.argv[sys.argv.index(arg)+1].split(",")
+                            print_colored("Using %s from command line"%flag_dict[flag],"INFO")
+                        else:
+                            if sys.argv[sys.argv.index(arg)+1].split(",")[0] == "False": user_input["cuts"] = {'cut_df': [False], 'cut_lin_rel': [False], 'cut_peak_finder': [False]}
+                            if sys.argv[sys.argv.index(arg)+1].split(",")[0] == "True":  user_input["cuts"] = apply_cuts(user_input, debug=debug)
+
                     except IndexError:
                         print("Please provide argument for flag %s"%flag_dict[flag])
                         exit()
@@ -60,7 +65,6 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
     user_input = update_user_input(user_input,input_list,debug=debug)
     user_input["debug"] = user_input["debug"][0].lower() in ['true', '1', 't', 'y', 'yes']
     user_input = use_default_input(user_input, default_dict, debug=debug)
-    # if "cuts" in input_list: user_input = apply_cuts(user_input, debug=debug)
 
     if debug: print_colored("User input: %s"%user_input,"INFO")
     return user_input
@@ -84,8 +88,8 @@ def update_user_input(user_input,new_input_list,debug=False):
             if key_label != "cuts":
                 q = [ inquirer.Text(key_label, message="Please select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
                 new_user_input[key_label] =  inquirer.prompt(q)[key_label].split(",")
-            else: new_user_input["cuts"] = apply_cuts(user_input, debug=debug); print(new_user_input["cuts"])
-            # new_user_input[key_label] = input("Please select %s (separated with commas): "%key_label).split(",")
+            else:  new_user_input["cuts"] = apply_cuts(user_input, debug=debug)
+                
         else: pass
             # if debug: print("Using %s from user input"%key_label)
     return new_user_input
