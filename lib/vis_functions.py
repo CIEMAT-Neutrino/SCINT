@@ -131,21 +131,26 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                         std = 0 # It is ugly if we see this line in log plots
                     # fig.tight_layout(h_pad=2) # If we want more space betweeb subplots. We avoid small vertical space between plots            
                     axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
-                    axs[j].grid(True, alpha = 0.7)
-                    try:
-                        axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
-                        axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
+                    except KeyError: print_colored("PeakAmp not computed!", "ERROR")    
+                    try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx],c="tab:green", alpha = 0.8)
+                    except KeyError: print_colored("ValleyAmp not computed!", "ERROR")    
+                    try: axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    except KeyError: print_colored("PedLim not computed!", "ERROR")    
+                    try:    
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedStart"][idx],my_run[run][ch_list[j]][label+"PedStart"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedEnd"][idx],my_run[run][ch_list[j]][label+"PedEnd"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
-                        axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
-                        axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
-                    except KeyError: print_colored("Run preprocess please!", "ERROR")
+                    except KeyError: print_colored("PedWindow not compued!", "ERROR")    
+                    
+                    axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55)
+                    axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--"); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--")
                     axs[j].set_title("Run {} - Ch {} - Event Number {}".format(run,ch_list[j],idx),size = 14)
                     axs[j].xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
+                    axs[j].grid(True, alpha = 0.7)
                     
                     if check_key(OPT, "SHOW_AVE") == True:   
                         try:
-                            ave_key = OPT["SHOW_AVE"]
+                            ave_key = label+OPT["SHOW_AVE"]
                             ave = my_run[run][ch_list[j]][ave_key][0]
                             if OPT["NORM"] == True and OPT["NORM"] == True:
                                 ave = ave/np.max(ave)
@@ -182,18 +187,23 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                         std = 0 # It is ugly if we see this line in log plots
                     axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2,label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]).replace("#"," "))
                     axs.grid(True, alpha = 0.7)
-                    try: 
-                        axs.scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
-                        axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    try: axs.scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
+                    except KeyError: print_colored("PeakAmp not computed!", "ERROR")
+                    try: axs.scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx],c="tab:green", alpha = 0.8)
+                    except KeyError: print_colored("ValleyAmp not computed!", "ERROR")
+                    try: axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
+                    except KeyError: print_colored("PedLim not computed!", "ERROR")
+                    try:
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedStart"][idx],my_run[run][ch_list[j]][label+"PedStart"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
                         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedEnd"][idx],my_run[run][ch_list[j]][label+"PedEnd"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
-                    except KeyError: print_colored("Run preprocess please!", "ERROR")
+                    except KeyError: print_colored("PedWindow not compued!", "ERROR")
+                    
                     axs.set_title("Run {} - Event Number {}".format(run,idx),size = 14)
                     axs.xaxis.offsetText.set_fontsize(14)
                     
                     if check_key(OPT, "SHOW_AVE") == True:   
                         try:
-                            ave_key = OPT["SHOW_AVE"]
+                            ave_key = label+OPT["SHOW_AVE"]
                             ave = my_run[run][ch_list[j]][ave_key][0]
                             if OPT["NORM"] == True and OPT["NORM"] == True: ave = ave/np.max(ave)
                             if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
