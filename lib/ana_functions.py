@@ -166,7 +166,7 @@ def get_units(my_runs, debug = False):
 #************************* PEAK + PEDESTAL *********************************#
 #===========================================================================# 
 
-def compute_peak_variables(my_runs, key = "", label = "", buffer = 100, debug = False):
+def compute_peak_variables(my_runs, key = "", label = "", buffer = 25, debug = False):
     '''
     Computes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
