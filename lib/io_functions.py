@@ -448,7 +448,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = aux
 
     elif preset == "CAL": # Save aux + Charge* branches
-        branch_list = dict_option[option]; aux = ["ADC","PedLim","Label","Sampling"]
+        branch_list = dict_option[option]; aux = ["RawADC","PedLim","Label","Sampling"]
         for key in branch_list:
             if "Charge" in key and key not in aux: aux.append(key)
         branch_list = aux
