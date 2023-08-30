@@ -6,7 +6,7 @@ OPT  = {
     "MICRO_SEC":   True,
     "NORM":        False,                # Runs can be displayed normalised (True/False)
     "LOGY":        False,                # Runs can be displayed in logy (True/False)
-    "SHOW_AVE":    "AnaAveWvf",          # If computed, vis will show average (RawAveWvf/AnaAveWvf,RawAveWvfSPE/AnaAveWvfSPE,etc.)
+    "SHOW_AVE":    "AveWvf",          # If computed, vis will show average (RawAveWvf/AnaAveWvf,RawAveWvfSPE/AnaAveWvfSPE,etc.)
     "SHOW_PARAM":  True,                 # Print terminal information (True/False)
     "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False),
@@ -17,6 +17,6 @@ OPT  = {
 
 # 0XVisEvent
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
-my_runs = load_npy(user_input["runs"],user_input["channels"],preset=user_input["load_preset"][0],info=info,compressed=True) # preset could be RAW or ANA
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int),preset=user_input["load_preset"][0],info=info,compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input)
 vis_npy(my_runs, user_input["key"],OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
