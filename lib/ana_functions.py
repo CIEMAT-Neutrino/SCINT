@@ -253,7 +253,7 @@ def compute_power_spec(ADC, timebin, debug = False):
 
 
 @numba.njit
-def shift_ADCs(ADC,shift):
+def shift_ADCs(ADC,shift,debug=False):
     ''' 
     Used for the sliding window. 
     '''
@@ -261,7 +261,7 @@ def shift_ADCs(ADC,shift):
     N_wvfs=ADC.shape[0]
     aux_ADC=np.zeros(ADC.shape)
     for i in range(N_wvfs): aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
-    
+    print("ADCs have been shifted")
     return aux_ADC
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
