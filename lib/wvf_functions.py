@@ -1,8 +1,9 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from itertools import product
 
 from .io_functions import print_colored, check_key
-from .ana_functions import generate_cut_array, get_units, get_wvf_label
+from .ana_functions import generate_cut_array, get_units, get_wvf_label, shift_ADCs
 
 #===========================================================================#
 #********************** AVERAGING FUCNTIONS ********************************#
@@ -172,17 +173,18 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
                 i_idx,f_idx = find_baseline_cuts(ave[i])
                 my_runs[run][ch][label+typ+cut_label] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1) # Integrated charge from the DECONVOLUTED average waveform
                 
-            if typ == "ChargeRangeFromPed":
+            if typ == "ChargePedRange":
                 for j in range(len(f_range)):
                     i_idx = my_runs[run][ch][label+"PedLim"]
-                    f_idx = i_idx + int(np.round(f_range[j]/my_runs[run][ch]["Sampling"]))
+                    f_idx = i_idx + int(np.round(f_range[j]*1e-6/my_runs[run][ch]["Sampling"]))
                     my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1)
 
             if typ == "ChargeRange":
-                for j in range(len(f_range)):
-                    i_idx = int(np.round(i_range[j]/my_runs[run][ch]["Sampling"]))
-                    f_idx = i_idx + int(np.round(f_range[j]/my_runs[run][ch]["Sampling"]))
-                    my_runs[run][ch][label+typ+str(j)+cut_label] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1)
+                for k in range(len(f_range)):
+                    i_idx = int(np.round(i_range[k]*1e-6/my_runs[run][ch]["Sampling"]))
+                    f_idx = int(np.round(f_range[k]*1e-6/my_runs[run][ch]["Sampling"]))
+                    this_aux_ADC = shift_ADCs(aux_ADC, -np.asarray(my_runs[run][ch][label+"PeakTime"])+i_idx, debug = debug)
+                    my_runs[run][ch][label+typ+str(k)+cut_label] = np.sum(this_aux_ADC[:,:f_idx], axis = 1)
             
             if debug: print_colored("Integrated wvfs according to type **%s** from %.2E to %.2E"%(typ,i_idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]), "SUCCESS")
     return my_runs
