@@ -82,7 +82,7 @@ def update_user_input(user_input,new_input_list,debug=False):
         if check_key(user_input, key_label) == False:
 
             q = [ inquirer.Text(key_label, message="Please select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
-            new_user_input[key_label] =  [inquirer.prompt(q)[key_label]]
+            new_user_input[key_label] = inquirer.prompt(q)[key_label].split(",")
             # new_user_input[key_label] = input("Please select %s (separated with commas): "%key_label).split(",")
         else: pass
             # if debug: print("Using %s from user input"%key_label)
