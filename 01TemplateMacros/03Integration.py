@@ -1,6 +1,6 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"runs":["CALIB_RUNS","LIGHT_RUNS","ALPHA_RUNS","MUON_RUNS","NOISE_RUNS"],"channels":["CHAN_TOTAL"]}
-user_input = initialize_macro("03Integration",["input_file","debug","key","cuts"],default_dict=default_dict, debug=True)
+user_input = initialize_macro("03Integration",["input_file","key","cuts","debug"],default_dict=default_dict, debug=True)
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
 
 ### 02Integration
