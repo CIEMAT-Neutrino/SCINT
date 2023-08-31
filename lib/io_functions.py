@@ -400,6 +400,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             (e) "EVA": all the existing keys/branches EXCEPT ADC
             (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
             (g) "CAL": only Charge* keys
+            (h) "WVF": only Wvf* keys
         - option: 
             (a) "LOAD": takes the os.listdir(path+folder) as brach_list (IN)
             (b) "SAVE": takes the my_run.keys() as branch list (OUT)
@@ -421,13 +422,13 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = aux
 
     elif preset == "RAW":  # Save aux + Raw branches
-        branch_list = dict_option[option]; aux = ["NBinsWvf", "TimeStamp","Sampling"]
+        branch_list = dict_option[option]; aux = ["TimeStamp","Sampling"]
         for key in branch_list:
             if "Raw" in key: aux.append(key) 
         branch_list = aux
 
     elif preset == "INT": # Save aux + Charge* and Ave* branches
-        branch_list = dict_option[option]; aux = ["NBinsWvf", "TimeStamp", "Sampling"]
+        branch_list = dict_option[option]; aux = ["TimeStamp", "Sampling"]
         for key in branch_list:
             if "Charge" in key and key not in aux: aux.append(key)
             if "Ave" in key and key not in aux: aux.append(key)
@@ -435,24 +436,29 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     elif preset == "EVA": # Remove ADC, Dict and Cuts branches
         branch_list = dict_option[option]
-        aux = ["NBinsWvf",  "TimeStamp", "Sampling"]
+        aux = ["TimeStamp", "Sampling"]
         for key in branch_list:
             if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "DEC": # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
         branch_list = dict_option[option]
-        aux = ["NBinsWvf",  "TimeStamp", "Sampling", "SER"]
+        aux = ["TimeStamp", "Sampling", "SER"]
         for key in branch_list:
             if "Gauss" in key or "Wiener" in key or "Dec" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "CAL": # Save aux + Charge* branches
-        branch_list = dict_option[option]; aux = ["RawNBinsWvf", "TimeStamp", "PedLim", "Sampling"]
+        branch_list = dict_option[option]; aux = ["TimeStamp", "Sampling"]
         for key in branch_list:
             if "Charge" in key and key not in aux: aux.append(key)
         branch_list = aux
 
+    elif preset == "WVF": # Save aux + Charge* branches
+        branch_list = dict_option[option]; aux = ["TimeStamp", "Sampling"]
+        for key in branch_list:
+            if "Wvf" in key and key not in aux: aux.append(key)
+        branch_list = aux
     # if debug: print_colored("\nPreset branch_list:" + str(branch_list), "DEBUG")
     return branch_list
 
@@ -490,19 +496,19 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug) # Get the branch list if preset is used
             for branch in branch_list:   
-                try:
-                    if compressed:
-                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
-                        if branch.__contains__("ADC"):my_runs[run][ch][branch.replace(".npz","")]=my_runs[run][ch][branch.replace(".npz","")].astype(float)
-                    else:
-                        my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
-                        if branch.__contains__("ADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
-                except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
+                # try:
+                if compressed:
+                    my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
+                    if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npz","")]=my_runs[run][ch][branch.replace(".npz","")].astype(float)
+                else:
+                    my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
+                    if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
+                # except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
             try:
-                my_runs[run][ch]["Label"] = info["CHAN_LABEL"][np.where(channels == ch)[0][0]]
+                my_runs[run][ch]["Label"] = info["CHAN_LABEL"][ch]
             except IndexError: 
-                my_runs[run][ch]["Label"] = info["CHAN_LABEL"][np.where(np.asarray(channels).astype(int) == int(ch))[0][0]]
+                my_runs[run][ch]["Label"] = info["CHAN_LABEL"][int(ch)]
                  
             print_colored("load_npy --> DONE!\n", "SUCCESS")
             del branch_list # Delete the branch list to avoid loading the same branches again
