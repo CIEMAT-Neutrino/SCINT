@@ -90,7 +90,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
             if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
                 
             # try:
-            counts, bins, bars = vis_var_hist(my_runs, [key], compare="NONE", OPT=OPT)
+            counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
             plt.close()
 
             ## New Figure with the fit ##
@@ -199,7 +199,7 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
             if i == fitted_peaks-1: gain = -99; dgain = -99; sn0 = -99; dsn0 = -99; sn1 = -99; dsn1 = -99; sn2 = -99; dsn2 = -99
             else:
                 # GAIN = [mu(i+1) - mu(i)] * 1e-12 /    e-19 (pC)
-                gain  = (copy_cal[i+1][0][0]-copy_cal[i][0][0])*1e-12/1.602e-19; dgain = (np.sqrt(copy_cal[i+1][0][1]**2+copy_cal[i][0][1]**2))*1e-12/1.602e-19
+                gain  = (copy_cal[i+1][0][0]-copy_cal[i][0][0]); dgain = (np.sqrt(copy_cal[i+1][0][1]**2+copy_cal[i][0][1]**2)) #*1e-12/1.602e-19 #when everythong was pC
                 
                 # SN0 = [mu(i+1)-mu(i)]/sigma(i)
                 sn0 = (copy_cal[i+1][0][0]-copy_cal[i][0][0])/copy_cal[i][2][0]
