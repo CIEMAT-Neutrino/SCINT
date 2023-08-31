@@ -9,9 +9,10 @@ OPT  = {
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False),
     "CUTTED_WVF":  -1,                   # Shows all/un-cutted/cutted waveforms (True/False)
     "SAME_PLOT":   False,                # True if we want to plot different channels in the SAME plot
-    "LEGEND":      True                 # Shows plot legend (True/False)
+    "LEGEND":      True,                 # Shows plot legend (True/False)
+    "COMPARE":     "CHANNELS"            # Compare CHANNELS or RUNS
 }
 
 ### 0WVisWvf
 my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=user_input["load_preset"][0], compressed=True, debug=user_input["debug"])
-vis_compare_wvf(my_runs, user_input["variables"], compare="CHANNELS", OPT=OPT)
+vis_compare_wvf(my_runs, user_input["variables"], OPT=OPT)
