@@ -4,5 +4,14 @@ user_input = initialize_macro("00Raw2Np",["input_file","debug"],default_dict=def
 info = read_input_file(user_input["input_file"], debug=user_input["debug"])
 
 ### 10Ana2Root
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int), np.asarray(user_input["channels"]).astype(int), preset="EVA", info=info, compressed=True) # preset could be RAW or ANA
-npy2root(my_runs, debug=user_input["debug"])
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(int), np.asarray(user_input["channels"]).astype(int), preset="CAL", info=info, compressed=True) # preset could be RAW or ANA
+delete_keys(my_runs,["Label","NBinsWvf","TimeStamp","Sampling","PeakAmp","PedLim","ChargeRangeDict","AnaChargeRangeDict"])
+root_df = npy2root(my_runs[user_input["runs"][0]][user_input["channels"][0]], debug=user_input["debug"])
+root_df.Display().Print()
+
+c1 = ROOT.TCanvas("c1","c1",800,600)
+cut_df = root_df.Filter("AnaChargeAveRange > 0")
+histo = cut_df.Histo1D("AnaChargeAveRange")
+histo.Draw()
+
+input("Press Enter to continue...")
