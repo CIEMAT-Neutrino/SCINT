@@ -166,21 +166,24 @@ def get_units(my_runs, debug = False):
 #************************* PEAK + PEDESTAL *********************************#
 #===========================================================================# 
 
-def compute_peak_variables(my_runs, key = "", label = "", buffer = 25, debug = False):
+def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = False):
     '''
     Computes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
     key, label = get_wvf_label(my_runs, key, label, debug = debug)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         aux_ADC = my_runs[run][ch][key]
-        my_runs[run][ch][label+"PeakAmp" ] = np.max    (my_runs[run][ch][label+"PChannel"]*aux_ADC[:,:],axis=1)
-        my_runs[run][ch][label+"PeakTime"] = np.argmax (my_runs[run][ch][label+"PChannel"]*aux_ADC[:,:],axis=1)
+        my_runs[run][ch][label+"PeakAmp" ] = my_runs[run][ch]["PChannel"]*np.max(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
+        my_runs[run][ch][label+"PeakTime"] = np.argmax (my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
         # Compute valley amplitude in the buffer around the peak to avoid noise
         i_idx = my_runs[run][ch][label+"PeakTime"]
         i_idx[i_idx < 0] = 0
         this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
-        my_runs[run][ch][label+"ValleyAmp" ] = np.min(my_runs[run][ch][label+"PChannel"]*this_aux_ADC[:,:buffer],axis=1)
-        my_runs[run][ch][label+"ValleyTime"] = i_idx + np.argmin(my_runs[run][ch][label+"PChannel"]*this_aux_ADC[:,:buffer],axis=1)
+        my_runs[run][ch][label+"ValleyAmp" ] = my_runs[run][ch]["PChannel"]*(np.min(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
+        my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
+        if label == "Ana": 
+            my_runs[run][ch][label+"PeakAmp" ] *= my_runs[run][ch]["PChannel"] # Change polarity!
+            my_runs[run][ch][label+"ValleyAmp" ] *= my_runs[run][ch]["PChannel"]
         print_colored("Peak variables have been computed for run %i ch %i"%(run,ch), "blue")
 
 def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=100, sliding=100, debug=False):
@@ -217,9 +220,8 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=100, debug=False):
     Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
     It checks for the best window.
     '''
-    
     slides=int(ped_lim/sliding);
-    nwvfs=ADC.shape[0];
+    nwvfs=ADC.shape[0]
     aux=np.zeros((nwvfs,slides))
 
     for i in range(slides): aux[:,i]=np.std(ADC[:,(i*sliding):((i+1)*sliding)],axis=1)
@@ -242,7 +244,7 @@ def compute_ana_wvfs(my_runs, debug = False):
     from .io_functions import print_colored, print_keys
 
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
-        my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["RawPChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
+        my_runs[run][ch]["AnaADC"] = (my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T
         print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
         
@@ -251,7 +253,6 @@ def compute_power_spec(ADC, timebin, debug = False):
     ''' 
     Computes the power spectrum of the given events. It returns both axis. 
     '''
-
     aux = [] 
     aux_X = np.fft.rfftfreq(len(ADC[0]), timebin)
     for i in range(len(ADC)): aux.append(np.fft.rfft(ADC[i]))
@@ -260,15 +261,14 @@ def compute_power_spec(ADC, timebin, debug = False):
 
 
 @numba.njit
-def shift_ADCs(ADC,shift,debug=False):
+def shift_ADCs(ADC, shift, debug=False):
     ''' 
     Used for the sliding window. 
     '''
-
     N_wvfs=ADC.shape[0]
     aux_ADC=np.zeros(ADC.shape)
     for i in range(N_wvfs): aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
-    print("ADCs have been shifted")
+    # print("ADCs have been shifted")
     return aux_ADC
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
