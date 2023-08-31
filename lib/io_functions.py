@@ -590,6 +590,8 @@ def npy2root(my_runs, debug = False):
     '''
     # Create the ROOT dataframe
     df = ROOT.RDF.FromNumpy(my_runs)
+    return df
+
     # Create the ROOT file
     f = ROOT.TFile.Open("test.root","RECREATE")
     # Create the ROOT tree
@@ -597,8 +599,14 @@ def npy2root(my_runs, debug = False):
     # Save the ROOT file
     f.Write()
     f.Close()
+
+    f2 = ROOT.TFile("test.root")
+    t = f2.myTree
+    print("These are all the columns available to this dataframe:")
+    for branch in t.GetListOfBranches():
+        print("Branch: %s" %branch.GetName())
+
     if debug: print_colored("npy2root --> DONE!\n", "SUCCESS")
-    return tree
 
 def npy2df(my_runs, debug = False):
     '''
