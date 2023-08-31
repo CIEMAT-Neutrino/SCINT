@@ -93,7 +93,7 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                 elif(key == "AnaADC"):
                     print_colored("AnaADC not saved but we compute it now :)", "WARNING")
                     min.append(np.argmax(my_run[run][ch_list[j]][true_key][idx]))
-                    ana = my_run[run][ch_list[j]]["RawPChannel"]*((my_run[run][ch_list[j]]["RawADC"][idx].T-my_run[run][ch_list[j]]["RawPedMean"][idx]).T)
+                    ana = my_run[run][ch_list[j]]["PChannel"]*((my_run[run][ch_list[j]]["RawADC"][idx].T-my_run[run][ch_list[j]]["RawPedMean"][idx]).T)
                     raw.append(ana)
                     ped = 0
                     std = my_run[run][ch_list[j]]["AnaPedSTD"][idx]
@@ -251,9 +251,9 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                     except KeyError: print_colored("Max peak amplitude not found!", color="ERROR")
                     try: print("- Max peak time: {:.2E}".format(my_run[run][ch_list[j]][label+"PeakTime"][idx]*my_run[run][ch_list[j]]["Sampling"]))
                     except KeyError: print_colored("Max peak time not found!", color="ERROR")
-                    try:    print("-",OPT["CHARGE_KEY"],"{:.2E}".format(my_run[run][ch_list[j]][OPT["CHARGE_KEY"]][idx]))
+                    try:    print("-",label+OPT["CHARGE_KEY"],"{:.2E}".format(my_run[run][ch_list[j]][label+OPT["CHARGE_KEY"]][idx]))
                     except:
-                        if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%OPT["CHARGE_KEY"], "WARNING")
+                        if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%label+OPT["CHARGE_KEY"], "WARNING")
                         else: print("- Charge: default charge key has not been computed")
                     try:      print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
                     except:
@@ -279,7 +279,7 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
         except: axs.clear()
         plt.close()
 
-def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
+def vis_compare_wvf(my_run, keys, OPT = {}):
     '''
     This function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
     
@@ -310,12 +310,13 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
     nch = len(my_run["NChannel"])
     axs = []
     
-    if compare == "CHANNELS": a_list = r_list;  b_list = ch_list 
-    if compare == "RUNS":     a_list = ch_list; b_list = r_list 
+    if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
+    if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
+    if OPT["COMPARE"] == "RUNS":     a_list = ch_list; b_list = r_list 
 
     for a in a_list:
-        if compare == "CHANNELS": run = a
-        if compare == "RUNS":      ch = a
+        if OPT["COMPARE"] == "CHANNELS": run = a
+        if OPT["COMPARE"] == "RUNS":      ch = a
 
         plt.ion()
         fig, ax = plt.subplots(1 ,1, figsize = (8,6))
@@ -328,8 +329,8 @@ def vis_compare_wvf(my_run, keys, compare="RUNS", OPT = {}):
         counter = 0
         ref_max_idx = -1
         for b in b_list:
-            if compare == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
-            if compare == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"]).replace("#"," ")
+            if OPT["COMPARE"] == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
+            if OPT["COMPARE"] == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"]).replace("#"," ")
             if   len(keys) == 1: ave = my_run[run][ch][keys[counter]][0]
             elif len(keys) > 1:  ave = my_run[run][ch][keys[counter]][0]; counter = counter + 1
 
