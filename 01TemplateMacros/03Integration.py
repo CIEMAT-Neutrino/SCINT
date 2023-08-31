@@ -8,10 +8,6 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][3], compressed=True, debug=user_input["debug"])
     
     average_wvfs(my_runs, key=user_input["key"][0], label="Ana", centering="NONE", debug=user_input["debug"])
-    label, my_runs = cut_selector(my_runs, user_input)
-    average_wvfs(my_runs, key=user_input["key"][0], label="Ana", cut_label="Signal", centering="PEAK", debug=user_input["debug"])
-
-    ## Charge Integration ##
     integrate_wvfs(my_runs, info=info, key=user_input["key"][0], label="Ana", debug=user_input["debug"])
 
     delete_keys(my_runs,user_input["key"])
