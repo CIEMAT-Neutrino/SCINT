@@ -422,40 +422,33 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = aux
 
     elif preset == "RAW":  # Save aux + Raw branches
-        branch_list = dict_option[option]; aux = ["TimeStamp","Sampling"]
+        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Raw" in key: aux.append(key) 
         branch_list = aux
 
-    elif preset == "INT": # Save aux + Charge* and Ave* branches
-        branch_list = dict_option[option]; aux = ["TimeStamp", "Sampling"]
-        for key in branch_list:
-            if "Charge" in key and key not in aux: aux.append(key)
-            if "Ave" in key and key not in aux: aux.append(key)
-        branch_list = aux
-
     elif preset == "EVA": # Remove ADC, Dict and Cuts branches
         branch_list = dict_option[option]
-        aux = ["TimeStamp", "Sampling"]
+        aux = ["TimeStamp"]
         for key in branch_list:
             if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "DEC": # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
         branch_list = dict_option[option]
-        aux = ["TimeStamp", "Sampling", "SER"]
+        aux = ["TimeStamp", "SER"]
         for key in branch_list:
             if "Gauss" in key or "Wiener" in key or "Dec" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "CAL": # Save aux + Charge* branches
-        branch_list = dict_option[option]; aux = ["TimeStamp", "Sampling"]
+        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Charge" in key and key not in aux: aux.append(key)
         branch_list = aux
 
     elif preset == "WVF": # Save aux + Charge* branches
-        branch_list = dict_option[option]; aux = ["TimeStamp", "Sampling"]
+        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Wvf" in key and key not in aux: aux.append(key)
         branch_list = aux
@@ -505,10 +498,10 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
                     if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
                 # except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
-            try:
-                my_runs[run][ch]["Label"] = info["CHAN_LABEL"][ch]
-            except IndexError: 
-                my_runs[run][ch]["Label"] = info["CHAN_LABEL"][int(ch)]
+
+            my_runs[run][ch]["Label"] = info["CHAN_LABEL"][int(ch)]
+            my_runs[run][ch]["PChannel"] = info["CHAN_POLAR"][int(ch)]
+            my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
             print_colored("load_npy --> DONE!\n", "SUCCESS")
             del branch_list # Delete the branch list to avoid loading the same branches again
