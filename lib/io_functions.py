@@ -65,7 +65,7 @@ def read_input_file(input, path = "../input/", debug = False):
     info = dict()
     NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY"]
+    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","CUT_CHAN","CUT_TYPE","CUT_KEYS","CUT_LOGIC","CUT_VALUE","CUT_INCLUSIVE"]
     
     # Strips the newline character
     for line in lines:
@@ -118,6 +118,16 @@ def read_input_file(input, path = "../input/", debug = False):
                 if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
     return info
+
+def cuts_info2dict(info, debug=False):
+    '''
+    Convert the information stored in the input file to a dictionary with the cuts information.
+    '''
+    cuts_dict = {'cut_df': [False], 'cut_lin_rel': [False], 'cut_peak_finder': [False]}
+    for i, cut in enumerate(info["CUT_TYPE"]):
+        cuts_dict[cut] = [True, info["CUT_CHAN"], info["CUT_KEYS"], info["CUT_LOGIC"], info["CUT_VALUE"], info["CUT_INCLUSIVE"]]
+    if debug: print_colored("Cuts dictionary: "+str(cuts_dict), "DEBUG")
+    return cuts_dict
 
 def list_to_string(input_list):
     '''
