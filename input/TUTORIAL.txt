@@ -49,3 +49,13 @@ F_RANGE: 1,2,3
 ####  ANALYSIS INFO ####
 ########################
 ANA_KEY: RawADC
+
+########################
+####   CUTS INFO    ####
+########################
+CUT_CHAN: 
+CUT_TYPE: 
+CUT_KEYS: 
+CUT_LOGIC: 
+CUT_VALUE: 
+CUT_INCLUSIVE: 
