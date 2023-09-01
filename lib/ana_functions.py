@@ -201,10 +201,14 @@ def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=10
         if type(ped_lim) != int:
             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
             ped_lim = values[np.argmax(counts)]-buffer
-        
+
         ADC_aux=my_runs[run][ch][key]
+        my_runs[run][ch][label+"PreTriggerSTD"]   = np.std (ADC_aux[:,:ped_lim],axis=1)
+        my_runs[run][ch][label+"PreTriggerMean"]  = np.mean(ADC_aux[:,:ped_lim],axis=1)
+        my_runs[run][ch][label+"PreTriggerMax"]   = np.max (ADC_aux[:,:ped_lim],axis=1)
+        my_runs[run][ch][label+"PreTriggerMin"]   = np.min (ADC_aux[:,:ped_lim],axis=1)
+
         ADC, start_window=compute_pedestal_sliding_windows(ADC_aux, ped_lim=ped_lim, sliding=sliding)
-        
         my_runs[run][ch][label+"PedSTD"]   = np.std (ADC[:,:sliding],axis=1)
         my_runs[run][ch][label+"PedMean"]  = np.mean(ADC[:,:sliding],axis=1)
         my_runs[run][ch][label+"PedMax"]   = np.max (ADC[:,:sliding],axis=1)
