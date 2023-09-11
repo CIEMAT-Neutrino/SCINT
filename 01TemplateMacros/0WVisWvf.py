@@ -4,13 +4,14 @@ info = read_input_file(user_input["input_file"], debug=user_input["debug"])
 
 OPT  = {
     "MICRO_SEC":   True,                 # Time in microseconds (True/False)
-    "NORM":        False,                # Runs can be displayed normalised (True/False)
-    "LOGY":        False,                # Runs can be displayed in logy (True/False)
+    "NORM":        True,                # Runs can be displayed normalised (True/False)
+    "LOGY":        True,                # Runs can be displayed in logy (True/False)
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False),
     "CUTTED_WVF":  -1,                   # Shows all/un-cutted/cutted waveforms (True/False)
     "SAME_PLOT":   False,                # True if we want to plot different channels in the SAME plot
     "LEGEND":      True,                 # Shows plot legend (True/False)
-    "COMPARE":     "CHANNELS"            # Compare CHANNELS or RUNS
+    "COMPARE":     "RUNS",            # Compare CHANNELS or RUNS
+    "ALIGN":       True                # Align by TIME or PEAK
 }
 
 ### 0WVisWvf
