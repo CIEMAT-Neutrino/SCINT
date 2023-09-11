@@ -10,7 +10,7 @@ OPT  = {
     "SHOW_PARAM":  True,                 # Print terminal information (True/False)
     "CHARGE_KEY":  "ChargeAveRange",     # Select charge info to be displayed. Default: "ChargeAveRange" (if computed)
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False),
-    "CUTTED_WVF":  -1,                   # Shows all/un-cutted/cutted waveforms (True/False)
+    "CUTTED_WVF":  True,                   # Shows all/un-cutted/cutted waveforms (True/False)
     "SAME_PLOT":   False,                # True if we want to plot different channels in the SAME plot
     "LEGEND":      False                 # Shows plot legend (True/False)
 }
