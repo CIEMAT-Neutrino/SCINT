@@ -30,7 +30,7 @@ OPT = {
 deconvolve(my_runs,keys=keys, noise_run=[], OPT=OPT, debug=user_input["debug"])
 
 OPT = {
-    # "SHOW": False,
+    "SHOW": False,
     "FIXED_CUTOFF": True
 }
 
