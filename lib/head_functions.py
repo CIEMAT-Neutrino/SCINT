@@ -202,3 +202,53 @@ def apply_cuts(user_input, debug=False):
 
             if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
             return cut_dict
+
+# Function to read and print the content of a text file
+def read_and_print_text_file(filename):
+    from .io_functions import print_colored
+
+    try:
+        first_words = []
+        with open(filename, 'r') as file:
+            content = file.read()
+            for l,line in enumerate(content.strip().split()):
+                if ":" in line: first_words.append(line)
+            print_colored("\nCurrent visualization parameters:","INFO")
+            print(content)
+            print("\n")
+        return content, first_words
+    except FileNotFoundError: print_colored(f"The file '{filename}' does not exist.","ERROR"); return None
+
+# Function to update a specific line in the text content
+def update_line(filename, content, first_words, line_label, new_text):
+    read_lines  = content.split('\n')
+    line_number = np.where(np.asarray(first_words) == line_label)[0][0]
+    new_lines   = read_lines
+    new_lines[line_number] = line_label + " " + new_text
+    save_lines = [i + j for i,j in  zip(new_lines,["\n"]*int(len(new_lines)-1)+[""])]
+
+    with open(filename, 'w') as file:
+        for line in save_lines: file.write(line)
+
+    print("UPDATED",save_lines)
+    print(f"Content has been updated and saved to '{filename}'.")
+
+    return save_lines
+
+def opt_selector(filename = "VisConfig.txt", debug=False):
+    from .io_functions import print_colored
+    content, first_words = read_and_print_text_file(filename)
+    if content:
+        q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
+        change_line =  inquirer.prompt(q)["change"].strip().lower()
+        if change_line in ["yes","y","true","1"]:
+            q = [ inquirer.Checkbox("lines", message="Choose the lines to change", choices=first_words) ]
+            line_label =  inquirer.prompt(q)["lines"]
+            for line in line_label:
+                new_text = input(f"Enter the new text for line {line} ")
+                updated_content = update_line(filename, content, first_words, line, new_text)
+            my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in updated_content}
+    
+        else: my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in content.split('\n')}
+        
+        return my_opt

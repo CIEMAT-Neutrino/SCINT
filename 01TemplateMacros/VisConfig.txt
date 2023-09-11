@@ -1,0 +1,13 @@
+MICRO_SEC:   True
+NORM: True
+LOGY:        True
+SHOW_AVE:    AveWvf
+SHOW_PARAM:  False
+COMPARE:     NONE
+CHARGE_KEY:  ChargeAveRange
+CHARGEDICT:  False
+PEAK_FINDER: False
+CUTTED_WVF:  -1
+SAME_PLOT:   False
+LEGEND:      True
+SHOW:        True
