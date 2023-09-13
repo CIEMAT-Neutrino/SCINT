@@ -56,9 +56,9 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
                             if sys.argv[sys.argv.index(arg)+1].split(",")[0].lower() in ['true', '1', 't', 'y', 'yes']:  
                                 user_input = select_input_file(user_input, debug=debug)
                                 user_input["input_file"] = user_input["input_file"][0]
-                                user_input["cuts"] = apply_cuts(user_input, debug=debug)
+                                user_input["filter"] = apply_cuts(user_input, debug=debug)
                             if sys.argv[sys.argv.index(arg)+1].split(",")[0].lower() in ['false', '0', 'f', 'n', 'no']: 
-                                user_input["cuts"] = {'cut_df': [False], 'cut_lin_rel': [False], 'cut_peak_finder': [False]}
+                                user_input["filter"] = {'cut_df': [False], 'cut_lin_rel': [False], 'cut_peak_finder': [False]}
 
                     except IndexError:
                         print("Please provide argument for flag %s"%flag_dict[flag])
@@ -89,10 +89,10 @@ def update_user_input(user_input,new_input_list,debug=False):
     flags = {"load_preset":"-l","save_preset":"-s","key":"-k","variables":"-v","runs":"-r","channels":"-c","debug":"-d"}
     for key_label in new_input_list:
         if check_key(user_input, key_label) == False:
-            if key_label != "cuts":
+            if key_label != "filter":
                 q = [ inquirer.Text(key_label, message="Please select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
                 new_user_input[key_label] =  inquirer.prompt(q)[key_label].split(",")
-            else:  new_user_input["cuts"] = apply_cuts(user_input, debug=debug)
+            else:  new_user_input["filter"] = apply_cuts(user_input, debug=debug)
                 
         else: pass
             # if debug: print("Using %s from user input"%key_label)
@@ -127,7 +127,7 @@ def use_default_input(user_input, default_dict, debug=False):
     '''
     from .io_functions import check_key, print_colored, read_input_file
     
-    info = read_input_file(user_input["input_file"])
+    info = read_input_file(user_input["input_file"], debug=False)
 
     new_user_input = user_input.copy()
     for default_key in default_dict:
@@ -169,17 +169,17 @@ def apply_cuts(user_input, debug=False):
 
     
     cuts_choices = ["cut_df","cut_lin_rel","cut_peak_finder"]
-    info = read_input_file(user_input["input_file"])
+    info = read_input_file(user_input["input_file"], debug=False)
     cut_dict = cuts_info2dict(info)
     for cut in cuts_choices:
         if cut_dict[cut][0] == True: 
             if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
             return cut_dict
         else:
-            if check_key(user_input, "cuts") == False:
+            if check_key(user_input, "filter") == False:
 
-                q = [ inquirer.Checkbox("cuts", message="Please select the cuts you want to apply", choices=cuts_choices) ]
-                my_cuts = [inquirer.prompt(q)["cuts"]][0]
+                q = [ inquirer.Checkbox("filter", message="Please select the cuts you want to apply", choices=cuts_choices) ]
+                my_cuts = [inquirer.prompt(q)["filter"]][0]
                 cut_dict = dict.fromkeys(cuts_choices)
                 for cut in cuts_choices:
                     if cut in my_cuts:
@@ -236,19 +236,27 @@ def update_line(filename, content, first_words, line_label, new_text):
     return save_lines
 
 def opt_selector(filename = "VisConfig.txt", debug=False):
-    from .io_functions import print_colored
+    from .io_functions import print_colored, read_input_file
     content, first_words = read_and_print_text_file(filename)
-    if content:
-        q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
-        change_line =  inquirer.prompt(q)["change"].strip().lower()
-        if change_line in ["yes","y","true","1"]:
-            q = [ inquirer.Checkbox("lines", message="Choose the lines to change", choices=first_words) ]
-            line_label =  inquirer.prompt(q)["lines"]
-            for line in line_label:
-                new_text = input(f"Enter the new text for line {line} ")
-                updated_content = update_line(filename, content, first_words, line, new_text)
-            my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in updated_content}
+    # if content:
+    q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
+    change_line =  inquirer.prompt(q)["change"].strip().lower()
+    if change_line in ["yes","y","true","1"]:
+        q = [ inquirer.Checkbox("lines", message="Choose the lines to change", choices=first_words) ]
+        line_label =  inquirer.prompt(q)["lines"]
+        for line in line_label:
+            new_text = input(f"Enter the new text for line {line} ")
+            updated_content = update_line(filename, content, first_words, line, new_text)
+        my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in updated_content}
+
+    else: my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in content.split('\n')}
     
-        else: my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in content.split('\n')}
-        
-        return my_opt
+    my_opt = read_input_file(filename.split(".txt")[0],path="",BOOLEAN=["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","SHOW_PARAM","CHARGEDICT","PEAK_FINDER","SAME_PLOT","LEGEND","SHOW"],STRINGS=["SHOW_AVE","CHARGE_KEY","COMPARE"],NUMBERS=["CUTTED_WVF"],debug=False)
+    # Reformat the dict to select the first element of the list of each entry
+    for key in my_opt:
+        try: my_opt[key] = my_opt[key][0]
+        except IndexError:
+            pass
+
+    if debug: print_colored("Using visualization options %s"%my_opt,"INFO")
+    return my_opt
