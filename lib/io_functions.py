@@ -50,7 +50,7 @@ def print_dict(dictionary, debug=False):
 #===========================================================================#
 #************************** INPUT FILE *************************************#
 #===========================================================================#
-def read_input_file(input, path = "../input/", debug = False):
+def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "../input/",debug = False):
     '''
     Obtain the information stored in a .txt input file to load the runs and channels needed.
     **VARIABLES**:
@@ -63,10 +63,11 @@ def read_input_file(input, path = "../input/", debug = False):
     file  = open(path+input+".txt", 'r')
     lines = file.readlines()
     info = dict()
-    NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
-    DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","CUT_CHAN","CUT_TYPE","CUT_KEYS","CUT_LOGIC","CUT_VALUE","CUT_INCLUSIVE"]
-    
+
+    if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
+    if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
+    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","CUT_CHAN","CUT_TYPE","CUT_KEYS","CUT_LOGIC","CUT_VALUE","CUT_INCLUSIVE"]
+    if BOOLEAN == []: BOOLEAN = []
     # Strips the newline character
     for line in lines:
         for LABEL in DOUBLES: 
@@ -116,7 +117,21 @@ def read_input_file(input, path = "../input/", debug = False):
                     except ValueError:
                         if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
                 if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+        for LABEL in BOOLEAN:
+            if line.startswith(LABEL):
+                # if debug: print_colored(line, "DEBUG")
+                try:
+                    info[LABEL] = []
+                    numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                except IndexError:
+                    if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
+                    continue
 
+                for i in numbers.split(","):
+                    try:   info[LABEL].append(i.lower() in ["yes","y","true","t","si","s"]) # Try to append the string to LABEL list
+                    except ValueError:
+                        if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
+                if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
     return info
 
 def cuts_info2dict(info, debug=False):
