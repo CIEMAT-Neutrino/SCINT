@@ -256,6 +256,8 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                     except:
                         if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%label+OPT["CHARGE_KEY"], "WARNING")
                         else: print("- Charge: default charge key has not been computed")
+                    try: print("- TimeStamp: {:.2E}".format(my_run[run][ch_list[j]]["TimeStamp"][idx]))
+                    except KeyError: print_colored("TimeStamp not found!", color="ERROR") 
                     try:      print("- Peak_idx:",peak_idx*my_run[run][ch_list[j]]["Sampling"])
                     except:
                         if not check_key(OPT,"PEAK_FINDER"): print("")
@@ -430,7 +432,7 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
 
             for k in key:
                 # Debug the following line
-                if debug: print_colored("Plotting variable: ", k, color="INFO")
+                if debug: print_colored("Plotting variable: %s"%k, color="INFO")
                 aux_data = np.asarray(my_run[run][ch][k])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
                 aux_data = aux_data[~np.isnan(aux_data)]
                 
@@ -484,25 +486,29 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
             if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:     ax.legend()
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: ax.semilogy()
             if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
-                print_stats(ax,data)
+                print_stats(my_run,run,ch,ax,data)
                 plt.ion()
                 plt.show()
 
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] != "NONE":
-            print_stats(ax,data)
+            print_stats(my_run,run,ch,ax,data)
             plt.show()
             while not plt.waitforbuttonpress(-1): pass
             plt.close()
 
     return all_counts, all_bins, all_bars
 
-def print_stats(ax,data):
+def print_stats(my_run,run,ch,ax,data):
     '''
     This function prints the statistics of the data.
     '''
+    times = np.asarray(my_run[run][ch]["TimeStamp"])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
+    rate = 1/np.mean(np.diff(times))
     print_colored("\nStatistics of the histogram:", "INFO")
+    print_colored("- Counts: %i"%len(data), color="INFO")
+    print_colored("- Rate: %.2E"%rate, color="INFO")
     print_colored("- Mean: {:.2E}".format(np.mean(data)), "INFO")
     print_colored("- Median: {:.2E}".format(np.median(data)), "INFO")
     print_colored("- Std: {:.2E}".format(np.std(data)), "INFO")
