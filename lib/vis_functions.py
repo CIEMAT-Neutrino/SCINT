@@ -3,6 +3,7 @@
 #================================================================================================================================================#
 
 import math
+import inquirer
 import numpy             as np
 import matplotlib.pyplot as plt
 from matplotlib.colors           import LogNorm
@@ -306,9 +307,13 @@ def vis_compare_wvf(my_run, keys, OPT = {}):
 
     figure_features()
     r_list = my_run["NRun"]
-    ch_list = my_run["NChannel"]
+    ch_loaded = my_run["NChannel"]
     nch = len(my_run["NChannel"])
     axs = []
+    
+    # Make query to user: choose loaded chanels or select specific channels
+    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded.tolist()) ]
+    ch_list =  inquirer.prompt(q)["channels"]
     
     if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
@@ -394,7 +399,12 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
 
     figure_features()
     all_counts = []; all_bins = []; all_bars = []
-    r_list = my_run["NRun"]; ch_list = my_run["NChannel"]
+    r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
+
+    # Make query to user: choose loaded chanels or select specific channels
+    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded.tolist()) ]
+    ch_list =  inquirer.prompt(q)["channels"]
+
     if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
     if OPT["COMPARE"] == "RUNS":     a_list = ch_list; b_list = r_list
@@ -504,7 +514,12 @@ def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = Fals
     from .fig_config    import figure_features, add_grid
 
     figure_features()
-    r_list = my_run["NRun"]; ch_list = my_run["NChannel"]
+    r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
+
+    # Make query to user: choose loaded chanels or select specific channels
+    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded.tolist()) ]
+    ch_list =  inquirer.prompt(q)["channels"]
+
     if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
     if OPT["COMPARE"] == "RUNS":     a_list = ch_list; b_list = r_list
@@ -547,8 +562,14 @@ def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = Fals
             y_ypad = 0.2*(y_yptop - y_ypbot)
             y_ymin = y_ypbot - y_ypad; y_ymax = y_yptop + y_ypad
 
-            if "Time" in keys[0]: ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
-            else:                 ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], density=True, cmap = viridis, norm=LogNorm())
+            if "Time" in keys[0]:
+                if check_key(OPT, "LOGZ") == True and OPT["LOGZ"] == True: hist = ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], cmap = viridis, norm=LogNorm())
+                else: hist = ax.hist2d(x_data*my_run[run][ch]["Sampling"], y_data, bins=[600,600], range = [[x_ymin*my_run[run][ch]["Sampling"],x_ymax*my_run[run][ch]["Sampling"]],[y_ymin, y_ymax]], cmap = viridis)
+                plt.colorbar(hist[3])
+            else:
+                if check_key(OPT, "LOGZ") == True and OPT["LOGZ"] == True: hist = ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], cmap = viridis, norm=LogNorm())
+                else: hist = ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], cmap = viridis)
+                plt.colorbar(hist[3])
             ax.grid("both")
             fig.supxlabel(label0 + " " + keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(label1 + " " + keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
             fig.suptitle(title)
@@ -560,7 +581,9 @@ def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = Fals
                         y1 = float(input("ymin: ")); y2 = float(input("ymax: "))
                     except:
                         x1 = -1e6
-                ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], density=True, cmap = viridis, norm=LogNorm())
+                if check_key(OPT, "LOGZ") == True and OPT["LOGZ"] == True: hist = ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], cmap = viridis, norm=LogNorm())
+                else: hist = ax.hist2d(x_data, y_data, bins=[300,300], range = [[x1,x2],[y1, y2]], cmap = viridis)  
+                plt.colorbar(hist[3])
                 ax.grid("both")
 
             figures_list.append(fig)
