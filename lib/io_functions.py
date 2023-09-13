@@ -150,18 +150,23 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
 
     file = open(path+label+str(input_file)+".txt", 'w+')
     for branch in info:
+        if branch == "CHAN_POLAR":
+            if label == "Gauss" or label == "Wiener": 
+                info[branch] = len(info[branch])*[1]
         if branch == "LOAD_PRESET":
             if label == "Gauss" or label == "Wiener":
+                info[branch][1] = "DEC"
+                info[branch][2] = "DEC"
                 info[branch][3] = "DEC"
                 info[branch][4] = "DEC"
                 file.write(branch+": "+list_to_string(info[branch])+"\n")
-        elif branch == "REF":
-            if label == "Gauss" or label == "Wiener": 
-                info[branch][0] = label+"AveWvf"; file.write(branch+": "+list_to_string(info[branch])+"\n")
+        # elif branch == "REF":
+        #     if label == "Gauss" or label == "Wiener": 
+        #         info[branch][0] = label+"AveWvf"; file.write(branch+": "+list_to_string(info[branch])+"\n")
         # elif branch == "LIGHT_RUNS" or branch == "CALIB_RUNS" or branch == "MUON_RUNS":    
         #     if label == "Gauss" or label == "Wiener": 
         #         info[branch] = []; file.write(branch+": "+list_to_string(info[branch])+"\n")
-        elif branch == "ANA_LABEL":
+        elif branch == "ANA_KEY":
             if label == "Gauss" or label == "Wiener": 
                 info[branch] = label; file.write(branch+": "+list_to_string(info[branch])+"\n")
         else:
@@ -343,8 +348,8 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
             del my_dict["ADC"]
             my_dict["NBinsWvf"]    = my_dict["RawADC"][0].shape[0]
             my_dict["Sampling"]    = info["SAMPLING"][0]
-            my_dict["Label"]       = info["CHAN_LABEL"][j]
-            my_dict["RawPChannel"] = int(info["CHAN_POLAR"][j])
+            # my_dict["Label"]       = info["CHAN_LABEL"][j]
+            # my_dict["RawPChannel"] = int(info["CHAN_POLAR"][j])
 
             np.save(out_path+out_file,my_dict)
             
@@ -446,7 +451,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     elif preset == "DEC": # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
         branch_list = dict_option[option]
-        aux = ["TimeStamp", "SER"]
+        aux = ["TimeStamp"]
         for key in branch_list:
             if "Gauss" in key or "Wiener" in key or "Dec" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
@@ -462,7 +467,11 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         for key in branch_list:
             if "Wvf" in key and key not in aux: aux.append(key)
         branch_list = aux
+    
     # if debug: print_colored("\nPreset branch_list:" + str(branch_list), "DEBUG")
+    else:
+        print_colored("Preset not found. Returning all the branches.", "WARNING")
+        raise ValueError("Preset not found. Returning all the branches.")
     return branch_list
 
 def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):

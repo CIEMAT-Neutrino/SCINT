@@ -11,14 +11,14 @@ from itertools      import product
 from curve          import Curve
 
 
-def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Area", debug=False):
+def generate_SER(my_runs,light_runs,SPE_runs,scaling_type="Amplitude", debug=False):
     ''' 
     This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
 
     **VARIABLES:**
 
     - my_runs: DICTIONARY containing the wvf to be deconvolved.
-    - dec_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
+    - light_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
     - SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
     '''
 
@@ -28,15 +28,15 @@ def generate_SER(my_runs,dec_runs,SPE_runs,scaling_type="Area", debug=False):
 
     for ii in range(len(my_runs["NRun"])):
         for jj in range(len(my_runs["NChannel"])):
-            det_response =    dec_runs[dec_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvf"][0]
-            single_response = SPE_runs[SPE_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AveWvfSPE"][0]
+            det_response =    light_runs[light_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AnaAveWvf"][0]
+            single_response = SPE_runs[SPE_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AnaAveWvfSPE"][0]
             
             if scaling_type == "Amplitude": SER = np.max(single_response)*det_response/np.max(det_response)
             if scaling_type == "Area":      SER = np.sum(single_response)*det_response/np.sum(det_response)
             
             i_idx,f_idx = find_amp_decrease(SER, 1e-4)
             SER = np.roll(SER,-i_idx)
-            my_runs[my_runs["NRun"][ii]][my_runs["NChannel"][jj]]["SER"] = [SER]
+            my_runs[my_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AnaAveWvfSER"] = [SER]
     
     if debug: print_colored("\n---SER generated!", "SUCCESS")
 
@@ -66,7 +66,9 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
         for i in range(len(my_runs[run][ch][keys[0]])):
             # Select required runs and parameters
             signal = my_runs[run][ch][keys[0]][i]
-            
+            if "Raw" in keys[0]:
+                label = "Raw"
+                signal = my_runs[run][ch]["PChannel"]*(signal-my_runs[run][ch][label+"PedMean"][i])
             # Arrays must be even for fft
             signal = check_array_even(signal)
             template = check_array_even(template)
