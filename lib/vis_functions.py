@@ -484,16 +484,33 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
             if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:     ax.legend()
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: ax.semilogy()
             if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
+                print_stats(ax,data)
                 plt.ion()
                 plt.show()
+
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] != "NONE":
+            print_stats(ax,data)
             plt.show()
             while not plt.waitforbuttonpress(-1): pass
             plt.close()
 
     return all_counts, all_bins, all_bars
+
+def print_stats(ax,data):
+    '''
+    This function prints the statistics of the data.
+    '''
+    print_colored("\nStatistics of the histogram:", "INFO")
+    print_colored("- Mean: {:.2E}".format(np.mean(data)), "INFO")
+    print_colored("- Median: {:.2E}".format(np.median(data)), "INFO")
+    print_colored("- Std: {:.2E}".format(np.std(data)), "INFO")
+
+    # Add reference lines to the plot
+    ax.axvline(np.mean(data), c="k", alpha=0.5)
+    ax.axvline(np.mean(data)+np.std(data), c="k", ls="--", alpha=0.5)
+    ax.axvline(np.mean(data)-np.std(data), c="k", ls="--", alpha=0.5)
 
 def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = False, OPT={}):
     '''
