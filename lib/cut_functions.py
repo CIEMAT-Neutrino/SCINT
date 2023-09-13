@@ -10,20 +10,20 @@ from scipy.signal             import find_peaks
 from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
 
-def cut_selector(my_runs, user_input):
+def cut_selector(my_runs, user_input, debug=False):
     label = ""
-    if user_input["cuts"]["cut_df"][0]:
+    if user_input["filter"]["cut_df"][0]:
         label = "cut_df_"
         cut_dict={}
-        for kdx,key in enumerate(user_input["cuts"]["cut_df"][2]):
-            cut_dict[(key,user_input["cuts"]["cut_df"][3][kdx])] = float(user_input["cuts"]["cut_df"][4][kdx])
-        cut_df(my_runs, user_input["cuts"]["cut_df"][1], cut_dict=cut_dict, inclusive=user_input["cuts"]["cut_df"][5][0].lower() in ["yes","y","true","t"], debug=user_input["debug"])
-    if user_input["cuts"]["cut_lin_rel"][0]: 
+        for kdx,key in enumerate(user_input["filter"]["cut_df"][2]):
+            cut_dict[(key,user_input["filter"]["cut_df"][3][kdx])] = float(user_input["filter"]["cut_df"][4][kdx])
+        cut_df(my_runs, user_input["filter"]["cut_df"][1], cut_dict=cut_dict, inclusive=user_input["filter"]["cut_df"][5][0].lower() in ["yes","y","true","t"], debug=user_input["debug"])
+    if user_input["filter"]["cut_lin_rel"][0]: 
         label = "cut_lin_rel_"
-        cut_lin_rel(my_runs, user_input["cuts"]["cut_lin_rel"][1])
-    if user_input["cuts"]["cut_peak_finder"][0]:
+        cut_lin_rel(my_runs, user_input["filter"]["cut_lin_rel"][1])
+    if user_input["filter"]["cut_peak_finder"][0]:
         label = "cut_peak_finder_"
-        cut_peak_finder(my_runs, user_input["cuts"]["cut_peak_finder"][1], user_input["cuts"]["cut_peak_finder"][2], debug=user_input["debug"])
+        cut_peak_finder(my_runs, user_input["filter"]["cut_peak_finder"][1], user_input["filter"]["cut_peak_finder"][2], debug=user_input["debug"])
     
     return label, my_runs
 
