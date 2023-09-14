@@ -1,7 +1,7 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"runs":["ALPHA_RUNS"],"channels":["CHAN_TOTAL"],"key":["ANA_KEY"],"variables":["TYPE"]}
 user_input = initialize_macro("05Calibration",["input_file","debug"],default_dict=default_dict, debug=True)
-info = read_input_file(user_input["input_file"], debug=user_input["debug"])
+info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 
 OPT = {
     "LOGY": True,       # Runs can be displayed in logy (True/False)

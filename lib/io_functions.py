@@ -66,7 +66,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
 
     if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","CUT_CHAN","CUT_TYPE","CUT_KEYS","CUT_LOGIC","CUT_VALUE","CUT_INCLUSIVE"]
+    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY"]
     if BOOLEAN == []: BOOLEAN = []
     # Strips the newline character
     for line in lines:
@@ -134,13 +134,24 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
                 if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
     return info
 
-def cuts_info2dict(info, debug=False):
+def cuts_info2dict(user_input, debug=False):
     '''
     Convert the information stored in the input file to a dictionary with the cuts information.
     '''
-    cuts_dict = {'cut_df': [False], 'cut_lin_rel': [False], 'cut_peak_finder': [False]}
-    for i, cut in enumerate(info["CUT_TYPE"]):
-        cuts_dict[cut] = [True, info["CUT_CHAN"], info["CUT_KEYS"], info["CUT_LOGIC"], info["CUT_VALUE"], info["CUT_INCLUSIVE"]]
+    cuts_dict = {'cut_df': [False, []], 'cut_lin_rel': [False, []], 'cut_peak_finder': [False, []]}
+    keep_reading = True
+    for i, cut in enumerate(cuts_dict):
+        idx = 0
+        while keep_reading:
+            try: 
+                input_list = [str(idx)+"CUT_CHAN",str(idx)+"CUT_TYPE",str(idx)+"CUT_KEYS",str(idx)+"CUT_LOGIC",str(idx)+"CUT_VALUE",str(idx)+"CUT_INCLUSIVE"]
+                info = read_input_file(user_input["input_file"][0], STRINGS = input_list, debug=True)
+                if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
+                cuts_dict[cut][1].append([info[str(idx)+"CUT_CHAN"], info[str(idx)+"CUT_KEYS"][0], info[str(idx)+"CUT_LOGIC"][0], float(info[str(idx)+"CUT_VALUE"][0]), info[str(idx)+"CUT_INCLUSIVE"][0].lower() in ["yes","y","true","t","si","s"]])
+                idx += 1
+            except KeyError:
+                if debug: print_colored("No more cuts to read", "DEBUG")
+                keep_reading = False
     if debug: print_colored("Cuts dictionary: "+str(cuts_dict), "DEBUG")
     return cuts_dict
 

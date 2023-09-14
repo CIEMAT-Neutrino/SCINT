@@ -12,12 +12,13 @@ from shapely.geometry.polygon import Polygon
 
 def cut_selector(my_runs, user_input, debug=False):
     label = ""
+    cut_dict={}
     if user_input["filter"]["cut_df"][0]:
         label = "cut_df_"
-        cut_dict={}
-        for kdx,key in enumerate(user_input["filter"]["cut_df"][2]):
-            cut_dict[(key,user_input["filter"]["cut_df"][3][kdx])] = float(user_input["filter"]["cut_df"][4][kdx])
-        cut_df(my_runs, user_input["filter"]["cut_df"][1], cut_dict=cut_dict, inclusive=user_input["filter"]["cut_df"][5][0].lower() in ["yes","y","true","t"], debug=user_input["debug"])
+        for ldx,cut_list in enumerate(user_input["filter"]["cut_df"][1]):
+            this_cut = user_input["filter"]["cut_df"][1][ldx]
+            cut_dict[(this_cut[1],this_cut[2],this_cut[3],this_cut[4],ldx)] = this_cut[0]
+        cut_df(my_runs, cut_dict=cut_dict, debug=user_input["debug"])
     if user_input["filter"]["cut_lin_rel"][0]: 
         label = "cut_lin_rel_"
         cut_lin_rel(my_runs, user_input["filter"]["cut_lin_rel"][1])
@@ -32,42 +33,43 @@ def print_cut_info(my_cuts):
 
 
 
-def cut_df(my_runs, channels, cut_dict={}, inclusive=True, debug=False):
+def cut_df(my_runs, cut_dict={}, debug=False):
     from .io_functions  import print_colored, check_key
     from .ana_functions import generate_cut_array, get_units
 
     print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
 
-    for run  in (np.asarray(my_runs["NRun"]).astype(int)):
+    for run in (np.asarray(my_runs["NRun"]).astype(int)):
+        my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
         my_runs_df = pd.DataFrame(my_runs[run]).T
-        for ch_idx,ch in enumerate(np.asarray(channels).astype(int)):
-            my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
-            try: my_runs[run][ch]
-            except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()
+        for cut in cut_dict:
+            this_cut_cut_array = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
+            channels = cut_dict[cut]; key = cut[0]; logic = cut[1]; value = cut[2]; inclusive = cut[3]
+            for ch_idx,ch in enumerate(np.asarray(channels).astype(int)):
+                this_channel_cut_array = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
+                try: my_runs[run][ch]
+                except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()
 
-            if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs); print("...Running generate_cut_array...")
-            if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
-            for key in cut_dict:
-                if check_key(my_runs[run][ch], key[0]) == True:
-                    print_colored("... Cutting events for run %i channel %i with %s %s %0.2f ..."%(run, ch, key[0],key[1],cut_dict[key]),"INFO")
+                if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs); print("...Running generate_cut_array...")
+                if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
+                print_colored("... Cutting events for run %i channel %i with %s %s %0.2f ..."%(run, ch, key, logic, value),"INFO")
 
-                    if key[1] == "bigger_than":    my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] >  cut_dict[key]); print_cut_info(my_cuts)
-                    if key[1] == "smaller_than":   my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] <  cut_dict[key]); print_cut_info(my_cuts)
-                    if key[1] == "equal_than":     my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] == cut_dict[key]); print_cut_info(my_cuts)
-                    if key[1] == "not_equal_than": my_cuts = my_cuts * (my_runs_df.loc[ch][key[0]] != cut_dict[key]); print_cut_info(my_cuts)
-                else: print_colored("WARNING: Key %s not found in loaded data"%(key[0]),"WARNING")
+                if logic == "bigger_than":    this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(my_cuts)
+                if logic == "smaller_than":   this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(my_cuts)
+                if logic == "equal_than":     this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(my_cuts)
+                if logic == "not_equal_than": this_channel_cut_array = (my_runs_df.loc[ch][key] != value); print_cut_info(my_cuts)
 
-            this_channel_cut_array = my_cuts
-            if ch_idx == 0: global_cut_array = this_channel_cut_array
-            else:
-                if inclusive: global_cut_array = global_cut_array + this_channel_cut_array
-                else:         global_cut_array = global_cut_array * this_channel_cut_array
+                if ch_idx != 0:
+                    if inclusive: this_cut_cut_array = this_cut_cut_array + this_channel_cut_array
+                    else:         this_cut_cut_array = this_cut_cut_array * this_channel_cut_array
+                    
+                    print_colored("\nInclusive = %s"%inclusive,"magenta")
+                    print_cut_info(this_cut_cut_array)
                 
-                print("\nInclusive =", inclusive)
-                print_cut_info(global_cut_array)
+            my_cuts = my_cuts * this_cut_cut_array
 
         for loaded_ch in my_runs["NChannel"]: 
-            my_runs[run][loaded_ch]["MyCuts"] = global_cut_array
+            my_runs[run][loaded_ch]["MyCuts"] = my_cuts
     
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False, debug = False):

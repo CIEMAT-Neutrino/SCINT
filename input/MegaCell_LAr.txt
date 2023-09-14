@@ -41,9 +41,30 @@ ANA_KEY: RawADC
 ########################
 ####   CUTS INFO    ####
 ########################
-CUT_CHAN: 0,1
-CUT_TYPE: cut_df
-CUT_KEYS: AnaValleyAmp
-CUT_LOGIC: bigger_than
-CUT_VALUE: 0
-CUT_INCLUSIVE: False
+0CUT_CHAN: 2,3
+0CUT_TYPE: cut_df
+0CUT_KEYS: AnaValleyAmp
+0CUT_LOGIC: bigger_than
+0CUT_VALUE: 0
+0CUT_INCLUSIVE: False
+
+1CUT_CHAN: 4,5
+1CUT_TYPE: cut_df
+1CUT_KEYS: AnaValleyAmp
+1CUT_LOGIC: bigger_than
+1CUT_VALUE: 0
+1CUT_INCLUSIVE: False
+
+2CUT_CHAN: 4,5
+2CUT_TYPE: cut_df
+2CUT_KEYS: AnaPeakTime
+2CUT_LOGIC: bigger_than
+2CUT_VALUE: 1000
+2CUT_INCLUSIVE: False
+
+3CUT_CHAN: 4,5
+3CUT_TYPE: cut_df
+3CUT_KEYS: AnaPeakTime
+3CUT_LOGIC: smaller_than
+3CUT_VALUE: 1100
+3CUT_INCLUSIVE: False
