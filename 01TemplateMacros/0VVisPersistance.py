@@ -1,6 +1,6 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 user_input = initialize_macro("0VVisPersistance",["input_file","load_preset","variables","runs","channels","debug"],default_dict={}, debug=True)
-info = read_input_file(user_input["input_file"], debug=user_input["debug"])
+info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 
 OPT = opt_selector(debug=True)
 

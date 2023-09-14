@@ -49,23 +49,15 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
             for flag in flag_dict:
                 if arg == flag[0] or arg == flag[1]:
                     try:
-                        if flag[1].split("--")[1] != "filter":
-                            user_input[flag[1].split("--")[1]] = sys.argv[sys.argv.index(arg)+1].split(",")
-                            print_colored("Using %s from command line"%flag_dict[flag],"INFO")
-                        else:
-                            if sys.argv[sys.argv.index(arg)+1].split(",")[0].lower() in ['true', '1', 't', 'y', 'yes']:  
-                                user_input = select_input_file(user_input, debug=debug)
-                                user_input["input_file"] = user_input["input_file"][0]
-                                user_input["filter"] = apply_cuts(user_input, debug=debug)
-                            if sys.argv[sys.argv.index(arg)+1].split(",")[0].lower() in ['false', '0', 'f', 'n', 'no']: 
-                                user_input["filter"] = {'cut_df': [False], 'cut_lin_rel': [False], 'cut_peak_finder': [False]}
+                        user_input[flag[1].split("--")[1]] = sys.argv[sys.argv.index(arg)+1].split(",")
+                        print_colored("Using %s from command line %s"%(flag_dict[flag],sys.argv[sys.argv.index(arg)+1].split(",")),"INFO")
 
                     except IndexError:
-                        print("Please provide argument for flag %s"%flag_dict[flag])
+                        print("Provide argument for flag %s"%flag_dict[flag])
                         exit()
     if check_key(user_input, "input_file") == False:
         user_input = select_input_file(user_input, debug=debug)
-        user_input["input_file"] = user_input["input_file"][0]
+        user_input["input_file"] = user_input["input_file"]
     user_input = update_user_input(user_input,input_list,debug=debug)
     user_input["debug"] = user_input["debug"][0].lower() in ['true', '1', 't', 'y', 'yes']
     user_input = use_default_input(user_input, default_dict, debug=debug)
@@ -90,7 +82,7 @@ def update_user_input(user_input,new_input_list,debug=False):
     for key_label in new_input_list:
         if check_key(user_input, key_label) == False:
             if key_label != "filter":
-                q = [ inquirer.Text(key_label, message="Please select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
+                q = [ inquirer.Text(key_label, message=" select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
                 new_user_input[key_label] =  inquirer.prompt(q)[key_label].split(",")
             else:  new_user_input["filter"] = apply_cuts(user_input, debug=debug)
                 
@@ -111,7 +103,7 @@ def select_input_file(user_input, debug=False):
     new_user_input = user_input.copy()
     if check_key(user_input, "input_file") == False:
         file_names = [file_name.replace(".txt", "") for file_name in os.listdir('../input')]
-        q = [ inquirer.List("input_file", message="Please select input file [flag: -i]", choices=file_names, default="TUTORIAL") ]
+        q = [ inquirer.List("input_file", message=" select input file [flag: -i]", choices=file_names, default="TUTORIAL") ]
         new_user_input["input_file"] = [inquirer.prompt(q)["input_file"]]
     if debug: print_colored("Using input file %s"%new_user_input["input_file"][0],"INFO")
     return new_user_input
@@ -127,7 +119,7 @@ def use_default_input(user_input, default_dict, debug=False):
     '''
     from .io_functions import check_key, print_colored, read_input_file
     
-    info = read_input_file(user_input["input_file"], debug=False)
+    info = read_input_file(user_input["input_file"][0], debug=False)
 
     new_user_input = user_input.copy()
     for default_key in default_dict:
@@ -169,36 +161,46 @@ def apply_cuts(user_input, debug=False):
 
     
     cuts_choices = ["cut_df","cut_lin_rel","cut_peak_finder"]
-    info = read_input_file(user_input["input_file"], debug=False)
-    cut_dict = cuts_info2dict(info)
+    info = read_input_file(user_input["input_file"][0], debug=False)
+    # try: 
+    cut_dict = cuts_info2dict(user_input,debug=True)
+    # except KeyError: print_colored("No cuts information found in input file. Introduce your cuts.","WARNING"); cut_dict = {'cut_df': [False,[]], 'cut_lin_rel': [False,[]], 'cut_peak_finder': [False,[]]}
+
     for cut in cuts_choices:
         if cut_dict[cut][0] == True: 
             if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
             return cut_dict
-        else:
-            if check_key(user_input, "filter") == False:
+        if cut_dict[cut][0] == False:
+            ask4cuts = True
+            q = [ inquirer.Checkbox("filter", message=" select the cuts you want to apply", choices=cuts_choices) ]
+            my_cuts = [inquirer.prompt(q)["filter"]][0]
+            for cut in cuts_choices:
+                if cut in my_cuts:
+                    if cut == "cut_df":
+                        while ask4cuts:
+                            if cut_dict[cut][0] != True: cut_dict[cut] = [True, []]
+                            channels  = [ inquirer.Text("channels",  message="Select channels for applying **%s**"%cut, default="0,1") ]
+                            key       = [ inquirer.Text("key",       message="Select key for applying **%s**"%cut, default="AnaPedSTD") ]
+                            logic     = [ inquirer.Text("logic",     message="Select logic for applying **%s**"%cut, default="bigger_than") ]
+                            value     = [ inquirer.Text("value",     message="Select value for applying **%s**"%cut, default="1") ]
+                            inclusive = [ inquirer.Text("inclusive", message="Select inclusive for applying **%s**"%cut, default="False") ]
+                            cut_dict[cut][1].append([inquirer.prompt(channels)["channels"].split(','),inquirer.prompt(key)["key"], inquirer.prompt(logic)["logic"], float(inquirer.prompt(value)["value"]), inquirer.prompt(inclusive)["inclusive"].lower() in ['true', '1', 't', 'y', 'yes']])
+                            ask4cuts = input("\nDo you want to add another cut? (y/n) ").lower() in ['true', '1', 't', 'y', 'yes']
 
-                q = [ inquirer.Checkbox("filter", message="Please select the cuts you want to apply", choices=cuts_choices) ]
-                my_cuts = [inquirer.prompt(q)["filter"]][0]
-                cut_dict = dict.fromkeys(cuts_choices)
-                for cut in cuts_choices:
-                    if cut in my_cuts:
-                        if cut == "cut_df":
-                            channels = [ inquirer.Text("channels", message="Please select channels for applying **%s**"%cut, default="0,1") ]
-                            key = [ inquirer.Text("key", message="Please select key for applying **%s**"%cut, default="AnaPedSTD") ]
-                            logic = [ inquirer.Text("logic", message="Please select logic for applying **%s**"%cut, default="bigger_than") ]
-                            value = [ inquirer.Text("value", message="Please select value for applying **%s**"%cut, default="1") ]
-                            inclusive = [ inquirer.Text("inclusive", message="Please select inclusive for applying **%s**"%cut, default="False") ]
-                            cut_dict[cut] = [True, inquirer.prompt(channels)["channels"].split(','),inquirer.prompt(key)["key"].split(','), inquirer.prompt(logic)["logic"].split(','), inquirer.prompt(value)["value"].split(','), inquirer.prompt(inclusive)["inclusive"].split(',')]
-                        if cut == "cut_lin_rel":
-                            key = [ inquirer.Text("key", message="Please select 2 keys for applying **%s**"%cut, default="AnaPeakAmp,AnaChargeAveRange") ]
+                    if cut == "cut_lin_rel":
+                        while ask4cuts:
+                            if cut_dict[cut][0] != True: cut_dict[cut] = [True, []]
+                            key = [ inquirer.Text("key", message="Select 2 keys for applying **%s**"%cut, default="AnaPeakAmp,AnaChargeAveRange") ]
                             compare = [ inquirer.Text("compare", message="NONE, RUNS, CHANNELS to decide the histogram to use", default="NONE") ]
-                            cut_dict[cut] = [True, inquirer.prompt(key)["key"].split(','), inquirer.prompt(compare)["compare"]]
-                        if cut == "cut_peak_finder":
-                            n_peaks = [ inquirer.Text("n_peaks", message="Please select number of peaks for applying **%s**"%cut, default="1") ]
-                            cut_dict[cut] = [True, inquirer.prompt(n_peaks)["n_peaks"]]
+                            cut_dict[cut][1].append([inquirer.prompt(key)["key"].split(','), inquirer.prompt(compare)["compare"]])
+                            ask4cuts = input("\nDo you want to add another cut? (y/n) ").lower() in ['true', '1', 't', 'y', 'yes']
 
-                    else: cut_dict[cut] = [False]
+                    if cut == "cut_peak_finder":
+                        while ask4cuts:
+                            if cut_dict[cut][0] != True: cut_dict[cut] = [True, []]
+                            n_peaks = [ inquirer.Text("n_peaks", message="Select number of peaks for applying **%s**"%cut, default="1") ]
+                            cut_dict[cut][1].append([inquirer.prompt(n_peaks)["n_peaks"]])
+                            ask4cuts = input("\nDo you want to add another cut? (y/n) ").lower() in ['true', '1', 't', 'y', 'yes']
 
             if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
             return cut_dict

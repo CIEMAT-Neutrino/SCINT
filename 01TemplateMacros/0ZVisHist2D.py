@@ -1,6 +1,6 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 user_input = initialize_macro("0YVisHist2D",["input_file","variables","runs","channels","filter","debug"],default_dict={}, debug=True)
-info = read_input_file(user_input["input_file"], debug=False)
+info = read_input_file(user_input["input_file"][0], debug=False)
 
 OPT = opt_selector(debug=user_input["debug"])
 
