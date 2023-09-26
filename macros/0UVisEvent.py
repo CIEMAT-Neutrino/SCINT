@@ -15,9 +15,16 @@ if 'ipykernel' in os.sys.modules:
     if get_ipython() is not None: jupyter_mode = "inline"
 
 app = dash.Dash(__name__)
-app.layout = html.Div([
-                html.H1("Waveform Visualization"),
-                html.Div([ html.Label("Select Waveform File"), dcc.Upload(id='upload-data', children=html.Button('Browse')), 
+colors = {
+    'background': '#ffffff',
+    'text': '#7FDBFF'
+}
+app.layout = html.Div(style={'backgroundColor': colors['background']},
+                      children = 
+                      [
+                        html.H1("Waveform Visualization"),
+                        html.H4("You can browse a waveW.dat (RAW) or a RawADC.npx (PROCESSED) file and an interactive event will be displayed with the main parameters printed."),
+                        html.Div([ html.Label("Select Waveform File"), dcc.Upload(id='upload-data', children=html.Button('Browse')), 
                         html.Br(), 
                         html.Label("Select the extension of the browsed file"), dcc.Dropdown([".dat",".npx"], ".dat",id='extension'),
                         html.Br(),
@@ -27,8 +34,8 @@ app.layout = html.Div([
                         html.Br(),
                         html.Button("Previous Event", id='prev-button'),
                         html.Button("Next Event",     id='next-button')]),
-                html.Div( id='waveform-info'), dcc.Graph(id='waveform-plot'),
-             ])
+                        html.Div( id='waveform-info'), dcc.Graph(id='waveform-plot'),
+                      ])  
 
 @app.callback(
     dash.dependencies.Output('waveform-info', 'children'),
@@ -94,5 +101,5 @@ if __name__ == '__main__':
     from lib.io_functions  import binary2npy_express;
     from lib.ply_functions import *
 
-    app.run(debug=True)
-    # app.run(jupyter_mode=jupyter_mode,debug=True)
+    # app.run(debug=True)
+    app.run(jupyter_mode=jupyter_mode,debug=True)

@@ -25,7 +25,7 @@ if [ -n "$1" ];then
         fi
     
     # scp -r "${afs_user}"@pcae"${afs_pc}".ciemat.es:/pnfs/ciemat.es/data/neutrinos/Super-cells_LAr/Feb22_2/raw/run{"01","08,"09","25","29"}" ../data/TUTORIAL/raw/.
-    scp -r "${afs_user}"@pcae"${afs_pc}".ciemat.es:/pc/choozdsk01/palomare/CYTHON/TUTORIAL/run{"01","08,"09","17","25","29"}" ../data/TUTORIAL/raw/.
+    scp -r "${afs_user}"@pcae"${afs_pc}".ciemat.es:/pc/choozdsk01/palomare/CYTHON/TUTORIAL/run{"01","08,"09","17","25","29","128"}" ../data/TUTORIAL/raw/.
 
     else
         echo "No afs user introduced try with: sh copy_data.sh USER"
