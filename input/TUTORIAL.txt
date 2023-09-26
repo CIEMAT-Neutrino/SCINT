@@ -19,43 +19,39 @@ MONTH: TUTORIAL
 
 OV_LABEL: OV1,0V2,0V3
 
-CALIB_RUNS: 1
+CALIB_RUNS: 01
 LIGHT_RUNS: 09
 NOISE_RUNS: 17
 ALPHA_RUNS: 25
 MUONS_RUNS: 29
 
-CHAN_LABEL: SiPM0,SC
+CHAN_LABEL: SiPM0,none,none,none,none,none,SC
 CHAN_TOTAL: 0,6
-CHAN_POLAR: -1,1
-CHAN_AMPLI: 250,1030
+CHAN_POLAR: -1,0,0,0,0,0,1
+CHAN_AMPLI: 250,0,0,0,0,1030
 
 ########################
 ####   BRANCH INFO  ####
 ########################
 #PRESETS USED: 0,  1,  2,  3,  4,  5,  6
-LOAD_PRESET: NON,RAW,NON,RAW,RAW,EVA,ANA
-SAVE_PRESET: NON,ALL,ANA,INT,CAL,NON,DEC
+LOAD_PRESET: NON,RAW,ALL,ANA,CAL,EVA,ANA
+SAVE_PRESET: NON,ALL,EVA,WVF,CAL,NON,DEC
 
 ########################
 ####  CHARGE INFO   ####
 ########################
-TYPE: ChargeAveRange,ChargeRange
-REF: AveWvfPeak
+TYPE: ChargeAveRange,ChargePedRange
+REF: AveWvf
 I_RANGE: -1
-F_RANGE: 1,2,3
-
-########################
-####  ANALYSIS INFO ####
-########################
+F_RANGE: 0.1,0.5,1
 ANA_KEY: RawADC
 
 ########################
 ####   CUTS INFO    ####
 ########################
-CUT_CHAN: 
-CUT_TYPE: 
-CUT_KEYS: 
-CUT_LOGIC: 
-CUT_VALUE: 
-CUT_INCLUSIVE: 
+#CUT_CHAN: 
+#CUT_TYPE: 
+#CUT_KEYS: 
+#CUT_LOGIC: 
+#CUT_VALUE: 
+#CUT_INCLUSIVE: 
