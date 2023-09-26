@@ -9,7 +9,49 @@ from itertools      import product
 from scipy.optimize import curve_fit
 from scipy.signal   import find_peaks
 from scipy.special  import erf
+from scipy.stats    import poisson
+
 np.seterr(divide = 'ignore') 
+
+# THIS LIBRARY NEED MIMO PORQUE HAY COSAS REDUNDAANTES QUE SE PUEDEN UNIFICAR
+
+def fit_gaussians(x, y, *p0):
+    assert x.shape == y.shape, "Input arrays must have the same shape."
+    popt, pcov = curve_fit(gaussian_train, x,y, p0=p0[0])
+    fit_y=gaussian_train(x,*popt)
+    chi_squared = np.sum((y[abs(fit_y)>0.1] - fit_y[abs(fit_y)>0.1]) ** 2 / fit_y[abs(fit_y)>0.1]) / (y.size - len(popt))
+    return popt,fit_y, chi_squared
+
+##Binomial+Poisson distribution
+from math import factorial as fact
+import numpy as np
+from scipy.stats import poisson
+def B(i,k,debug=False):
+    '''
+    Factorial factor of F
+    '''
+    if (i==0) & (k==0):return 1;
+    if (i==0) & (k>0): return 0;
+    else:              return ( fact(k-1)*fact(k) / (fact(i-1)*fact(i)*fact(k-i)) )
+
+def F(K,p,L,debug=False):
+    '''
+    Computes prob of the kth point in a convoluted poisson+binomial distribution,.
+    L is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
+    '''
+
+    aux_sum=0
+    if debug: print(K)
+    for i in range(K+1): aux_sum+=B(i,K)*((L *(1 - p))**i)  *  (p**(K - i)) 
+    return np.exp(-L)*aux_sum/fact(K);
+
+def PoissonPlusBinomial(x,p,L,debug=False):
+    N   = len(x)
+    aux = np.zeros(shape=N)
+    for i in range(N):
+        if debug: print(x,i,x[i])
+        aux[i] = F(int(x[i]),p,L);
+    return aux/sum(aux);
 
 #===========================================================================#
 #********************** TH FUNCTIONS TO USE ********************************#
