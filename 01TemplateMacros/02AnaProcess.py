@@ -1,5 +1,5 @@
 import sys; sys.path.insert(0, '../'); from lib import *
-default_dict = {"runs":["CALIB_RUNS","LIGHT_RUNS","ALPHA_RUNS","MUON_RUNS","NOISE_RUNS"],"channels":["CHAN_TOTAL"],"key":["ANA_KEY"]}
+default_dict = {"runs":["CALIB_RUNS","LIGHT_RUNS","ALPHA_RUNS","MUONS_RUNS","NOISE_RUNS"],"channels":["CHAN_TOTAL"],"key":["ANA_KEY"]}
 user_input = initialize_macro("02AnaProcess",["input_file","key","debug"],default_dict=default_dict, debug=True)
 info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 
