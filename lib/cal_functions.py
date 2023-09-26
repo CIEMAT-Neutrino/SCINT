@@ -287,7 +287,7 @@ def charge_fit(my_runs, keys, OPT={}):
 
     next_plot = False
     counter = 0
-    all_counts, all_bins, all_bars = vis_var_hist(my_runs, keys, compare = "NONE", OPT={"SHOW":False})
+    all_counts, all_bins, all_bars = vis_var_hist(my_runs, keys, OPT={"SHOW":False})
     all_popt=[]; all_pcov=[]; all_perr=[]
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
         
