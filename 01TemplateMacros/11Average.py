@@ -1,6 +1,6 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"channels":["CHAN_TOTAL"]}
-user_input = initialize_macro("11Average",["input_file","runs","key","load_preset","save_preset","cuts","debug"],default_dict=default_dict, debug=True)
+user_input = initialize_macro("11Average",["input_file","runs","key","load_preset","save_preset","filter","debug"],default_dict=default_dict, debug=True)
 info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 
 ### 11Average
