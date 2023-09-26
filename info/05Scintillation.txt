@@ -1,9 +1,0 @@
-# ---------------------------------------------------------------------------------------------------------------------- #
-#  ======================================== RUN:$ python3 05Scintillation.py TEST ====================================== #
-# This macro allow us to visualize average waveforms comparing ch or runs with vis_compare_wvf.                          #
-# It also loads the "ChargeAveRange" computed in 02Process for the scintillation runs and plot the charge histogram      #
-# The histogram is fitted to a Gaussian and the results can be stored in a txt in ../fit_data/filename_chX.txt           #
-# TO DO --> plot histograms/fit same plot + Scintillation profiles with fits (tau_slow etc)                              #
-# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
-# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
-# ---------------------------------------------------------------------------------------------------------------------- #

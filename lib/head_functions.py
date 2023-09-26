@@ -136,14 +136,14 @@ def use_default_input(user_input, default_dict, debug=False):
     return new_user_input
 
 def print_macro_info(macro, debug=False):
-    f = open('../info/'+macro+'.txt', 'r')
+    f = open('info/'+macro+'.txt', 'r')
     file_contents = f.read()
     print (file_contents+"\n")
     f.close
     if debug: print("----- Debug mode activated -----")
 
 def print_header():
-    f = open('../info/header.txt', 'r')
+    f = open('info/header.txt', 'r')
     file_contents = f.read()
     print (file_contents)
     f.close

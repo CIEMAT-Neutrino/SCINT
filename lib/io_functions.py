@@ -277,7 +277,7 @@ def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_l
     
     Depends numpy. 
     '''
-    info = read_input_file(user_input["input_file"],debug=user_input["debug"])
+    info = read_input_file(user_input["input_file"][0],debug=user_input["debug"])
 
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
@@ -544,7 +544,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
                 # except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
 
-            my_runs[run][ch]["Label"] = info["CHAN_LABEL"][int(ch)]
+            my_runs[run][ch]["Label"]    = info["CHAN_LABEL"][int(ch)]
             my_runs[run][ch]["PChannel"] = info["CHAN_POLAR"][int(ch)]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
