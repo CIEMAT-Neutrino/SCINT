@@ -3,20 +3,11 @@ default_dict = {"runs":["ALPHA_RUNS"],"channels":["CHAN_TOTAL"],"key":["ANA_KEY"
 user_input = initialize_macro("05Calibration",["input_file","debug"],default_dict=default_dict, debug=True)
 info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 
-OPT = {
-    "LOGY": True,       # Runs can be displayed in logy (True/False)
-    "NORM": True,       # Runs can be displayed normalised (True/False)
-    "PRINT_KEYS":False,
-    "MICRO_SEC":True,
-    "SCINT_FIT":True,
-    "LEGEND":False,     # Shows plot legend (True/False)
-    "SHOW": True
-}
+OPT = opt_selector(debug=user_input["debug"])
 
 my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=info["LOAD_PRESET"][4], compressed=True, debug=user_input["debug"])
 popt_ch = []; pcov_ch = []; perr_ch = []; popt_nevt = []; pcov_nevt = []; perr_nevt = []
 popt, pcov, perr = charge_fit(my_runs, [user_input["key"][0].split("ADC")[0]+user_input["variables"][0]], OPT); popt_ch.append(popt); pcov_ch.append(pcov); perr_ch.append(perr)
-#################################################
 
 # HAY QUE REVISAR ESTO
 counter = 0
