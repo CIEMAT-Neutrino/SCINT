@@ -4,6 +4,7 @@
 
 import numpy             as np
 import matplotlib.pyplot as plt
+import pandas            as pd
 from matplotlib.colors import LogNorm
 from matplotlib.cm     import viridis
 from itertools         import product
@@ -229,6 +230,17 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
         
         write_output_file(run, ch, cal_parameters, filename, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"], extra_tab=[3])
 
+def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
+    gains = dict.fromkeys(channels) ; Dgain = dict.fromkeys(channels)
+    for c, ch in enumerate(channels):
+        my_table = pd.read_csv("../fit_data/"+folder_path+"/Anagain_ch%i.txt"%ch, header=None,sep = "\t",usecols=np.arange(16),names=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
+        my_table = my_table.iloc[1:]
+        gains[ch] = list(np.array(my_table["GAIN" ]).astype(float)[my_table["RUN"]==str(run)])
+        Dgain[ch] = list(np.array(my_table["DGAIN"]).astype(float)[my_table["RUN"]==str(run)])
+        if debug: print("\nGAIN TXT FOR CHANNEL %i"%ch ); display(my_table)
+    
+    return gains, Dgain
+
 def scintillation_txt(run, ch, popt, pcov, filename, info):
     '''
     Computes charge parameters.
@@ -287,7 +299,7 @@ def charge_fit(my_runs, keys, OPT={}):
 
     next_plot = False
     counter = 0
-    all_counts, all_bins, all_bars = vis_var_hist(my_runs, keys, compare = "NONE", OPT={"SHOW":False})
+    all_counts, all_bins, all_bars = vis_var_hist(my_runs, keys, OPT=OPT)
     all_popt=[]; all_pcov=[]; all_perr=[]
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
         
