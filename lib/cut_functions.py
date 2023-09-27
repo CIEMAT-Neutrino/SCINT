@@ -65,12 +65,9 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                     
                     print_colored("\nInclusive = %s"%inclusive,"magenta")
                     print_cut_info(this_cut_cut_array)
-                
             my_cuts = my_cuts * this_cut_cut_array
-
-        for loaded_ch in my_runs["NChannel"]: 
-            my_runs[run][loaded_ch]["MyCuts"] = my_cuts
-    
+            
+        for loaded_ch in my_runs["NChannel"]: my_runs[run][loaded_ch]["MyCuts"] = my_cuts
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False, debug = False):
     """
