@@ -206,28 +206,27 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
     If the file existed previously it appends the new fit values (it save the run for each introduced row)
     By default we dont save the height of the fitted gaussian in the txt.
     '''
-    
+
+    folder_path  = info["MONTH"][0]+"/"
     fitted_peaks = len(output)
     par_list = list(range(len(output[0])))
-    for p in not_saved:
-            par_list.remove(p) #removing parameters before saving in txt (height by default)
+    for p in not_saved: par_list.remove(p) #removing parameters before saving in txt (height by default)
 
-    confirmation = input(color_list("magenta")+"\nConfirmation to save in"+path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch+color_list("end"))
+    confirmation = input(color_list("magenta")+"\nConfirmation to save in"+path+folder_path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch+color_list("end"))
     if "y" in confirmation:
         print("\n----------- Saving -----------")
 
-        if not os.path.exists(path+filename+"_ch%i.txt"%ch): #HEADER#
-            os.makedirs(name=path,exist_ok=True) # Create the directory if it doesnt exist
-            with open(path+filename+"_ch%i.txt"%ch, 'a+') as f:  f.write("\t".join(header_list)+"\n") # Write the header
+        if not os.path.exists(path+folder_path+filename+"_ch%i.txt"%ch): #HEADER#
+            os.makedirs(name=path+folder_path,exist_ok=True)             # Create the directory if it doesnt exist
+            with open(path+folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:  f.write("\t".join(header_list)+"\n") # Write the header
 
-        with open(path+filename+"_ch%i.txt"%ch, 'a+') as f:
+        with open(path+folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:
             for i in np.arange(fitted_peaks):
                 if fitted_peaks != 1: aux_label = str(i)+"\t"
                 if fitted_peaks == 1: aux_label = ""
                 f.write(str(int(run))+"\t"+info["OV_LABEL"][0]+"\t"+aux_label) #OVLABEL no funciona bien
-                for k in par_list[:len(par_list)-1]: #save all the parameter list except last element to include \n after it
-                    if any (k == t for t in extra_tab): # if k == 3: # for calibration format
-                        f.write("\t")
+                for k in par_list[:len(par_list)-1]:                           #save all the parameter list except last element to include \n after it
+                    if any (k == t for t in extra_tab): f.write("\t")          # if k == 3: # for calibration format
                     f.write(str(output[i][k][0]) +"\t" + str(output[i][k][1])+"\t")
                 f.write(str(output[i][-1][0]) +"\t" + str(output[i][-1][1])+"\n")
 
