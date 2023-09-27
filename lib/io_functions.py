@@ -528,7 +528,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
 
     for run in runs:
         my_runs[run]=dict()
-        for ch in channels:
+        for ch_idx,ch in enumerate(channels):
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug) # Get the branch list if preset is used
@@ -543,8 +543,8 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
                 # except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
 
-            my_runs[run][ch]["Label"]    = info["CHAN_LABEL"][int(ch)]
-            my_runs[run][ch]["PChannel"] = info["CHAN_POLAR"][int(ch)]
+            my_runs[run][ch]["Label"]    = info["CHAN_LABEL"][ch_idx]
+            my_runs[run][ch]["PChannel"] = info["CHAN_POLAR"][ch_idx]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
             print_colored("load_npy --> DONE!\n", "SUCCESS")
