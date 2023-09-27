@@ -404,7 +404,7 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
 
     # Make query to user: choose loaded chanels or select specific channels
-    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded.tolist()) ]
+    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
     ch_list =  inquirer.prompt(q)["channels"]
 
     if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
@@ -483,9 +483,9 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
                 all_bins.append(bins)
                 all_bars.append(bars)
             
-            if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:     ax.legend()
-            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: ax.semilogy()
-            if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
+            if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:       ax.legend()
+            if check_key(OPT, "LOGY")   == True and OPT["LOGY"] == True: ax.semilogy()
+            if check_key(OPT, "SHOW")   == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
                 print_stats(my_run,run,ch,ax,data)
                 plt.ion()
                 plt.show()
