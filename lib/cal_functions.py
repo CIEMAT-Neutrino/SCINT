@@ -71,102 +71,81 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
     from .ana_functions import generate_cut_array, get_units
     from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit
     from .vis_functions import vis_var_hist
-    from .fig_config     import add_grid
+    from .fig_config    import figure_features, add_grid
 
-    plt.ion()
-    next_plot = False
-    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
-        if len(my_runs[run][ch].keys()) == 0:
-            print_colored("\n RUN DOES NOT EXIST. Looking for the next", "WARNING")
-            popt = [-99, -99, -99]; pcov= [-99, -99, -99]; perr = [-99, -99, -99]
-        
-        else: 
-            det_label = my_runs[run][ch]["Label"]
-
-            if check_key(my_runs[run][ch], "MyCuts") == False:
-                if debug: print_colored("Cuts not generated. Generating them...", "WARNING")
-                generate_cut_array(my_runs,debug=debug) # If cuts not generated, generate them
-                if debug: print(run, ch, my_runs[run][ch]["MyCuts"])
+    figure_features()
+    for run in my_runs["NRun"]:
+        for ch in my_runs["NChannel"]:
+            for key in keys:
+                if len(my_runs[run][ch].keys()) == 0: 
+                    print_colored("\n RUN DOES NOT EXIST. Looking for the next", "WARNING")
+                    popt = [-99, -99, -99]; pcov= [-99, -99, -99]; perr = [-99, -99, -99]
                 
-            if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
-                
-            # try:
-            counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
-            plt.close()
+                else: 
+                    det_label = my_runs[run][ch]["Label"]
+                    if check_key(my_runs[run][ch], "MyCuts") == False:
+                        if debug: print_colored("Cuts not generated. Generating them...", "WARNING")
+                        generate_cut_array(my_runs,debug=debug) # If cuts not generated, generate them
+                        if debug: print(run, ch, my_runs[run][ch]["MyCuts"])
+                    if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
+                    OPT["SHOW"] == False
+                    counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
+                    counts = counts[0]; bins = bins[0]; bars = bars[0]
 
-            ## New Figure with the fit ##
-            fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
+                    ## New Figure with the fit ##
+                    plt.ion(); fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6)); add_grid(ax_cal)
+                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step")
+                    fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
+                    fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
 
-            add_grid(ax_cal)
-            counts = counts[0]; bins = bins[0]; bars = bars[0]
-            ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step")
-            fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key)); fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
-        
-            if det_label != "PMT": #Fit for SiPMs/SC
-                ### --- Nx GAUSSIAN FIT --- ### 
-                # thresh = int(len(my_runs[run][ch][key])/2000)
-                params = {"THRESHOLD": 10, "WIDTH": 15, "PROMINENCE": 0.5, "ACCURACY": 500, "FIT": "gaussian"}
-                new_params = {}
-                for i,param in enumerate(params.keys()):
-                    if check_key(OPT,param) == True:
-                        new_params[param] = OPT[param]
-                    else:
-                        new_params[param] = params[param]
+                    #TODO: This if could be simplified!!!
+                    if det_label != "PMT": #Fit for SiPMs/SC
+                        ### --- Nx GAUSSIAN FIT --- ### 
+                        params = {"THRESHOLD": 10, "WIDTH": 15, "PROMINENCE": 0.5, "ACCURACY": 500, "FIT": "gaussian"}
+                        new_params = {}
+                        for i,param in enumerate(params.keys()):
+                            if check_key(OPT,param) == True: new_params[param] = OPT[param]
+                            else:                            new_params[param] = params[param]
 
-                # try:
-                x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, new_params, debug=debug)
-                ax_cal.axhline(new_params["THRESHOLD"], ls='--')
-                ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
-                ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-                ax_cal.plot(x,gaussian_train(x, *popt), label="")
+                        x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, new_params, debug=debug)
+                        ax_cal.axhline(new_params["THRESHOLD"], ls='--')
+                        ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
+                        ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
+                        ax_cal.plot(x,gaussian_train(x, *popt), label="")
 
-                # except UnboundLocalError:
-                #     print_colored("UnboundLocalError. Looking for the next", "WARNING")
-                #     popt = [-99, -99, -99]; pcov= [-99, -99, -99]; perr = [-99, -99, -99]
-                #     plt.clf()
-                #     continue
+                    else: #Particular calibration fit for PMTs
+                        print("Hello, we are working on a funtion to fit PMT spe :)")
+                        thresh = int(len(my_runs[run][ch][key])/1e4)
+                        x, y, peak_idx, valley_idx, popt, pcov, perr = pmt_spe_fit(counts, bins, bars, thresh)
+                        ## Plot threshold, peaks (red) and valleys (blue) ##
+                        ax_cal.axhline(thresh, ls='--')
+                        ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
+                        ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
+                        ## Plot the fit ##
+                        ax_cal.plot(x,gaussian_train(x, *popt), label="")
 
-                ## Repeat customized fit ## Ver si necesario -- añadir opcion customizar a gaussian_train_fit
-                # confirmation = input("Are you happy with the fit? (y/n) ")
-                # if "n" in confirmation:
-                #     print("\n--- Repeating the fit with input parameters (\u03BC \u00B1 \u03C3) \u03B5 [{:0.2f}, {:0.2f}] ---".format(x[0],x[-1]))
-                #     n_peaks = input("Introduce NPEAKS to fit: ")
-                #     mean  = input("Introduce MEAN value for the fit: ")
-                #     sigma = input("Introduce SIGMA value for the fit: ")
+                    if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True: ax_cal.legend()
+                    if check_key(OPT,"LOGY")   == True and OPT["LOGY"]   == True: ax_cal.semilogy(); ax_cal.set_ylim(1)
+                    if check_key(OPT,"SHOW")   == True and OPT["SHOW"]   == True:
+                        print("SHOW BUT NO TERMINAL FRIEND")
 
-                #     x, popt, pcov, perr = gaussian_train_fit(counts, bins, bars,thresh,custom_fit=[int(mean),int(sigma)])
-                #     ax_cal.plot(x, gaussian(x, *popt), label="")
-            
-            else: #Particular calibration fit for PMTs
-                print("Hello, we are working on a funtion to fit PMT spe :)")
-                thresh = int(len(my_runs[run][ch][key])/1e4)
-                x, y, peak_idx, valley_idx, popt, pcov, perr = pmt_spe_fit(counts, bins, bars, thresh)
-                ## Plot threshold, peaks (red) and valleys (blue) ##
-                ax_cal.axhline(thresh, ls='--')
-                ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
-                ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-                ## Plot the fit ##
-                ax_cal.plot(x,gaussian_train(x, *popt), label="")
+                        if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
+                            print("TERMINAL FRIEND")
+                            plt.ion()
+                            plt.show()
+                            while not plt.waitforbuttonpress(-1): pass
+                            plt.close()
 
-            if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True: ax_cal.legend()
-            if check_key(OPT,"LOGY")   == True and OPT["LOGY"]   == True: ax_cal.semilogy(); ax_cal.set_ylim(1)
-            if check_key(OPT,"SHOW")   == True and OPT["SHOW"]   == True:
-                while not plt.waitforbuttonpress(-1): pass
-            plt.clf()
+                    try:
+                        my_runs[run][ch]["Gain"]         = popt[3]-abs(popt[0])
+                        my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
+                        my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
+                    except IndexError:
+                        print_colored("Fit failed to find min of 3 calibration peaks!", "WARNING")
+                        my_runs[run][ch]["Gain"]         = -99
+                        my_runs[run][ch]["MaxChargeSPE"] = -99
+                        my_runs[run][ch]["MinChargeSPE"] = -99
 
-            try:
-                my_runs[run][ch]["Gain"] = popt[3]-abs(popt[0])
-                my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
-                my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
-            except IndexError:
-                print_colored("Fit failed to find min of 3 calibration peaks!", "WARNING")
-                my_runs[run][ch]["Gain"] = -99
-                my_runs[run][ch]["MaxChargeSPE"] = -99
-                my_runs[run][ch]["MinChargeSPE"] = -99
-
-        plt.clf()
-        plt.close()
-    
     return popt, pcov, perr
 
 def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
