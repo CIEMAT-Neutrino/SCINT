@@ -2,6 +2,7 @@ numpy
 numba
 numexpr
 plotly
+plotly_express
 pandas
 scipy 
 matplotlib
