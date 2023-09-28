@@ -404,8 +404,10 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
 
     # Make query to user: choose loaded chanels or select specific channels
-    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
-    ch_list =  inquirer.prompt(q)["channels"]
+    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
+        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
+        ch_list =  inquirer.prompt(q)["channels"]
+    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
 
     if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
@@ -489,14 +491,15 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
                 print_stats(my_run,run,ch,ax,data)
                 plt.ion()
                 plt.show()
-
-                while not plt.waitforbuttonpress(-1): pass
-                plt.close()
+                if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
+                    while not plt.waitforbuttonpress(-1): pass
+                    plt.close()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] != "NONE":
             print_stats(my_run,run,ch,ax,data)
             plt.show()
-            while not plt.waitforbuttonpress(-1): pass
-            plt.close()
+            if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
+                while not plt.waitforbuttonpress(-1): pass
+                plt.close()
 
     return all_counts, all_bins, all_bars
 
