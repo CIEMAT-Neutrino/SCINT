@@ -253,12 +253,11 @@ def opt_selector(filename = "VisConfig.txt", debug=False):
 
     else: my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in content.split('\n')}
     
-    my_opt = read_input_file(filename.split(".txt")[0],path="",BOOLEAN=["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","SHOW_PARAM","CHARGEDICT","PEAK_FINDER","SAME_PLOT","LEGEND","SHOW"],STRINGS=["SHOW_AVE","CHARGE_KEY","COMPARE"],NUMBERS=["CUTTED_WVF"],debug=False)
+    my_opt = read_input_file(filename.split(".txt")[0],path="",BOOLEAN=["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","SHOW_PARAM","CHARGEDICT","PEAK_FINDER","SAME_PLOT","LEGEND","SHOW","TERMINAL_MODE","PRINT_KEYS","SCINT_FIT"],STRINGS=["SHOW_AVE","CHARGE_KEY","COMPARE"],NUMBERS=["CUTTED_WVF"],debug=False)
     # Reformat the dict to select the first element of the list of each entry
     for key in my_opt:
         try: my_opt[key] = my_opt[key][0]
-        except IndexError:
-            pass
+        except IndexError: pass
 
     if debug: print_colored("Using visualization options %s"%my_opt,"INFO")
     return my_opt
