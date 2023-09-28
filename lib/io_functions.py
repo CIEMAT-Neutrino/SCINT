@@ -3,7 +3,6 @@
 #================================================================================================================================================#
 
 import os, gc, uproot, copy, stat
-import ROOT
 import numpy as np
 import pandas as pd
 
@@ -145,7 +144,7 @@ def cuts_info2dict(user_input, debug=False):
         while keep_reading:
             try: 
                 input_list = [str(idx)+"CUT_CHAN",str(idx)+"CUT_TYPE",str(idx)+"CUT_KEYS",str(idx)+"CUT_LOGIC",str(idx)+"CUT_VALUE",str(idx)+"CUT_INCLUSIVE"]
-                info = read_input_file(user_input["input_file"][0], STRINGS = input_list, debug=True)
+                info = read_input_file(user_input["input_file"][0], STRINGS = input_list, debug=False)
                 if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
                 cuts_dict[cut][1].append([info[str(idx)+"CUT_CHAN"], info[str(idx)+"CUT_KEYS"][0], info[str(idx)+"CUT_LOGIC"][0], float(info[str(idx)+"CUT_VALUE"][0]), info[str(idx)+"CUT_INCLUSIVE"][0].lower() in ["yes","y","true","t","si","s"]])
                 idx += 1
@@ -528,7 +527,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
 
     for run in runs:
         my_runs[run]=dict()
-        for ch in channels:
+        for ch_idx,ch in enumerate(channels):
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug) # Get the branch list if preset is used
@@ -543,8 +542,8 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
                 # except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
 
-            my_runs[run][ch]["Label"]    = info["CHAN_LABEL"][int(ch)]
-            my_runs[run][ch]["PChannel"] = info["CHAN_POLAR"][int(ch)]
+            my_runs[run][ch]["Label"]    = info["CHAN_LABEL"][ch_idx]
+            my_runs[run][ch]["PChannel"] = info["CHAN_POLAR"][ch_idx]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
             print_colored("load_npy --> DONE!\n", "SUCCESS")
@@ -631,6 +630,10 @@ def npy2root(my_runs, debug = False):
         - my_runs: dictionary with the runs and channels to be saved
         - debug: if True, the function will print the branches that are being saved
     '''
+
+    # Load ROOT
+    import ROOT
+    
     # Create the ROOT dataframe
     df = ROOT.RDF.FromNumpy(my_runs)
     return df

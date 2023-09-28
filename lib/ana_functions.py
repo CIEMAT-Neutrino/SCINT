@@ -225,6 +225,10 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=100, debug=False):
     Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
     It checks for the best window.
     '''
+    if ped_lim < sliding:
+        ped_lim = 400
+        print_colored("WARNING: Pedestal window is smaller than sliding window. Setting ped_lim = 400", "WARNING")
+    
     slides=int(ped_lim/sliding);
     nwvfs=ADC.shape[0]
     aux=np.zeros((nwvfs,slides))
