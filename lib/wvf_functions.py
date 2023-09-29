@@ -156,17 +156,15 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
     f_range = info["F_RANGE"] # Get final time(s) to finish the integration
     
     for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
-        if check_key(my_runs[run][ch], "MyCuts") == False:
-            generate_cut_array(my_runs)
-            cut_label = ""
+        if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs); cut_label = ""
 
         print("\n--- Integrating RUN %i CH %i TYPE %s, REF %s ---"%(run,ch,typ,label+ref))
         true_key, true_label = get_wvf_label(my_runs, "", "", debug = debug)
-        if true_label == "Gauss": label = "Gauss"
+        if true_label == "Gauss":  label = "Gauss"
         if true_label == "Wiener": label = "Wiener"
-        ave = my_runs[run][ch][label+ref] # Load the reference average waveform
+        ave = my_runs[run][ch][label+ref+cut_label] # Load the reference average waveform
         
-        if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs) # If there are no units, it calculates them
+        if check_key(my_runs[run][ch], "UnitsDict") == False:             get_units(my_runs) # If there are no units, it calculates them
         if check_key(my_runs[run][ch], label+"ChargeRangeDict") == False: my_runs[run][ch][label+"ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             
         aux_ADC = my_runs[run][ch][key]
