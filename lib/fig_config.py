@@ -11,7 +11,7 @@ except FileNotFoundError:
 
 output, error = process.communicate()
 if "Error" in str(output):
-    print("You don't have latex installed. Changing default configuration to tex=Foptionalalse")
+    print("You don't have latex installed. Changing default configuration to tex=False")
     tex_installed = False
 else:
     print("You have latex installed!. Applying default configuration (tex=True)")
