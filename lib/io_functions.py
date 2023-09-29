@@ -294,10 +294,12 @@ def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_l
         except FileExistsError: print_colored("DATA STRUCTURE ALREADY EXISTS", "WARNING") 
 
         try:
-            ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug)                           # Read the file
-            branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]                                 # Branches to be saved
-            content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])] # Content to be saved
-            files          = os.listdir(out_path+out_folder)                                                                       # List of files in the output folder
+            ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug) # Read the file
+            branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling"]                               # Branches to be saved
+            content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0]]                          # Content to be saved
+            files          = os.listdir(out_path+out_folder)                                             # List of files in the output folder
+            # branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]                                 # Branches to be saved
+            # content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])] # Content to be saved
             for i, branch in enumerate(branches):
                 try:
                     # If the file already exists and force is True, overwrite it
@@ -370,8 +372,8 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
             # additional useful info
             my_dict["RawADC"] = my_dict["ADC"]
             del my_dict["ADC"]
-            my_dict["NBinsWvf"]    = my_dict["RawADC"][0].shape[0]
-            my_dict["Sampling"]    = info["SAMPLING"][0]
+            my_dict["NBinsWvf"] = my_dict["RawADC"][0].shape[0]
+            my_dict["Sampling"] = info["SAMPLING"][0]
             # my_dict["Label"]       = info["CHAN_LABEL"][j]
             # my_dict["RawPChannel"] = int(info["CHAN_POLAR"][j])
 
@@ -450,52 +452,57 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     dict_option["SAVE"] = my_run.keys()
 
     if preset == "ALL":  # Save all branches
-        branch_list = dict_option[option]
-        if "UnitsDict" in branch_list: branch_list.remove("UnitsDict")
-        if "MyCuts" in branch_list: branch_list.remove("MyCuts")
+        branch_list = dict_option[option]; aux = []
+        for key in branch_list:
+            if key and not "Label" in key and not "PChannel" in key and not "UnitsDict" in key and not "MyCuts" in key: aux.append(key)
+        branch_list = aux
 
     elif preset == "ANA": # Remove Raw, Dict and Cuts branches
         branch_list = dict_option[option]; aux = ["RawADC"]
         for key in branch_list:
-            if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Gauss" in key: aux.append(key)
+            if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Gauss" in key and not "Label" in key and not "PChannel" in key: aux.append(key)
         branch_list = aux
 
     elif preset == "RAW":  # Save aux + Raw branches
         branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
-            if "Raw" in key: aux.append(key) 
+            if "Raw" in key and not "Label" in key and not "PChannel" in key: aux.append(key) 
         branch_list = aux
 
     elif preset == "EVA": # Remove ADC, Dict and Cuts branches
-        branch_list = dict_option[option]
-        aux = ["TimeStamp"]
+        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
-            if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key) # and key not in aux # add??
+            if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Label" in key and not "PChannel" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "DEC": # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
-        branch_list = dict_option[option]
-        aux = ["TimeStamp"]
+        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
-            if "Gauss" in key or "Wiener" in key or "Dec" in key: aux.append(key) # and key not in aux # add??
+            if "Gauss" in key or "Wiener" in key or "Dec" in key and not "Label" in key and not "PChannel" in key: aux.append(key) # and key not in aux # add??
         branch_list = aux
 
     elif preset == "CAL": # Save aux + Charge* branches
         branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
-            if "Charge" in key and key not in aux: aux.append(key)
+            if "Charge" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
         branch_list = aux
 
-    elif preset == "WVF": # Save aux + Charge* branches
+    elif preset == "WVF": # Save aux + Wvf* branches
         branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
-            if "Wvf" in key and key not in aux: aux.append(key)
+            if "Wvf" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
+        branch_list = aux
+
+    elif preset == "INT": # Save aux + Wvf* branches
+        branch_list = dict_option[option]; aux = ["TimeStamp"]
+        for key in branch_list:
+            if "Wvf" in key or "Charge" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
         branch_list = aux
     
-    # if debug: print_colored("\nPreset branch_list:" + str(branch_list), "DEBUG")
     else:
         print_colored("Preset not found. Returning all the branches.", "WARNING")
         raise ValueError("Preset not found. Returning all the branches.")
+
     return branch_list
 
 def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):
@@ -524,6 +531,8 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     my_runs = dict()
     my_runs["NRun"]     = runs
     my_runs["NChannel"] = channels
+    aux_PChannel = dict(zip(info["CHAN_TOTAL"], info["CHAN_POLAR"]))
+    aux_Label    = dict(zip(info["CHAN_TOTAL"], info["CHAN_LABEL"]))
 
     for run in runs:
         my_runs[run]=dict()
@@ -542,8 +551,8 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
                 # except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
 
-            my_runs[run][ch]["Label"]    = info["CHAN_LABEL"][ch_idx]
-            my_runs[run][ch]["PChannel"] = info["CHAN_POLAR"][ch_idx]
+            my_runs[run][ch]["Label"]    = aux_Label[ch]
+            my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
             print_colored("load_npy --> DONE!\n", "SUCCESS")
@@ -565,15 +574,13 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
     '''
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-    
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
-    # opath = info["OPATH"][0]+info["MONTH"][0]+"/npy/"
 
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             os.makedirs(name=path+out_folder,exist_ok=True)
-            files=os.listdir(path+out_folder)
+            files = os.listdir(path+out_folder)
             if not branch_list: branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
             print(branch_list)
             for key in branch_list:
