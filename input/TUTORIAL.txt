@@ -49,9 +49,9 @@ ANA_KEY: RawADC
 ########################
 ####   CUTS INFO    ####
 ########################
-#CUT_CHAN: 
-#CUT_TYPE: 
-#CUT_KEYS: 
-#CUT_LOGIC: 
-#CUT_VALUE: 
-#CUT_INCLUSIVE: 
+#0CUT_CHAN: 
+#0CUT_TYPE: 
+#0CUT_KEYS: 
+#0CUT_LOGIC: 
+#0CUT_VALUE: 
+#0CUT_INCLUSIVE: 
