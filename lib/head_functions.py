@@ -51,7 +51,6 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
                     try:
                         user_input[flag[1].split("--")[1]] = sys.argv[sys.argv.index(arg)+1].split(",")
                         print_colored("Using %s from command line %s"%(flag_dict[flag],sys.argv[sys.argv.index(arg)+1].split(",")),"INFO")
-
                     except IndexError:
                         print("Provide argument for flag %s"%flag_dict[flag])
                         exit()
@@ -84,8 +83,7 @@ def update_user_input(user_input,new_input_list,debug=False):
             if key_label != "filter":
                 q = [ inquirer.Text(key_label, message=" select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
                 new_user_input[key_label] =  inquirer.prompt(q)[key_label].split(",")
-            else:  new_user_input["filter"] = apply_cuts(user_input, debug=debug)
-                
+            else: new_user_input["filter"] = apply_cuts(user_input, debug=debug)
         else: pass
             # if debug: print("Using %s from user input"%key_label)
     return new_user_input
