@@ -661,6 +661,12 @@ def npy2df(my_runs, debug = False):
         - my_runs: dictionary with the runs and channels to be saved
         - debug: if True, the function will print the branches that are being saved
     '''
+    # From my_runs.keys() remove all keys that are not a dictionary
+    keys = list(my_runs.keys())
+    for key in keys:
+        if not isinstance(my_runs[key], dict):
+            my_runs.pop(key)
+            
     df = pd.DataFrame.from_dict({
         (i,j): my_runs[i][j] 
         for i in my_runs.keys() 
