@@ -183,7 +183,7 @@ def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = F
         my_runs[run][ch][label+"ValleyAmp" ] = my_runs[run][ch]["PChannel"]*(np.min(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
         my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
         if label == "Ana": 
-            my_runs[run][ch][label+"PeakAmp" ] *= my_runs[run][ch]["PChannel"] # Change polarity!
+            my_runs[run][ch][label+"PeakAmp" ]   *= my_runs[run][ch]["PChannel"] # Change polarity!
             my_runs[run][ch][label+"ValleyAmp" ] *= my_runs[run][ch]["PChannel"]
         print_colored("Peak variables have been computed for run %i ch %i"%(run,ch), "blue")
 
