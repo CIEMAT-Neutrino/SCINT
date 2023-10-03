@@ -256,6 +256,7 @@ def gaussian_train_fit(counts, bins, bars, params, debug=False):
         perr = np.sqrt(np.diag(pcov))
     except:
         pcov = np.zeros((len(initial),len(initial)))
+        perr = np.zeros(len(initial))
         popt = initial
         print_colored("Full fit could not be performed", "ERROR")
     
