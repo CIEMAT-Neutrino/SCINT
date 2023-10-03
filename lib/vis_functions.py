@@ -402,10 +402,10 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
     figure_features()
     all_counts = []; all_bins = []; all_bars = []
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
-
+    print(my_run["NChannel"])
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
+        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded.tolist()) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
 
