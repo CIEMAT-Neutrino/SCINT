@@ -29,11 +29,11 @@ def average_wvfs(my_runs, centering="NONE", key="", label="", threshold=0, cut_l
 
         buffer = 100  
         aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
-        if true_label == "Gauss": label = "Gauss"
-        if true_label == "Wiener": label = "Wiener"
+        label = true_label
         if true_label == "Raw":
             # from compute_ana_wvfs: my_runs[run][ch]["PChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
             aux_ADC = my_runs[run][ch]["PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+"PedMean"][my_runs[run][ch]["MyCuts"] == True]).T)
+            if label == "Raw": label = "Ana"
             print_colored("Computing ANA wvfs from RAW", "WARNING")
         mean_ana_ADC = np.mean(aux_ADC,axis=0)
         # bin_ref_peak = st.mode(np.argmax(aux_ADC,axis=1), keepdims=True) # Deprecated function st.mode()
@@ -160,16 +160,17 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
 
         print("\n--- Integrating RUN %i CH %i TYPE %s, REF %s ---"%(run,ch,typ,label+ref))
         true_key, true_label = get_wvf_label(my_runs, "", "", debug = debug)
-        if true_label == "Gauss":  label = "Gauss"
-        if true_label == "Wiener": label = "Wiener"
+        label = true_label
+
         ave = my_runs[run][ch][label+ref+cut_label] # Load the reference average waveform
         
         if check_key(my_runs[run][ch], "UnitsDict") == False:             get_units(my_runs) # If there are no units, it calculates them
         if check_key(my_runs[run][ch], label+"ChargeRangeDict") == False: my_runs[run][ch][label+"ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             
         aux_ADC = my_runs[run][ch][key]
-        if true_label == "Raw": aux_ADC = my_runs[run][ch]["PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+"PedMean"]).T)
-
+        if true_label == "Raw": 
+            aux_ADC = my_runs[run][ch]["PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+"PedMean"]).T)
+            if label == "Raw": label = "Ana"
         for i in range(len(ave)):
             if typ == "ChargeAveRange": # Integrated charge from the average waveform
                 i_idx,f_idx = find_baseline_cuts(ave[i])
