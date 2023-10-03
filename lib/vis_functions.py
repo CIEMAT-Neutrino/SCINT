@@ -405,7 +405,9 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
     figure_features()
     all_counts = []; all_bins = []; all_bars = []
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
-
+    try: ch_lodaded = ch_loaded.tolist()
+    except: print_colored("Imported channels as list!", "INFO")
+    print(my_run["NChannel"])
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
         if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
