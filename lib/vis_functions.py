@@ -314,8 +314,11 @@ def vis_compare_wvf(my_run, keys, OPT = {}):
     axs = []
     
     # Make query to user: choose loaded chanels or select specific channels
-    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded.tolist()) ]
-    ch_list =  inquirer.prompt(q)["channels"]
+    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
+        if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
+        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
+        ch_list =  inquirer.prompt(q)["channels"]
+    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
     
     if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
@@ -405,6 +408,7 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
 
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
+        if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
         q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
@@ -543,8 +547,11 @@ def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = Fals
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
 
     # Make query to user: choose loaded chanels or select specific channels
-    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded.tolist()) ]
-    ch_list =  inquirer.prompt(q)["channels"]
+    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
+        if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
+        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
+        ch_list =  inquirer.prompt(q)["channels"]
+    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
 
     if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
