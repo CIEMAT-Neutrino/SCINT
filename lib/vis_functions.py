@@ -405,12 +405,12 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
     figure_features()
     all_counts = []; all_bins = []; all_bars = []
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
-    try: ch_lodaded = ch_loaded.tolist()
-    except: print_colored("Imported channels as list!", "INFO")
-    print(my_run["NChannel"])
+    if type(ch_loaded) != list:
+        try: ch_loaded = ch_loaded.tolist()
+        except: print_colored("Imported channels as list!", "INFO")
+
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
         q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
@@ -428,8 +428,6 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
             if OPT["COMPARE"] == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
             if OPT["COMPARE"] == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
             if OPT["COMPARE"] == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
-            
-            # print(my_run[run][ch]["MyCuts"] == True)
             if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run,debug=True)
             if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
             
