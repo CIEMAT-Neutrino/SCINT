@@ -72,21 +72,21 @@ def gaussian_train(x, *params):
         center = params[i]
         height = params[i+1]
         width  = params[i+2]
-        y      = y + gaussian(x, height, center, width)
+        y      = y + gaussian(x, center, height, width)
     return y
 
 def loggaussian_train(x, *params):
     y = gaussian_train(x, *params)
     return np.log10(y)
 
-def gaussian(x, height, center, width):
+def gaussian(x, center, height, width):
     return height * np.exp(-0.5*((x - center)/width)**2)
 
-def pmt_spe(x, height, center, width):
-    return height * np.exp(-0.5*((x - center)/width)**2)
+# def pmt_spe(x, height, center, width):
+#     return height * np.exp(-0.5*((x - center)/width)**2)
 
-def loggaussian(x, height, center, width):
-    return np.log10(gaussian(x, height, center, width))
+def loggaussian(x, center, height, width):
+    return np.log10(gaussian(x, center, height, width))
 
 def func(t, t0, sigma, a, tau):
     return (2 * a/tau)*np.exp((sigma/(np.sqrt(2)*tau))**2-(np.array(t)-t0)/tau)*(1-erf((sigma**2-tau*(np.array(t)-t0))/(np.sqrt(2)*sigma*tau)))
@@ -172,7 +172,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
         print("Taking peak at: ", x[best_peak_idx])
 
     # try:
-    popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],sigma],maxfev=5000)
+    popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[x[best_peak_idx1],y[best_peak_idx],sigma],maxfev=5000)
     # popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1]],sigma = sigma, absolute_sigma=True, maxfev=5000)
     perr = np.sqrt(np.diag(pcov))
     chi2 = chi_squared(x_gauss,y_gauss,popt)
@@ -182,6 +182,29 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
     return x, popt, pcov, perr
     # return x, popt, pcov, perr, chi2 # UPLOAD WHEN POSSIBLE MERGING IN MAIN BRANCH; upgrade all the fit functions
 
+def peak_valley_finder(x, y, params):
+    '''
+    This function finds the peaks and valleys of the histogram, which has been previoulsy visualized with:
+    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    And return the indices of the peaks and valleys.
+    '''
+    
+    from .io_functions import print_colored
+    
+    thresh       = params["THRESHOLD"]
+    wdth         = params["WIDTH"]
+    prom         = params["PROMINENCE"]
+    acc          = params["ACCURACY"]
+    max_y = np.max(y)
+    y = y/max_y
+
+    peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+    valley_idx, _ = find_peaks(-y, height = [-1, -thresh], width = wdth, prominence = prom)
+    print("Peaks found at: ", peak_idx)
+    print("Valleys found at: ", valley_idx)
+
+    print_colored("PeakFinder using parameters: thresh = %i, wdth = %i, prom = %.2f, acc = %i"%(thresh, wdth, prom, acc), "INFO")
+    return peak_idx, valley_idx
 
 def gaussian_train_fit(counts, bins, bars, params, debug=False):
     ''' 
@@ -193,71 +216,50 @@ def gaussian_train_fit(counts, bins, bars, params, debug=False):
     #Imports from other libraries
     from .io_functions import print_colored
 
-    ## Threshold value (for height of peaks and valleys) ##
-    # thresh = int(len(my_runs[run][ch][key])/1000)
-    thresh       = params["THRESHOLD"]
-    wdth         = params["WIDTH"]
-    prom         = params["PROMINENCE"]
-    acc          = params["ACCURACY"]
-    fit_function = params["FIT"]
     ## Create linear interpolation between bins to search peaks in these variables ##
-    x = np.linspace(bins[1],bins[-2],acc)
+    x = np.linspace(bins[1],bins[-2],params["ACCURACY"])
     y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
     y = y_intrp(x)
 
-    ## Find indices of peaks and valleys ##
-    if fit_function == "gaussian":
-        peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
-        valley_idx, _ = find_peaks(-y, height = [-np.max(counts), -thresh], width = wdth)
-    if fit_function == "loggaussian":
-        peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
-        valley_idx, _ = find_peaks(-np.log10(y), height = [-np.max(np.log10(counts)), -np.log10(thresh)], width = wdth, prominence = prom)
+    peak_idx, valley_idx = peak_valley_finder(x, y, params)
 
-    n_peaks = 6
     initial = []                   #Saving for input to the TRAIN FIT
-    if len(peak_idx) < n_peaks:
+    if len(peak_idx) < len(valley_idx):
         n_peaks = len(peak_idx)  #Number of peaks found by find_peak
-    
-    for i in range(n_peaks):
-        try:
-            x_space = np.linspace(x[peak_idx[i]], x[peak_idx[i+1]], acc) #Array with values between the x_coord of 2 consecutives peaks
-            step = x_space[1]-x_space[0]
-            x_gauss = x_space-int(acc/2)*step
-        except IndexError:
-            x_space = np.linspace(x[peak_idx[i-1]], x[i], acc)
-            step = x_space[1]-x_space[0]
-            x_gauss = x_space+int(acc/2)*step
+    else:
+        n_peaks = len(valley_idx)
 
+    for i in range(n_peaks):
+        if i == 0:
+            x_gauss = np.linspace(x[peak_idx[i]] - (x[valley_idx[i]]-x[peak_idx[i]]), x[valley_idx[i]], params["ACCURACY"]) #Array with values between the x_coord of 2 consecutives peaks
+        else:
+            x_gauss = np.linspace(x[valley_idx[i-1]], x[valley_idx[i]], params["ACCURACY"])
+        
         x_gauss = x_gauss[x_gauss >= bins[0]]
         y_gauss = y_intrp(x_gauss)
         # plt.plot(x_gauss,y_gauss,ls="--",alpha=0.9)
 
         try:
             # popt, pcov = curve_fit(loggaussian,x_gauss,np.log10(y_gauss),p0=[np.log10(y[peak_idx[i]]),x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
-            popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[peak_idx[i]],x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
+            popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[x[peak_idx[i]],y[peak_idx[i]],abs(params["WIDTH"]*(x_gauss[0]-x_gauss[1]))])
             perr = np.sqrt(np.diag(pcov))
             ## FITTED to gaussian(x, height, center, width) ##
-            initial.append(popt[1])         # HEIGHT
             initial.append(popt[0])         # CENTER
+            initial.append(popt[1])         # HEIGHT
             initial.append(np.abs(popt[2])) # WIDTH
-            # plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
-        
+            plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
         except:
-            initial.append(x[peak_idx[i]])
-            initial.append(y[peak_idx[i]])
-            initial.append(abs(wdth*(bins[0]-bins[1])))
-            print_colored("Peak %i could not be fitted"%i, "ERROR")
+            continue
 
+    pcov = np.zeros((len(initial),len(initial)))
+    perr = np.zeros(len(initial))
+    popt = initial
+    ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
     try:
-        ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
-        if fit_function == "gaussian":    popt, pcov = curve_fit(gaussian_train,x, y, p0=initial) 
-        if fit_function == "loggaussian": popt, pcov = curve_fit(loggaussian_train,x,np.log10(y),p0=initial)
-        
+        if params["FIT"] == "gaussian":    popt, pcov = curve_fit(gaussian_train,x[:valley_idx[-1]],y[:valley_idx[-1]],p0=initial) 
+        if params["FIT"] == "loggaussian": popt, pcov = curve_fit(loggaussian_train,x[:valley_idx[-1]],np.log10(y[:valley_idx[-1]]),p0=initial)
         perr = np.sqrt(np.diag(pcov))
     except:
-        pcov = np.zeros((len(initial),len(initial)))
-        perr = np.zeros(len(initial))
-        popt = initial
         print_colored("Full fit could not be performed", "ERROR")
     
     return x, y, peak_idx, valley_idx, popt, pcov, perr
