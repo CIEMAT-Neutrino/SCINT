@@ -98,12 +98,11 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                     fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
                     fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
 
-                    #TODO: This if could be simplified!!!
+                    #This if could be simplified!!!
                     if det_label != "PMT": #Fit for SiPMs/SC
-                        ### --- Nx GAUSSIAN FIT --- ### 
-                        params = {"THRESHOLD": 10, "WIDTH": 15, "PROMINENCE": 0.5, "ACCURACY": 500, "FIT": "gaussian"}
                         new_params = {}
-                        for i,param in enumerate(params.keys()):
+                        params = {"THRESHOLD": 0.1, "WIDTH": 5, "PROMINENCE": 0.01, "ACCURACY": 1000, "FIT": "gaussian"}
+                        for i,param in enumerate(list(params.keys())):
                             if check_key(OPT,param) == True: new_params[param] = OPT[param]
                             else:                            new_params[param] = params[param]
 

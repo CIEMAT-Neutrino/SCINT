@@ -14,7 +14,7 @@ from scipy.ndimage.interpolation import shift
 
 from .io_functions  import print_colored
 
-def vis_npy(my_run, keys, OPT = {}, debug = False):
+def vis_npy(my_run, info, keys, OPT = {}, debug = False):
     '''
     This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -94,7 +94,7 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                 elif(key == "AnaADC"):
                     print_colored("AnaADC not saved but we compute it now :)", "WARNING")
                     min.append(np.argmax(my_run[run][ch_list[j]][true_key][idx]))
-                    ana = my_run[run][ch_list[j]]["PChannel"]*((my_run[run][ch_list[j]]["RawADC"][idx].T-my_run[run][ch_list[j]]["RawPedMean"][idx]).T)
+                    ana = my_run[run][ch_list[j]]["PChannel"]*((my_run[run][ch_list[j]]["RawADC"][idx].T-my_run[run][ch_list[j]]["Raw"+info["PED_KEY"][0]][idx]).T)
                     raw.append(ana)
                     ped = 0
                     std = my_run[run][ch_list[j]]["AnaPedSTD"][idx]
@@ -131,7 +131,7 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                         axs[j].semilogy()
                         std = 0 # It is ugly if we see this line in log plots
                     # fig.tight_layout(h_pad=2) # If we want more space betweeb subplots. We avoid small vertical space between plots            
-                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="RAW_WVF", drawstyle = "steps", alpha = 0.95, linewidth=1.2)
+                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="%s"%key, drawstyle = "steps", alpha = 0.95, linewidth=1.2)
                     try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
                     except KeyError: print_colored("PeakAmp not computed!", "ERROR")    
                     try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx],c="tab:green", alpha = 0.8)
@@ -159,7 +159,7 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                                 ref_max_idx = np.argmax(raw[j])
                                 idx_move = np.argmax(ave)
                                 ave = shift(ave, ref_max_idx-idx_move, cval = 0)
-                            axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key, drawstyle = "steps")             
+                            axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="%s"%ave_key, drawstyle = "steps")             
                         except KeyError: print_colored("Run has not been averaged!", "ERROR")
 
                     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs[j].legend()
@@ -236,7 +236,7 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                     print_colored("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]), "white", bold=True)
                     try: print("- Sampling: {:.0E}".format(sampling))
                     except KeyError: print_colored("Variable not found!", color="ERROR")
-                    try: print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]][label+"PedMean"][idx]))
+                    try: print("- Pedestal mean: {:.2E}".format(my_run[run][ch_list[j]][label+info["PED_KEY"][0]][idx]))
                     except KeyError: print_colored("Pedestal mean not found!", color="ERROR")
                     try: print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]][label+"PedSTD"][idx]))
                     except KeyError: print_colored("Pedestal std not found!", color="ERROR")
@@ -310,6 +310,9 @@ def vis_compare_wvf(my_run, keys, OPT = {}):
     figure_features()
     r_list = my_run["NRun"]
     ch_loaded = my_run["NChannel"]
+    if type(ch_loaded) != list:
+        try: ch_loaded = ch_loaded.tolist()
+        except: print_colored("Imported channels as list!", "INFO")
     nch = len(my_run["NChannel"])
     axs = []
     
@@ -405,12 +408,12 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
     figure_features()
     all_counts = []; all_bins = []; all_bars = []
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
-    try: ch_lodaded = ch_loaded.tolist()
-    except: print_colored("Imported channels as list!", "INFO")
-    print(my_run["NChannel"])
+    if type(ch_loaded) != list:
+        try: ch_loaded = ch_loaded.tolist()
+        except: print_colored("Imported channels as list!", "INFO")
+
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
         q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
@@ -428,8 +431,6 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
             if OPT["COMPARE"] == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
             if OPT["COMPARE"] == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
             if OPT["COMPARE"] == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
-            
-            # print(my_run[run][ch]["MyCuts"] == True)
             if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run,debug=True)
             if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
             
@@ -491,17 +492,17 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
                 all_bins.append(bins)
                 all_bars.append(bars)
             
-            if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:       ax.legend()
-            if check_key(OPT, "LOGY")   == True and OPT["LOGY"] == True: ax.semilogy()
+            if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:        ax.legend()
+            if check_key(OPT, "LOGY")   == True and OPT["LOGY"]  == True: ax.semilogy()
+            if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,run,ch,ax,data)
             if check_key(OPT, "SHOW")   == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
-                print_stats(my_run,run,ch,ax,data)
                 plt.ion()
                 plt.show()
                 if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
                     while not plt.waitforbuttonpress(-1): pass
                     plt.close()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] != "NONE":
-            print_stats(my_run,run,ch,ax,data)
+            if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,run,ch,ax,data)
             plt.show()
             if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
                 while not plt.waitforbuttonpress(-1): pass
