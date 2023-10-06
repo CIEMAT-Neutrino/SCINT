@@ -17,17 +17,16 @@ else:
     print("You have latex installed!. Applying default configuration (tex=True)")
     tex_installed = True
 
-from matplotlib import pyplot as plt
+from matplotlib        import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-
 
 def figure_features(tex=tex_installed, font="serif", dpi=300):
     '''
-    Customize figure settings.
-    VARIABLES:
-       \n - tex (bool, optional): use LaTeX. Defaults to True.
-       \n - font (str, optional): font type. Defaults to "serif".
-       \n - dpi (int, optional): dots per inch. Defaults to 180.
+    \nCustomize figure settings.
+    \n**VARIABLES**:
+    \n - tex (bool, optional): use LaTeX. Defaults to True.
+    \n - font (str, optional): font type. Defaults to "serif".
+    \n - dpi (int, optional): dots per inch. Defaults to 180.
     '''
     plt.rcParams.update(
         {
@@ -68,12 +67,12 @@ def figure_features(tex=tex_installed, font="serif", dpi=300):
 
 def add_grid(ax, lines=True, locations=None):
     '''
-    Add a grid to the current plot.
-    VARIABLES:
-       \n - ax (Axis): axis object in which to draw the grid.
-       \n - lines (bool, optional): add lines to the grid. Defaults to True.
-       \n - locations (tuple, optional):
-           \n - (xminor, xmajor, yminor, ymajor). Defaults to None.
+    \nAdd a grid to the current plot.
+    \n**VARIABLES**:
+    \n - ax (Axis): axis object in which to draw the grid.
+    \n - lines (bool, optional): add lines to the grid. Defaults to True.
+    \n - locations (tuple, optional):
+    \n - (xminor, xmajor, yminor, ymajor). Defaults to None.
     '''
 
     if lines:
@@ -81,13 +80,9 @@ def add_grid(ax, lines=True, locations=None):
         ax.grid(lines, alpha=0.7, which="major")
 
     if locations is not None:
-
-        assert (
-            len(locations) == 4
-        ), "Invalid entry for the locations of the markers"
+        assert ( len(locations) == 4 ), "Invalid entry for the locations of the markers"
 
         xmin, xmaj, ymin, ymaj = locations
-
         ax.xaxis.set_minor_locator(MultipleLocator(xmin))
         ax.xaxis.set_major_locator(MultipleLocator(xmaj))
         ax.yaxis.set_minor_locator(MultipleLocator(ymin))

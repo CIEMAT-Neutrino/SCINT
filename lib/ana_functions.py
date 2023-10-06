@@ -5,8 +5,8 @@
 import numba
 import numpy as np
 from itertools import product
-
-from .io_functions import print_colored
+# Import from other libraries
+from .io_functions import print_colored, print_keys
 
 #===========================================================================#
 #************************ GENERAL FUNCTIONS ********************************#
@@ -14,12 +14,12 @@ from .io_functions import print_colored
 
 def insert_variable(my_runs, var, key, debug = False):
     '''
-    Insert values for each type of signal.
-    **VARIABLES**:
-        - my_runs: dictionary containing the data
-        - var:     array of values to be inserted
-        - key:     key to be inserted
-        - debug:   boolean to print debug messages
+    \nInsert values for each type of signal.
+    \n**VARIABLES**:
+    \n- my_runs: dictionary containing the data
+    \n- var:     array of values to be inserted
+    \n- key:     key to be inserted
+    \n- debug:   boolean to print debug messages
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         i = np.where(np.array(my_runs["NRun"]).astype(int) == run)[0][0]
@@ -31,11 +31,11 @@ def insert_variable(my_runs, var, key, debug = False):
 
 def get_ADC_key(my_runs, key, debug = False):
     '''
-    This function returns the ADC key for a given run.
-    **VARIABLES**:
-        - my_runs: dictionary containing the data
-        - key:     key to be inserted
-        - debug:   boolean to print debug messages
+    \nThis function returns the ADC key for a given run.
+    \n**VARIABLES**:
+    \n- my_runs: dictionary containing the data
+    \n- key:     key to be inserted
+    \n- debug:   boolean to print debug messages
     '''
     found_duplicate = 0
     if key == "":
@@ -60,12 +60,12 @@ def get_ADC_key(my_runs, key, debug = False):
 
 def get_wvf_label(my_runs, key, label, debug = False):
     '''
-    This function returns the label for a given run. This depends on the found ADC key or the one provided by the user.
-    **VARIABLES**:
-        - my_runs: dictionary containing the data
-        - key:     key to be inserted
-        - label:   label to be inserted
-        - debug:   boolean to print debug messages
+    \nThis function returns the label for a given run. This depends on the found ADC key or the one provided by the user.
+    \n**VARIABLES**:
+    \n- my_runs: dictionary containing the data
+    \n- key:     key to be inserted
+    \n- label:   label to be inserted
+    \n- debug:   boolean to print debug messages
     '''
     if key == "" and label == "":
         found_key, found_label = get_ADC_key(my_runs, key, debug = debug)
@@ -109,12 +109,12 @@ def get_wvf_label(my_runs, key, label, debug = False):
     
 def generate_cut_array(my_runs, ref="", debug=False):
     '''
-    This function generates an array of bool = True with length = NEvts. 
-    If cuts are applied and then you run this function, it resets the cuts.
-    **VARIABLES**:
-        - my_runs: dictionary containing the data
-        - ref:     reference variable to generate the cut array
-        - debug:   boolean to print debug messages
+    \nThis function generates an array of bool = True with length = NEvts. 
+    \nIf cuts are applied and then you run this function, it resets the cuts.
+    \n**VARIABLES**:
+    \n- my_runs: dictionary containing the data
+    \n- ref:     reference variable to generate the cut array
+    \n- debug:   boolean to print debug messages
     '''
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
@@ -145,10 +145,10 @@ def generate_cut_array(my_runs, ref="", debug=False):
 
 def get_units(my_runs, debug = False):
     '''
-    Computes and store in a dictionary the units of each variable.  
-    **VARIABLES**:
-        - my_runs: dictionary containing the data
-        - debug:   boolean to print debug messages
+    \nComputes and store in a dictionary the units of each variable.  
+    \n**VARIABLES**:
+    \n- my_runs: dictionary containing the data
+    \n- debug:   boolean to print debug messages
     '''
     if debug: print("Getting units...")
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -169,7 +169,7 @@ def get_units(my_runs, debug = False):
 
 def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = False):
     '''
-    Computes the peaktime and amplitude of a collection of a run's collection in standard format
+    \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
     key, label = get_wvf_label(my_runs, key, label, debug = debug)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
@@ -189,13 +189,13 @@ def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = F
 
 def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=100, sliding=100, debug=False):
     '''
-    Computes the pedestal variables of a collection of a run's collection in several windows.
-    **VARIABLES:**
-        - label: string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD
-        - ped_lim: size in bins of the sliding window
-        - sliding: bins moved between shifts of the window
-        - pretrigger: amount of bins to study. Eg: ped_lim = 400, sliding = 50, pretrigger = 800 --> 8 windows to compute
-        - start: the bin where starts the window. This way you can check the end of the window
+    \nComputes the pedestal variables of a collection of a run's collection in several windows.
+    \n**VARIABLES:**
+    \n- label: string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD
+    \n- ped_lim: size in bins of the sliding window
+    \n- sliding: bins moved between shifts of the window
+    \n- pretrigger: amount of bins to study. Eg: ped_lim = 400, sliding = 50, pretrigger = 800 --> 8 windows to compute
+    \n- start: the bin where starts the window. This way you can check the end of the window
     '''
     key, label = get_wvf_label(my_runs, key, label, debug = False)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
@@ -222,8 +222,8 @@ def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=10
 
 def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=100, debug=False):
     '''
-    Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
-    It checks for the best window.
+    \nTaking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
+    \nIt checks for the best window.
     '''
     if ped_lim < sliding:
         ped_lim = 400
@@ -247,11 +247,8 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=100, debug=False):
 
 def compute_ana_wvfs(my_runs, info, debug = False):
     '''
-    Computes the peaktime and amplitude of a collection of a run's collection in standard format
+    \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
-    # Import from other libraries
-    from .io_functions import print_colored, print_keys
-
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         my_runs[run][ch]["AnaADC"] = (my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
         print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
@@ -260,7 +257,7 @@ def compute_ana_wvfs(my_runs, info, debug = False):
 
 def compute_power_spec(ADC, timebin, debug = False):
     ''' 
-    Computes the power spectrum of the given events. It returns both axis. 
+    \nComputes the power spectrum of the given events. It returns both axis. 
     '''
     aux = [] 
     aux_X = np.fft.rfftfreq(len(ADC[0]), timebin)
@@ -272,7 +269,7 @@ def compute_power_spec(ADC, timebin, debug = False):
 @numba.njit
 def shift_ADCs(ADC, shift, debug=False):
     ''' 
-    Used for the sliding window. 
+    \nUsed for the sliding window. 
     '''
     N_wvfs=ADC.shape[0]
     aux_ADC=np.zeros(ADC.shape)
@@ -284,7 +281,7 @@ def shift_ADCs(ADC, shift, debug=False):
 @numba.njit
 def shift4_numba(arr, num, fill_value=0): #default shifted value is 0, remember to always substract your pedestal first
     ''' 
-    Used for the sliding window.
+    \nUsed for the sliding window.
     '''
     if   num > 0: return np.concatenate((np.full(num, fill_value), arr[:-num]))
     elif num < 0: return np.concatenate((arr[-num:], np.full(-num, fill_value)))
