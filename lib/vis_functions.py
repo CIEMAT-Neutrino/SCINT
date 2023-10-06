@@ -254,7 +254,7 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
                     except KeyError: print_colored("Max peak time not found!", color="ERROR")
                     try:    print("-",label+OPT["CHARGE_KEY"],"{:.2E}".format(my_run[run][ch_list[j]][label+OPT["CHARGE_KEY"]][idx]))
                     except:
-                        if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%label+OPT["CHARGE_KEY"], "WARNING")
+                        if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: %s has not been computed!"%(label+OPT["CHARGE_KEY"]), "WARNING")
                         else: print("- Charge: default charge key has not been computed")
                     try: print("- TimeStamp: {:.2E}".format(my_run[run][ch_list[j]]["TimeStamp"][idx]))
                     except KeyError: print_colored("TimeStamp not found!", color="ERROR") 
