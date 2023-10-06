@@ -1,8 +1,8 @@
-import numpy as np
+import numpy             as np
 import matplotlib.pyplot as plt
 from itertools import product
-
-from .io_functions import print_colored, check_key
+# Imports from other libraries
+from .io_functions  import print_colored, check_key
 from .ana_functions import generate_cut_array, get_units, get_wvf_label, shift_ADCs
 
 #===========================================================================#
@@ -11,11 +11,10 @@ from .ana_functions import generate_cut_array, get_units, get_wvf_label, shift_A
 
 def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0, cut_label="", OPT={}, debug=False):
     '''
-    It calculates the average waveform of a run. Select centering:
-    
-    - "NONE"      -> AveWvf: each event is added without centering.
-    - "PEAK"      -> AveWvfPeak: each event is centered according to wvf argmax. 
-    - "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
+    \nIt calculates the average waveform of a run. Select centering:
+    \n- "NONE"      -> AveWvf: each event is added without centering.
+    \n- "PEAK"      -> AveWvfPeak: each event is centered according to wvf argmax. 
+    \n- "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
     '''
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
         true_key, true_label = get_wvf_label(my_runs, "", "", debug = False)
@@ -68,8 +67,8 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
 
 def expo_average(my_run, alpha):
     ''' 
-    This function calculates the exponential average with a given alpha.
-    **returns**: average[i+1] = (1-alpha) * average[i] + alpha * my_run[i+1]
+    \nThis function calculates the exponential average with a given alpha.
+    \n**returns**: average[i+1] = (1-alpha) * average[i] + alpha * my_run[i+1]
     '''
     v_averaged = np.zeros(len(my_run)); v_averaged[0] = my_run[0]
     for i in range (len(my_run) - 1):   v_averaged[i+1] = (1-alpha) * v_averaged[i] + alpha * my_run[i+1] # e.g. alpha = 0.1  ->  average[1] = 0.9 * average[0] + 0.1 * my_run[1]
@@ -78,8 +77,8 @@ def expo_average(my_run, alpha):
 
 def unweighted_average(my_run):
     ''' 
-    This function calculates the unweighted average.
-    **returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3
+    \nThis function calculates the unweighted average.
+    \n**returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3
     '''
     v_averaged    = np.zeros(len(my_run))
     v_averaged[0] = my_run[0]; v_averaged[-1] = my_run[-1]
@@ -89,8 +88,8 @@ def unweighted_average(my_run):
 
 def smooth(my_run, alpha):
     ''' 
-    This function calculates the exponential average and then the unweighted average.
-    **returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 with my_run = (1-alpha) * average[i] + alpha * my_run[i+1]
+    \nThis function calculates the exponential average and then the unweighted average.
+    \n**returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 with my_run = (1-alpha) * average[i] + alpha * my_run[i+1]
     '''
     my_run = expo_average(my_run, alpha)
     my_run = unweighted_average(my_run)
@@ -102,11 +101,9 @@ def smooth(my_run, alpha):
 
 def find_baseline_cuts(raw):
     '''
-    It finds the cuts with the x-axis. It returns the index of both bins.
-    
-    **VARIABLES:**
-
-    - raw: the .root that you want to analize.
+    \nIt finds the cuts with the x-axis. It returns the index of both bins.
+    \n**VARIABLES:**
+    \n- raw: the .root that you want to analize.
     '''
 
     max = np.argmax(raw); i_idx = 0; f_idx = 0
@@ -119,12 +116,10 @@ def find_baseline_cuts(raw):
 
 def find_amp_decrease(raw,thrld):
     '''
-    It finds bin where the amp has fallen above a certain threshold relative to the main peak. It returns the index of both bins.
-
-    **VARIABLES:**
-
-    - raw: the np array that you want to analize.
-    - thrld: the relative amp that you want to analize.
+    \nIt finds bin where the amp has fallen above a certain threshold relative to the main peak. It returns the index of both bins.
+    \n**VARIABLES:**
+    \n- raw: the np array that you want to analize.
+    \n- thrld: the relative amp that you want to analize.
     '''
 
     max = np.argmax(raw); i_idx = 0; f_idx = 0
@@ -137,16 +132,15 @@ def find_amp_decrease(raw,thrld):
 
 def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug = False):
     '''
-    This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
-    **VARIABLES**:
-        - my_runs: run(s) we want to use
-        - info: input information from .txt with DAQ characteristics and Charge Information.
-        - key: waveform we want to integrate (by default any ADC)
-        
-    In txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
-    If I_RANGE == -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
-    If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
-    I_RANGE must have same length than F_RANGE!
+    \nThis function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
+    \n**VARIABLES**:
+    \n- my_runs: run(s) we want to use
+    \n- info: input information from .txt with DAQ characteristics and Charge Information.
+    \n- key: waveform we want to integrate (by default any ADC)
+    \nIn txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
+    \nIf I_RANGE == -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
+    \nIf I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
+    \nI_RANGE must have same length than F_RANGE!
     '''
 
     conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system

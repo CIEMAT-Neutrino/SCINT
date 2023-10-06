@@ -10,11 +10,15 @@ from scipy.optimize import curve_fit
 from scipy.signal   import find_peaks
 from scipy.special  import erf
 from scipy.stats    import poisson
+from math           import factorial as fact
+
+#Imports from other libraries
+from .io_functions  import check_key, print_colored
+from .ana_functions import find_amp_decrease
 
 np.seterr(divide = 'ignore') 
 
 # THIS LIBRARY NEED MIMO PORQUE HAY COSAS REDUNDAANTES QUE SE PUEDEN UNIFICAR
-
 def fit_gaussians(x, y, *p0):
     assert x.shape == y.shape, "Input arrays must have the same shape."
     popt, pcov = curve_fit(gaussian_train, x,y, p0=p0[0])
@@ -23,12 +27,9 @@ def fit_gaussians(x, y, *p0):
     return popt,fit_y, chi_squared
 
 ##Binomial+Poisson distribution
-from math import factorial as fact
-import numpy as np
-from scipy.stats import poisson
 def B(i,k,debug=False):
     '''
-    Factorial factor of F
+    \nFactorial factor of F
     '''
     if (i==0) & (k==0):return 1;
     if (i==0) & (k>0): return 0;
@@ -36,8 +37,8 @@ def B(i,k,debug=False):
 
 def F(K,p,L,debug=False):
     '''
-    Computes prob of the kth point in a convoluted poisson+binomial distribution,.
-    L is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
+    \nComputes prob of the kth point in a convoluted poisson+binomial distribution,.
+    \nL is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
     '''
 
     aux_sum=0
@@ -121,9 +122,9 @@ def fit_dec_gauss(f, fc, n):
 
 def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit=[0]):
     '''
-    This function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
-    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    And return the parameters of the fit (if performed)
+    \nThis function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
+    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    \nAnd return the parameters of the fit (if performed)
     ''' 
 
     #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
@@ -184,12 +185,10 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
 
 def peak_valley_finder(x, y, params):
     '''
-    This function finds the peaks and valleys of the histogram, which has been previoulsy visualized with:
-    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    And return the indices of the peaks and valleys.
+    \nThis function finds the peaks and valleys of the histogram, which has been previoulsy visualized with:
+    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    \nAnd return the indices of the peaks and valleys.
     '''
-    
-    from .io_functions import print_colored
     
     thresh       = params["THRESHOLD"]
     wdth         = params["WIDTH"]
@@ -208,13 +207,10 @@ def peak_valley_finder(x, y, params):
 
 def gaussian_train_fit(counts, bins, bars, params, debug=False):
     ''' 
-    This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
-    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    And return the parameters of the fit (if performed)
+    \nThis function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
+    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    \nAnd return the parameters of the fit (if performed)
     ''' 
-
-    #Imports from other libraries
-    from .io_functions import print_colored
 
     ## Create linear interpolation between bins to search peaks in these variables ##
     x = np.linspace(bins[1],bins[-2],params["ACCURACY"])
@@ -266,15 +262,12 @@ def gaussian_train_fit(counts, bins, bars, params, debug=False):
 
 def pmt_spe_fit(counts, bins, bars, thresh):
     '''
-    This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
-    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    And return the parameters of the fit (if performed)
-    [es muy parecida a gaussian_train_fit; hay algunas cosas que las coge en log pero igual se pueden unificar]
-    [se le puede dedicar un poco mas de tiempo para tener un ajuste mas fino pero parece que funciona]
+    \nThis function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
+    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    \nAnd return the parameters of the fit (if performed)
+    \n[es muy parecida a gaussian_train_fit; hay algunas cosas que las coge en log pero igual se pueden unificar]
+    \n[se le puede dedicar un poco mas de tiempo para tener un ajuste mas fino pero parece que funciona]
     ''' 
-
-    #Imports from other libraries
-    from .io_functions import print_colored
 
     ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
@@ -335,14 +328,10 @@ def pmt_spe_fit(counts, bins, bars, thresh):
 
 def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_fast = 1e-8, OPT={}):
     ''' 
-    This function fits the peak to a gaussian function, and returns the parameters
+    \nThis function fits the peak to a gaussian function, and returns the parameters
     '''
 
-    # Imports from other libraries
-    from .io_functions import check_key
-
     raw_max = np.argmax(fit_raw)
-
     if check_key(OPT, "CUT_NEGATIVE") == True and OPT["CUT_NEGATIVE"] == True:
         for i in range(len(fit_raw)):
             if fit_raw[i] <= thrld:  fit_raw[i] = thrld
@@ -383,12 +372,8 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_f
 
 def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     ''' 
-    DOC 
+    \nDOC 
     '''
-
-    # Imports from other libraries
-    from .io_functions import check_key
-
 
     max = np.argmax(raw)
     # thrld = 1e-4
@@ -449,11 +434,8 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
 
 def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     ''' 
-    DOC 
+    \nDOC 
     '''
-
-    # Imports from other libraries
-    from .io_functions import check_key, print_colored
 
     next_plot = False
     OPT["CUT_NEGATIVE"] = True
@@ -529,9 +511,6 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
 
 def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
 
-    # Imports from other libraries
-    from .io_functions import check_key, print_colored
-
     # Prepare plot vis
     next_plot = False
     plt.rcParams['figure.figsize'] = [8, 8]
@@ -568,15 +547,10 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
 
 def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={}):
     ''' 
-    DOC 
+    \nDOC 
     '''
 
-    # Imports from other libraries
-    from .io_functions  import check_key
-    from .ana_functions import find_amp_decrease
-
     i_param = get_initial_parameters(i_param)
-
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ion()
     
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], in_key):
@@ -620,10 +594,8 @@ def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC
 
 def get_initial_parameters(i_param):
     '''
-    DOC
+    \nDOC
     '''
-    # Imports from other libraries
-    from .io_functions import check_key
     
     # Define input parameters from dictionary
     if check_key(i_param,"ped")      == False: i_param["ped"]      = 1e-6
@@ -650,10 +622,9 @@ def log_tau_slow_profile(x,a_s,tau_s):
     return np.log(tau_slow_profile(x,a_s,tau_s))
 
 def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
-    """ DOC """
-
-    # Imports from other libraries
-    from .io_functions import check_key
+    '''
+    \nDOC 
+    '''
 
     next_plot = False
     thrld = 1e-10
@@ -717,11 +688,10 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     return aux,popt,perr,labels2
 
 def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
-    """ DOC """
+    ''' 
+    \nDOC
+    '''
 
-    # Imports from other libraries
-    from .io_functions import check_key
-    
     next_plot = False
     # thrld = 1e-10
     # for i in range(len(raw)):
