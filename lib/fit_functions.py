@@ -14,7 +14,7 @@ from math           import factorial as fact
 
 #Imports from other libraries
 from .io_functions  import check_key, print_colored
-from .ana_functions import find_amp_decrease
+from .wvf_functions import find_amp_decrease
 
 np.seterr(divide = 'ignore') 
 
