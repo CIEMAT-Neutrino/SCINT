@@ -10,19 +10,22 @@ from matplotlib.cm     import viridis
 from itertools         import product
 # from scipy import stats as st
 
+# Import from other libraries
+from .io_functions  import check_key, print_colored, color_list, write_output_file
+from .ana_functions import generate_cut_array, get_units
+from .fig_config    import figure_features, add_grid
+from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian
+from .vis_functions import vis_var_hist
+
 def vis_persistence(my_run, OPT = {}):
     '''
-    This function plot the PERSISTENCE histogram of the given runs&ch.
-    It perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
-    Binning is fixed (x=5000, y=1000) [study upgrade].
-    X_data (time) and Y_data (waveforms) are deleted after the plot to save space.
-    
-    WARNING! flattening long arrays leads to MEMORY problems :/
+    \nThis function plot the PERSISTENCE histogram of the given runs&ch.
+    \nIt perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
+    \nBinning is fixed (x=5000, y=1000) [study upgrade].
+    \nX_data (time) and Y_data (waveforms) are deleted after the plot to save space.
+    \n
+    \nWARNING! flattening long arrays leads to MEMORY problems :/
     '''
-
-    #Imports from other libraries
-    from .ana_functions import generate_cut_array
-    from .fig_config    import figure_features
 
     figure_features()
     plt.ion()
@@ -53,25 +56,15 @@ def vis_persistence(my_run, OPT = {}):
 
 def calibrate(my_runs, keys, OPT={}, debug=False):
     '''
-    Computes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as 
-    a return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
-    
-    **VARIABLES:**
-
-    - my_run: run(s) we want to check
-    - keys: variables we want to plot as histograms. Type: List
-    - OPT: several options that can be True or False. Type: List
-
+    \nComputes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as 
+    \na return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
+    \n**VARIABLES:**
+    \n- my_run: run(s) we want to check
+    \n- keys: variables we want to plot as histograms. Type: List
+    \n- OPT: several options that can be True or False. Type: List
       (a) LOGY: True if we want logarithmic y-axis
       (b) SHOW: if True, it will show the calibration plot
     '''
-
-    # Imports from other libraries
-    from .io_functions  import check_key, print_colored
-    from .ana_functions import generate_cut_array, get_units
-    from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit
-    from .vis_functions import vis_var_hist
-    from .fig_config    import figure_features, add_grid
 
     figure_features()
     for run in my_runs["NRun"]:
@@ -149,19 +142,14 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
 
 def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
     '''
-    Computes calibration parameters for each peak.
-    
-    Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
-    It returns an array of arrays: 
-    save_calibration = [ [[mu,dmu],[height,dheight],[height,dheight],[sigma,dsigma],
-    [gain,dgain],[sn0,dsn0],[sn1,dsn1],[sn2,dsn2]], [PEAK 1], [PEAK 2],...]
-    
-    Save in a txt the calibration parameters to be exported directly.
-    Takes as input an array of arrays with the computed parameters (see compute_cal_parameters())
+    \nComputes calibration parameters for each peak.
+    \nGiven popt and pcov which are the output for the best parameters when performing the Gaussian fit.
+    \nIt returns an array of arrays: 
+    \nsave_calibration = [ [[mu,dmu],[height,dheight],[height,dheight],[sigma,dsigma],
+    \n[gain,dgain],[sn0,dsn0],[sn1,dsn1],[sn2,dsn2]], [PEAK 1], [PEAK 2],...]
+    \nSave in a txt the calibration parameters to be exported directly.
+    \nTakes as input an array of arrays with the computed parameters (see compute_cal_parameters())
     '''
-
-    # Imports from other libraries
-    from .io_functions import write_output_file
 
     if all(x !=-99 for x in popt):
         cal_parameters = []
@@ -221,18 +209,13 @@ def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
 
 def scintillation_txt(run, ch, popt, pcov, filename, info):
     '''
-    Computes charge parameters.
-    
-    Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
-    It returns an array of arrays: 
-    save_scintillation = [ [[mu,dmu],[height,dheight],[sigma,dsigma],] ]
-    
-    Save in a txt the calibration parameters to be exported directly.
-    Takes as input an array of arrays with the computed parameters (see compute_charge_parameters())
+    \nComputes charge parameters.
+    \nGiven popt and pcov which are the output for the best parameters when performing the Gaussian fit.
+    \nIt returns an array of arrays: 
+    \nsave_scintillation = [ [[mu,dmu],[height,dheight],[sigma,dsigma],] ]
+    \nSave in a txt the calibration parameters to be exported directly.
+    \nTakes as input an array of arrays with the computed parameters (see compute_charge_parameters())
     '''
-
-    # Imports from other libraries
-    from .io_functions import write_output_file
 
     charge_parameters = []
     perr0 = np.sqrt(np.diag(pcov))  #error for each variable
@@ -255,25 +238,15 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
 
 def charge_fit(my_runs, keys, OPT={}):
     '''
-    Computes charge hist of a collection of runs. A fit is performed (1 gaussian) and we have as 
-    a return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
-    
-    **VARIABLES:**
-
-    - my_run: run(s) we want to check
-    - keys: variables we want to plot as histograms. Type: List
-    - OPT: several options that can be True or False. Type: List
-    
+    \nComputes charge hist of a collection of runs. A fit is performed (1 gaussian) and we have as 
+    \na return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
+    \n**VARIABLES:**
+    \n- my_run: run(s) we want to check
+    \n- keys: variables we want to plot as histograms. Type: List
+    \n- OPT: several options that can be True or False. Type: List
       (a) LOGY: True if we want logarithmic y-axis
       (b) SHOW: if True, it will show the calibration plot
     '''
-
-    # Imports from other libraries
-    from .io_functions  import check_key, color_list
-    from .ana_functions import generate_cut_array, get_units
-    from .fit_functions import gaussian_fit, gaussian
-    from .vis_functions import vis_var_hist
-    from .fig_config     import add_grid
 
     next_plot = False
     counter = 0

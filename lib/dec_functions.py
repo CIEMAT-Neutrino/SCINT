@@ -10,21 +10,21 @@ from scipy.optimize import curve_fit
 from itertools      import product
 from curve          import Curve
 
+#Imports from other libraries
+from .io_functions  import check_key, print_colored
+from .wvf_functions import find_amp_decrease, find_baseline_cuts, smooth, signal_int
+from .fit_functions import dec_gauss, fit_dec_gauss, conv_func2, func2
+# from .wvf_functions import conv_func2, func2,logfunc2
+from .ana_functions import compute_power_spec
 
 def generate_SER(my_runs,light_runs,SPE_runs,scaling_type="Amplitude", debug=False):
     ''' 
-    This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
-
-    **VARIABLES:**
-
-    - my_runs: DICTIONARY containing the wvf to be deconvolved.
-    - light_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
-    - SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
+    \nThis function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
+    \n**VARIABLES:**
+    \n- my_runs: DICTIONARY containing the wvf to be deconvolved.
+    \n- light_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
+    \n- SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
     '''
-
-    #Imports from other libraries
-    from .io_functions  import print_colored
-    from .wvf_functions import find_amp_decrease
 
     for ii in range(len(my_runs["NRun"])):
         for jj in range(len(my_runs["NChannel"])):
@@ -42,22 +42,14 @@ def generate_SER(my_runs,light_runs,SPE_runs,scaling_type="Amplitude", debug=Fal
 
 def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, debug=False):
     ''' 
-    This function deconvolves any given number of arrays according to a provided SPE template.
-    By default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
-
-    **VARIABLES:**
-
-    - my_runs: DICTIONARY containing the wvf to be deconvolved.
-    - keys: LIST containing the keys of [wvf, template, outputkey].
-    - peak_buffer: INT with left distance from peak to calculate baseline.
-    - OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).  
+    \nThis function deconvolves any given number of arrays according to a provided SPE template.
+    \nBy default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
+    \n**VARIABLES:**
+    \n- my_runs: DICTIONARY containing the wvf to be deconvolved.
+    \n- keys: LIST containing the keys of [wvf, template, outputkey].
+    \n- peak_buffer: INT with left distance from peak to calculate baseline.
+    \n- OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).  
     '''
-
-    # Imports from other libraries
-    from .io_functions  import print_colored, check_key
-    from .fit_functions import dec_gauss, fit_dec_gauss
-    from .wvf_functions import find_baseline_cuts, smooth
-    from .ana_functions import compute_power_spec
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = []; trimm = 0 
@@ -275,12 +267,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
 
 def convolve(my_runs, keys = [], OPT = {}):
 
-    # Imports from other libraries
-    from .io_functions import print_colored, check_key
-    from .wvf_functions import signal_int, conv_func2, func2
-
     print_colored("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n", "blue", bold=True)
-
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = dict()
     
@@ -373,10 +360,6 @@ def convolve(my_runs, keys = [], OPT = {}):
             output_file.write("%.2E \t\u00B1\t %.2E\n"%(fit_finals[0], perr[0]))
 
 def check_array_len(wvf1,wvf2):
-
-    # Imports from other libraries
-    from .io_functions import print_colored
-
     if len(wvf1) < len(wvf2): 
         print_colored("RAW WVF IS LONGER THAN WVF TEMPLATE", "WARNING")
         wvf2 = wvf2[:-(len(wvf2)-len(wvf1))]
@@ -391,10 +374,6 @@ def check_array_even(wvf):
     else:                return wvf
 
 def conv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
-
-    #Imports from other libraries
-    from .wvf_functions import func2
-
     resp = func2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)
     
     conv = convolve(wvf[1], resp)
@@ -405,10 +384,6 @@ def conv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
     return conv[conv_max-wvf_max:conv_max+len(wvf[1])-wvf_max]
 
 def logconv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
-
-    #Imports from other libraries
-    from .wvf_functions import logfunc2
-
     resp = logfunc2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)
 
     conv = convolve(wvf[1], resp)

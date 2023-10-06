@@ -2,8 +2,7 @@
 # In this library we have all the functions related with visualization. They are mostly used in 0XVis*.py macros but can be included anywhere !! #
 #================================================================================================================================================#
 
-import math
-import inquirer
+import math, inquirer
 import numpy             as np
 import matplotlib.pyplot as plt
 from matplotlib.colors           import LogNorm
@@ -12,19 +11,20 @@ from itertools                   import product
 from scipy.signal                import find_peaks
 from scipy.ndimage.interpolation import shift
 
-from .io_functions  import print_colored
+# Imports from other libraries
+from .io_functions  import check_key,print_colored
+from .fig_config    import figure_features, add_grid
+from .ana_functions import get_wvf_label
+from .fit_functions import fit_wvfs
 
 def vis_npy(my_run, info, keys, OPT = {}, debug = False):
     '''
-    This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
-    We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
-    
-    **VARIABLES:**
-
-    - my_run: run(s) we want to check
-    - KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
-    - OPT: several options that can be True or False. Type: List
-
+    \nThis function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
+    \nWe can interact with the plot and pass through the events freely (go back, jump to a specific event...)
+    \n**VARIABLES:**
+    \n- my_run: run(s) we want to check
+    \n- KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
+    \n- OPT: several options that can be True or False. Type: List
       (a) MICRO_SEC: if True we multiply Sampling by 1e6
       (b) NORM: True if we want normalized waveforms
       (c) LOGY: True if we want logarithmic y-axis
@@ -35,11 +35,6 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
       (h) CUTTED_WVF: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
       (i) SAME_PLOT: True if we want to plot different channels in the SAME plot
     '''
-
-    # Imports from other libraries
-    from .io_functions  import check_key,print_colored
-    from .fig_config    import figure_features
-    from .ana_functions import get_wvf_label
 
     if not check_key(OPT, "CUTTED_WVF"): OPT["CUTTED_WVF"] = -1; print_colored("CUTTED_WVF not defined, setting to -1", "WARNING")
     if not check_key(OPT, "SAME_PLOT"): OPT["SAME_PLOT"] = False; print_colored("SAME_PLOT not defined, setting to False", "WARNING")
@@ -284,28 +279,18 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
 
 def vis_compare_wvf(my_run, keys, OPT = {}):
     '''
-    This function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
-    
-    **VARIABLES:**
-
-    - my_run: run(s) we want to check
-    - KEYS: waveform to plot (AveWvf, AveWvdSPE, ...). Type: List
-    - OPT: several options that can be True or False.  Type: List
-
+    \nThis function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
+    \n**VARIABLES:**
+    \n- my_run: run(s) we want to check
+    \n- KEYS: waveform to plot (AveWvf, AveWvdSPE, ...). Type: List
+    \n- OPT: several options that can be True or False.  Type: List
       (a) MICRO_SEC: if True we multiply Sampling by 1e6
       (b) NORM: True if we want normalized waveforms
       (c) LOGY: True if we want logarithmic y-axis
-
-    - compare: 
-
+    \n- compare: 
       (a) "RUNS" to get a plot for each channel and the selected runs. Type: String
       (b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     '''
-
-    # Imports from other libraries
-    from .io_functions  import check_key
-    from .fit_functions import fit_wvfs
-    from .fig_config    import figure_features
 
     figure_features()
     r_list = my_run["NRun"]
@@ -382,28 +367,18 @@ def vis_compare_wvf(my_run, keys, OPT = {}):
 
 def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False, debug = False):
     '''
-    This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
-    Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
-    It returns values of counts, bins and bars from the histogram to be used in other function.
-    
-    **VARIABLES:**
-
-    - my_run: run(s) we want to check
-    - keys: variables we want to plot as histograms. Type: List
-
+    \nThis function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
+    \nOutliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
+    \nIt returns values of counts, bins and bars from the histogram to be used in other function.
+    \n**VARIABLES:**
+    \n- my_run: run(s) we want to check
+    \n- keys: variables we want to plot as histograms. Type: List
       (a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
       (b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
       (c) Other variable: any other variable. Here we reject outliers.
-      
-    - percentile: percentile used for outliers removal
-    
-    WARNING! Maybe the binning stuff should be studied in more detail.
+    \n- percentile: percentile used for outliers removal
+    \nWARNING! Maybe the binning stuff should be studied in more detail.
     '''
-
-    # Imports from other libraries
-    from .io_functions  import check_key, print_colored
-    from .ana_functions import generate_cut_array, get_units
-    from .fig_config    import figure_features, add_grid
 
     figure_features()
     all_counts = []; all_bins = []; all_bars = []
@@ -512,7 +487,7 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
 
 def print_stats(my_run,run,ch,ax,data):
     '''
-    This function prints the statistics of the data.
+    \nThis function prints the statistics of the data.
     '''
     times = np.asarray(my_run[run][ch]["TimeStamp"])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
     rate = 1/np.mean(np.diff(times))
@@ -530,21 +505,14 @@ def print_stats(my_run,run,ch,ax,data):
 
 def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = False, OPT={}):
     '''
-    This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
-    It plots values below and above the indicated percetiles, but values are not removed from data.
-    
-    **VARIABLES:**
-
-    - my_run: run(s) we want to check
-    - keys: variables we want to plot as histograms. Type: List
-    - percentile: percentile used for outliers removal
-    - select_range: if we still have many outliers we can select the ranges in x and y axis.
+    \nThis function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
+    \nIt plots values below and above the indicated percetiles, but values are not removed from data.
+    \n**VARIABLES:**
+    \n- my_run: run(s) we want to check
+    \n- keys: variables we want to plot as histograms. Type: List
+    \n- percentile: percentile used for outliers removal
+    \n- select_range: if we still have many outliers we can select the ranges in x and y axis.
     '''
-
-    # Imports from other libraries
-    from .io_functions  import check_key, print_colored
-    from .ana_functions import generate_cut_array, get_units
-    from .fig_config    import figure_features, add_grid
 
     figure_features()
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
