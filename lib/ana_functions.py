@@ -245,7 +245,7 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=100, debug=False):
     if debug: print_colored("Calculating pedestal variables from sliding window of %i bins"%(sliding), "INFO")
     return ADC_s, start_window
 
-def compute_ana_wvfs(my_runs, debug = False):
+def compute_ana_wvfs(my_runs, info, debug = False):
     '''
     Computes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
@@ -253,7 +253,7 @@ def compute_ana_wvfs(my_runs, debug = False):
     from .io_functions import print_colored, print_keys
 
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
-        my_runs[run][ch]["AnaADC"] = (my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T
+        my_runs[run][ch]["AnaADC"] = (my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
         print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
         
