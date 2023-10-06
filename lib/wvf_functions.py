@@ -9,7 +9,7 @@ from .ana_functions import generate_cut_array, get_units, get_wvf_label, shift_A
 #********************** AVERAGING FUCNTIONS ********************************#
 #===========================================================================# 
 
-def average_wvfs(my_runs, centering="NONE", key="", label="", threshold=0, cut_label="", OPT={}, debug=False):
+def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0, cut_label="", OPT={}, debug=False):
     '''
     It calculates the average waveform of a run. Select centering:
     
@@ -30,9 +30,9 @@ def average_wvfs(my_runs, centering="NONE", key="", label="", threshold=0, cut_l
         buffer = 100  
         aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
         label = true_label
-        if true_label == "Raw":
+        if true_label == "Raw" and key == "AnaADC":
             # from compute_ana_wvfs: my_runs[run][ch]["PChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
-            aux_ADC = my_runs[run][ch]["PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+"PedMean"][my_runs[run][ch]["MyCuts"] == True]).T)
+            aux_ADC = my_runs[run][ch]["PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+info["PED_KEY"][0]][my_runs[run][ch]["MyCuts"] == True]).T)
             if label == "Raw": label = "Ana"
             print_colored("Computing ANA wvfs from RAW", "WARNING")
         mean_ana_ADC = np.mean(aux_ADC,axis=0)
@@ -169,7 +169,7 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
             
         aux_ADC = my_runs[run][ch][key]
         if true_label == "Raw": 
-            aux_ADC = my_runs[run][ch]["PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+"PedMean"]).T)
+            aux_ADC = my_runs[run][ch]["PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+info["PED_KEY"][0]]).T)
             if label == "Raw": label = "Ana"
         for i in range(len(ave)):
             if typ == "ChargeAveRange": # Integrated charge from the average waveform

@@ -65,7 +65,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
 
     if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY"]
+    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
     if BOOLEAN == []: BOOLEAN = []
     # Strips the newline character
     for line in lines:

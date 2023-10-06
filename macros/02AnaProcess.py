@@ -6,11 +6,12 @@ info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 ### 02Process
 for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int)):
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][2], compressed=True, debug=user_input["debug"])
-    compute_ana_wvfs(my_runs,debug=False)
+    compute_ana_wvfs(my_runs,info,debug=False)
     delete_keys(my_runs,['RawADC','RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim']) # Delete branches to avoid overwritting
 
     compute_peak_variables(my_runs, label="Ana", key="AnaADC", debug=user_input["debug"])     # Compute new peak variables
     compute_pedestal_variables(my_runs, label="Ana", key="AnaADC", debug=user_input["debug"]) # Compute new ped variables using sliding window
+    average_wvfs(my_runs, info=info, label="Ana", key="AnaADC", centering="NONE", debug=user_input["debug"])
 
     save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][2]),info=info, force=True)
     del my_runs

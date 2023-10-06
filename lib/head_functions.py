@@ -252,7 +252,7 @@ def opt_selector(filename = "VisConfig.txt", debug=False):
     else: my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in content.split('\n')}
     
     my_opt = read_input_file(filename.split(".txt")[0],path="",
-        BOOLEAN=["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","SHOW_PARAM","CHARGEDICT","PEAK_FINDER","SAME_PLOT","LEGEND","SHOW","TERMINAL_MODE","PRINT_KEYS","SCINT_FIT"],
+        BOOLEAN=["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","SHOW_PARAM","CHARGEDICT","PEAK_FINDER","SAME_PLOT","LEGEND","SHOW","TERMINAL_MODE","PRINT_KEYS","SCINT_FIT","STATS"],
         STRINGS=["SHOW_AVE","CHARGE_KEY","COMPARE","FIT"],
         NUMBERS=["CUTTED_WVF","ACCURACY"],
         DOUBLES=["THRESHOLD","WIDTH","PROMINENCE"],debug=False)
