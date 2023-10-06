@@ -65,7 +65,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
 
     if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY"]
+    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
     if BOOLEAN == []: BOOLEAN = []
     # Strips the newline character
     for line in lines:
@@ -198,7 +198,7 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
             file.write(branch+": "+list_to_string(info[branch])+"\n")
 
 
-def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1], path = "../fit_data/"):
+def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1], path = "../data/"):
     '''
     General function to write a txt file with the outputs obtained.
     The file name is defined by the given "filename" variable + _chX. 
@@ -206,7 +206,9 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
     By default we dont save the height of the fitted gaussian in the txt.
     '''
 
-    folder_path  = info["MONTH"][0]+"/"
+    # Check if folder exists
+    folder_path  = info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
+    if not os.path.exists(path+folder_path): os.makedirs(name=path+folder_path,exist_ok=True)
     fitted_peaks = len(output)
     par_list = list(range(len(output[0])))
     for p in not_saved: par_list.remove(p) #removing parameters before saving in txt (height by default)
