@@ -35,15 +35,23 @@ SAVE_PRESET: NON,ALL,EVA,CAL,CAL,NON,DEC
 ########################
 TYPE: ChargeAveRange,ChargeRange,
 REF: AveWvf
-I_RANGE: 0.1,0.5,0.5,0.5,0.5
-F_RANGE: 0.1,0.5,1.0,2.0,4.0
+I_RANGE: 0.1,0.1,0.1,0.1,0.1
+F_RANGE: 0.4,0.9,1.9,2.9,3.9
 ANA_KEY: RawADC
+PED_KEY: PreTriggerMean
 ########################
 ####   CUTS INFO    ####
 ########################
-#0CUT_CHAN: 6,7
+#0CUT_CHAN: 1
 #0CUT_TYPE: cut_df
-#0CUT_KEYS: AnaValleyAmp
+#0CUT_KEYS: AnaChargeRange2
 #0CUT_LOGIC: bigger_than
-#0CUT_VALUE: 0
+#0CUT_VALUE: 1000
+#0CUT_INCLUSIVE: False
+
+#0CUT_CHAN: 0
+#0CUT_TYPE: cut_df
+#0CUT_KEYS: AnaChargeRange2
+#0CUT_LOGIC: smaller_than
+#0CUT_VALUE: 1000
 #0CUT_INCLUSIVE: False
