@@ -35,7 +35,7 @@ def cut_selector(my_runs, user_input, debug=False):
     return label, my_runs
 
 def print_cut_info(my_cuts):
-        print("Nº of selected events from total events: %i (%0.2f"%(np.sum(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)")
+    print("Nº of selected events from total events: %i (%0.2f"%(np.sum(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)")
 
 
 
@@ -57,11 +57,11 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                 if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs); print("...Running generate_cut_array...")
                 if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
                 print_colored("... Cutting events for run %i channel %i with %s %s %0.2f ..."%(run, ch, key, logic, value),"INFO")
-
-                if logic == "bigger_than":    this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(my_cuts)
-                if logic == "smaller_than":   this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(my_cuts)
-                if logic == "equal_than":     this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(my_cuts)
-                if logic == "not_equal_than": this_channel_cut_array = (my_runs_df.loc[ch][key] != value); print_cut_info(my_cuts)
+                # print(my_runs_df.loc[ch][key])
+                if logic == "bigger_than":    this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(this_channel_cut_array)
+                if logic == "smaller_than":   this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(this_channel_cut_array)
+                if logic == "equal_than":     this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(this_channel_cut_array)
+                if logic == "not_equal_than": this_channel_cut_array = (my_runs_df.loc[ch][key] != value); print_cut_info(this_channel_cut_array)
 
                 if ch_idx != 0:
                     if inclusive: this_cut_cut_array = this_cut_cut_array + this_channel_cut_array
