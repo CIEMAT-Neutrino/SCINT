@@ -1,25 +1,25 @@
-import subprocess
 
-try:
-    # print("WORKING ON CENTOS")
-    bashCommand = "yum info texlive-latex-base"
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-except FileNotFoundError:
-    # print("WORKING ON UBUNTU")
-    bashCommand = "apt list --installed | grep texlive-latex-base"
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-output, error = process.communicate()
-if "Error" in str(output):
-    print("You don't have latex installed. Changing default configuration to tex=False")
-    tex_installed = False
-else:
-    print("You have latex installed!. Applying default configuration (tex=True)")
-    tex_installed = True
+import sys
+if not sys.platform.startswith('win'):
+    import subprocess
+    try:
+        # print("WORKING ON CENTOS")
+        bashCommand = "yum info texlive-latex-base"
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    except FileNotFoundError:
+        # print("WORKING ON UBUNTU")
+        bashCommand = "apt list --installed | grep texlive-latex-base"
+        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    output, error = process.communicate()
+    if "Error" in str(output):
+        print("You don't have latex installed. Changing default configuration to tex=False")
+        tex_installed = False
+    else:
+        print("You have latex installed!. Applying default configuration (tex=True)")
+        tex_installed = True
 
 from matplotlib        import pyplot as plt
 from matplotlib.ticker import MultipleLocator
-
 def figure_features(tex=tex_installed, font="serif", dpi=300):
     '''
     \nCustomize figure settings.
