@@ -87,7 +87,7 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
                     if debug: print_colored("Using '%s' label"%label, "DEBUG")
 
                 elif(key == "AnaADC"):
-                    print_colored("AnaADC not saved but we compute it now :)", "WARNING")
+                    print_colored("\nAnaADC not saved but we compute it now :)", "WARNING")
                     min.append(np.argmax(my_run[run][ch_list[j]][true_key][idx]))
                     ana = my_run[run][ch_list[j]]["PChannel"]*((my_run[run][ch_list[j]]["RawADC"][idx].T-my_run[run][ch_list[j]]["Raw"+info["PED_KEY"][0]][idx]).T)
                     raw.append(ana)
@@ -249,7 +249,7 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
                     except KeyError: print_colored("Max peak time not found!", color="ERROR")
                     try:    print("-",label+OPT["CHARGE_KEY"],"{:.2E}".format(my_run[run][ch_list[j]][label+OPT["CHARGE_KEY"]][idx]))
                     except:
-                        if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: has not been computed for key %s!"%label+OPT["CHARGE_KEY"], "WARNING")
+                        if check_key(OPT,"CHARGE_KEY"): print_colored("- Charge: %s has not been computed!"%(label+OPT["CHARGE_KEY"]), "WARNING")
                         else: print("- Charge: default charge key has not been computed")
                     try: print("- TimeStamp: {:.2E}".format(my_run[run][ch_list[j]]["TimeStamp"][idx]))
                     except KeyError: print_colored("TimeStamp not found!", color="ERROR") 
