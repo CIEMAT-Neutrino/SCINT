@@ -9,7 +9,7 @@ compute_ana_wvfs(my_runs,info,debug=False)
 delete_keys(my_runs,['RawADC','RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim']) # Delete branches to avoid overwritting
 
 label, my_runs = cut_selector(my_runs, user_input)
-average_wvfs(my_runs, key=user_input["key"][0], label="Ana", cut_label="Signal", centering="NONE", debug=user_input["debug"])
+average_wvfs(my_runs, info, key=user_input["key"][0], label="Ana", cut_label="Noise", centering="NONE", debug=user_input["debug"])
 
 save_proccesed_variables(my_runs, preset=user_input["save_preset"][0], info=info, force=True, debug=user_input["debug"])
 del my_runs
