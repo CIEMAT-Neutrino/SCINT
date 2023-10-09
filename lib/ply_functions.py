@@ -6,6 +6,8 @@ import plotly.offline       as pyoff
 import matplotlib.pyplot    as plt
 import ipywidgets           as widgets
 
+from .io_functions import binary2npy_express
+
 
 def custom_legend_name(fig_px,new_names):
     for i, new_name in enumerate(new_names): fig_px.data[i].name = new_name
@@ -31,10 +33,6 @@ def save_plot(fig_px,name):
     if ".json" in name: return fig_px.write_json(name)
 
 def vis_event(in_file):
-
-    #Import from other libraries
-    from .io_functions import binary2npy_express
-
     adc,timestamp = binary2npy_express(in_file,debug=False)
     df = pd.DataFrame(adc,timestamp)
     col_names  = (list(range(1,len(df.columns)+1))); df.columns = col_names

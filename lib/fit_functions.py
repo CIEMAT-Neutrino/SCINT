@@ -10,11 +10,15 @@ from scipy.optimize import curve_fit
 from scipy.signal   import find_peaks
 from scipy.special  import erf
 from scipy.stats    import poisson
+from math           import factorial as fact
+
+#Imports from other libraries
+from .io_functions  import check_key, print_colored
+from .wvf_functions import find_amp_decrease
 
 np.seterr(divide = 'ignore') 
 
 # THIS LIBRARY NEED MIMO PORQUE HAY COSAS REDUNDAANTES QUE SE PUEDEN UNIFICAR
-
 def fit_gaussians(x, y, *p0):
     assert x.shape == y.shape, "Input arrays must have the same shape."
     popt, pcov = curve_fit(gaussian_train, x,y, p0=p0[0])
@@ -23,12 +27,9 @@ def fit_gaussians(x, y, *p0):
     return popt,fit_y, chi_squared
 
 ##Binomial+Poisson distribution
-from math import factorial as fact
-import numpy as np
-from scipy.stats import poisson
 def B(i,k,debug=False):
     '''
-    Factorial factor of F
+    \nFactorial factor of F
     '''
     if (i==0) & (k==0):return 1;
     if (i==0) & (k>0): return 0;
@@ -36,8 +37,8 @@ def B(i,k,debug=False):
 
 def F(K,p,L,debug=False):
     '''
-    Computes prob of the kth point in a convoluted poisson+binomial distribution,.
-    L is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
+    \nComputes prob of the kth point in a convoluted poisson+binomial distribution,.
+    \nL is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
     '''
 
     aux_sum=0
@@ -72,21 +73,21 @@ def gaussian_train(x, *params):
         center = params[i]
         height = params[i+1]
         width  = params[i+2]
-        y      = y + gaussian(x, height, center, width)
+        y      = y + gaussian(x, center, height, width)
     return y
 
 def loggaussian_train(x, *params):
     y = gaussian_train(x, *params)
     return np.log10(y)
 
-def gaussian(x, height, center, width):
+def gaussian(x, center, height, width):
     return height * np.exp(-0.5*((x - center)/width)**2)
 
-def pmt_spe(x, height, center, width):
-    return height * np.exp(-0.5*((x - center)/width)**2)
+# def pmt_spe(x, height, center, width):
+#     return height * np.exp(-0.5*((x - center)/width)**2)
 
-def loggaussian(x, height, center, width):
-    return np.log10(gaussian(x, height, center, width))
+def loggaussian(x, center, height, width):
+    return np.log10(gaussian(x, center, height, width))
 
 def func(t, t0, sigma, a, tau):
     return (2 * a/tau)*np.exp((sigma/(np.sqrt(2)*tau))**2-(np.array(t)-t0)/tau)*(1-erf((sigma**2-tau*(np.array(t)-t0))/(np.sqrt(2)*sigma*tau)))
@@ -121,9 +122,9 @@ def fit_dec_gauss(f, fc, n):
 
 def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit=[0]):
     '''
-    This function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
-    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    And return the parameters of the fit (if performed)
+    \nThis function fits the histogram, to a gaussians, which has been previoulsy visualized with: 
+    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    \nAnd return the parameters of the fit (if performed)
     ''' 
 
     #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
@@ -172,7 +173,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
         print("Taking peak at: ", x[best_peak_idx])
 
     # try:
-    popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1],sigma],maxfev=5000)
+    popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[x[best_peak_idx1],y[best_peak_idx],sigma],maxfev=5000)
     # popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[best_peak_idx],x[best_peak_idx1]],sigma = sigma, absolute_sigma=True, maxfev=5000)
     perr = np.sqrt(np.diag(pcov))
     chi2 = chi_squared(x_gauss,y_gauss,popt)
@@ -182,97 +183,91 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
     return x, popt, pcov, perr
     # return x, popt, pcov, perr, chi2 # UPLOAD WHEN POSSIBLE MERGING IN MAIN BRANCH; upgrade all the fit functions
 
-
-def gaussian_train_fit(counts, bins, bars, params, debug=False):
-    ''' 
-    This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
-    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    And return the parameters of the fit (if performed)
-    ''' 
-
-    #Imports from other libraries
-    from .io_functions import print_colored
-
-    ## Threshold value (for height of peaks and valleys) ##
-    # thresh = int(len(my_runs[run][ch][key])/1000)
+def peak_valley_finder(x, y, params):
+    '''
+    \nThis function finds the peaks and valleys of the histogram, which has been previoulsy visualized with:
+    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    \nAnd return the indices of the peaks and valleys.
+    '''
+    
     thresh       = params["THRESHOLD"]
     wdth         = params["WIDTH"]
     prom         = params["PROMINENCE"]
     acc          = params["ACCURACY"]
-    fit_function = params["FIT"]
+    max_y = np.max(y)
+    y = y/max_y
+
+    peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
+    valley_idx, _ = find_peaks(-y, height = [-1, -thresh], width = wdth, prominence = prom)
+    print("Peaks found at: ", peak_idx)
+    print("Valleys found at: ", valley_idx)
+
+    print_colored("PeakFinder using parameters: thresh = %i, wdth = %i, prom = %.2f, acc = %i"%(thresh, wdth, prom, acc), "INFO")
+    return peak_idx, valley_idx
+
+def gaussian_train_fit(counts, bins, bars, params, debug=False):
+    ''' 
+    \nThis function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
+    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    \nAnd return the parameters of the fit (if performed)
+    ''' 
+
     ## Create linear interpolation between bins to search peaks in these variables ##
-    x = np.linspace(bins[1],bins[-2],acc)
+    x = np.linspace(bins[1],bins[-2],params["ACCURACY"])
     y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
     y = y_intrp(x)
 
-    ## Find indices of peaks and valleys ##
-    if fit_function == "gaussian":
-        peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
-        valley_idx, _ = find_peaks(-y, height = [-np.max(counts), -thresh], width = wdth)
-    if fit_function == "loggaussian":
-        peak_idx, _ = find_peaks(np.log10(y), height = np.log10(thresh), width = wdth, prominence = prom)
-        valley_idx, _ = find_peaks(-np.log10(y), height = [-np.max(np.log10(counts)), -np.log10(thresh)], width = wdth, prominence = prom)
+    peak_idx, valley_idx = peak_valley_finder(x, y, params)
 
-    n_peaks = 6
     initial = []                   #Saving for input to the TRAIN FIT
-    if len(peak_idx) < n_peaks:
+    if len(peak_idx) < len(valley_idx):
         n_peaks = len(peak_idx)  #Number of peaks found by find_peak
-    
-    for i in range(n_peaks):
-        try:
-            x_space = np.linspace(x[peak_idx[i]], x[peak_idx[i+1]], acc) #Array with values between the x_coord of 2 consecutives peaks
-            step = x_space[1]-x_space[0]
-            x_gauss = x_space-int(acc/2)*step
-        except IndexError:
-            x_space = np.linspace(x[peak_idx[i-1]], x[i], acc)
-            step = x_space[1]-x_space[0]
-            x_gauss = x_space+int(acc/2)*step
+    else:
+        n_peaks = len(valley_idx)
 
+    for i in range(n_peaks):
+        if i == 0:
+            x_gauss = np.linspace(x[peak_idx[i]] - (x[valley_idx[i]]-x[peak_idx[i]]), x[valley_idx[i]], params["ACCURACY"]) #Array with values between the x_coord of 2 consecutives peaks
+        else:
+            x_gauss = np.linspace(x[valley_idx[i-1]], x[valley_idx[i]], params["ACCURACY"])
+        
         x_gauss = x_gauss[x_gauss >= bins[0]]
         y_gauss = y_intrp(x_gauss)
         # plt.plot(x_gauss,y_gauss,ls="--",alpha=0.9)
 
         try:
             # popt, pcov = curve_fit(loggaussian,x_gauss,np.log10(y_gauss),p0=[np.log10(y[peak_idx[i]]),x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
-            popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[y[peak_idx[i]],x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
+            popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[x[peak_idx[i]],y[peak_idx[i]],abs(params["WIDTH"]*(x_gauss[0]-x_gauss[1]))])
             perr = np.sqrt(np.diag(pcov))
             ## FITTED to gaussian(x, height, center, width) ##
-            initial.append(popt[1])         # HEIGHT
             initial.append(popt[0])         # CENTER
+            initial.append(popt[1])         # HEIGHT
             initial.append(np.abs(popt[2])) # WIDTH
-            # plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
-        
+            plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
         except:
-            initial.append(x[peak_idx[i]])
-            initial.append(y[peak_idx[i]])
-            initial.append(abs(wdth*(bins[0]-bins[1])))
-            print_colored("Peak %i could not be fitted"%i, "ERROR")
+            continue
 
+    pcov = np.zeros((len(initial),len(initial)))
+    perr = np.zeros(len(initial))
+    popt = initial
+    ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
     try:
-        ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
-        if fit_function == "gaussian":    popt, pcov = curve_fit(gaussian_train,x, y, p0=initial) 
-        if fit_function == "loggaussian": popt, pcov = curve_fit(loggaussian_train,x,np.log10(y),p0=initial)
-        
+        if params["FIT"] == "gaussian":    popt, pcov = curve_fit(gaussian_train,x[:valley_idx[-1]],y[:valley_idx[-1]],p0=initial) 
+        if params["FIT"] == "loggaussian": popt, pcov = curve_fit(loggaussian_train,x[:valley_idx[-1]],np.log10(y[:valley_idx[-1]]),p0=initial)
         perr = np.sqrt(np.diag(pcov))
     except:
-        pcov = np.zeros((len(initial),len(initial)))
-        perr = np.zeros(len(initial))
-        popt = initial
         print_colored("Full fit could not be performed", "ERROR")
     
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
 def pmt_spe_fit(counts, bins, bars, thresh):
     '''
-    This function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
-    **counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    And return the parameters of the fit (if performed)
-    [es muy parecida a gaussian_train_fit; hay algunas cosas que las coge en log pero igual se pueden unificar]
-    [se le puede dedicar un poco mas de tiempo para tener un ajuste mas fino pero parece que funciona]
+    \nThis function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
+    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
+    \nAnd return the parameters of the fit (if performed)
+    \n[es muy parecida a gaussian_train_fit; hay algunas cosas que las coge en log pero igual se pueden unificar]
+    \n[se le puede dedicar un poco mas de tiempo para tener un ajuste mas fino pero parece que funciona]
     ''' 
-
-    #Imports from other libraries
-    from .io_functions import print_colored
 
     ## Threshold value (for height of peaks and valleys) ##
     # thresh = int(len(my_runs[run][ch][key])/1000)
@@ -333,14 +328,10 @@ def pmt_spe_fit(counts, bins, bars, thresh):
 
 def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_fast = 1e-8, OPT={}):
     ''' 
-    This function fits the peak to a gaussian function, and returns the parameters
+    \nThis function fits the peak to a gaussian function, and returns the parameters
     '''
 
-    # Imports from other libraries
-    from .io_functions import check_key
-
     raw_max = np.argmax(fit_raw)
-
     if check_key(OPT, "CUT_NEGATIVE") == True and OPT["CUT_NEGATIVE"] == True:
         for i in range(len(fit_raw)):
             if fit_raw[i] <= thrld:  fit_raw[i] = thrld
@@ -381,12 +372,8 @@ def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_f
 
 def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     ''' 
-    DOC 
+    \nDOC 
     '''
-
-    # Imports from other libraries
-    from .io_functions import check_key
-
 
     max = np.argmax(raw)
     # thrld = 1e-4
@@ -447,11 +434,8 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
 
 def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     ''' 
-    DOC 
+    \nDOC 
     '''
-
-    # Imports from other libraries
-    from .io_functions import check_key, print_colored
 
     next_plot = False
     OPT["CUT_NEGATIVE"] = True
@@ -527,9 +511,6 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
 
 def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
 
-    # Imports from other libraries
-    from .io_functions import check_key, print_colored
-
     # Prepare plot vis
     next_plot = False
     plt.rcParams['figure.figsize'] = [8, 8]
@@ -566,15 +547,10 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
 
 def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={}):
     ''' 
-    DOC 
+    \nDOC 
     '''
 
-    # Imports from other libraries
-    from .io_functions  import check_key
-    from .ana_functions import find_amp_decrease
-
     i_param = get_initial_parameters(i_param)
-
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ion()
     
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], in_key):
@@ -618,10 +594,8 @@ def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC
 
 def get_initial_parameters(i_param):
     '''
-    DOC
+    \nDOC
     '''
-    # Imports from other libraries
-    from .io_functions import check_key
     
     # Define input parameters from dictionary
     if check_key(i_param,"ped")      == False: i_param["ped"]      = 1e-6
@@ -648,10 +622,9 @@ def log_tau_slow_profile(x,a_s,tau_s):
     return np.log(tau_slow_profile(x,a_s,tau_s))
 
 def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
-    """ DOC """
-
-    # Imports from other libraries
-    from .io_functions import check_key
+    '''
+    \nDOC 
+    '''
 
     next_plot = False
     thrld = 1e-10
@@ -715,11 +688,10 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     return aux,popt,perr,labels2
 
 def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
-    """ DOC """
+    ''' 
+    \nDOC
+    '''
 
-    # Imports from other libraries
-    from .io_functions import check_key
-    
     next_plot = False
     # thrld = 1e-10
     # for i in range(len(raw)):

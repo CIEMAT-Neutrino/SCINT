@@ -1,13 +1,13 @@
 import sys, inquirer, os
 import numpy as np
 
+from .io_functions import print_colored, check_key, read_input_file, cuts_info2dict
+
 def get_flag_dict():
     '''
-    This function returns a dictionary with the available flags for the macros.
-    
-    **RETURNS:**
-
-        - **flag_dict** (*dict*) - Dictionary with the available flags for the macros.
+    \nThis function returns a dictionary with the available flags for the macros.
+    \n**RETURNS:**
+    \n- **flag_dict** (*dict*) - Dictionary with the available flags for the macros.
     '''
     flag_dict = {("-i","--input_file"):"input_file",
         ("-l","--load_preset"):"load_preset \t(RAW, ANA, etc.)",
@@ -18,18 +18,14 @@ def get_flag_dict():
         ("-c","--channels"):"channels \t(optional)",
         ("-f","--filter"): "filter \t(optional)",
         ("-d","--debug"):"debug \t(True/False)"}
-    
     return flag_dict
 
 def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, debug=False):
     '''
-    This function initializes the macro by reading the input file and the user input.
-    
-    **VARIABLES:**
-
-        - **macro** (*str*) - Name of the macro to be executed.
+    \nThis function initializes the macro by reading the input file and the user input.
+    \n**VARIABLES:**
+    \n- **macro** (*str*) - Name of the macro to be executed.
     '''
-    from .io_functions import print_colored,check_key
 
     flag_dict = get_flag_dict()
     user_input = dict()
@@ -66,14 +62,11 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
 
 def update_user_input(user_input,new_input_list,debug=False):
     '''
-    This function updates the user input by asking the user to provide the missing information.
-    
-    **VARIABLES:**
-
-        - **user_input** (*dict*) - Dictionary with the user input.
-        - **new_input_list** (*list*) - List with the keys of the user input that need to be updated.
+    \nThis function updates the user input by asking the user to provide the missing information.
+    \n**VARIABLES:**
+    \n- **user_input** (*dict*) - Dictionary with the user input.
+    \n- **new_input_list** (*list*) - List with the keys of the user input that need to be updated.
     '''
-    from .io_functions import check_key
 
     new_user_input = user_input.copy()
     defaults = {"load_preset":"ANA","save_preset":"ANA","key":"AnaADC","variables":"AnaPeakAmp","runs":"1","channels":"0","debug":"y"}
@@ -90,13 +83,10 @@ def update_user_input(user_input,new_input_list,debug=False):
 
 def select_input_file(user_input, debug=False):
     '''
-    This function asks the user to select the input file.
-
-    **VARIABLES:**
-
-        - **user_input** (*dict*) - Dictionary with the user input.
+    \nThis function asks the user to select the input file.
+    \n**VARIABLES:**
+    \n- **user_input** (*dict*) - Dictionary with the user input.
     '''
-    from .io_functions import check_key, print_colored
     
     new_user_input = user_input.copy()
     if check_key(user_input, "input_file") == False:
@@ -108,14 +98,11 @@ def select_input_file(user_input, debug=False):
 
 def use_default_input(user_input, default_dict, debug=False):
     '''
-    This function updates the user input by asking the user to provide the missing information.
-
-    **VARIABLES:**
-
-        - **user_input** (*dict*) - Dictionary with the user input.
-        - **info** (*dict*) - Dictionary with the information from the input file.
+    \nThis function updates the user input by asking the user to provide the missing information.
+    \n**VARIABLES:**
+    \n- **user_input** (*dict*) - Dictionary with the user input.
+    \n- **info** (*dict*) - Dictionary with the information from the input file.
     '''
-    from .io_functions import check_key, print_colored, read_input_file
     
     info = read_input_file(user_input["input_file"][0], debug=False)
 
@@ -149,21 +136,15 @@ def print_header():
 
 def apply_cuts(user_input, debug=False):
     '''
-    This function asks the user to select the cuts to be apply to your events.
-
-    **VARIABLES:**
-
-        - **user_input** (*dict*) - Dictionary with the user input.
+    \nThis function asks the user to select the cuts to be apply to your events.
+    \n**VARIABLES:**
+    \n- **user_input** (*dict*) - Dictionary with the user input.
     '''
-    from .io_functions import check_key, print_colored,read_input_file,cuts_info2dict
-
     
-    cuts_choices = ["cut_df","cut_lin_rel","cut_peak_finder"]
     info = read_input_file(user_input["input_file"][0], debug=False)
-    # try: 
-    cut_dict = cuts_info2dict(user_input,debug=True)
-    # except KeyError: print_colored("No cuts information found in input file. Introduce your cuts.","WARNING"); cut_dict = {'cut_df': [False,[]], 'cut_lin_rel': [False,[]], 'cut_peak_finder': [False,[]]}
 
+    cuts_choices = ["cut_df","cut_lin_rel","cut_peak_finder"]
+    cut_dict = cuts_info2dict(user_input,debug=True)
     for cut in cuts_choices:
         if cut_dict[cut][0] == True: 
             if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
@@ -205,8 +186,6 @@ def apply_cuts(user_input, debug=False):
 
 # Function to read and print the content of a text file
 def read_and_print_text_file(filename):
-    from .io_functions import print_colored
-
     try:
         first_words = []
         with open(filename, 'r') as file:
@@ -236,7 +215,6 @@ def update_line(filename, content, first_words, line_label, new_text):
     return save_lines
 
 def opt_selector(filename = "VisConfig.txt", debug=False):
-    from .io_functions import print_colored, read_input_file
     content, first_words = read_and_print_text_file(filename)
     # if content:
     q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
@@ -251,7 +229,11 @@ def opt_selector(filename = "VisConfig.txt", debug=False):
 
     else: my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in content.split('\n')}
     
-    my_opt = read_input_file(filename.split(".txt")[0],path="",BOOLEAN=["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","SHOW_PARAM","CHARGEDICT","PEAK_FINDER","SAME_PLOT","LEGEND","SHOW","TERMINAL_MODE","PRINT_KEYS","SCINT_FIT"],STRINGS=["SHOW_AVE","CHARGE_KEY","COMPARE"],NUMBERS=["CUTTED_WVF"],debug=False)
+    my_opt = read_input_file(filename.split(".txt")[0],path="",
+        BOOLEAN=["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","SHOW_PARAM","CHARGEDICT","PEAK_FINDER","SAME_PLOT","LEGEND","SHOW","TERMINAL_MODE","PRINT_KEYS","SCINT_FIT","STATS"],
+        STRINGS=["SHOW_AVE","CHARGE_KEY","COMPARE","FIT"],
+        NUMBERS=["CUTTED_WVF","ACCURACY"],
+        DOUBLES=["THRESHOLD","WIDTH","PROMINENCE"],debug=False)
     # Reformat the dict to select the first element of the list of each entry
     for key in my_opt:
         try: my_opt[key] = my_opt[key][0]

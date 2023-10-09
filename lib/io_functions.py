@@ -2,15 +2,14 @@
 # This library contains general functions used to read/write files, load/save data, etc.                                                         #
 #================================================================================================================================================#
 
-import os, gc, uproot, copy, stat
+import os, gc, uproot, copy, stat, ROOT
 import numpy as np
 import pandas as pd
-
 from itertools import product
 
 def color_list(color):
     '''
-    Function which returns the color in ascii.
+    \nFunction which returns the color in ascii.
     '''
     colors = {
               "DEBUG":   '\033[35m', #PURPLE
@@ -30,7 +29,7 @@ def color_list(color):
 
 def print_colored(string, color, bold=False, end = "\n"):
     '''
-    Print a string in a specific color.
+    \nPrint a string in a specific color.
     '''  
     
     color = color_list(color)
@@ -41,7 +40,7 @@ def print_colored(string, color, bold=False, end = "\n"):
 
 def print_dict(dictionary, debug=False):
     '''
-    Print the keys and values of a dictionary.
+    \nPrint the keys and values of a dictionary.
     '''
     
     for key, value in dictionary.items(): print(str(key) + ": " + str(value))
@@ -51,11 +50,11 @@ def print_dict(dictionary, debug=False):
 #===========================================================================#
 def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "../input/",debug = False):
     '''
-    Obtain the information stored in a .txt input file to load the runs and channels needed.
-    **VARIABLES**:
-        - input: name of the input file
-        - path: path to the input file
-        - debug: if True, print debug messages
+    \nObtain the information stored in a .txt input file to load the runs and channels needed.
+    \n**VARIABLES**:
+    \n- input: name of the input file
+    \n- path: path to the input file
+    \n- debug: if True, print debug messages
     '''
     if debug: print_colored("\nReading input file: "+str(input)+".txt\n", "DEBUG")
     # Using readlines()
@@ -65,7 +64,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
 
     if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY"]
+    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
     if BOOLEAN == []: BOOLEAN = []
     # Strips the newline character
     for line in lines:
@@ -135,7 +134,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
 
 def cuts_info2dict(user_input, debug=False):
     '''
-    Convert the information stored in the input file to a dictionary with the cuts information.
+    \nConvert the information stored in the input file to a dictionary with the cuts information.
     '''
     cuts_dict = {'cut_df': [False, []], 'cut_lin_rel': [False, []], 'cut_peak_finder': [False, []]}
     keep_reading = True
@@ -156,8 +155,8 @@ def cuts_info2dict(user_input, debug=False):
 
 def list_to_string(input_list):
     '''
-    Convert a list to a string to be written in a .txt file
-    Used in generate_input_file.
+    \nConvert a list to a string to be written in a .txt file
+    \nUsed in generate_input_file.
     '''
 
     string = str(input_list).replace("[","") 
@@ -169,8 +168,8 @@ def list_to_string(input_list):
 
 def generate_input_file(input_file,info,path="../input/",label="",debug=False):
     '''
-    Generate a .txt file with the information needed to load the runs and channels.
-    Used when deconvolving signals to be able to re-start the analysis workflow with the deconvolved waveforms.
+    \nGenerate a .txt file with the information needed to load the runs and channels.
+    \nUsed when deconvolving signals to be able to re-start the analysis workflow with the deconvolved waveforms.
     '''
 
     file = open(path+label+str(input_file)+".txt", 'w+')
@@ -198,15 +197,17 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
             file.write(branch+": "+list_to_string(info[branch])+"\n")
 
 
-def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1], path = "../fit_data/"):
+def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1], path = "../data/"):
     '''
-    General function to write a txt file with the outputs obtained.
-    The file name is defined by the given "filename" variable + _chX. 
-    If the file existed previously it appends the new fit values (it save the run for each introduced row)
-    By default we dont save the height of the fitted gaussian in the txt.
+    \nGeneral function to write a txt file with the outputs obtained.
+    \nThe file name is defined by the given "filename" variable + _chX. 
+    \nIf the file existed previously it appends the new fit values (it save the run for each introduced row)
+    \nBy default we dont save the height of the fitted gaussian in the txt.
     '''
 
-    folder_path  = info["MONTH"][0]+"/"
+    # Check if folder exists
+    folder_path  = info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
+    if not os.path.exists(path+folder_path): os.makedirs(name=path+folder_path,exist_ok=True)
     fitted_peaks = len(output)
     par_list = list(range(len(output[0])))
     for p in not_saved: par_list.remove(p) #removing parameters before saving in txt (height by default)
@@ -234,10 +235,9 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
 #===========================================================================#
 def binary2npy_express(in_file, header_lines=6, debug=False):
     '''
-    Dumper from binary format to npy tuples. 
-    Input are binary input file path and npy outputfile as strings. 
-    
-    Depends numpy. 
+    \nDumper from binary format to npy tuples. 
+    \nInput are binary input file path and npy outputfile as strings. 
+    \nDepends numpy. 
     '''
 
     try:    headers = np.fromfile(in_file, dtype='I')               # Reading .dat file as uint32
@@ -270,10 +270,9 @@ def binary2npy_express(in_file, header_lines=6, debug=False):
 
 def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_lines=6, force=False):
     '''
-    Dumper from binary format to npy tuples. 
-    Input are binary input file path and npy outputfile as strings. 
-    
-    Depends numpy. 
+    \nDumper from binary format to npy tuples. 
+    \nInput are binary input file path and npy outputfile as strings. 
+    \nDepends numpy. 
     '''
     info = read_input_file(user_input["input_file"][0],debug=user_input["debug"])
 
@@ -342,11 +341,11 @@ def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_l
 ### DEPRECATED --- UPDATE ###
 def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BINARIO ###
     '''
-    Dumper from .root format to npy tuples. 
-    Input are root input file path and npy outputfile as strings. 
-    Depends on uproot, awkward and numpy. 
-    Size increases x2 times. 
-    NEEDS UPDATE!! (see binary2npy)
+    \nDumper from .root format to npy tuples. 
+    \nInput are root input file path and npy outputfile as strings. 
+    \nDepends on uproot, awkward and numpy. 
+    \nSize increases x2 times. 
+    \nNEEDS UPDATE!! (see binary2npy)
     '''
 
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
@@ -393,8 +392,8 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
 
 def check_key(OPT, key):
     ''' 
-    Checks if the given key is included in the dictionary OPT.
-    Returns a bool. (True if it finds the key)
+    \nChecks if the given key is included in the dictionary OPT.
+    \nReturns a bool. (True if it finds the key)
     '''
 
     try:   OPT[key]; return True   # If the key is found, return True 
@@ -402,7 +401,7 @@ def check_key(OPT, key):
 
 def print_keys(my_runs, debug=False):
     '''
-    Prints the keys of the run_dict which can be accesed with run_dict[runs][channels][BRANCH] 
+    \nPrints the keys of the run_dict which can be accesed with run_dict[runs][channels][BRANCH] 
     '''
     try:
         for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -414,7 +413,7 @@ def print_keys(my_runs, debug=False):
 
 def delete_keys(my_runs, keys, debug=False):
     '''
-    Delete the keys list introduced as 2nd variable
+    \nDelete the keys list introduced as 2nd variable
     '''
 
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
@@ -428,23 +427,23 @@ def delete_keys(my_runs, keys, debug=False):
 
 def get_preset_list(my_run, path, folder, preset, option, debug = False):
     '''
-    Return as output presets lists for load/save npy files.
-    **VARIABLES**:
-        - my_run: my_runs[run][ch]
-        - path: saving path
-        - folder: saving in/out folder
-        - preset: 
-            (a) "ALL": all the existing keys/branches
-            (b) "ANA": only Ana keys/branches (removing RAW info)
-            (c) "INT": only Charge*, Ave* keys/branches
-            (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
-            (e) "EVA": all the existing keys/branches EXCEPT ADC
-            (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
-            (g) "CAL": only Charge* keys
-            (h) "WVF": only Wvf* keys
-        - option: 
-            (a) "LOAD": takes the os.listdir(path+folder) as brach_list (IN)
-            (b) "SAVE": takes the my_run.keys() as branch list (OUT)
+    \nReturn as output presets lists for load/save npy files.
+    \n**VARIABLES**:
+    \n- my_run: my_runs[run][ch]
+    \n- path: saving path
+    \n- folder: saving in/out folder
+    \n- preset: 
+       (a) "ALL": all the existing keys/branches
+       (b) "ANA": only Ana keys/branches (removing RAW info)
+       (c) "INT": only Charge*, Ave* keys/branches
+       (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
+       (e) "EVA": all the existing keys/branches EXCEPT ADC
+       (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
+       (g) "CAL": only Charge* keys
+       (h) "WVF": only Wvf* keys
+    \n- option: 
+       (a) "LOAD": takes the os.listdir(path+folder) as brach_list (IN)
+       (b) "SAVE": takes the my_run.keys() as branch list (OUT)
     '''
 
     dict_option = dict()
@@ -507,23 +506,23 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
 def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):
     '''
-    Structure: run_dict[runs][channels][BRANCH] 
-    Loads the selected channels and runs, for simplicity, all runs must have the same number of channels
-    Presets can be used to only load a subset of desired branches. ALL is default.
-    **VARIABLES**:
-        - runs: list of runs to load
-        - channels: list of channels to load
-        - preset:
-            (a) "ALL": all the existing keys/branches
-            (b) "ANA": only Ana keys/branches (removing RAW info)
-            (c) "INT": only Charge*, Ave* keys/branches
-            (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
-            (e) "EVA": all the existing keys/branches EXCEPT ADC
-            (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
-            (g) "CAL": only Charge* keys
-        - branch_list: list of branches to load
-        - info: dictionary with the info of the run
-        - debug: if True, print debug info
+    \nStructure: run_dict[runs][channels][BRANCH] 
+    \nLoads the selected channels and runs, for simplicity, all runs must have the same number of channels
+    \nPresets can be used to only load a subset of desired branches. ALL is default.
+    \n**VARIABLES**:
+    \n- runs: list of runs to load
+    \n- channels: list of channels to load
+    \n- preset:
+       (a) "ALL": all the existing keys/branches
+       (b) "ANA": only Ana keys/branches (removing RAW info)
+       (c) "INT": only Charge*, Ave* keys/branches
+       (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
+       (e) "EVA": all the existing keys/branches EXCEPT ADC
+       (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
+       (g) "CAL": only Charge* keys
+    \n- branch_list: list of branches to load
+    \n- info: dictionary with the info of the run
+    \n- debug: if True, print debug info
     '''
     if debug: print_colored("\nLoading npy files...", "INFO")
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
@@ -561,16 +560,15 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
 
 def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, debug = False, compressed=True):
     '''
-    Saves the processed variables an npx file.
-    
-    **VARIABLES**:
-        - my_runs: dictionary with the runs and channels to be saved
-        - preset: preset to be used to save the variables
-        - branch_list: list of branches to be saved
-        - info: dictionary with the path and month to be used
-        - force: if True, the files will be overwritten
-        - debug: if True, the function will print the branches that are being saved
-        - compressed: if True, the files will be saved as npz, if False, as npy
+    \nSaves the processed variables an npx file.
+    \n**VARIABLES**:
+    \n- my_runs: dictionary with the runs and channels to be saved
+    \n- preset: preset to be used to save the variables
+    \n- branch_list: list of branches to be saved
+    \n- info: dictionary with the path and month to be used
+    \n- force: if True, the files will be overwritten
+    \n- debug: if True, the function will print the branches that are being saved
+    \n- compressed: if True, the files will be saved as npz, if False, as npy
     '''
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
@@ -592,27 +590,27 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
                 # If the file already exists and force is True, overwrite it
                 elif (key+".npz" in files or key+".npy" in files) and force == True:        
                     if compressed:
-                        print_colored("File (%s.npz) OVERWRITTEN "%key, "WARNING")
                         os.remove(path+out_folder+key+".npz")
                         np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                        print_colored("File (%s.npz) OVERWRITTEN "%key, "WARNING")
                     else:
-                        print_colored("File (%s.npy) OVERWRITTEN "%key, "WARNING")
                         os.remove(path+out_folder+key+".npy")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                        print_colored("File (%s.npy) OVERWRITTEN "%key, "WARNING")
                 
                 # If the file does not exist, create it
-                else: 
-                    print_colored("Saving NEW file: %s.npz"%key, "SUCCESS")
+                elif check_key(aux[run][ch], key): 
                     print(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                    print_colored("Saving NEW file: %s.npz"%key, "SUCCESS")
 
                     if not compressed:
-                        print_colored("Saving NEW file: %s.npy"%key, "SUCCESS")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                        print_colored("Saving NEW file: %s.npy"%key, "SUCCESS")
     del my_runs 
     
 #DEPREACTED??#
@@ -632,15 +630,12 @@ def copy_single_run(my_runs, runs, channels, keys):
 
 def npy2root(my_runs, debug = False):
     '''
-    Converts the npy files to root TTree files by converting the dictionaries to a RDataFrame from ROOT & using the snapshot method.
-    **VARIABLES:**
-        - my_runs: dictionary with the runs and channels to be saved
-        - debug: if True, the function will print the branches that are being saved
+    \nConverts the npy files to root TTree files by converting the dictionaries to a RDataFrame from ROOT & using the snapshot method.
+    \n**VARIABLES:**
+    \n- my_runs: dictionary with the runs and channels to be saved
+    \n- debug: if True, the function will print the branches that are being saved
     '''
 
-    # Load ROOT
-    import ROOT
-    
     # Create the ROOT dataframe
     df = ROOT.RDF.FromNumpy(my_runs)
     return df
@@ -663,10 +658,10 @@ def npy2root(my_runs, debug = False):
 
 def npy2df(my_runs, debug = False):
     '''
-    Converts the npy files to a pandas dataframe.
-    **VARIABLES:**
-        - my_runs: dictionary with the runs and channels to be saved
-        - debug: if True, the function will print the branches that are being saved
+    \nConverts the npy files to a pandas dataframe.
+    \n**VARIABLES:**
+    \n- my_runs: dictionary with the runs and channels to be saved
+    \n- debug: if True, the function will print the branches that are being saved
     '''
     # From my_runs.keys() remove all keys that are not a dictionary
     keys = list(my_runs.keys())
