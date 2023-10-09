@@ -590,27 +590,27 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
                 # If the file already exists and force is True, overwrite it
                 elif (key+".npz" in files or key+".npy" in files) and force == True:        
                     if compressed:
-                        print_colored("File (%s.npz) OVERWRITTEN "%key, "WARNING")
                         os.remove(path+out_folder+key+".npz")
                         np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                        print_colored("File (%s.npz) OVERWRITTEN "%key, "WARNING")
                     else:
-                        print_colored("File (%s.npy) OVERWRITTEN "%key, "WARNING")
                         os.remove(path+out_folder+key+".npy")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                        print_colored("File (%s.npy) OVERWRITTEN "%key, "WARNING")
                 
                 # If the file does not exist, create it
-                else: 
-                    print_colored("Saving NEW file: %s.npz"%key, "SUCCESS")
+                elif check_key(aux[run][ch], key): 
                     print(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                    print_colored("Saving NEW file: %s.npz"%key, "SUCCESS")
 
                     if not compressed:
-                        print_colored("Saving NEW file: %s.npy"%key, "SUCCESS")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                        print_colored("Saving NEW file: %s.npy"%key, "SUCCESS")
     del my_runs 
     
 #DEPREACTED??#

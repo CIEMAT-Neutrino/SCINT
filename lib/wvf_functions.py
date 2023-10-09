@@ -18,6 +18,7 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
     '''
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
         true_key, true_label = get_wvf_label(my_runs, "", "", debug = False)
+        label = true_label
         
         if check_key(my_runs[run][ch], "MyCuts") == True:
             print("Calculating average wvf with cuts")
@@ -28,20 +29,14 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
 
         buffer = 100  
         aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
-        label = true_label
-        if true_label == "Raw" and key == "AnaADC":
-            # from compute_ana_wvfs: my_runs[run][ch]["PChannel"]*((my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["RawPedMean"]).T)
-            aux_ADC = my_runs[run][ch]["PChannel"]*((aux_ADC.T-my_runs[run][ch][true_label+info["PED_KEY"][0]][my_runs[run][ch]["MyCuts"] == True]).T)
-            if label == "Raw": label = "Ana"
-            print_colored("Computing ANA wvfs from RAW", "WARNING")
-        mean_ana_ADC = np.mean(aux_ADC,axis=0)
+
         # bin_ref_peak = st.mode(np.argmax(aux_ADC,axis=1), keepdims=True) # Deprecated function st.mode()
         values, counts = np.unique(np.argmax(aux_ADC,axis=1), return_counts=True) #using the mode peak as reference
         bin_ref_peak = values[np.argmax(counts)]
         
         if centering == "NONE":
-            my_runs[run][ch][label+"AveWvf"+cut_label] = [mean_ana_ADC] # It saves the average waveform as "AveWvf_*"
-            if debug: print_colored("Averaging wvf: "+label+"AveWvf"+cut_label, "INFO")
+            my_runs[run][ch][label+"AveWvf"+cut_label] = [np.mean(aux_ADC,axis=0)] # It saves the average waveform as "AveWvf_*"
+            if debug: print_colored("Averaging %s centered wvf: "%centering+label+"AveWvf"+cut_label, "INFO")
         
         if centering == "PEAK":
             bin_max_peak = np.argmax(aux_ADC[:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
@@ -49,10 +44,10 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii]) # It centers the waveform using the peak
             my_runs[run][ch][label+"AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]     # It saves the average waveform as "AveWvfPeak_*"
-            if debug: print_colored("Averaging wvf: "+label+"AveWvfPeak"+cut_label, "INFO")
+            if debug: print_colored("Averaging %s centered wvf: "+label+"AveWvfPeak"+cut_label, "INFO")
         
         if centering == "THRESHOLD":
-            if threshold == 0: threshold = np.max(mean_ana_ADC)/2
+            if threshold == 0: threshold = np.max(np.mean(aux_ADC,axis=0))/2
             # bin_ref_thld = st.mode(np.argmax(aux_ADC>threshold,axis=1), keepdims=True) # Deprecated st.mode()
             values,counts = np.unique(np.argmax(aux_ADC>threshold,axis=1), return_counts=True) #using the mode peak as reference
             bin_ref_thld = values[np.argmax(counts)] # It is an int
@@ -61,9 +56,9 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])    # It centers the waveform using the threshold
             my_runs[run][ch][label+"AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]  # It saves the average waveform as "AveWvfThreshold_*"
-            if debug: print_colored("Averaging wvf: "+label+"AveWvfThreshold"+cut_label, "INFO")
+            if debug: print_colored("Averaging %s centered wvf: "+label+"AveWvfThreshold"+cut_label, "INFO")
 
-    if debug: print_colored("Average waveform calculated", "SUCCESS")
+    print_colored("Average waveform calculated", "SUCCESS")
 
 def expo_average(my_run, alpha):
     ''' 
