@@ -9,7 +9,7 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     ### Compute
     integrate_wvfs(my_runs, info=info, key=user_input["key"][0], debug=user_input["debug"])
     ### Remove branches to exclude from saving
-    delete_keys(my_runs,[user_input["key"], "TimeStamp","Sampling"])
+    # delete_keys(my_runs,[user_input["key"][0], "TimeStamp", "Sampling"])
     save_proccesed_variables(my_runs, preset=str(info["SAVE_PRESET"][3]),info=info, force=True, debug=user_input["debug"])
     ### Free memory
     del my_runs
