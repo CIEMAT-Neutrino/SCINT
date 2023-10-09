@@ -14,7 +14,7 @@ from scipy.ndimage.interpolation import shift
 # Imports from other libraries
 from .io_functions  import check_key,print_colored
 from .fig_config    import figure_features, add_grid
-from .ana_functions import get_wvf_label
+from .ana_functions import get_wvf_label,generate_cut_array,get_units
 from .fit_functions import fit_wvfs
 
 def vis_npy(my_run, info, keys, OPT = {}, debug = False):
@@ -326,6 +326,7 @@ def vis_compare_wvf(my_run, keys, OPT = {}):
         norm_raw = [1]*nch # Generates a list with the norm correction for std bar
         counter = 0
         ref_max_idx = -1
+        print(b_list)
         for b in b_list:
             if OPT["COMPARE"] == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
             if OPT["COMPARE"] == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"]).replace("#"," ")
