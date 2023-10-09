@@ -8,19 +8,19 @@
 Work in progress (check [TO DO LIST](https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS/blob/main/To_Do.md))
 :construction:
 
-This is a python library to process and analyse raw data from the IR02 lab.
+This is a Python library to process and analyze raw data from the IR02 lab.
 
 We want:
 
-* Classless structure, dictionaries hold all the run/channels information + the wvfs.
-* To avoid as much overcalculation as posible, in particular:
-  * Calculate pedestal/charge/time values all at once and store them sepparatly from the raw data
-  * Prevent excessive memmory usage when dealing with multiple runs.
+* Classless structure, dictionaries hold all the run/channels variables (+ wvfs).
+* To avoid as much overcalculation as possible:
+  * Calculate pedestal/charge/time... values at once and store them separately from the raw data.
+  * Prevent excessive memory usage when dealing with multiple runs by only loading the variables and not the wvfs.
 
 We don't want:
 
-* Complicated hyerarchies
-* Comented/uncomented lines with the same code but different runs/configs
+* Complicated hierarchies
+* Commented/uncommented lines with the same code but different runs/configs
 
 0 Download
 
@@ -38,17 +38,18 @@ git clone https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS.git
 git checkout -b <your_branch_name>
 ```
 
-* Create a folder for your coustom scripts and notebooks and add them to the .gitignore file:
+* Create a folder for your custom scripts and notebooks and add them to the .gitignore file:
 
 ```bash
 mkdir <your_folder_name>
 echo "<your_folder_name/*>" >> .gitignore
 ```
 
-* Create a folder for your data in data/MONTH/raw or use the copy_data.sh script to copy the data from the server.
+* Create a folder data/ (or use the copy_data.sh script) to copy the data from the server.
 
 ```bash
-mkdir data/MONTH/raw/<your_folder_name>
+mkdir data/
+sshfs user@server:path_to_data data
 ```
 
 * Go to the scripts folder:
@@ -63,23 +64,23 @@ cd scripts
 sh setup.sh 
 ```
 
-There is a MergeDebug script where there have been defined the actions to be checked in order to commit the changes to the GitHub repository, making sure everything works as before the changes. (check it for ideas on how to run the scripts)
+There is a MergeDebug script that checks the basic workflow before committing the changes to the GitHub repository, making sure everything works as before uploading any change.
 
 2 Run the following macros FROM the macros folder:
 
 ```bash
 cd ../macros
-python3 00Raw2Np.py MergeDebug
-python3 01PreProcess.py MergeDebug 
-python3 02Process.py MergeDebug
-python3 03Integration.py MergeDebug
-python3 04Calibration.py MergeDebug
-python3 05Scintillation.py MergeDebug
-python3 06Deconvolution.py MergeDebug
-python3 0XVisEvent.py MergeDebug 1 0,1
+python3 00Raw2Np.py -i MergeDebug
+python3 01PreProcess.py -i MergeDebug 
+python3 02AnaProcess.py -i MergeDebug
+python3 03Integration.py -i MergeDebug
+python3 04Calibration.py -i MergeDebug
+python3 05Scintillation.py -i MergeDebug
+python3 06Deconvolution.py -i MergeDebug
+python3 0XVisEvent.py -i MergeDebug -r 1 -c 0,1
 ```
 
-3 To better visualize what is happening and perform non standard analysis, there are jupyter notebooks available in notebooks/
+3 To better visualize what is happening and perform non-standard analysis, there are Jupyter notebooks available in notebooks/
 
 ```bash
 cd ../notebooks
