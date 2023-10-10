@@ -66,9 +66,11 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                 if ch_idx != 0:
                     if inclusive: this_cut_cut_array = this_cut_cut_array + this_channel_cut_array
                     else:         this_cut_cut_array = this_cut_cut_array * this_channel_cut_array
-                    
                     print_colored("\nInclusive = %s"%inclusive,"magenta")
-                    print_cut_info(this_cut_cut_array)
+                else:
+                    this_cut_cut_array = this_channel_cut_array  
+
+                print_cut_info(this_cut_cut_array)
             my_cuts = my_cuts * this_cut_cut_array
             
         for loaded_ch in my_runs["NChannel"]: my_runs[run][loaded_ch]["MyCuts"] = my_cuts
