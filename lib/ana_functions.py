@@ -294,30 +294,3 @@ def get_units(my_runs, debug = False):
             else:                                                                   aux_dic[key] = "a.u."
             
         my_runs[run][ch]["UnitsDict"] = aux_dic
-
-# def old_compute_pedestal_variables(my_runs, key = "", label = "", buffer = 200, debug = False):
-#     '''
-#     Computes the pedestal variables of a collection of a run's collection in standard format
-#     **VARIABLES**:
-#         - my_runs: dictionary containing the data
-#         - key:     key of the variable to be used
-#         - label:   label to be added to the variable name
-#         - buffer:  number of samples to be used for the pedestal computation
-#         - debug:   boolean to print debug messages
-#     '''
-#     key, label = get_ADC_key(my_runs, key, label, debug = debug)
-#     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
-#         try:
-#             # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
-#             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
-#             ped_lim = values[np.argmax(counts)]-buffer
-#             if ped_lim < 0: ped_lim = 200
-#             my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedLim"]  = ped_lim
-#             # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
-#             print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
-#         except KeyError: 
-#             if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")
