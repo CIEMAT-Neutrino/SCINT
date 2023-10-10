@@ -294,6 +294,9 @@ def vis_compare_wvf(my_run, keys, OPT = {}):
 
     figure_features()
     r_list = my_run["NRun"]
+    if type(r_list) != list:
+        try: r_list = r_list.tolist()
+        except: print_colored("Imported runs as list!", "INFO")
     ch_loaded = my_run["NChannel"]
     if type(ch_loaded) != list:
         try: ch_loaded = ch_loaded.tolist()
@@ -303,7 +306,7 @@ def vis_compare_wvf(my_run, keys, OPT = {}):
     
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
+        # if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
         q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
@@ -327,9 +330,10 @@ def vis_compare_wvf(my_run, keys, OPT = {}):
         counter = 0
         ref_max_idx = -1
         print(b_list)
+        print(a_list)
         for b in b_list:
             if OPT["COMPARE"] == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
-            if OPT["COMPARE"] == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]); title = "Average Waveform - Ch {} ({})".format(ch,my_run[run][ch]["Label"]).replace("#"," ")
+            if OPT["COMPARE"] == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]);title = "Average Waveform - Ch {}".format(ch)
             if   len(keys) == 1: ave = my_run[run][ch][keys[counter]][0]
             elif len(keys) > 1:  ave = my_run[run][ch][keys[counter]][0]; counter = counter + 1
 
