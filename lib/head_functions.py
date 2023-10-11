@@ -130,14 +130,14 @@ def print_macro_info(macro, debug=False):
     file_contents = f.read()
     print (file_contents+"\n")
     f.close
-    if debug: print("----- Debug mode activated -----")
+    if debug: print_colored("....... Debug Mode Activated! .......", "DEBUG")
 
 def print_header():
     f = open('info/header.txt', 'r')
     file_contents = f.read()
     print (file_contents)
     f.close
-    print("----- Starting macro -----")
+    print_colored("....... Starting Macro .......", "INFO")
 
 def apply_cuts(user_input, debug=False):
     '''

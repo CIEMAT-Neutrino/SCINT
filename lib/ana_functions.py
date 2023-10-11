@@ -20,7 +20,7 @@ def compute_ana_wvfs(my_runs, info, debug = False):
         my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
         print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
-    print_colored("Ane wvfs have been computed for run %i ch %i"%(run,ch), "SUCCESS")
+    print_colored("--> Computed AnaADC Wvfs!", "SUCCESS")
 
 def compute_fft_wvfs(my_runs, info, key, label, debug = False):
     '''
@@ -38,7 +38,7 @@ def compute_fft_wvfs(my_runs, info, key, label, debug = False):
         my_runs[run][ch][label+"MeanFFT"] = [np.mean(my_runs[run][ch][label+"FFT"],axis=0)]
         print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
-    print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "SUCCESS")
+    print_colored("--> Computed AnaFFT Wvfs!", "SUCCESS")
 
 def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = False):
     '''
@@ -66,7 +66,7 @@ def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = F
             my_runs[run][ch][label+"ValleyAmp" ] = np.min(this_aux_ADC[:,:buffer],axis=1)
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
 
-        print_colored("Peak variables have been computed for run %i ch %i"%(run,ch), "SUCCESS")
+        print_colored("--> Computed Peak Variables!", "SUCCESS")
 
 def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=100, sliding=100, debug=False):
     '''
@@ -99,7 +99,7 @@ def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=10
         my_runs[run][ch][label+"PedStart"] = start_window
         my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
         # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADC[:,start:(start+ped_lim)]**2),axis=1))
-        print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "SUCCESS")
+        print_colored("--> Computed Pedestal Variables!", "SUCCESS")
 
 def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=500, debug=False):
     '''
@@ -193,7 +193,7 @@ def get_ADC_key(my_runs, key, debug = False):
                 key = this_key
                 label = this_key.split("ADC")[0]
                 found_duplicate += 1
-                print_colored("Found ADC branch: %s"%key, "INFO")
+                if debug: print_colored("Found ADC branch: %s"%key, "DEBUG")
                 if found_duplicate > 1:
                     print_colored("ERROR: Found more than one ADC key! Please check load preset.", "ERROR")
                     exit()
@@ -204,7 +204,7 @@ def get_ADC_key(my_runs, key, debug = False):
 
     else:
         label = key.split("ADC")[0]
-        print_colored("Returning label from provided key:", "INFO")
+        if debug: print_colored("Returning label from provided key:", "DEBUG")
     
     return key, label
 
@@ -254,7 +254,7 @@ def get_wvf_label(my_runs, key, label, debug = False):
         out_key = key
         out_label = label
     
-    if debug: print_colored("-> Found label %s form key %s"%(out_label,out_key), "INFO")
+    if debug: print_colored("--> Found label %s form key %s"%(out_label,out_key), "INFO")
     return out_key, out_label
     
 def generate_cut_array(my_runs, ref="", debug=False):
@@ -291,7 +291,7 @@ def generate_cut_array(my_runs, ref="", debug=False):
                     if debug: print_colored("Key "+key+" does not exist", "DEBUG")
                     pass
         
-        print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
+        if debug: print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
 
 def get_units(my_runs, debug = False):
     '''

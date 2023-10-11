@@ -19,11 +19,9 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
         true_key, true_label = get_wvf_label(my_runs, "", "", debug = False)
         label = true_label
-        
-        if check_key(my_runs[run][ch], "MyCuts") == True:
-            print("Calculating average wvf with cuts")
-        else:
-            generate_cut_array(my_runs)
+
+        if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs) 
+            # if debug: print_colored("Calculating average wvf with cuts", "DEBUG")
         if check_key(my_runs[run][ch], "UnitsDict") == False:
             get_units(my_runs)
 
@@ -36,7 +34,7 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
         
         if centering == "NONE":
             my_runs[run][ch][label+"AveWvf"+cut_label] = [np.mean(aux_ADC,axis=0)] # It saves the average waveform as "AveWvf_*"
-            if debug: print_colored("Averaging %s centered wvf: "%centering+label+"AveWvf"+cut_label, "INFO")
+            # if debug: print_colored("Averaging %s centered wvf: "%centering+label+"AveWvf"+cut_label, "DEBUG")
         
         if centering == "PEAK":
             bin_max_peak = np.argmax(aux_ADC[:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
@@ -44,7 +42,7 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii]) # It centers the waveform using the peak
             my_runs[run][ch][label+"AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]     # It saves the average waveform as "AveWvfPeak_*"
-            if debug: print_colored("Averaging %s centered wvf: "+label+"AveWvfPeak"+cut_label, "INFO")
+            # if debug: print_colored("Averaging %s centered wvf: "%centering+label+"AveWvfPeak"+cut_label, "DEBUG")
         
         if centering == "THRESHOLD":
             if threshold == 0: threshold = np.max(np.mean(aux_ADC,axis=0))/2
@@ -56,9 +54,9 @@ def average_wvfs(my_runs, info, centering="NONE", key="", label="", threshold=0,
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])    # It centers the waveform using the threshold
             my_runs[run][ch][label+"AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]  # It saves the average waveform as "AveWvfThreshold_*"
-            if debug: print_colored("Averaging %s centered wvf: "+label+"AveWvfThreshold"+cut_label, "INFO")
+            # if debug: print_colored("Averaging %s centered wvf: "%centering+label+"AveWvfThreshold"+cut_label, "DEBUG")
 
-    print_colored("Average waveform calculated", "SUCCESS")
+    print_colored("--> Computed Average Wvfs (centered wrt %s)!"%centering, "SUCCESS")
 
 def expo_average(my_run, alpha):
     ''' 
@@ -178,7 +176,7 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
                     this_aux_ADC = shift_ADCs(aux_ADC, -np.asarray(my_runs[run][ch][label+"PeakTime"])+i_idx, debug = debug)
                     my_runs[run][ch][label+typ+str(k)+cut_label] = np.sum(this_aux_ADC[:,:f_idx], axis = 1)
             
-            if debug: print_colored("Integrated wvfs according to type **%s** from %.2E to %.2E"%(typ,i_idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]), "SUCCESS")
+            print_colored("--> Computed Integrated Wvfs (according to type **%s** from %.2E to %.2E)!"%(typ,i_idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]), "SUCCESS")
     return my_runs
 
 def compute_peak_RMS(my_runs, info, key = "", label = "", debug = False):
@@ -198,7 +196,7 @@ def compute_peak_RMS(my_runs, info, key = "", label = "", debug = False):
         aux_ADC = shift_ADCs(my_runs[run][ch][key], -shift_idx, debug = debug) 
         aux_ADC = np.asarray(aux_ADC)
         my_runs[run][ch][label+"RMS" ] = np.sqrt(np.mean(np.power(aux_ADC[:,:pulse_width].T - np.tile(ref[i_idx:f_idx],(len(aux_ADC),1)).T*np.max(aux_ADC[:,:pulse_width],axis=1)/pulse_max,2),axis=0))
-        print_colored("Peak RMS have been computed for run %i ch %i"%(run,ch), "SUCCESS")
+        print_colored("--> Computed Peak RMS!", "SUCCESS")
 
         # else:
         #     [my_runs[r][ch][charge]] = pC = s * [ADC] * [V/ADC] * [A/V] * [1e12 pC/1 C]
