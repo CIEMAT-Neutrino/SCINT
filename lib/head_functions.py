@@ -76,8 +76,13 @@ def update_user_input(user_input,new_input_list,debug=False):
             if key_label != "filter":
                 q = [ inquirer.Text(key_label, message=" select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
                 new_user_input[key_label] =  inquirer.prompt(q)[key_label].split(",")
-            else: new_user_input["filter"] = apply_cuts(user_input, debug=debug)
-        else: pass
+                # print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
+            else:
+                new_user_input["filter"] = apply_cuts(user_input, debug=debug)
+                print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
+        else:
+            # print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
+            pass
             # if debug: print("Using %s from user input"%key_label)
     return new_user_input
 
@@ -140,14 +145,11 @@ def apply_cuts(user_input, debug=False):
     \n**VARIABLES:**
     \n- **user_input** (*dict*) - Dictionary with the user input.
     '''
-    
-    info = read_input_file(user_input["input_file"][0], debug=False)
-
     cuts_choices = ["cut_df","cut_lin_rel","cut_peak_finder"]
     cut_dict = cuts_info2dict(user_input,debug=True)
     for cut in cuts_choices:
         if cut_dict[cut][0] == True: 
-            if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
+            # if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
             return cut_dict
         if cut_dict[cut][0] == False:
             ask4cuts = True
@@ -160,7 +162,7 @@ def apply_cuts(user_input, debug=False):
                             if cut_dict[cut][0] != True: cut_dict[cut] = [True, []]
                             channels  = [ inquirer.Text("channels",  message="Select channels for applying **%s**"%cut, default="0,1") ]
                             key       = [ inquirer.Text("key",       message="Select key for applying **%s**"%cut, default="AnaPedSTD") ]
-                            logic     = [ inquirer.Text("logic",     message="Select logic for applying **%s**"%cut, default="bigger_than") ]
+                            logic     = [ inquirer.Text("logic",     message="Select logic for applying **%s**"%cut, default="bigger") ]
                             value     = [ inquirer.Text("value",     message="Select value for applying **%s**"%cut, default="1") ]
                             inclusive = [ inquirer.Text("inclusive", message="Select inclusive for applying **%s**"%cut, default="False") ]
                             cut_dict[cut][1].append([inquirer.prompt(channels)["channels"].split(','),inquirer.prompt(key)["key"], inquirer.prompt(logic)["logic"], float(inquirer.prompt(value)["value"]), inquirer.prompt(inclusive)["inclusive"].lower() in ['true', '1', 't', 'y', 'yes']])
