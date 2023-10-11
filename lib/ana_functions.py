@@ -193,6 +193,7 @@ def get_ADC_key(my_runs, key, debug = False):
                 key = this_key
                 label = this_key.split("ADC")[0]
                 found_duplicate += 1
+                print_colored("Found ADC branch: %s"%key, "INFO")
                 if found_duplicate > 1:
                     print_colored("ERROR: Found more than one ADC key! Please check load preset.", "ERROR")
                     exit()
