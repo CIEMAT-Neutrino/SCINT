@@ -12,7 +12,7 @@
 
 # Changing permissions on files#
 ```bash
-    sudo sshfs -o allow_other perezl@pcae146.ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE ../data
+    sudo sshfs -o allow_other USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE ../data
     chmod o=rwx */*.npz
     chmod -R ugo=+rwx folder #POWERFUL --> all the files/folders in the folder you choose are available for everyone
 ```
