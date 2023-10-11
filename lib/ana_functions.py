@@ -6,7 +6,7 @@ import numba
 import numpy as np
 from itertools import product
 # Import from other libraries
-from .io_functions import print_colored, print_keys
+from .io_functions import print_colored, print_keys, check_key
 
 #===========================================================================#
 #************************* PEAK + PEDESTAL *********************************#
@@ -22,6 +22,23 @@ def compute_ana_wvfs(my_runs, info, debug = False):
         if debug: print_keys(my_runs)
     print_colored("Ane wvfs have been computed for run %i ch %i"%(run,ch), "SUCCESS")
 
+def compute_fft_wvfs(my_runs, info, key, label, debug = False):
+    '''
+    \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
+    '''
+    if check_key(my_runs[my_runs["NRun"][0]][my_runs["NChannel"][0]], key):
+        if key == "AnaADC": compute_ana_wvfs(my_runs, info, debug = debug)
+        else:
+            print_colored("ERROR: Key not found!", "ERROR")
+            exit()
+            
+    for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+        my_runs[run][ch][label+"FFT"] = np.abs(np.fft.rfft(my_runs[run][ch][key]))
+        my_runs[run][ch][label+"Freq"] = [np.fft.rfftfreq(my_runs[run][ch][key][0].size, d=my_runs[run][ch]["Sampling"])]
+        my_runs[run][ch][label+"MeanFFT"] = [np.mean(my_runs[run][ch][label+"FFT"],axis=0)]
+        print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "blue")
+        if debug: print_keys(my_runs)
+    print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "SUCCESS")
 
 def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = False):
     '''
