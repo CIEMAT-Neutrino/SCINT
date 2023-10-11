@@ -94,7 +94,7 @@ def smooth(my_run, alpha):
 #********************** INTEGRATION FUNCTIONS ******************************#
 #===========================================================================# 
 
-def find_baseline_cuts(raw):
+def find_baseline_cuts(raw, debug=False):
     '''
     \nIt finds the cuts with the x-axis. It returns the index of both bins.
     \n**VARIABLES:**
@@ -180,6 +180,25 @@ def integrate_wvfs(my_runs, info = {}, key = "", label="", cut_label="", debug =
             
             if debug: print_colored("Integrated wvfs according to type **%s** from %.2E to %.2E"%(typ,i_idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]), "SUCCESS")
     return my_runs
+
+def compute_peak_RMS(my_runs, info, key = "", label = "", debug = False):
+    '''
+    \nThis function uses the calculated average wvf for a given run and computes the RMS of the peak in the given buffer.
+    '''
+    key, label = get_wvf_label(my_runs, key, label, debug = debug)
+    for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
+        ref = np.asarray(my_runs[run][ch][label+"AveWvf"][0])
+        i_idx,f_idx = find_baseline_cuts(ref)
+        pulse_peak = np.argmax(ref)
+        pulse_max = np.max(ref)
+        pulse_width = f_idx-i_idx
+        
+        shift_idx = my_runs[run][ch][label+"PeakTime"]-(pulse_peak-i_idx)
+        shift_idx[shift_idx < 0] = 0
+        aux_ADC = shift_ADCs(my_runs[run][ch][key], -shift_idx, debug = debug) 
+        aux_ADC = np.asarray(aux_ADC)
+        my_runs[run][ch][label+"RMS" ] = np.sqrt(np.mean(np.power(aux_ADC[:,:pulse_width].T - np.tile(ref[i_idx:f_idx],(len(aux_ADC),1)).T*np.max(aux_ADC[:,:pulse_width],axis=1)/pulse_max,2),axis=0))
+        print_colored("Peak RMS have been computed for run %i ch %i"%(run,ch), "SUCCESS")
 
         # else:
         #     [my_runs[r][ch][charge]] = pC = s * [ADC] * [V/ADC] * [A/V] * [1e12 pC/1 C]
