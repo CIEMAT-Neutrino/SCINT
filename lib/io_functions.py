@@ -144,8 +144,8 @@ def cuts_info2dict(user_input, debug=False):
             try: 
                 input_list = [str(idx)+"CUT_CHAN",str(idx)+"CUT_TYPE",str(idx)+"CUT_KEYS",str(idx)+"CUT_LOGIC",str(idx)+"CUT_VALUE",str(idx)+"CUT_INCLUSIVE"]
                 info = read_input_file(user_input["input_file"][0], STRINGS = input_list, debug=False)
-                if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
                 cuts_dict[cut][1].append([info[str(idx)+"CUT_CHAN"], info[str(idx)+"CUT_KEYS"][0], info[str(idx)+"CUT_LOGIC"][0], float(info[str(idx)+"CUT_VALUE"][0]), info[str(idx)+"CUT_INCLUSIVE"][0].lower() in ["yes","y","true","t","si","s"]])
+                if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
                 idx += 1
             except KeyError:
                 if debug: print_colored("No more cuts to read", "DEBUG")
