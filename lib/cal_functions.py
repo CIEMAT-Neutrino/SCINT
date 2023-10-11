@@ -1,7 +1,7 @@
 #================================================================================================================================================#
 # This library contains function to perform the calibration of our sensors. They are mostly used in the 04Calibration.py macro.                  #
 #================================================================================================================================================#
-
+import scipy
 import numpy             as np
 import matplotlib.pyplot as plt
 import pandas            as pd
@@ -14,7 +14,7 @@ from itertools         import product
 from .io_functions  import check_key, print_colored, color_list, write_output_file
 from .ana_functions import generate_cut_array, get_units
 from .fig_config    import figure_features, add_grid
-from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian
+from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder
 from .vis_functions import vis_var_hist
 
 def vis_persistence(my_run, OPT = {}):
@@ -87,7 +87,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
 
                     ## New Figure with the fit ##
                     plt.ion(); fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6)); add_grid(ax_cal)
-                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step")
+                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step",label="Data")
                     fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
                     fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
 
@@ -99,11 +99,18 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                             if check_key(OPT,param) == True: new_params[param] = OPT[param]
                             else:                            new_params[param] = params[param]
 
-                        x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, new_params, debug=debug)
+                        ## Create linear interpolation between bins to search peaks in these variables ##
+                        x = np.linspace(bins[1],bins[-2],params["ACCURACY"])
+                        y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
+                        y = y_intrp(x)
+
+                        peak_idx, valley_idx = peak_valley_finder(x, y, new_params)
                         ax_cal.axhline(new_params["THRESHOLD"], ls='--')
-                        ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
+                        ax_cal.plot(x[peak_idx][:4], y[peak_idx][:4], 'r.', lw=4)
                         ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-                        ax_cal.plot(x,gaussian_train(x, *popt), label="")
+
+                        popt, pcov, perr = gaussian_train_fit(x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
+                        ax_cal.plot(x,gaussian_train(x, *popt))
 
                     else: #Particular calibration fit for PMTs
                         print("Hello, we are working on a funtion to fit PMT spe :)")
