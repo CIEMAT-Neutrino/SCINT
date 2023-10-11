@@ -10,6 +10,12 @@ from scipy.signal             import find_peaks
 from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
 
+# Import from other libraries
+from .io_functions  import print_colored, check_key
+from .ana_functions import generate_cut_array, get_units
+from .vis_functions import vis_two_var_hist
+from .fig_config    import figure_features
+
 def cut_selector(my_runs, user_input, debug=False):
     label = ""
     cut_dict={}
@@ -28,17 +34,16 @@ def cut_selector(my_runs, user_input, debug=False):
     
     return label, my_runs
 
-def print_cut_info(my_cuts):
-        print("Nº of selected events from total events: %i (%0.2f"%(np.sum(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)")
-
-
+def print_cut_info(my_cuts, stage="partial", debug=False):
+    if stage == "partial": print_colored("Nº selected/total events for this cut: %i/%i (%0.2f"%(np.sum(my_cuts), len(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)", color="INFO")
+    if stage == "final":   print_colored("Nº selected/total events in total cut: %i/%i (%0.2f"%(np.sum(my_cuts), len(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)", color="SUCCESS")
 
 def cut_df(my_runs, cut_dict={}, debug=False):
-    from .io_functions  import print_colored, check_key
-    from .ana_functions import generate_cut_array, get_units
-
+    '''
+    This function cuts the data using a dictionary with the cuts. The dictionary must be in the following format:
+    cut_dict = {(key, logic, value, inclusive): channels}
+    '''
     print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
-
     for run in (np.asarray(my_runs["NRun"]).astype(int)):
         my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
         my_runs_df = pd.DataFrame(my_runs[run]).T
@@ -50,44 +55,39 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                 try: my_runs[run][ch]
                 except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()
 
-                if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs); print("...Running generate_cut_array...")
-                if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
+                if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs, debug=debug)
+                if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs, debug=debug)
                 print_colored("... Cutting events for run %i channel %i with %s %s %0.2f ..."%(run, ch, key, logic, value),"INFO")
-
-                if logic == "bigger_than":    this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(my_cuts)
-                if logic == "smaller_than":   this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(my_cuts)
-                if logic == "equal_than":     this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(my_cuts)
-                if logic == "not_equal_than": this_channel_cut_array = (my_runs_df.loc[ch][key] != value); print_cut_info(my_cuts)
+                if logic == "bigger":  this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(this_channel_cut_array)
+                if logic == "smaller": this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(this_channel_cut_array)
+                if logic == "equal":   this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(this_channel_cut_array)
+                if logic == "unequal": this_channel_cut_array = (my_runs_df.loc[ch][key] != value); print_cut_info(this_channel_cut_array)
 
                 if ch_idx != 0:
                     if inclusive: this_cut_cut_array = this_cut_cut_array + this_channel_cut_array
                     else:         this_cut_cut_array = this_cut_cut_array * this_channel_cut_array
-                    
                     print_colored("\nInclusive = %s"%inclusive,"magenta")
-                    print_cut_info(this_cut_cut_array)
+                else:
+                    this_cut_cut_array = this_channel_cut_array  
+                
             my_cuts = my_cuts * this_cut_cut_array
+            print_cut_info(my_cuts, stage="final")
             
         for loaded_ch in my_runs["NChannel"]: my_runs[run][loaded_ch]["MyCuts"] = my_cuts
+    print_colored("---- DONE CUT! ----\n", color = "SUCCESS", bold=True)
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False, debug = False):
     """
-    This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-    
-    **VARIABLES:**
-
-    - keys: a LIST of variables you want to constrain
-    - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
-    - chs_cut: a LIST with the affected channels.
-    - apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
-    
-    Important! Each key works independently. If one key gives True and the other False, it remains False.
-    Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
+    \nThis is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
+    \n**VARIABLES:**
+    \n- keys: a LIST of variables you want to constrain
+    \n- limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+    \n- ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+    \n- chs_cut: a LIST with the affected channels.
+    \n- apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
+    \nImportant! Each key works independently. If one key gives True and the other False, it remains False.
+    \nExample: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
     """
-
-    #Import from other libraries
-    from .io_functions  import print_colored, check_key
-    from .ana_functions import generate_cut_array, get_units
 
     print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
     if chs_cut == []: chs_cut = my_runs["NChannel"]
@@ -129,7 +129,7 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
             print("Nº of new cutted events in Chs "+str(my_runs["NChannel"])+":", len(idx_list))
             for ch in my_runs["NChannel"]:
                 if check_key(my_runs[run][ch], "MyCuts") == False:
-                    print("...Running generate_cut_array...")
+                    print("...Running generate_cut_array...\n")
                     generate_cut_array(my_runs)
                 for i in idx_list: my_runs[run][ch]["MyCuts"][i] = False
             
@@ -138,29 +138,24 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
 
 def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False, debug=False):
     '''
-    This is a fuction for a cut in the PedSTD. It uses the median as reference and eliminates events with
-    PedSTD > median + n_std*std, where std is the Standard Deviation of the PedSTD distribution (previously filtered
-    with percentiles). 
-
-    **VARIABLES:**
-
-    - keys: a LIST of variables you want to constrain
-    - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    - ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
-    - chs_cut: a LIST with the affected channels.
-    - apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
+    \nThis is a fuction for a cut in the PedSTD. It uses the median as reference and eliminates events with
+    \nPedSTD > median + n_std*std, where std is the Standard Deviation of the PedSTD distribution (previously filtered
+    \nwith percentiles). 
+    \n**VARIABLES:**
+    \n- keys: a LIST of variables you want to constrain
+    \n- limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+    \n- ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
+    \n- chs_cut: a LIST with the affected channels.
+    \n- apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
     '''
-
-    #Import from other libraries
-    from .io_functions  import print_colored, check_key
-    from .ana_functions import generate_cut_array
 
     print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
     if chs_cut == []: chs_cut = my_runs["NChannel"]
     idx_list = []
     initial_evts = 0
     for run, ch in product(my_runs["NRun"], chs_cut):
-        if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs); print("...Running generate_cut_array...")
+        if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs)
+        print("...Running generate_cut_array...\n")
 
         initial_evts = len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True])
         if run != my_runs["NRun"][0] and ch == chs_cut[0]: idx_list = []; print_colored("... NEW RUN ...", color = "WARNING")
@@ -204,21 +199,13 @@ def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False, debug=F
 
 def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
     '''
-    This is a function to cut manually with a polygonal figure on two variables. You can do any polygonal figure (avoid strange figures with crossed lines).
-    "Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
-
-    **VARIABLES:**
-
-    - keys: a LIST of variables you want to plot and cut
-    - compare: NONE, RUNS, CHANNELS to decide the histogram to use
-    - percentile: the percentile used to reject outliers in the histogram
+    \nThis is a function to cut manually with a polygonal figure on two variables. You can do any polygonal figure (avoid strange figures with crossed lines).
+    \n"Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
+    \n**VARIABLES:**
+    \n- keys: a LIST of variables you want to plot and cut
+    \n- compare: NONE, RUNS, CHANNELS to decide the histogram to use
+    \n- percentile: the percentile used to reject outliers in the histogram
     '''
-
-    #Import from other libraries
-    from .io_functions  import print_colored, check_key
-    from .ana_functions import generate_cut_array
-    from .vis_functions import vis_two_var_hist
-    from .fig_config    import figure_features
 
     print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
     counter = 0
@@ -279,15 +266,10 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
 
 def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
     """
-    This is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes)
-    and set the threshold in 3/4 of the SPE max. Other way it takes into account the Max value in Pedestal (this works well for laser runes).
-    
-    WARNING! Maybe the values of width, prominence and distance may be changed.
+    \nThis is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes)
+    \nand set the threshold in 3/4 of the SPE max. Other way it takes into account the Max value in Pedestal (this works well for laser runes).
+    \nWARNING! Maybe the values of width, prominence and distance may be changed.
     """
-
-    #Import from other libraries
-    from .io_functions  import print_colored, check_key
-    from .ana_functions import generate_cut_array
     
     print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -313,20 +295,13 @@ def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
 
 def cut_min_max_sim(my_runs, keys, limits, debug = False):
     '''
-    This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-
-    **VARIABLES:**
-
-    - keys: a LIST of variables you want to constrain at the same time
-    - limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    
-    Important! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
-    Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
+    \nThis is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
+    \n**VARIABLES:**
+    \n- keys: a LIST of variables you want to constrain at the same time
+    \n- limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
+    \nImportant! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
+    \nExample: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
     '''
-
-    #Import from other libraries
-    from .io_functions  import print_colored, check_key
-    from .ana_functions import generate_cut_array
 
     print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
