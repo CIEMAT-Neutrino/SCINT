@@ -6,7 +6,7 @@ import numba
 import numpy as np
 from itertools import product
 # Import from other libraries
-from .io_functions import print_colored, print_keys
+from .io_functions import print_colored, print_keys, check_key
 
 #===========================================================================#
 #************************* PEAK + PEDESTAL *********************************#
@@ -22,6 +22,23 @@ def compute_ana_wvfs(my_runs, info, debug = False):
         if debug: print_keys(my_runs)
     print_colored("Ane wvfs have been computed for run %i ch %i"%(run,ch), "SUCCESS")
 
+def compute_fft_wvfs(my_runs, info, key, label, debug = False):
+    '''
+    \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
+    '''
+    if check_key(my_runs[my_runs["NRun"][0]][my_runs["NChannel"][0]], key):
+        if key == "AnaADC": compute_ana_wvfs(my_runs, info, debug = debug)
+        else:
+            print_colored("ERROR: Key not found!", "ERROR")
+            exit()
+            
+    for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+        my_runs[run][ch][label+"FFT"] = np.abs(np.fft.rfft(my_runs[run][ch][key]))
+        my_runs[run][ch][label+"Freq"] = [np.fft.rfftfreq(my_runs[run][ch][key][0].size, d=my_runs[run][ch]["Sampling"])]
+        my_runs[run][ch][label+"MeanFFT"] = [np.mean(my_runs[run][ch][label+"FFT"],axis=0)]
+        print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "blue")
+        if debug: print_keys(my_runs)
+    print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "SUCCESS")
 
 def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = False):
     '''
@@ -287,37 +304,10 @@ def get_units(my_runs, debug = False):
         keys = my_runs[run][ch].keys()
         aux_dic = {}
         for key in keys:
-            if "Amp" in key or "Ped" in key or "ADC" in key: aux_dic[key] = "ADC"
-            elif "Time" in key or "Sampling" in key:         aux_dic[key] = "ticks"
-            elif "Charge" in key and "Ana" in key:           aux_dic[key] = "ADC x ticks"
-            elif "Charge" in key and "Gauss" in key:         aux_dic[key] = "PE"
-            else:                                            aux_dic[key] = "a.u."
+            if "Amp" in key or "Ped" in key or "ADC" in key or "PreTrigger" in key: aux_dic[key] = "ADC"
+            elif "Time" in key or "Sampling" in key:                                aux_dic[key] = "ticks"
+            elif "Charge" in key and "Ana" in key:                                  aux_dic[key] = "ADC x ticks"
+            elif "Charge" in key and "Gauss" in key:                                aux_dic[key] = "PE"
+            else:                                                                   aux_dic[key] = "a.u."
             
         my_runs[run][ch]["UnitsDict"] = aux_dic
-
-# def old_compute_pedestal_variables(my_runs, key = "", label = "", buffer = 200, debug = False):
-#     '''
-#     Computes the pedestal variables of a collection of a run's collection in standard format
-#     **VARIABLES**:
-#         - my_runs: dictionary containing the data
-#         - key:     key of the variable to be used
-#         - label:   label to be added to the variable name
-#         - buffer:  number of samples to be used for the pedestal computation
-#         - debug:   boolean to print debug messages
-#     '''
-#     key, label = get_ADC_key(my_runs, key, label, debug = debug)
-#     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
-#         try:
-#             # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
-#             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
-#             ped_lim = values[np.argmax(counts)]-buffer
-#             if ped_lim < 0: ped_lim = 200
-#             my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedLim"]  = ped_lim
-#             # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
-#             print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
-#         except KeyError: 
-#             if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")

@@ -82,6 +82,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                         if debug: print(run, ch, my_runs[run][ch]["MyCuts"])
                     if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
                     OPT["SHOW"] == False
+                    OPT["NORM"] == True
                     counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
                     counts = counts[0]; bins = bins[0]; bars = bars[0]
 
