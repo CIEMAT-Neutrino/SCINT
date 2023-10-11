@@ -2,7 +2,7 @@
 # This library contains general functions used to read/write files, load/save data, etc.                                                         #
 #================================================================================================================================================#
 
-import os, gc, uproot, copy, stat, ROOT
+import os, gc, uproot, copy, stat
 import numpy as np
 import pandas as pd
 from itertools import product
@@ -496,6 +496,12 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Wvf" in key or "Charge" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
+        branch_list = aux
+
+    elif preset == "FFT": # Save aux + Wvf* branches
+        branch_list = dict_option[option]; aux = ["TimeStamp"]
+        for key in branch_list:
+            if "MeanFFT" in key or "Freq" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
         branch_list = aux
     
     else:
