@@ -17,10 +17,14 @@ def compute_ana_wvfs(my_runs, info, debug = False):
     \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+        if check_key(my_runs[run][ch],"RawADC") == False:
+            print_colored("ERROR: RawADC not found!", "ERROR")
+            exit()
+        if check_key(my_runs[run][ch],"Raw"+info["PED_KEY"][0]) == False:
+            print_colored("ERROR: Raw"++info["PED_KEY"][0]+" not found! Please run 01PreProcess.py", "ERROR")
+            exit()
         my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
-        print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
-        if debug: print_keys(my_runs)
-    print_colored("--> Computed AnaADC Wvfs!", "SUCCESS")
+    print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")
 
 def compute_fft_wvfs(my_runs, info, key, label, debug = False):
     '''
@@ -32,7 +36,7 @@ def compute_fft_wvfs(my_runs, info, key, label, debug = False):
         my_runs[run][ch][label+"MeanFFT"] = [np.mean(my_runs[run][ch][label+"FFT"],axis=0)]
         print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
-    print_colored("--> Computed AnaFFT Wvfs!", "SUCCESS")
+    print_colored("--> Computed AnaFFT Wvfs!!!", "SUCCESS")
 
 def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False):
     '''
@@ -63,7 +67,7 @@ def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False
             my_runs[run][ch][label+"ValleyAmp" ] = np.min(this_aux_ADC[:,:buffer],axis=1)
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
 
-        print_colored("--> Computed Peak Variables!", "SUCCESS")
+        print_colored("--> Computed Peak Variables!!!", "SUCCESS")
 
 def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 100, sliding = 100, debug = False):
     '''
@@ -95,9 +99,9 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
         my_runs[run][ch][label+"PedStart"] = start_window
         my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
         # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADC[:,start:(start+ped_lim)]**2),axis=1))
-        print_colored("--> Computed Pedestal Variables!", "SUCCESS")
+        print_colored("--> Computed Pedestal Variables!!!", "SUCCESS")
 
-def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=500, debug=False):
+def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 500, debug = False):
     '''
     \nTaking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
     \nIt checks for the best window.
@@ -133,7 +137,7 @@ def compute_power_spec(ADC, timebin, debug = False):
     return np.absolute(np.mean(aux, axis = 0)), np.absolute(aux_X)
 
 @numba.njit
-def shift_ADCs(ADC, shift, debug=False):
+def shift_ADCs(ADC, shift, debug = False):
     ''' 
     \nUsed for the sliding window. 
     '''
@@ -145,7 +149,7 @@ def shift_ADCs(ADC, shift, debug=False):
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
 @numba.njit
-def shift4_numba(arr, num, fill_value=0): #default shifted value is 0, remember to always substract your pedestal first
+def shift4_numba(arr, num, fill_value = 0): #default shifted value is 0, remember to always substract your pedestal first
     ''' 
     \nUsed for the sliding window.
     '''
@@ -196,7 +200,7 @@ def get_ADC_key(my_runs, key, debug = False):
         if found_duplicate == 0:
             label = ""
             print_colored("WARNING: No ADC branch found!", "WARNING")
-        if debug: print_colored("-> Found key: '%s' and label: '%s'"%(key,label), "SUCCESS")
+        if debug: print_colored("--> Returning key: '%s' and label: '%s'!!!"%(key,label), "SUCCESS")
 
     else:
         label = key.split("ADC")[0]
@@ -227,14 +231,13 @@ def get_wvf_label(my_runs, key, label, debug = False):
             user_confirmation = input("Do you want to continue with coustom selection? [y/n]: ")
             if user_confirmation.lower() in ["y","yes"]:
                 out_label = found_label
-                if debug: print_colored("-> Selected label %s"%label, "SUCCESS")
+                if debug: print_colored("Selected label %s"%label, "DEBUG")
             else:
                 out_label = label
-                if debug: print_colored("-> Found label %s"%found_label, "SUCCESS")
-
+                if debug: print_colored("Found label %s"%found_label, "DEBUG")
         else:
             out_label = found_label
-            if debug: print_colored("-> Found label %s"%label, "SUCCESS")
+            if debug: print_colored("Found label %s"%label, "DEBUG")
     
     elif key != "" and label == "":
         if debug: print_colored("WARNING: Selected input ADC but no label provided!", "WARNING")
@@ -250,10 +253,9 @@ def get_wvf_label(my_runs, key, label, debug = False):
         out_key = key
         out_label = label
     
-    if debug: print_colored("--> Found label %s form key %s"%(out_label,out_key), "INFO")
     return out_key, out_label
     
-def generate_cut_array(my_runs, ref="", debug=False):
+def generate_cut_array(my_runs, ref = "", debug = False):
     '''
     \nThis function generates an array of bool = True with length = NEvts. 
     \nIf cuts are applied and then you run this function, it resets the cuts.
@@ -273,7 +275,7 @@ def generate_cut_array(my_runs, ref="", debug=False):
             for key in my_runs[run][ch].keys():
                 try:
                     if len(my_runs[run][ch][key]) > 1:
-                        print_colored("--> Found viable reference variable: "+key, "DEBUG")
+                        if debug: print_colored("Found viable reference variable: "+key, "DEBUG")
                         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][key]),dtype=bool)
                         break
                 except TypeError:
