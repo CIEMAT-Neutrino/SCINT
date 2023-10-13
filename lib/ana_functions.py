@@ -265,7 +265,7 @@ def generate_cut_array(my_runs, ref = "", debug = False):
     \n- debug:   boolean to print debug messages
     '''
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
-        if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
+        # if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
         try:
             if debug: print("Check cut array ref: ",my_runs[run][ch][ref])
             my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]),dtype=bool)
@@ -285,7 +285,8 @@ def generate_cut_array(my_runs, ref = "", debug = False):
                     if debug: print_colored("Key "+key+" does not exist", "DEBUG")
                     pass
         
-        if debug: print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
+        # if debug: print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
+    return my_runs
 
 def get_units(my_runs, debug = False):
     '''

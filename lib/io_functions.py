@@ -61,7 +61,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
     file  = open(path+input+".txt", 'r')
     lines = file.readlines()
     info = dict()
-
+    info["NAME"] = [input]
     if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
     if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
@@ -132,12 +132,13 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
                 if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
     return info
 
-def cuts_info2dict(user_input, debug=False):
+def cuts_info2dict(user_input, info, debug=False):
     '''
     \nConvert the information stored in the input file to a dictionary with the cuts information.
     '''
     cuts_dict = {'cut_df': [False, []], 'cut_lin_rel': [False, []], 'cut_peak_finder': [False, []]}
     keep_reading = True
+    if debug: print_colored("Reading cuts from input file %s"%info["NAME"][0], "DEBUG")
     for i, cut in enumerate(cuts_dict):
         idx = 0
         while keep_reading:
@@ -147,10 +148,10 @@ def cuts_info2dict(user_input, debug=False):
                 cuts_dict[cut][1].append([info[str(idx)+"CUT_CHAN"], info[str(idx)+"CUT_KEYS"][0], info[str(idx)+"CUT_LOGIC"][0], float(info[str(idx)+"CUT_VALUE"][0]), info[str(idx)+"CUT_INCLUSIVE"][0].lower() in ["yes","y","true","t","si","s"]])
                 if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
                 idx += 1
+                if debug: print_colored("Cuts dictionary: "+str(cuts_dict), "DEBUG")
             except KeyError:
-                if debug: print_colored("No more cuts to read", "DEBUG")
                 keep_reading = False
-    if debug: print_colored("Cuts dictionary: "+str(cuts_dict), "DEBUG")
+    if debug and idx == 0: print_colored("No cuts imported from input!", "DEBUG")
     return cuts_dict
 
 def list_to_string(input_list):
