@@ -20,7 +20,7 @@ def get_flag_dict():
         ("-d","--debug"):"debug \t(True/False)"}
     return flag_dict
 
-def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, debug=False):
+def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = {}, debug = False):
     '''
     \nThis function initializes the macro by reading the input file and the user input.
     \n**VARIABLES:**
@@ -51,14 +51,17 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
                         print("Provide argument for flag %s"%flag_dict[flag])
                         exit()
     if check_key(user_input, "input_file") == False:
-        user_input = select_input_file(user_input, debug=debug)
+        user_input = select_input_file(user_input, debug = debug)
         user_input["input_file"] = user_input["input_file"]
-    info = read_input_file(user_input["input_file"][0], debug=False)
-    user_input, info = update_user_input(user_input, input_list, info, debug=debug)
+    
+    info = read_input_file(user_input["input_file"][0], debug = debug)
+    user_input, info = update_user_input(user_input, input_list, info, debug = debug)
     user_input["debug"] = user_input["debug"][0].lower() in ['true', '1', 't', 'y', 'yes']
-    user_input = use_default_input(user_input, default_dict, debug=debug)
+    user_input = use_default_input(user_input, default_dict, info, debug = debug)
 
-    if debug: print_colored("User input: %s"%user_input,"INFO")
+    if debug:
+        print_colored("\nUser input:","INFO")
+        ic.ic(user_input)
     return user_input, info
 
 def update_user_input(user_input, new_input_list, info, debug=False):
@@ -102,16 +105,13 @@ def select_input_file(user_input, debug=False):
     if debug: print_colored("Using input file %s"%new_user_input["input_file"][0],"INFO")
     return new_user_input
 
-def use_default_input(user_input, default_dict, debug=False):
+def use_default_input(user_input, default_dict, info, debug = False):
     '''
     \nThis function updates the user input by asking the user to provide the missing information.
     \n**VARIABLES:**
     \n- **user_input** (*dict*) - Dictionary with the user input.
     \n- **info** (*dict*) - Dictionary with the information from the input file.
     '''
-    
-    info = read_input_file(user_input["input_file"][0], debug=False)
-
     new_user_input = user_input.copy()
     for default_key in default_dict:
         if check_key(new_user_input, default_key) == False:
@@ -122,8 +122,7 @@ def use_default_input(user_input, default_dict, debug=False):
                         if run not in runs:
                             runs.append(run)
             new_user_input[default_key] = runs
-            if new_user_input["debug"]: print_colored("No runs provided. Using all %s from input file. %s"%(default_key,runs),"WARNING")
-
+            if new_user_input["debug"]: print_colored("No %s provided. Using all %s from input file. %s"%(default_key,default_key,runs),"WARNING")
     return new_user_input
 
 def print_macro_info(macro, debug=False):
@@ -243,6 +242,6 @@ def opt_selector(filename = "VisConfig.txt", debug = False):
         except IndexError: pass
 
     if debug:
-        print_colored("Using visualization options:","INFO")
+        print_colored("\nUsing visualization options:","INFO")
         ic.ic(my_opt)
     return my_opt
