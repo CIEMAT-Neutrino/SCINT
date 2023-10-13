@@ -1,8 +1,7 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"runs":["CALIB_RUNS"],"channels":["CHAN_TOTAL"],"variables":["TYPE"]}
-user_input = initialize_macro("04Calibration",["input_file","variables","filter","debug"],default_dict=default_dict, debug=True)
-info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
-
+user_input, info = initialize_macro("04Calibration",["input_file","variables","filter","debug"],default_dict=default_dict, debug=True)
+# info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 OPT = opt_selector(debug=user_input["debug"])
 
 ### 04Calibration

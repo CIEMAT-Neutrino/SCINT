@@ -1,7 +1,7 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"runs":["CALIB_RUNS","LIGHT_RUNS","ALPHA_RUNS","MUONS_RUNS","NOISE_RUNS"],"channels":["CHAN_TOTAL"]}
-user_input = initialize_macro("01PreProcess",["input_file","debug"],default_dict=default_dict, debug=True)
-info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
+user_input, info = initialize_macro("01PreProcess",["input_file","debug"],default_dict=default_dict, debug=True)
+# info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 ### 01PreProcess
 for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int)):
     ### Load
