@@ -23,7 +23,7 @@ MUONS_RUNS:
 CHAN_LABEL: XA0,XA1,SiPM0,SiPM1
 CHAN_TOTAL: 0,1,6,7
 CHAN_POLAR: 1,1,-1,-1
-CHAN_AMPLI: 1300,1300,250,250
+CHAN_AMPLI: 10813,10813,250,250
 ########################
 ####   BRANCH INFO  ####
 ########################
