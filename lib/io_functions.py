@@ -610,15 +610,16 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
                 
                 # If the file does not exist, create it
                 elif check_key(aux[run][ch], key): 
-                    print(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                     print_colored("\tSaving NEW file: %s.npz"%key, "SUCCESS")
-
+                    print(path+out_folder+key+".npz")
                     if not compressed:
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                         print_colored("\tSaving NEW file: %s.npy"%key, "SUCCESS")
+                        print(path+out_folder+key+".npy")
+
     print_colored("--> Saved Data Succesfully!", "SUCCESS")
     del my_runs 
     
