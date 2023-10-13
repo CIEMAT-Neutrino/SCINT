@@ -127,8 +127,8 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
     '''
 
     conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
-    channels = []; channels = np.append(channels,info["CHAN_TOTAL"])
-    ch_amp = dict(zip(channels,info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
+    ch_amp = dict(zip(info["CHAN_TOTAL"],info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
+    
     i_range = info["I_RANGE"] # Get initial time(s) to start the integration
     f_range = info["F_RANGE"] # Get final time(s) to finish the integration
     
