@@ -14,6 +14,7 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     compute_pedestal_variables(my_runs, label="Ana", key="AnaADC", debug=user_input["debug"])
     average_wvfs(my_runs, info=info, label="Ana", key="AnaADC", centering="NONE", debug=user_input["debug"])
     average_wvfs(my_runs, info=info, label="Ana", key="AnaADC", centering="PEAK", debug=user_input["debug"])
+    compute_peak_RMS(my_runs, info=info, label="Ana", key="AnaADC", debug=user_input["debug"])
     ### Remove branches to exclude from saving
     # delete_keys(my_runs,["TimeStamp","Sampling"])
     save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][2]),info=info, force=True)
