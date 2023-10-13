@@ -295,7 +295,7 @@ def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_l
 
         try:
             ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug) # Read the file
-            branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling"]                               # Branches to be saved
+            branches       = ["RawADC","TimeStamp","NBinsWvf","Sampling"]                                # Branches to be saved
             content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0]]                          # Content to be saved
             files          = os.listdir(out_path+out_folder)                                             # List of files in the output folder
             # branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]                                 # Branches to be saved
@@ -336,8 +336,8 @@ def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_l
                     gc.collect()
 
                 except FileNotFoundError: print("--- File %s was not foud!!! \n"%in_file)
-        except FileNotFoundError: print("--- File %s was not foud!!! \n"%(in_path+in_file))
-
+        # except FileNotFoundError: print("--- File %s was not foud!!! \n"%(in_path+in_file))
+        except AttributeError: print("--- File %s does not exist!!! \n"%(in_path+in_file))
 
 ### DEPRECATED --- UPDATE ###
 def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BINARIO ###
