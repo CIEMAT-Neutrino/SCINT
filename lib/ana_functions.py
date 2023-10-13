@@ -25,13 +25,7 @@ def compute_ana_wvfs(my_runs, info, debug = False):
 def compute_fft_wvfs(my_runs, info, key, label, debug = False):
     '''
     \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
-    '''
-    if check_key(my_runs[my_runs["NRun"][0]][my_runs["NChannel"][0]], key):
-        if key == "AnaADC": compute_ana_wvfs(my_runs, info, debug = debug)
-        else:
-            print_colored("ERROR: Key not found!", "ERROR")
-            exit()
-            
+    '''            
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         my_runs[run][ch][label+"FFT"] = np.abs(np.fft.rfft(my_runs[run][ch][key]))
         my_runs[run][ch][label+"Freq"] = [np.fft.rfftfreq(my_runs[run][ch][key][0].size, d=my_runs[run][ch]["Sampling"])]
@@ -40,35 +34,38 @@ def compute_fft_wvfs(my_runs, info, key, label, debug = False):
         if debug: print_keys(my_runs)
     print_colored("--> Computed AnaFFT Wvfs!", "SUCCESS")
 
-def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = False):
+def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False):
     '''
     \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
-    key, label = get_wvf_label(my_runs, key, label, debug = debug)
-    true_key, true_label = get_wvf_label(my_runs, "", "", debug = False)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         aux_ADC = my_runs[run][ch][key]   
-        if true_label == "Raw":
+        if key == "RawADC" and label == "Raw":
             my_runs[run][ch][label+"PeakAmp" ] = my_runs[run][ch]["PChannel"]*np.max(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
             my_runs[run][ch][label+"PeakTime"] = np.argmax(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
+
+            # Compute valley amplitude in the buffer around the peak to avoid noise
+            i_idx = my_runs[run][ch][label+"PeakTime"]
+            i_idx[i_idx < 0] = 0
+            this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
+
+            my_runs[run][ch][label+"ValleyAmp" ] = my_runs[run][ch]["PChannel"]*(np.min(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
+            my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
+        
         else:
             my_runs[run][ch][label+"PeakAmp" ] = np.max(aux_ADC[:,:],axis=1)
             my_runs[run][ch][label+"PeakTime"] = np.argmax(aux_ADC[:,:],axis=1)
-        # Compute valley amplitude in the buffer around the peak to avoid noise
-        i_idx = my_runs[run][ch][label+"PeakTime"]
-        i_idx[i_idx < 0] = 0
-        this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
+            # Compute valley amplitude in the buffer around the peak to avoid noise
+            i_idx = my_runs[run][ch][label+"PeakTime"]
+            i_idx[i_idx < 0] = 0
+            this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
 
-        if true_label == "Raw":
-            my_runs[run][ch][label+"ValleyAmp" ] = my_runs[run][ch]["PChannel"]*(np.min(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
-            my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
-        else:
             my_runs[run][ch][label+"ValleyAmp" ] = np.min(this_aux_ADC[:,:buffer],axis=1)
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
 
         print_colored("--> Computed Peak Variables!", "SUCCESS")
 
-def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=100, sliding=100, debug=False):
+def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 100, sliding = 100, debug = False):
     '''
     \nComputes the pedestal variables of a collection of a run's collection in several windows.
     \n**VARIABLES:**
@@ -78,7 +75,6 @@ def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=10
     \n- pretrigger: amount of bins to study. Eg: ped_lim = 400, sliding = 50, pretrigger = 800 --> 8 windows to compute
     \n- start: the bin where starts the window. This way you can check the end of the window
     '''
-    key, label = get_wvf_label(my_runs, key, label, debug = False)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         if type(ped_lim) != int:
             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
@@ -269,19 +265,15 @@ def generate_cut_array(my_runs, ref="", debug=False):
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
         try:
-            if ref == "": 
-                key, label = get_wvf_label(my_runs, "", "", debug = debug)
-                ref = key
             if debug: print("Check cut array ref: ",my_runs[run][ch][ref])
             my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]),dtype=bool)
         
         except KeyError:
-            print_colored("WARNING: Reference variable for cut array generation not found!", "WARNING")
-            print("Searching for viable reference variable...")
+            if debug: print_colored("Reference variable for cut array generation not found!", "DEBUG")
             for key in my_runs[run][ch].keys():
                 try:
                     if len(my_runs[run][ch][key]) > 1:
-                        print_colored("Found viable reference variable: "+key, "WARNING")
+                        print_colored("--> Found viable reference variable: "+key, "DEBUG")
                         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][key]),dtype=bool)
                         break
                 except TypeError:
