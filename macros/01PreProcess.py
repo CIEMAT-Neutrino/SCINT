@@ -8,7 +8,7 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][1], compressed=True, debug=user_input["debug"])
     ### Process
     if info["LOAD_PRESET"][1] == "ANA":
-        if check_key(my_runs[my_runs["NRun"][0]][my_runs["NChannel"][0]],"AnaADC") == False: compute_ana_wvfs(my_runs,info=info,debug=False)
+        if check_key(my_runs[my_runs["NRun"][0]][my_runs["NChannel"][0]],"AnaADC") == False: compute_ana_wvfs(my_runs,info=info,debug=user_input["debug"])
         delete_keys(my_runs,['RawADC','RawPeakAmp','RawPeakTime','RawPedSTD','RawPedMean','RawPedMax','RawPedMin','RawPedLim'])
     ### Compute
     key, label = get_wvf_label(my_runs, "", "", debug=user_input["debug"])
