@@ -1,23 +1,23 @@
 
-## SCINT TO DO LIST
+# SCINT TO DO LIST
 
-### CYNDRES
+## CYNDRES
 
-CUT FUNCTIONS:
+### CUT FUNCTIONS
 
 - [x] Hacer que funcione el cut_min_max_sim para que se tengan que cumplir dos condiciones simultaneamente (es realmente necesario?) Sobre todo para calibrar sin cargarse el pedestal al cortar en PeakTime. La idea es que se cumplan dos condiciones A LA VEZ, que es diferente a hace un min_max normal y luego otro, porque ahí se modifican los valores por separado. La idea principal de esto es en claibración, poder cortar en PeakTime sin quedarnos sin pedestal, es decir, que se cumpla que el peakTime esté en el rango que le pides y que además tenga > x ADCs (por encima del single). Así no nos cargamos el pedestal.
 - [ ] Hacer que funcione la variable range para poder chequear las variables en un rango concreto de la ventana.
 
-FIT FUNCTIONS:
+### FIT FUNCTIONS
 
 - [ ] Limpiar las funciones, sobre todo las nuevas. Añadir documentación
 
-VIS FUNCTIONS:
+### VIS FUNCTIONS
 
 - [x] Hacer que el visualizador (vis_npy) admita varios runes seguidos. Los admite pero creo que hay veces en las que se raya un poco. Pero si es solo el visualizador funciona bien.
 - [ ] Intentar reducir el tamaño de vis_npy? Funciona bien pero es larga.
 
-OTHERS:
+### OTHERS
 
 - [ ] Conseguir hacer waveforms medias con cortes en varios canales.
 
@@ -52,10 +52,12 @@ OTHERS:
 - [ ] QUITAR BUCLES (cambiar for por vectores)
   - [ ] Problema con el procesado de WFS: procesarlas run a run i.e hacer una macro que ejecute python3 ... para cada run y no pete
   - [ ] El resto sin bucle (poner un WARNING?)
-  - [x] ~~Indexado para quitar los bucles en los cortes~~ 
+  - [x] ~~Indexado para quitar los bucles en los cortes.~~
+  
   ```python
   my_run[run][ch][key][my_run[run][ch]["MyCuts"] == True]
   ```
+
 - [x] ~~Añadir al ppio de las funciones una comprobacion de si existen cortes generados y aplicarlos en las funciones que vengan despues.~~
 - [x] ~~No queremos guardar una branch con los cortes --> Ahora se esta guardando~~
 - [x] ~~Comprobar ganancias FEB22_2 (testear que los resultados son compatibles con las otras macros)~~
@@ -63,7 +65,8 @@ OTHERS:
 - [x] ~~Imports desde un .py comun~~
 - [x] ~~No pasar por los .root :)~~
 - [x] ~~Cambiar estructura a carpeta (run00_ch00) con .npy (Ana/Dec/Fit) que serian las ramas del root + info extra que vamos añadiendo. Hay que cambiar os prefijos para que sean el nombre de los .npy. Puedes cargas las ramas que elijas. Kind of solve memory problem~~
-- [x] ~~Libreria de fit: no saca el chi2; hay que cambiarla o ver como añadirlo/calcularlo~~
+- [x] ~~Libreria de fit: no saca el chi2; hay que cambiarla o ver como añadirlo/calcularlo.~~
+
 ```python
 import numpy as np
 from scipy.optimize import curve_fit
@@ -84,22 +87,24 @@ def fit_gaussians(x, y, N, p0):
     except:
         print("Fit failed.")
 ```
+
 - [x] ~~persistencia no funciona~~
 
-EXTRAS PARA CUANDO TODO FUNCIONE BIEN
+### EXTRAS PARA CUANDO TODO FUNCIONE BIEN
+
 - [ ] Cabeceras {ADC, Osciloscopio}
 - [ ] Segmentados binarios del osciloscopio a npy
 - [ ] Cambiar sampling – por characteristics del setup (sampling, ganancia electrónica, bits adc, etc)
 
 ### CYTHON WORKSHOP I
 
-- [x] ~~NOMBRES variables/funciones~~
-    - FUNCIONES Y ARGUMENTOS → PYTHON NOTATION
-      my_runs: low_case + “_” binding
-    - KEYS → C++ notation
-    - SPECIAL DICTIONARIES
-        - OPT: visualization Options + CHECK KEY
-        - CUT: cortes
+- [x] ~~NOMBRES variables/funciones.~~
+  - FUNCIONES Y ARGUMENTOS → PYTHON NOTATION
+  my_runs: low_case + “_” binding
+  - KEYS → C++ notation
+  - SPECIAL DICTIONARIES
+    - OPT: visualization Options + CHECK KEY
+    - CUT: cortes
 - [x] ~~Documentar funciones~~
 - [x] ~~Cortes~~
 - [x] ~~Visualizador~~
