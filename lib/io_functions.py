@@ -565,7 +565,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             del branch_list # Delete the branch list to avoid loading the same branches again
     return my_runs
 
-def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, debug = False, compressed=True):
+def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, compressed=True, debug = False):
     '''
     \nSaves the processed variables an npx file.
     \n**VARIABLES**:
@@ -613,14 +613,14 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                     print_colored("\tSaving NEW file: %s.npz"%key, "SUCCESS")
-                    print(path+out_folder+key+".npz")
+                    if debug: print_colored("\t"+path+out_folder+key+".npz", "DEBUG")
                     if not compressed:
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                         print_colored("\tSaving NEW file: %s.npy"%key, "SUCCESS")
-                        print(path+out_folder+key+".npy")
+                        if debug: print_colored("\t"+path+out_folder+key+".npy","DEBUG")
 
-    print_colored("--> Saved Data Succesfully!", "SUCCESS")
+    print_colored("--> Saved Data Succesfully!!!", "SUCCESS")
     del my_runs 
     
 #DEPREACTED??#
