@@ -78,7 +78,8 @@ def gaussian_train(x, *params):
 
 def loggaussian_train(x, *params):
     y = gaussian_train(x, *params)
-    return np.log10(y)
+    y[y<=0] = 1e-1
+    return np.log(y)
 
 def gaussian(x, center, height, width):
     return height * np.exp(-0.5*((x - center)/width)**2)
@@ -245,9 +246,14 @@ def gaussian_train_fit(x, y, y_intrp, peak_idx, valley_idx, params, debug=False)
     ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
     try:
         if params["FIT"] == "gaussian":    popt, pcov = curve_fit(gaussian_train,x[:valley_idx[-1]],y[:valley_idx[-1]],p0=initial) 
-        if params["FIT"] == "loggaussian": popt, pcov = curve_fit(loggaussian_train,x[:valley_idx[-1]],np.log10(y[:valley_idx[-1]]),p0=initial)
+        if params["FIT"] == "loggaussian": 
+            try:
+                popt, pcov = curve_fit(loggaussian_train,x[:valley_idx[-1]],np.log(y[:valley_idx[-1]]),p0=initial)
+            except ValueError:
+                print_colored("Loggaussian fit could not be performed! Defaulting to gaussian fit", "WARNING")
+                popt, pcov = curve_fit(gaussian_train,x[:valley_idx[-1]],y[:valley_idx[-1]],p0=initial)
         perr = np.sqrt(np.diag(pcov))
-    except:
+    except ValueError:
         print_colored("Full fit could not be performed", "ERROR")
     
     return popt, pcov, perr
