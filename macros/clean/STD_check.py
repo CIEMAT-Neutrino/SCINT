@@ -122,9 +122,13 @@ def custom_plotly_layout(fig_px, xaxis_title="", yaxis_title="", title="",barmod
 ###############
 ## ARGUMENTS ##
 ###############
-try:               input_files = sys.argv[1]
-except IndexError: input_files = input("Please introduce the input \"PATH/File\" you want to analyse (separated with commas): ")
-file_list = [str(f) for f in input_files.split(",")]
+try:
+    input_files = sys.argv[1]
+    file_list = [str(f) for f in input_files.split(",")]
+except IndexError: 
+    input_path = input("Please introduce the ABSOLUTE PATH you want to analyse: ")
+    input_files = input("Please introduce the files you want to analyse (separated with commas): ")
+    file_list = [str(input_path + f) for f in input_files.split(",")]
 
 ##########
 ## MAIN ##
@@ -152,7 +156,7 @@ for f in file_list:
 data2plot = []; label2plot = [];
 for pdx, p in enumerate(peds_vars_list): data2plot.append(p["STD"]); label2plot.append(file_list[pdx].split("/")[-1])
 
-fig_px = px.histogram(x=data2plot, opacity=1/len(file_list))
+fig_px = px.histogram(x=data2plot, opacity=1-0.1*len(file_list))
 custom_legend_name(fig_px, label2plot)
 custom_plotly_layout(fig_px, xaxis_title="Pedestal STD [ADCs]", yaxis_title="Counts", title="Pedestal STD histogram",barmode="overlay")
 fig_px.show()
@@ -160,7 +164,7 @@ fig_px.show()
 #AMPLITUDE
 data2plot = []; label2plot = [];
 for adx, a in enumerate(adcs_list): data2plot.append(np.max(a, axis=1)); label2plot.append(file_list[adx].split("/")[-1])
-fig_px = px.histogram(x=data2plot, opacity=1/len(file_list))
+fig_px = px.histogram(x=data2plot, opacity=1-0.1*len(file_list))
 custom_legend_name(fig_px, label2plot)
 custom_plotly_layout(fig_px, xaxis_title="PeakAmp [ADCs]", yaxis_title="Counts", title="PeakAmp histogram",barmode="overlay")
 fig_px.show()

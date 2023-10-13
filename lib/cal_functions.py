@@ -12,12 +12,12 @@ from itertools         import product
 
 # Import from other libraries
 from .io_functions  import check_key, print_colored, color_list, write_output_file
-from .ana_functions import generate_cut_array, get_units
+from .ana_functions import generate_cut_array, get_units, get_wvf_label, compute_ana_wvfs
 from .fig_config    import figure_features, add_grid
 from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder
 from .vis_functions import vis_var_hist
 
-def vis_persistence(my_run, OPT = {}):
+def vis_persistence(my_run, info, debug=False):
     '''
     \nThis function plot the PERSISTENCE histogram of the given runs&ch.
     \nIt perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
@@ -29,16 +29,14 @@ def vis_persistence(my_run, OPT = {}):
 
     figure_features()
     plt.ion()
+    true_key, true_label = get_wvf_label(my_run, "", "", debug=debug)
+    if true_key == "RawADC":
+        compute_ana_wvfs(my_run, info, debug=False)
+        key = "AnaADC"
+    else: key = true_key
     for run, ch in product(my_run["NRun"],my_run["NChannel"]):
-
-        generate_cut_array(my_run)
-        # cut_min_max(my_run, ["PeakTime"], {"PeakTime":[(st.mode(my_run[run][ch]["PeakTime"])[0]-20)*4e-9, (st.mode(my_run[run][ch]["PeakTime"])[0]+20)*4e-9]})
-        # cut_min_max(my_run, ["PeakTime"], {"PeakTime":[4.19e-6, 4.22e-6]})
-        # cut_min_max(my_run, ["PeakAmp"], {"PeakAmp":[25,100]})
-        # cut_min_max(my_run, ["PedSTD"], {"PedSTD":[-1,4.8]})
-
-        data_flatten = my_run[run][ch]["ADC"][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() ##### Flatten the data array
-        time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch]["ADC"][0])) # Time array
+        data_flatten = my_run[run][ch][true_key][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() ##### Flatten the data array
+        time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch][true_key][0])) # Time array
         time_flatten = np.array([time] * int(len(data_flatten)/len(time))).flatten() 
 
         plt.hist2d(time_flatten,data_flatten,density=True,bins=[5000,1000], cmap = viridis, norm=LogNorm()) 

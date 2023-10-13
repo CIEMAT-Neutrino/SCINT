@@ -144,8 +144,8 @@ def cuts_info2dict(user_input, debug=False):
             try: 
                 input_list = [str(idx)+"CUT_CHAN",str(idx)+"CUT_TYPE",str(idx)+"CUT_KEYS",str(idx)+"CUT_LOGIC",str(idx)+"CUT_VALUE",str(idx)+"CUT_INCLUSIVE"]
                 info = read_input_file(user_input["input_file"][0], STRINGS = input_list, debug=False)
-                if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
                 cuts_dict[cut][1].append([info[str(idx)+"CUT_CHAN"], info[str(idx)+"CUT_KEYS"][0], info[str(idx)+"CUT_LOGIC"][0], float(info[str(idx)+"CUT_VALUE"][0]), info[str(idx)+"CUT_INCLUSIVE"][0].lower() in ["yes","y","true","t","si","s"]])
+                if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
                 idx += 1
             except KeyError:
                 if debug: print_colored("No more cuts to read", "DEBUG")
@@ -508,6 +508,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         print_colored("Preset not found. Returning all the branches.", "WARNING")
         raise ValueError("Preset not found. Returning all the branches.")
 
+    if debug: print_colored("Branch list: "+str(branch_list), "DEBUG")
     return branch_list
 
 def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):
@@ -530,7 +531,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     \n- info: dictionary with the info of the run
     \n- debug: if True, print debug info
     '''
-    if debug: print_colored("\nLoading npy files...", "INFO")
+    if debug: print_colored("\nLoading npy files...", "DEBUG")
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
 
     my_runs = dict()
@@ -560,7 +561,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
-            print_colored("load_npy --> DONE!\n", "SUCCESS")
+            print_colored("\n....... Load npy runs %s & %s channels --> DONE! .......\n"%(runs,channels), color="SUCCESS", bold=True)
             del branch_list # Delete the branch list to avoid loading the same branches again
     return my_runs
 
@@ -579,19 +580,20 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
-
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
+            print_colored("\n--> Saving Computed Variables (according to preset %s)!"%(preset), color="INFO", bold=True)
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             os.makedirs(name=path+out_folder,exist_ok=True)
             files = os.listdir(path+out_folder)
             if not branch_list: branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
-            print(branch_list)
             for key in branch_list:
                 key = key.replace(".npz","")
 
                 # If the file already exists, skip it
-                if key+".npz" in files and force == False: print("File (%s.npz) alredy exists"%key); continue 
+                if key+".npz" in files and force == False: 
+                    if debug: print_colored("\tFile (%s.npz) alredy exists"%key, "DEBUG")
+                    continue 
                 
                 # If the file already exists and force is True, overwrite it
                 elif (key+".npz" in files or key+".npy" in files) and force == True:        
@@ -599,24 +601,25 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
                         os.remove(path+out_folder+key+".npz")
                         np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                        print_colored("File (%s.npz) OVERWRITTEN "%key, "WARNING")
+                        print_colored("\tFile (%s.npz) OVERWRITTEN "%key, "WARNING")
                     else:
                         os.remove(path+out_folder+key+".npy")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                        print_colored("File (%s.npy) OVERWRITTEN "%key, "WARNING")
+                        print_colored("\tFile (%s.npy) OVERWRITTEN "%key, "WARNING")
                 
                 # If the file does not exist, create it
                 elif check_key(aux[run][ch], key): 
                     print(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                    print_colored("Saving NEW file: %s.npz"%key, "SUCCESS")
+                    print_colored("\tSaving NEW file: %s.npz"%key, "SUCCESS")
 
                     if not compressed:
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                        print_colored("Saving NEW file: %s.npy"%key, "SUCCESS")
+                        print_colored("\tSaving NEW file: %s.npy"%key, "SUCCESS")
+    print_colored("--> Saved Data Succesfully!", "SUCCESS")
     del my_runs 
     
 #DEPREACTED??#
