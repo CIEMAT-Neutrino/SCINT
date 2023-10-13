@@ -83,7 +83,7 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
         if type(ped_lim) != int:
             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
             ped_lim = values[np.argmax(counts)]-buffer
-
+            if ped_lim <= 0: ped_lim = 5*buffer
         ADC_aux=my_runs[run][ch][key]
         my_runs[run][ch][label+"PreTriggerSTD"]   = np.std (ADC_aux[:,:ped_lim],axis=1)
         my_runs[run][ch][label+"PreTriggerMean"]  = np.mean(ADC_aux[:,:ped_lim],axis=1)
@@ -108,7 +108,7 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 500, debug = False)
     '''
     if ped_lim < sliding:
         ped_lim = sliding
-        print_colored("WARNING: Pedestal window is smaller than sliding window. Setting ped_lim = 400", "WARNING")
+        print_colored("WARNING: Pedestal window is smaller than sliding window. Setting ped_lim = %s"%sliding, "WARNING")
     
     slides=int(ped_lim/sliding);
     nwvfs=ADC.shape[0]
