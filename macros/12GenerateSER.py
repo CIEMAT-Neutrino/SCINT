@@ -1,14 +1,10 @@
 import sys; sys.path.insert(0, '../'); from lib import *
-user_input = initialize_macro("11GenerateSER",["input_file","load_preset","save_preset","debug"],default_dict={}, debug=True)
-info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
-
+user_input, info = initialize_macro("11GenerateSER",["input_file","load_preset","save_preset","debug"],default_dict={}, debug=True)
+# info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 ### 12GenerateSER
-# my_runs = load_npy(np.asarray(user_input["runs"]).astype(int), np.asarray(user_input["channels"]).astype(int), info, preset=user_input["load_preset"][0], compressed=True, debug=user_input["debug"])
-
 raw_runs = np.asarray(info["ALPHA_RUNS"]).astype(int)
 dec_runs = np.asarray(info["LIGHT_RUNS"]).astype(int)
 ref_runs = np.asarray(info["CALIB_RUNS"]).astype(int)
-# noi_runs = np.asarray(info["NOISE_RUNS"]).astype(int)
 ana_ch   = np.asarray(info["CHAN_TOTAL"]).astype(int)
 
 my_runs = load_npy([7], [0,1], preset=user_input["load_preset"][0], info=info, compressed=True, debug=user_input["debug"])  # Select runs to be deconvolved (tipichaly alpha)     
