@@ -75,10 +75,11 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                 else: 
                     det_label = my_runs[run][ch]["Label"]
                     if check_key(my_runs[run][ch], "MyCuts") == False:
-                        if debug: print_colored("Cuts not generated. Generating them...", "WARNING")
+                        print_colored("Cuts not generated. Generating them now...", "WARNING")
                         generate_cut_array(my_runs,debug=debug) # If cuts not generated, generate them
-                        if debug: print(run, ch, my_runs[run][ch]["MyCuts"])
+                    
                     if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
+                    
                     OPT["SHOW"] == False
                     OPT["NORM"] == True
                     counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
@@ -104,7 +105,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                         y = y_intrp(x)
 
                         peak_idx, valley_idx = peak_valley_finder(x, y, new_params)
-                        ax_cal.axhline(new_params["THRESHOLD"], ls='--')
+                        ax_cal.axhline(np.max(y)*new_params["THRESHOLD"], ls='--')
                         ax_cal.plot(x[peak_idx][:4], y[peak_idx][:4], 'r.', lw=4)
                         ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
 
@@ -125,10 +126,10 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                     if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True: ax_cal.legend()
                     if check_key(OPT,"LOGY")   == True and OPT["LOGY"]   == True: ax_cal.semilogy(); ax_cal.set_ylim(1)
                     if check_key(OPT,"SHOW")   == True and OPT["SHOW"]   == True:
-                        print("SHOW BUT NO TERMINAL FRIEND")
+                        # print("SHOW BUT NO TERMINAL FRIEND")
 
                         if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-                            print("TERMINAL FRIEND")
+                            # print("TERMINAL FRIEND")
                             plt.ion()
                             plt.show()
                             while not plt.waitforbuttonpress(-1): pass
