@@ -224,7 +224,7 @@ def gaussian_train_fit(x, y, y_intrp, peak_idx, valley_idx, params, debug=False)
         else:
             x_gauss = np.linspace(x[valley_idx[i-1]], x[valley_idx[i]], params["ACCURACY"])
         
-        # x_gauss = x_gauss[x_gauss >= bins[0]]
+        x_gauss = x_gauss[x_gauss >= x[0]]
         y_gauss = y_intrp(x_gauss)
         # plt.plot(x_gauss,y_gauss,ls="--",alpha=0.9)
 
