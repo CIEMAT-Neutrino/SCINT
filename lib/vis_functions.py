@@ -25,29 +25,23 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
     \n- my_run: run(s) we want to check
     \n- KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
     \n- OPT: several options that can be True or False. Type: List
-      (a) MICRO_SEC: if True we multiply Sampling by 1e6
-      (b) NORM: True if we want normalized waveforms
-      (c) LOGY: True if we want logarithmic y-axis
-      (d) SHOW_AVE: if computed and True, it will show average
-      (e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
-      (f) CHARGE_KEY: if computed and True, it will show the parametre value
-      (g) PEAK_FINDER: True if we want to check how many peaks are
-      (h) CUTTED_WVF: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
-      (i) SAME_PLOT: True if we want to plot different channels in the SAME plot
+      (a) MICRO_SEC: if True we multiply Sampling by 1e6.
+      (b) NORM: True if we want normalized waveforms.
+      (c) LOGY: True if we want logarithmic y-axis.
+      (d) SHOW_AVE: if computed and True, it will show average.
+      (e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...).
+      (f) CHARGE_KEY: if computed and True, it will show the parametre value.
+      (g) PEAK_FINDER: True if we want to check how many peaks are.
+      (h) CUTTED_WVF: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed.
+      (i) SAME_PLOT: True if we want to plot different channels in the SAME plot.
     '''
 
     if not check_key(OPT, "CUTTED_WVF"): OPT["CUTTED_WVF"] = -1; print_colored("CUTTED_WVF not defined, setting to -1", "WARNING")
     if not check_key(OPT, "SAME_PLOT"): OPT["SAME_PLOT"] = False; print_colored("SAME_PLOT not defined, setting to False", "WARNING")
 
-    figure_features()
-    charge_key = "ChargeAveRange"
-    if check_key(OPT, "CHARGE_KEY"): charge_key = OPT["CHARGE_KEY"]
-    norm_ave = 1
-    buffer = 100
-
-    ch_list = my_run["NChannel"]; nch = len(my_run["NChannel"])
     axs = []
-    true_key, true_label = get_wvf_label(my_run, "", "", debug = False)
+    figure_features()
+    ch_list = my_run["NChannel"]; nch = len(my_run["NChannel"])
 
     for run, key in product(my_run["NRun"],keys):
         plt.ion()
@@ -62,8 +56,10 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
         else:
             fig, ax = plt.subplots(1 ,1, figsize = (8,6))
             axs = ax
+        
         idx = 0
-        for i in range(len(my_run[run][ch_list[0]][true_key])):
+        if check_key(my_run[run][ch_list[0]], "MyCuts") == False: generate_cut_array(my_run, debug=debug)
+        while idx < len(my_run[run][ch_list[0]]["MyCuts"]):
             try:
                 skip = 0
                 for ch in ch_list:
@@ -74,42 +70,24 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
 
             fig.supxlabel(r'Time [s]')
             fig.supylabel("ADC Counts")
-            min = []
             raw = []
             norm_raw = [1]*nch # Generates a list with the norm correction for std bar
+            
             for j in range(nch):
-                if (key == "RawADC"):
-                    min.append(np.argmin(my_run[run][ch_list[j]][key][idx]))
-                    raw.append(my_run[run][ch_list[j]][key][idx])
-                    ped = np.mean(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
-                    std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
-                    label = "Raw"
-                    if debug: print_colored("Using '%s' label"%label, "DEBUG")
-
-                elif(key == "AnaADC"):
+                if(key == "AnaADC"):
                     print_colored("\nAnaADC not saved but we compute it now :)", "WARNING")
-                    min.append(np.argmax(my_run[run][ch_list[j]][true_key][idx]))
+                    label = "Ana"
                     ana = my_run[run][ch_list[j]]["PChannel"]*((my_run[run][ch_list[j]]["RawADC"][idx].T-my_run[run][ch_list[j]]["Raw"+info["PED_KEY"][0]][idx]).T)
                     raw.append(ana)
                     ped = 0
                     std = my_run[run][ch_list[j]]["AnaPedSTD"][idx]
-                    label = "Ana"
                     if debug: print_colored("Using '%s' label"%label, "DEBUG")
-
-                elif("ADC" in str(key)):
-                    min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
+                
+                else:
+                    label = key.split("ADC")[0]
                     raw.append(my_run[run][ch_list[j]][key][idx])
-                    ped = 0
-                    std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
-                    label = key.replace("ADC","")
-                    if debug: print_colored("Using '%s' label"%label, "DEBUG")
-
-                elif("Ave" in str(key)):
-                    min.append(np.argmax(my_run[run][ch_list[j]][key][idx]))
-                    raw.append(my_run[run][ch_list[j]][key][idx])
-                    ped = 0
-                    std = np.std(my_run[run][ch_list[j]][key][idx][:min[j]-buffer])
-                    label = key.replace("Ave","")
+                    ped = my_run[run][ch_list[j]][label+info["PED_KEY"][0]][idx]
+                    std = my_run[run][ch_list[j]][label+"PedSTD"][idx]
                     if debug: print_colored("Using '%s' label"%label, "DEBUG")
 
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
@@ -277,19 +255,19 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
-                if idx > len(my_run[run][ch_list[j]][true_key]): idx = len(my_run[run][ch_list[j]][true_key])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", bold=True)
+                if idx > len(my_run[run][ch_list[j]]["MyCuts"]): idx = len(my_run[run][ch_list[j]]["MyCuts"])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", bold=True)
             elif tecla == "p":
                 fig.savefig('run{}_evt{}.png'.format(run,idx), dpi = 500)
                 idx = idx+1
             else: idx = idx + 1
-            if idx == len(my_run[run][ch_list[j]][true_key]): break
+            if idx == len(my_run[run][ch_list[j]]["MyCuts"]): break
             try: [axs[j].clear() for j in range (nch)]
             except: axs.clear()
         try: [axs[j].clear() for j in range (nch)]
         except: axs.clear()
         plt.close()
 
-def vis_compare_wvf(my_run, keys, OPT = {}):
+def vis_compare_wvf(my_run, keys, OPT = {}, debug = False):
     '''
     \nThis function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
     \n**VARIABLES:**
@@ -502,7 +480,7 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
 
     return all_counts, all_bins, all_bars
 
-def print_stats(my_run,run,ch,ax,data):
+def print_stats(my_run, run, ch, ax, data, debug = False):
     '''
     \nThis function prints the statistics of the data.
     '''
@@ -520,7 +498,7 @@ def print_stats(my_run,run,ch,ax,data):
     ax.axvline(np.mean(data)+np.std(data), c="k", ls="--", alpha=0.5)
     ax.axvline(np.mean(data)-np.std(data), c="k", ls="--", alpha=0.5)
 
-def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = False, OPT={}):
+def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = False, OPT={}, debug = False):
     '''
     \nThis function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     \nIt plots values below and above the indicated percetiles, but values are not removed from data.
