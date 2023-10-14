@@ -13,11 +13,11 @@ SAMPLING: 4e-9
 ########################
 RAW_DATA: DAT
 PATH: ../data/
-MONTH: MegaCell_LAr
-OV_LABEL: OV3,0V2,0V1
-CALIB_RUNS: 103,105,111
-LIGHT_RUNS: 000,107,000
-NOISE_RUNS: 104,106,112
+MONTH: Sep23
+OV_LABEL: OV7,OV5.5,0V4.5,0V3.5
+CALIB_RUNS: 103,113,105,111
+LIGHT_RUNS: 000,000,107,000
+NOISE_RUNS: 104,114,106,112
 ALPHA_RUNS: 
 MUONS_RUNS: 
 CHAN_LABEL: XA0,XA1,SiPM0,SiPM1
@@ -37,7 +37,7 @@ PED_KEY: PreTriggerMean
 ########################
 ####  CHARGE INFO   ####
 ########################
-TYPE: ChargeAveRange,ChargePedRange,ChargeRange,
+TYPE: ChargeAveRange,ChargePedRange,ChargeRange
 REF: AveWvf
 I_RANGE: 0.1,0.1,0.1,0.1,0.1
 F_RANGE: 0.4,0.9,1.9,2.9,3.9
