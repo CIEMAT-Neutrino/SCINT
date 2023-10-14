@@ -10,8 +10,10 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     if info["LOAD_PRESET"][3] == "ANA":
         if check_key(my_runs[my_runs["NRun"][0]][my_runs["NChannel"][0]],"AnaADC") == False: compute_ana_wvfs(my_runs,info=info,debug=user_input["debug"])
         delete_keys(my_runs,['RawADC','RawPeakAmp','RawPeakTime','RawPedSTD','RawPedMean','RawPedMax','RawPedMin','RawPedLim'])    
-    ### Compute
+    ### Check if the run is empty
     key, label = get_wvf_label(my_runs, "", "", debug=user_input["debug"])
+    if key == "" and label == "": continue
+    ### Compute
     integrate_wvfs(my_runs, info=info, key=key, label=label, debug=user_input["debug"])
     ### Remove branches to exclude from saving
     save_proccesed_variables(my_runs, preset=str(info["SAVE_PRESET"][3]),info=info, force=True, debug=user_input["debug"])

@@ -1,9 +1,8 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"runs":["ALPHA_RUNS"],"channels":["CHAN_TOTAL"],"variables":["TYPE"]}
 user_input, info = initialize_macro("05Calibration",["input_file","load_preset","key","filter","debug"],default_dict=default_dict, debug=True)
-# info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 OPT = opt_selector(debug=user_input["debug"])
-
+### 05Calibration
 my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=info["LOAD_PRESET"][4], compressed=True, debug=user_input["debug"])
 popt_ch = []; pcov_ch = []; perr_ch = []; popt_nevt = []; pcov_nevt = []; perr_nevt = []
 label, my_runs = cut_selector(my_runs, user_input)

@@ -269,7 +269,7 @@ def binary2npy_express(in_file, header_lines=6, debug=False):
 
     return ADC, TIMESTAMP
 
-def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_lines=6, force=False):
+def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_lines=6, force=False, debug=False):
     '''
     \nDumper from binary format to npy tuples. 
     \nInput are binary input file path and npy outputfile as strings. 
@@ -548,15 +548,17 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug) # Get the branch list if preset is used
             for branch in branch_list:   
-                # try:
-                if compressed:
-                    my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
-                    if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npz","")]=my_runs[run][ch][branch.replace(".npz","")].astype(float)
-                else:
-                    my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
-                    if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
-                # except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
-
+                try:
+                    if compressed:
+                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
+                        if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npz","")]=my_runs[run][ch][branch.replace(".npz","")].astype(float)
+                    else:
+                        my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
+                        if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
+                except FileNotFoundError:
+                    # my_runs["NRun"].remove(run)
+                    # my_runs["NChannel"].remove(ch)
+                    print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
             my_runs[run][ch]["Label"]    = aux_Label[ch]
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
