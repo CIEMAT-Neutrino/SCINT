@@ -269,7 +269,7 @@ def binary2npy_express(in_file, header_lines=6, debug=False):
 
     return ADC, TIMESTAMP
 
-def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_lines=6, force=False, debug=False):
+def binary2npy(runs, channels, user_input, compressed=True, header_lines=6, force=False, debug=False):
     '''
     \nDumper from binary format to npy tuples. 
     \nInput are binary input file path and npy outputfile as strings. 
