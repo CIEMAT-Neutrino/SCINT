@@ -35,6 +35,7 @@ def vis_persistence(my_run, info, debug=False):
         key = "AnaADC"
     else: key = true_key
     for run, ch in product(my_run["NRun"],my_run["NChannel"]):
+        if check_key(my_run[run][ch], "MyCuts") == False: generate_cut_array(my_run, debug=debug)
         data_flatten = my_run[run][ch][true_key][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() ##### Flatten the data array
         time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch][true_key][0])) # Time array
         time_flatten = np.array([time] * int(len(data_flatten)/len(time))).flatten() 
