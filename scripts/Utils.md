@@ -3,6 +3,8 @@
 sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE ../data
 sshfs pcaeXYZ:/pc/choozdsk01/palomare/CYTHON/ data
 sudo umount ../data
+# If sudo not available, use fusermount
+fusermount -u data/
 ```
 
 # Setup root environment
