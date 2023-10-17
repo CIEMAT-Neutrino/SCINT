@@ -1,9 +1,12 @@
 awkward
 curve
+dash
 icecream
 inquirer
 ipywidgets
 jupyter
+jupyter-dash
+jupyterlab
 keyboard
 matplotlib
 numba
@@ -14,7 +17,7 @@ pandas
 plotly
 plotly_express
 pynput
-pyqt5
 scipy 
 shapely
 uproot
+pyqt5
