@@ -648,7 +648,7 @@ def npy2root(my_runs, debug = False):
     \n- my_runs: dictionary with the runs and channels to be saved
     \n- debug: if True, the function will print the branches that are being saved
     '''
-
+    import ROOT
     # Create the ROOT dataframe
     df = ROOT.RDF.FromNumpy(my_runs)
     return df
