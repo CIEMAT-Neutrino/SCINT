@@ -4,6 +4,7 @@
 # Add coustom folders
 *data*/*
 data/*
+data
 notebooks/*
 scratch/
 larsoft/
