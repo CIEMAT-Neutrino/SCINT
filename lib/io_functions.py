@@ -2,7 +2,7 @@
 # This library contains general functions used to read/write files, load/save data, etc.                                                         #
 #================================================================================================================================================#
 
-import os, gc, uproot, copy, stat, ROOT
+import os, gc, uproot, copy, stat
 import numpy as np
 import pandas as pd
 from itertools import product
@@ -635,7 +635,7 @@ def npy2root(my_runs, debug = False):
     \n- my_runs: dictionary with the runs and channels to be saved
     \n- debug: if True, the function will print the branches that are being saved
     '''
-
+    import ROOT
     # Create the ROOT dataframe
     df = ROOT.RDF.FromNumpy(my_runs)
     return df
