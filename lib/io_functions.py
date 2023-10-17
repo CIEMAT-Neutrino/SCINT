@@ -61,7 +61,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
     file  = open(path+input+".txt", 'r')
     lines = file.readlines()
     info = dict()
-
+    info["NAME"] = [input]
     if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
     if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
     if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
@@ -132,25 +132,26 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
                 if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
     return info
 
-def cuts_info2dict(user_input, debug=False):
+def cuts_info2dict(user_input, info, debug=False):
     '''
     \nConvert the information stored in the input file to a dictionary with the cuts information.
     '''
     cuts_dict = {'cut_df': [False, []], 'cut_lin_rel': [False, []], 'cut_peak_finder': [False, []]}
     keep_reading = True
+    if debug: print_colored("Reading cuts from input file %s"%info["NAME"][0], "DEBUG")
     for i, cut in enumerate(cuts_dict):
         idx = 0
         while keep_reading:
             try: 
                 input_list = [str(idx)+"CUT_CHAN",str(idx)+"CUT_TYPE",str(idx)+"CUT_KEYS",str(idx)+"CUT_LOGIC",str(idx)+"CUT_VALUE",str(idx)+"CUT_INCLUSIVE"]
                 info = read_input_file(user_input["input_file"][0], STRINGS = input_list, debug=False)
-                if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
                 cuts_dict[cut][1].append([info[str(idx)+"CUT_CHAN"], info[str(idx)+"CUT_KEYS"][0], info[str(idx)+"CUT_LOGIC"][0], float(info[str(idx)+"CUT_VALUE"][0]), info[str(idx)+"CUT_INCLUSIVE"][0].lower() in ["yes","y","true","t","si","s"]])
+                if cuts_dict[cut][0] == False: cuts_dict[cut][0] = True
                 idx += 1
+                if debug: print_colored("Cuts dictionary: "+str(cuts_dict), "DEBUG")
             except KeyError:
-                if debug: print_colored("No more cuts to read", "DEBUG")
                 keep_reading = False
-    if debug: print_colored("Cuts dictionary: "+str(cuts_dict), "DEBUG")
+    if debug and idx == 0: print_colored("No cuts imported from input!", "DEBUG")
     return cuts_dict
 
 def list_to_string(input_list):
@@ -268,7 +269,7 @@ def binary2npy_express(in_file, header_lines=6, debug=False):
 
     return ADC, TIMESTAMP
 
-def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_lines=6, force=False):
+def binary2npy(runs, channels, user_input, compressed=True, header_lines=6, force=False, debug=False):
     '''
     \nDumper from binary format to npy tuples. 
     \nInput are binary input file path and npy outputfile as strings. 
@@ -294,7 +295,7 @@ def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_l
 
         try:
             ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug) # Read the file
-            branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling"]                               # Branches to be saved
+            branches       = ["RawADC","TimeStamp","NBinsWvf","Sampling"]                                # Branches to be saved
             content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0]]                          # Content to be saved
             files          = os.listdir(out_path+out_folder)                                             # List of files in the output folder
             # branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]                                 # Branches to be saved
@@ -335,8 +336,8 @@ def binary2npy(runs, channels, user_input, debug=True, compressed=True, header_l
                     gc.collect()
 
                 except FileNotFoundError: print("--- File %s was not foud!!! \n"%in_file)
-        except FileNotFoundError: print("--- File %s was not foud!!! \n"%(in_path+in_file))
-
+        # except FileNotFoundError: print("--- File %s was not foud!!! \n"%(in_path+in_file))
+        except AttributeError: print("--- File %s does not exist!!! \n"%(in_path+in_file))
 
 ### DEPRECATED --- UPDATE ###
 def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BINARIO ###
@@ -497,11 +498,18 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         for key in branch_list:
             if "Wvf" in key or "Charge" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
         branch_list = aux
+
+    elif preset == "FFT": # Save aux + Wvf* branches
+        branch_list = dict_option[option]; aux = ["TimeStamp"]
+        for key in branch_list:
+            if "MeanFFT" in key or "Freq" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
+        branch_list = aux
     
     else:
         print_colored("Preset not found. Returning all the branches.", "WARNING")
         raise ValueError("Preset not found. Returning all the branches.")
 
+    if debug: print_colored("Branch list: "+str(branch_list), "DEBUG")
     return branch_list
 
 def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):
@@ -524,7 +532,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     \n- info: dictionary with the info of the run
     \n- debug: if True, print debug info
     '''
-    if debug: print_colored("\nLoading npy files...", "INFO")
+    if debug: print_colored("\nLoading npy files...", "DEBUG")
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
 
     my_runs = dict()
@@ -540,25 +548,27 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug) # Get the branch list if preset is used
             for branch in branch_list:   
-                # try:
-                if compressed:
-                    my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
-                    if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npz","")]=my_runs[run][ch][branch.replace(".npz","")].astype(float)
-                else:
-                    my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
-                    if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
-                # except FileNotFoundError: print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
-
+                try:
+                    if compressed:
+                        my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
+                        if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npz","")]=my_runs[run][ch][branch.replace(".npz","")].astype(float)
+                    else:
+                        my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
+                        if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
+                except FileNotFoundError:
+                    # my_runs["NRun"].remove(run)
+                    # my_runs["NChannel"].remove(ch)
+                    print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
             my_runs[run][ch]["Label"]    = aux_Label[ch]
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
-            print_colored("load_npy --> DONE!\n", "SUCCESS")
+            print_colored("\n....... Load npy runs %s & %s channels --> DONE! .......\n"%(runs,channels), color="SUCCESS", bold=True)
             del branch_list # Delete the branch list to avoid loading the same branches again
     return my_runs
 
-def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, debug = False, compressed=True):
+def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, compressed=True, debug = False):
     '''
     \nSaves the processed variables an npx file.
     \n**VARIABLES**:
@@ -573,19 +583,20 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
-
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
+            print_colored("\n--> Saving Computed Variables (according to preset %s)!"%(preset), color="INFO", bold=True)
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             os.makedirs(name=path+out_folder,exist_ok=True)
             files = os.listdir(path+out_folder)
             if not branch_list: branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
-            print(branch_list)
             for key in branch_list:
                 key = key.replace(".npz","")
 
                 # If the file already exists, skip it
-                if key+".npz" in files and force == False: print("File (%s.npz) alredy exists"%key); continue 
+                if key+".npz" in files and force == False: 
+                    if debug: print_colored("\tFile (%s.npz) alredy exists"%key, "DEBUG")
+                    continue 
                 
                 # If the file already exists and force is True, overwrite it
                 elif (key+".npz" in files or key+".npy" in files) and force == True:        
@@ -593,24 +604,26 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
                         os.remove(path+out_folder+key+".npz")
                         np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                        print_colored("File (%s.npz) OVERWRITTEN "%key, "WARNING")
+                        print_colored("\tFile (%s.npz) OVERWRITTEN "%key, "WARNING")
                     else:
                         os.remove(path+out_folder+key+".npy")
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                        print_colored("File (%s.npy) OVERWRITTEN "%key, "WARNING")
+                        print_colored("\tFile (%s.npy) OVERWRITTEN "%key, "WARNING")
                 
                 # If the file does not exist, create it
                 elif check_key(aux[run][ch], key): 
-                    print(path+out_folder+key+".npz")
                     np.savez_compressed(path+out_folder+key+".npz",aux[run][ch][key])
                     os.chmod(path+out_folder+key+".npz", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                    print_colored("Saving NEW file: %s.npz"%key, "SUCCESS")
-
+                    print_colored("\tSaving NEW file: %s.npz"%key, "SUCCESS")
+                    if debug: print_colored("\t"+path+out_folder+key+".npz", "DEBUG")
                     if not compressed:
                         np.save(path+out_folder+key+".npy",aux[run][ch][key])
                         os.chmod(path+out_folder+key+".npy", stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                        print_colored("Saving NEW file: %s.npy"%key, "SUCCESS")
+                        print_colored("\tSaving NEW file: %s.npy"%key, "SUCCESS")
+                        if debug: print_colored("\t"+path+out_folder+key+".npy","DEBUG")
+
+    print_colored("--> Saved Data Succesfully!!!", "SUCCESS")
     del my_runs 
     
 #DEPREACTED??#

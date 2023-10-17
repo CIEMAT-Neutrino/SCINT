@@ -20,22 +20,22 @@ colors = {
     'text': '#7FDBFF'
 }
 app.layout = html.Div(style={'backgroundColor': colors['background']},
-                      children = 
-                      [
-                        html.H1("Waveform Visualization"),
-                        html.H4("You can browse a waveW.dat (RAW) or a RawADC.npx (PROCESSED) file and an interactive event will be displayed with the main parameters printed."),
-                        html.Div([ html.Label("Select Waveform File"), dcc.Upload(id='upload-data', children=html.Button('Browse')), 
-                        html.Br(), 
-                        html.Label("Select the extension of the browsed file"), dcc.Dropdown([".dat",".npx"], ".dat",id='extension'),
-                        html.Br(),
-                        html.Label("Enter Event Number"), dcc.Input(id='event-number', type='number', value=0),
-                        html.Button("Plot Waveform",  id='plot-button'), 
-                        html.Br(),
-                        html.Br(),
-                        html.Button("Previous Event", id='prev-button'),
-                        html.Button("Next Event",     id='next-button')]),
-                        html.Div( id='waveform-info'), dcc.Graph(id='waveform-plot'),
-                      ])  
+    children = 
+    [
+    html.H1("Waveform Visualization"),
+    html.H4("You can browse a waveW.dat (RAW) or a RawADC.npx (PROCESSED) file and an interactive event will be displayed with the main parameters printed."),
+    html.Div([ html.Label("Select Waveform File"), dcc.Upload(id='upload-data', children=html.Button('Browse')), 
+    html.Br(), 
+    html.Label("Select the extension of the browsed file"), dcc.Dropdown([".dat",".npx"], ".dat",id='extension'),
+    html.Br(),
+    html.Label("Enter Event Number"), dcc.Input(id='event-number', type='number', value=0),
+    html.Button("Plot Waveform",  id='plot-button'), 
+    html.Br(),
+    html.Br(),
+    html.Button("Previous Event", id='prev-button'),
+    html.Button("Next Event",     id='next-button')]),
+    html.Div( id='waveform-info'), dcc.Graph(id='waveform-plot'),
+    ])  
 
 @app.callback(
     dash.dependencies.Output('waveform-info', 'children'),
@@ -49,6 +49,7 @@ app.layout = html.Div(style={'backgroundColor': colors['background']},
     dash.dependencies.State('upload-data',  'contents'),
     dash.dependencies.State('event-number', 'value'),
 )
+
 def update_waveform(plot_clicks, prev_clicks, next_clicks, extension, contents, event_number):
     ctx = dash.callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
@@ -102,4 +103,4 @@ if __name__ == '__main__':
     from lib.ply_functions import *
 
     # app.run(debug=True)
-    app.run(jupyter_mode=jupyter_mode,debug=True)
+    app.run(debug=True)

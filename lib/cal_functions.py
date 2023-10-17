@@ -1,7 +1,7 @@
 #================================================================================================================================================#
 # This library contains function to perform the calibration of our sensors. They are mostly used in the 04Calibration.py macro.                  #
 #================================================================================================================================================#
-
+import scipy
 import numpy             as np
 import matplotlib.pyplot as plt
 import pandas            as pd
@@ -12,12 +12,12 @@ from itertools         import product
 
 # Import from other libraries
 from .io_functions  import check_key, print_colored, color_list, write_output_file
-from .ana_functions import generate_cut_array, get_units
+from .ana_functions import generate_cut_array, get_units, get_wvf_label, compute_ana_wvfs
 from .fig_config    import figure_features, add_grid
-from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian
+from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder
 from .vis_functions import vis_var_hist
 
-def vis_persistence(my_run, OPT = {}):
+def vis_persistence(my_run, info, debug=False):
     '''
     \nThis function plot the PERSISTENCE histogram of the given runs&ch.
     \nIt perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
@@ -29,16 +29,15 @@ def vis_persistence(my_run, OPT = {}):
 
     figure_features()
     plt.ion()
+    true_key, true_label = get_wvf_label(my_run, "", "", debug=debug)
+    if true_key == "RawADC":
+        compute_ana_wvfs(my_run, info, debug=False)
+        key = "AnaADC"
+    else: key = true_key
     for run, ch in product(my_run["NRun"],my_run["NChannel"]):
-
-        generate_cut_array(my_run)
-        # cut_min_max(my_run, ["PeakTime"], {"PeakTime":[(st.mode(my_run[run][ch]["PeakTime"])[0]-20)*4e-9, (st.mode(my_run[run][ch]["PeakTime"])[0]+20)*4e-9]})
-        # cut_min_max(my_run, ["PeakTime"], {"PeakTime":[4.19e-6, 4.22e-6]})
-        # cut_min_max(my_run, ["PeakAmp"], {"PeakAmp":[25,100]})
-        # cut_min_max(my_run, ["PedSTD"], {"PedSTD":[-1,4.8]})
-
-        data_flatten = my_run[run][ch]["ADC"][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() ##### Flatten the data array
-        time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch]["ADC"][0])) # Time array
+        if check_key(my_run[run][ch], "MyCuts") == False: generate_cut_array(my_run, debug=debug)
+        data_flatten = my_run[run][ch][true_key][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() ##### Flatten the data array
+        time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch][true_key][0])) # Time array
         time_flatten = np.array([time] * int(len(data_flatten)/len(time))).flatten() 
 
         plt.hist2d(time_flatten,data_flatten,density=True,bins=[5000,1000], cmap = viridis, norm=LogNorm()) 
@@ -77,10 +76,11 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                 else: 
                     det_label = my_runs[run][ch]["Label"]
                     if check_key(my_runs[run][ch], "MyCuts") == False:
-                        if debug: print_colored("Cuts not generated. Generating them...", "WARNING")
+                        print_colored("Cuts not generated. Generating them now...", "WARNING")
                         generate_cut_array(my_runs,debug=debug) # If cuts not generated, generate them
-                        if debug: print(run, ch, my_runs[run][ch]["MyCuts"])
+                    
                     if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
+                    
                     OPT["SHOW"] == False
                     OPT["NORM"] == True
                     counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
@@ -88,7 +88,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
 
                     ## New Figure with the fit ##
                     plt.ion(); fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6)); add_grid(ax_cal)
-                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step")
+                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step",label="Data")
                     fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
                     fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
 
@@ -100,11 +100,18 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                             if check_key(OPT,param) == True: new_params[param] = OPT[param]
                             else:                            new_params[param] = params[param]
 
-                        x, y, peak_idx, valley_idx, popt, pcov, perr = gaussian_train_fit(counts, bins, bars, new_params, debug=debug)
-                        ax_cal.axhline(new_params["THRESHOLD"], ls='--')
-                        ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
+                        ## Create linear interpolation between bins to search peaks in these variables ##
+                        x = np.linspace(bins[1],bins[-2],params["ACCURACY"])
+                        y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
+                        y = y_intrp(x)
+
+                        peak_idx, valley_idx = peak_valley_finder(x, y, new_params)
+                        ax_cal.axhline(np.max(y)*new_params["THRESHOLD"], ls='--')
+                        ax_cal.plot(x[peak_idx][:4], y[peak_idx][:4], 'r.', lw=4)
                         ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-                        ax_cal.plot(x,gaussian_train(x, *popt), label="")
+
+                        popt, pcov, perr = gaussian_train_fit(x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
+                        ax_cal.plot(x,gaussian_train(x, *popt))
 
                     else: #Particular calibration fit for PMTs
                         print("Hello, we are working on a funtion to fit PMT spe :)")
@@ -120,10 +127,10 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                     if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True: ax_cal.legend()
                     if check_key(OPT,"LOGY")   == True and OPT["LOGY"]   == True: ax_cal.semilogy(); ax_cal.set_ylim(1)
                     if check_key(OPT,"SHOW")   == True and OPT["SHOW"]   == True:
-                        print("SHOW BUT NO TERMINAL FRIEND")
+                        # print("SHOW BUT NO TERMINAL FRIEND")
 
                         if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-                            print("TERMINAL FRIEND")
+                            # print("TERMINAL FRIEND")
                             plt.ion()
                             plt.show()
                             while not plt.waitforbuttonpress(-1): pass

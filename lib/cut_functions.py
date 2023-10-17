@@ -34,15 +34,16 @@ def cut_selector(my_runs, user_input, debug=False):
     
     return label, my_runs
 
-def print_cut_info(my_cuts):
-    print("Nº of selected events from total events: %i (%0.2f"%(np.sum(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)")
-
-
+def print_cut_info(my_cuts, stage="partial", debug=False):
+    if stage == "partial": print_colored("Nº selected/total events for this cut: %i/%i (%0.2f"%(np.sum(my_cuts), len(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)", color="INFO")
+    if stage == "final":   print_colored("Nº selected/total events in total cut: %i/%i (%0.2f"%(np.sum(my_cuts), len(my_cuts), np.sum(my_cuts)/len(my_cuts)*100)+ "%)", color="SUCCESS")
 
 def cut_df(my_runs, cut_dict={}, debug=False):
-
+    '''
+    This function cuts the data using a dictionary with the cuts. The dictionary must be in the following format:
+    cut_dict = {(key, logic, value, inclusive): channels}
+    '''
     print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
-
     for run in (np.asarray(my_runs["NRun"]).astype(int)):
         my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
         my_runs_df = pd.DataFrame(my_runs[run]).T
@@ -54,24 +55,26 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                 try: my_runs[run][ch]
                 except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()
 
-                if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs); print("...Running generate_cut_array...")
-                if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
+                if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs, debug=debug)
+                if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs, debug=debug)
                 print_colored("... Cutting events for run %i channel %i with %s %s %0.2f ..."%(run, ch, key, logic, value),"INFO")
-                # print(my_runs_df.loc[ch][key])
-                if logic == "bigger_than":    this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(this_channel_cut_array)
-                if logic == "smaller_than":   this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(this_channel_cut_array)
-                if logic == "equal_than":     this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(this_channel_cut_array)
-                if logic == "not_equal_than": this_channel_cut_array = (my_runs_df.loc[ch][key] != value); print_cut_info(this_channel_cut_array)
+                if logic == "bigger":  this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(this_channel_cut_array)
+                if logic == "smaller": this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(this_channel_cut_array)
+                if logic == "equal":   this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(this_channel_cut_array)
+                if logic == "unequal": this_channel_cut_array = (my_runs_df.loc[ch][key] != value); print_cut_info(this_channel_cut_array)
 
                 if ch_idx != 0:
                     if inclusive: this_cut_cut_array = this_cut_cut_array + this_channel_cut_array
                     else:         this_cut_cut_array = this_cut_cut_array * this_channel_cut_array
-                    
                     print_colored("\nInclusive = %s"%inclusive,"magenta")
-                    print_cut_info(this_cut_cut_array)
+                else:
+                    this_cut_cut_array = this_channel_cut_array  
+                
             my_cuts = my_cuts * this_cut_cut_array
+            print_cut_info(my_cuts, stage="final")
             
         for loaded_ch in my_runs["NChannel"]: my_runs[run][loaded_ch]["MyCuts"] = my_cuts
+    print_colored("---- DONE CUT! ----\n", color = "SUCCESS", bold=True)
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False, debug = False):
     """
@@ -126,7 +129,7 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
             print("Nº of new cutted events in Chs "+str(my_runs["NChannel"])+":", len(idx_list))
             for ch in my_runs["NChannel"]:
                 if check_key(my_runs[run][ch], "MyCuts") == False:
-                    print("...Running generate_cut_array...")
+                    print("...Running generate_cut_array...\n")
                     generate_cut_array(my_runs)
                 for i in idx_list: my_runs[run][ch]["MyCuts"][i] = False
             
@@ -151,7 +154,8 @@ def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False, debug=F
     idx_list = []
     initial_evts = 0
     for run, ch in product(my_runs["NRun"], chs_cut):
-        if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs); print("...Running generate_cut_array...")
+        if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs)
+        print("...Running generate_cut_array...\n")
 
         initial_evts = len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True])
         if run != my_runs["NRun"][0] and ch == chs_cut[0]: idx_list = []; print_colored("... NEW RUN ...", color = "WARNING")
