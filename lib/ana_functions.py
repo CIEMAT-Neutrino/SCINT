@@ -6,7 +6,7 @@ import numba
 import numpy as np
 from itertools import product
 # Import from other libraries
-from .io_functions import print_colored, print_keys
+from .io_functions import print_colored, print_keys, check_key
 
 #===========================================================================#
 #************************* PEAK + PEDESTAL *********************************#
@@ -17,41 +17,59 @@ def compute_ana_wvfs(my_runs, info, debug = False):
     \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+        if check_key(my_runs[run][ch],"RawADC") == False:
+            print_colored("ERROR: RawADC not found!", "ERROR")
+            exit()
+        if check_key(my_runs[run][ch],"Raw"+info["PED_KEY"][0]) == False:
+            print_colored("ERROR: Raw"++info["PED_KEY"][0]+" not found! Please run 01PreProcess.py", "ERROR")
+            exit()
         my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
-        print_colored("Analysis wvfs have been computed for run %i ch %i"%(run,ch), "blue")
+    print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")
+
+def compute_fft_wvfs(my_runs, info, key, label, debug = False):
+    '''
+    \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
+    '''            
+    for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+        my_runs[run][ch][label+"FFT"] = np.abs(np.fft.rfft(my_runs[run][ch][key]))
+        my_runs[run][ch][label+"Freq"] = [np.fft.rfftfreq(my_runs[run][ch][key][0].size, d=my_runs[run][ch]["Sampling"])]
+        my_runs[run][ch][label+"MeanFFT"] = [np.mean(my_runs[run][ch][label+"FFT"],axis=0)]
+        print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "blue")
         if debug: print_keys(my_runs)
-    print_colored("Ane wvfs have been computed for run %i ch %i"%(run,ch), "SUCCESS")
+    print_colored("--> Computed AnaFFT Wvfs!!!", "SUCCESS")
 
-
-def compute_peak_variables(my_runs, key = "", label = "", buffer = 30, debug = False):
+def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False):
     '''
     \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
     '''
-    key, label = get_wvf_label(my_runs, key, label, debug = debug)
-    true_key, true_label = get_wvf_label(my_runs, "", "", debug = False)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         aux_ADC = my_runs[run][ch][key]   
-        if true_label == "Raw":
+        if key == "RawADC" and label == "Raw":
             my_runs[run][ch][label+"PeakAmp" ] = my_runs[run][ch]["PChannel"]*np.max(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
             my_runs[run][ch][label+"PeakTime"] = np.argmax(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
+
+            # Compute valley amplitude in the buffer around the peak to avoid noise
+            i_idx = my_runs[run][ch][label+"PeakTime"]
+            i_idx[i_idx < 0] = 0
+            this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
+
+            my_runs[run][ch][label+"ValleyAmp" ] = my_runs[run][ch]["PChannel"]*(np.min(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
+            my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
+        
         else:
             my_runs[run][ch][label+"PeakAmp" ] = np.max(aux_ADC[:,:],axis=1)
             my_runs[run][ch][label+"PeakTime"] = np.argmax(aux_ADC[:,:],axis=1)
-        # Compute valley amplitude in the buffer around the peak to avoid noise
-        i_idx = my_runs[run][ch][label+"PeakTime"]
-        i_idx[i_idx < 0] = 0
-        this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
+            # Compute valley amplitude in the buffer around the peak to avoid noise
+            i_idx = my_runs[run][ch][label+"PeakTime"]
+            i_idx[i_idx < 0] = 0
+            this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
 
-        if true_label == "Raw":
-            my_runs[run][ch][label+"ValleyAmp" ] = my_runs[run][ch]["PChannel"]*(np.min(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
-            my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
-        else:
             my_runs[run][ch][label+"ValleyAmp" ] = np.min(this_aux_ADC[:,:buffer],axis=1)
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
 
-        print_colored("Peak variables have been computed for run %i ch %i"%(run,ch), "SUCCESS")
+        print_colored("--> Computed Peak Variables!!!", "SUCCESS")
 
-def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=100, sliding=100, debug=False):
+def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 100, sliding = 100, debug = False):
     '''
     \nComputes the pedestal variables of a collection of a run's collection in several windows.
     \n**VARIABLES:**
@@ -61,12 +79,11 @@ def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=10
     \n- pretrigger: amount of bins to study. Eg: ped_lim = 400, sliding = 50, pretrigger = 800 --> 8 windows to compute
     \n- start: the bin where starts the window. This way you can check the end of the window
     '''
-    key, label = get_wvf_label(my_runs, key, label, debug = False)
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         if type(ped_lim) != int:
             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
             ped_lim = values[np.argmax(counts)]-buffer
-
+            if ped_lim <= 0: ped_lim = 5*buffer
         ADC_aux=my_runs[run][ch][key]
         my_runs[run][ch][label+"PreTriggerSTD"]   = np.std (ADC_aux[:,:ped_lim],axis=1)
         my_runs[run][ch][label+"PreTriggerMean"]  = np.mean(ADC_aux[:,:ped_lim],axis=1)
@@ -82,16 +99,16 @@ def compute_pedestal_variables(my_runs, key="", label="", ped_lim= "", buffer=10
         my_runs[run][ch][label+"PedStart"] = start_window
         my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
         # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADC[:,start:(start+ped_lim)]**2),axis=1))
-        print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "SUCCESS")
+        print_colored("--> Computed Pedestal Variables!!!", "SUCCESS")
 
-def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=500, debug=False):
+def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 500, debug = False):
     '''
     \nTaking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
     \nIt checks for the best window.
     '''
     if ped_lim < sliding:
         ped_lim = sliding
-        print_colored("WARNING: Pedestal window is smaller than sliding window. Setting ped_lim = 400", "WARNING")
+        print_colored("WARNING: Pedestal window is smaller than sliding window. Setting ped_lim = %s"%sliding, "WARNING")
     
     slides=int(ped_lim/sliding);
     nwvfs=ADC.shape[0]
@@ -120,7 +137,7 @@ def compute_power_spec(ADC, timebin, debug = False):
     return np.absolute(np.mean(aux, axis = 0)), np.absolute(aux_X)
 
 @numba.njit
-def shift_ADCs(ADC, shift, debug=False):
+def shift_ADCs(ADC, shift, debug = False):
     ''' 
     \nUsed for the sliding window. 
     '''
@@ -132,7 +149,7 @@ def shift_ADCs(ADC, shift, debug=False):
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
 @numba.njit
-def shift4_numba(arr, num, fill_value=0): #default shifted value is 0, remember to always substract your pedestal first
+def shift4_numba(arr, num, fill_value = 0): #default shifted value is 0, remember to always substract your pedestal first
     ''' 
     \nUsed for the sliding window.
     '''
@@ -176,17 +193,18 @@ def get_ADC_key(my_runs, key, debug = False):
                 key = this_key
                 label = this_key.split("ADC")[0]
                 found_duplicate += 1
+                if debug: print_colored("Found ADC branch: %s"%key, "DEBUG")
                 if found_duplicate > 1:
                     print_colored("ERROR: Found more than one ADC key! Please check load preset.", "ERROR")
                     exit()
         if found_duplicate == 0:
             label = ""
             print_colored("WARNING: No ADC branch found!", "WARNING")
-        if debug: print_colored("-> Found key: '%s' and label: '%s'"%(key,label), "SUCCESS")
+        if debug: print_colored("--> Returning key: '%s' and label: '%s'!!!"%(key,label), "SUCCESS")
 
     else:
         label = key.split("ADC")[0]
-        print_colored("Returning label from provided key:", "INFO")
+        if debug: print_colored("Returning label from provided key:", "DEBUG")
     
     return key, label
 
@@ -213,14 +231,13 @@ def get_wvf_label(my_runs, key, label, debug = False):
             user_confirmation = input("Do you want to continue with coustom selection? [y/n]: ")
             if user_confirmation.lower() in ["y","yes"]:
                 out_label = found_label
-                if debug: print_colored("-> Selected label %s"%label, "SUCCESS")
+                if debug: print_colored("Selected label %s"%label, "DEBUG")
             else:
                 out_label = label
-                if debug: print_colored("-> Found label %s"%found_label, "SUCCESS")
-
+                if debug: print_colored("Found label %s"%found_label, "DEBUG")
         else:
             out_label = found_label
-            if debug: print_colored("-> Found label %s"%label, "SUCCESS")
+            if debug: print_colored("Found label %s"%label, "DEBUG")
     
     elif key != "" and label == "":
         if debug: print_colored("WARNING: Selected input ADC but no label provided!", "WARNING")
@@ -236,10 +253,9 @@ def get_wvf_label(my_runs, key, label, debug = False):
         out_key = key
         out_label = label
     
-    if debug: print_colored("-> Found label %s form key %s"%(out_label,out_key), "INFO")
     return out_key, out_label
     
-def generate_cut_array(my_runs, ref="", debug=False):
+def generate_cut_array(my_runs, ref = "", debug = False):
     '''
     \nThis function generates an array of bool = True with length = NEvts. 
     \nIf cuts are applied and then you run this function, it resets the cuts.
@@ -249,21 +265,17 @@ def generate_cut_array(my_runs, ref="", debug=False):
     \n- debug:   boolean to print debug messages
     '''
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
-        if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
+        # if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
         try:
-            if ref == "": 
-                key, label = get_wvf_label(my_runs, "", "", debug = debug)
-                ref = key
             if debug: print("Check cut array ref: ",my_runs[run][ch][ref])
             my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]),dtype=bool)
         
         except KeyError:
-            print_colored("WARNING: Reference variable for cut array generation not found!", "WARNING")
-            print("Searching for viable reference variable...")
+            if debug: print_colored("Reference variable for cut array generation not found!", "DEBUG")
             for key in my_runs[run][ch].keys():
                 try:
                     if len(my_runs[run][ch][key]) > 1:
-                        print_colored("Found viable reference variable: "+key, "WARNING")
+                        if debug: print_colored("Found viable reference variable: "+key, "DEBUG")
                         my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][key]),dtype=bool)
                         break
                 except TypeError:
@@ -273,7 +285,8 @@ def generate_cut_array(my_runs, ref="", debug=False):
                     if debug: print_colored("Key "+key+" does not exist", "DEBUG")
                     pass
         
-        print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
+        # if debug: print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
+    return my_runs
 
 def get_units(my_runs, debug = False):
     '''
@@ -294,30 +307,3 @@ def get_units(my_runs, debug = False):
             else:                                                                   aux_dic[key] = "a.u."
             
         my_runs[run][ch]["UnitsDict"] = aux_dic
-
-# def old_compute_pedestal_variables(my_runs, key = "", label = "", buffer = 200, debug = False):
-#     '''
-#     Computes the pedestal variables of a collection of a run's collection in standard format
-#     **VARIABLES**:
-#         - my_runs: dictionary containing the data
-#         - key:     key of the variable to be used
-#         - label:   label to be added to the variable name
-#         - buffer:  number of samples to be used for the pedestal computation
-#         - debug:   boolean to print debug messages
-#     '''
-#     key, label = get_ADC_key(my_runs, key, label, debug = debug)
-#     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
-#         try:
-#             # ped_lim = st.mode(my_runs[run][ch][label+"PeakTime"], keepdims=True)[0][0]-buffer # Deprecated function
-#             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
-#             ped_lim = values[np.argmax(counts)]-buffer
-#             if ped_lim < 0: ped_lim = 200
-#             my_runs[run][ch][label+"PedSTD"]  = np.std (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMean"] = np.mean(my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMax"]  = np.max (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedMin"]  = np.min (my_runs[run][ch][key][:,:ped_lim],axis=1)
-#             my_runs[run][ch][label+"PedLim"]  = ped_lim
-#             # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(my_runs[run][ch][key][:,:ped_lim]**2),axis=1))
-#             print_colored("Pedestal variables have been computed for run %i ch %i"%(run,ch), "blue")
-#         except KeyError: 
-#             if debug: print_colored("*EXCEPTION: for %i, %i, %s pedestal variables could not be computed"%(run,ch,key), "WARNING")

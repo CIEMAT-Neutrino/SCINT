@@ -1,6 +1,6 @@
 import sys, inquirer, os
 import numpy as np
-
+import icecream as ic
 from .io_functions import print_colored, check_key, read_input_file, cuts_info2dict
 
 def get_flag_dict():
@@ -20,7 +20,7 @@ def get_flag_dict():
         ("-d","--debug"):"debug \t(True/False)"}
     return flag_dict
 
-def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, debug=False):
+def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = {}, debug = False):
     '''
     \nThis function initializes the macro by reading the input file and the user input.
     \n**VARIABLES:**
@@ -51,16 +51,20 @@ def initialize_macro(macro, input_list=["input_file","debug"], default_dict={}, 
                         print("Provide argument for flag %s"%flag_dict[flag])
                         exit()
     if check_key(user_input, "input_file") == False:
-        user_input = select_input_file(user_input, debug=debug)
+        user_input = select_input_file(user_input, debug = debug)
         user_input["input_file"] = user_input["input_file"]
-    user_input = update_user_input(user_input,input_list,debug=debug)
+    
+    info = read_input_file(user_input["input_file"][0], debug = debug)
+    user_input, info = update_user_input(user_input, input_list, info, debug = debug)
     user_input["debug"] = user_input["debug"][0].lower() in ['true', '1', 't', 'y', 'yes']
-    user_input = use_default_input(user_input, default_dict, debug=debug)
+    user_input = use_default_input(user_input, default_dict, info, debug = debug)
 
-    if debug: print_colored("User input: %s"%user_input,"INFO")
-    return user_input
+    if debug:
+        print_colored("\nUser input:","INFO")
+        ic.ic(user_input)
+    return user_input, info
 
-def update_user_input(user_input,new_input_list,debug=False):
+def update_user_input(user_input, new_input_list, info, debug=False):
     '''
     \nThis function updates the user input by asking the user to provide the missing information.
     \n**VARIABLES:**
@@ -76,10 +80,15 @@ def update_user_input(user_input,new_input_list,debug=False):
             if key_label != "filter":
                 q = [ inquirer.Text(key_label, message=" select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
                 new_user_input[key_label] =  inquirer.prompt(q)[key_label].split(",")
-            else: new_user_input["filter"] = apply_cuts(user_input, debug=debug)
-        else: pass
+                # print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
+            else:
+                new_user_input["filter"] = apply_cuts(user_input, info, debug=debug)
+                print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
+        else:
+            # print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
+            pass
             # if debug: print("Using %s from user input"%key_label)
-    return new_user_input
+    return new_user_input, info
 
 def select_input_file(user_input, debug=False):
     '''
@@ -96,16 +105,13 @@ def select_input_file(user_input, debug=False):
     if debug: print_colored("Using input file %s"%new_user_input["input_file"][0],"INFO")
     return new_user_input
 
-def use_default_input(user_input, default_dict, debug=False):
+def use_default_input(user_input, default_dict, info, debug = False):
     '''
     \nThis function updates the user input by asking the user to provide the missing information.
     \n**VARIABLES:**
     \n- **user_input** (*dict*) - Dictionary with the user input.
     \n- **info** (*dict*) - Dictionary with the information from the input file.
     '''
-    
-    info = read_input_file(user_input["input_file"][0], debug=False)
-
     new_user_input = user_input.copy()
     for default_key in default_dict:
         if check_key(new_user_input, default_key) == False:
@@ -116,8 +122,7 @@ def use_default_input(user_input, default_dict, debug=False):
                         if run not in runs:
                             runs.append(run)
             new_user_input[default_key] = runs
-            if new_user_input["debug"]:print_colored("No runs provided. Using all %s from input file. %s"%(default_key,runs),"WARNING")
-
+            if new_user_input["debug"]: print_colored("No %s provided. Using all %s from input file. %s"%(default_key,default_key,runs),"WARNING")
     return new_user_input
 
 def print_macro_info(macro, debug=False):
@@ -125,29 +130,26 @@ def print_macro_info(macro, debug=False):
     file_contents = f.read()
     print (file_contents+"\n")
     f.close
-    if debug: print("----- Debug mode activated -----")
+    if debug: print_colored("....... Debug Mode Activated! .......", "DEBUG")
 
 def print_header():
     f = open('info/header.txt', 'r')
     file_contents = f.read()
     print (file_contents)
     f.close
-    print("----- Starting macro -----")
+    print_colored("....... Starting Macro .......", "INFO")
 
-def apply_cuts(user_input, debug=False):
+def apply_cuts(user_input, info, debug=False):
     '''
     \nThis function asks the user to select the cuts to be apply to your events.
     \n**VARIABLES:**
     \n- **user_input** (*dict*) - Dictionary with the user input.
     '''
-    
-    info = read_input_file(user_input["input_file"][0], debug=False)
-
     cuts_choices = ["cut_df","cut_lin_rel","cut_peak_finder"]
-    cut_dict = cuts_info2dict(user_input,debug=True)
+    cut_dict = cuts_info2dict(user_input, info, debug=True)
     for cut in cuts_choices:
         if cut_dict[cut][0] == True: 
-            if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
+            # if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
             return cut_dict
         if cut_dict[cut][0] == False:
             ask4cuts = True
@@ -160,7 +162,7 @@ def apply_cuts(user_input, debug=False):
                             if cut_dict[cut][0] != True: cut_dict[cut] = [True, []]
                             channels  = [ inquirer.Text("channels",  message="Select channels for applying **%s**"%cut, default="0,1") ]
                             key       = [ inquirer.Text("key",       message="Select key for applying **%s**"%cut, default="AnaPedSTD") ]
-                            logic     = [ inquirer.Text("logic",     message="Select logic for applying **%s**"%cut, default="bigger_than") ]
+                            logic     = [ inquirer.Text("logic",     message="Select logic for applying **%s**"%cut, default="bigger") ]
                             value     = [ inquirer.Text("value",     message="Select value for applying **%s**"%cut, default="1") ]
                             inclusive = [ inquirer.Text("inclusive", message="Select inclusive for applying **%s**"%cut, default="False") ]
                             cut_dict[cut][1].append([inquirer.prompt(channels)["channels"].split(','),inquirer.prompt(key)["key"], inquirer.prompt(logic)["logic"], float(inquirer.prompt(value)["value"]), inquirer.prompt(inclusive)["inclusive"].lower() in ['true', '1', 't', 'y', 'yes']])
@@ -199,7 +201,7 @@ def read_and_print_text_file(filename):
     except FileNotFoundError: print_colored(f"The file '{filename}' does not exist.","ERROR"); return None
 
 # Function to update a specific line in the text content
-def update_line(filename, content, first_words, line_label, new_text):
+def update_line(filename, content, first_words, line_label, new_text, debug = False):
     read_lines  = content.split('\n')
     line_number = np.where(np.asarray(first_words) == line_label)[0][0]
     new_lines   = read_lines
@@ -208,13 +210,13 @@ def update_line(filename, content, first_words, line_label, new_text):
 
     with open(filename, 'w') as file:
         for line in save_lines: file.write(line)
-
-    print("UPDATED",save_lines)
-    print(f"Content has been updated and saved to '{filename}'.")
+    file.close()
+    # print("UPDATED",save_lines)
+    if debug: print_colored("Content has been updated and saved to '%s'."%filename, "DEBUG")
 
     return save_lines
 
-def opt_selector(filename = "VisConfig.txt", debug=False):
+def opt_selector(filename = "VisConfig.txt", debug = False):
     content, first_words = read_and_print_text_file(filename)
     # if content:
     q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
@@ -224,7 +226,7 @@ def opt_selector(filename = "VisConfig.txt", debug=False):
         line_label =  inquirer.prompt(q)["lines"]
         for line in line_label:
             new_text = input(f"Enter the new text for line {line} ")
-            updated_content = update_line(filename, content, first_words, line, new_text)
+            updated_content = update_line(filename, content, first_words, line, new_text, debug = debug)
         my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in updated_content}
 
     else: my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in content.split('\n')}
@@ -239,5 +241,7 @@ def opt_selector(filename = "VisConfig.txt", debug=False):
         try: my_opt[key] = my_opt[key][0]
         except IndexError: pass
 
-    if debug: print_colored("Using visualization options %s"%my_opt,"INFO")
+    if debug:
+        print_colored("\nUsing visualization options:","INFO")
+        ic.ic(my_opt)
     return my_opt
