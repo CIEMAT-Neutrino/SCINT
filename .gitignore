@@ -5,13 +5,12 @@
 *data*/*
 data/*
 data
-notebooks/*
+notebooks*/*
 scratch/
 larsoft/
 # Ignore everything from input files
 input/*.txt
 # But not the template one
-!input/MergeDebug*.txt
 !input/TUTORIAL*.txt
 
 # Byte-compiled / optimized / DLL files

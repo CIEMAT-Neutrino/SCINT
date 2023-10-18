@@ -2,16 +2,6 @@
 
 #Script must be run from scripts folder or paths will be messed up
 
-#create data and fit_data directory if not present
-if [ ! -d "../data" ]; then
-mkdir -p ../data/TUTORIAL/raw
-mkdir -p ../data/TUTORIAL/npy
-fi
-
-if [ ! -d "../fit_data" ]; then
-mkdir ../fit_data
-fi
-
 # copy notebooks folder if not present
 if [ -d "../notebooks" ]; then
 echo "\033[0;31m" WARNING: notebooks folder NOT updated. Delete it if you want to update it. '\033[0m'
@@ -19,7 +9,9 @@ fi
 
 if [ ! -d "../notebooks" ]; then
 echo "\033[0;36m" Copying notebooks... '\033[0m'
-cp -r ../00TUTORIAL ../notebooks
+cp -r ../vault/notebooks ../notebooks
+rm -rf ../notebooks/cleaning
+fi
 fi
 
 
