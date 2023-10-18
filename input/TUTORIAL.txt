@@ -21,7 +21,7 @@ OV_LABEL: OV1,0V2,0V3
 
 CALIB_RUNS: 01
 LIGHT_RUNS: 09
-NOISE_RUNS: 17
+NOISE_RUNS: 17,128
 ALPHA_RUNS: 25
 MUONS_RUNS: 29
 
@@ -34,25 +34,28 @@ CHAN_AMPLI: 250,1030
 ####   BRANCH INFO  ####
 ########################
 #PRESETS USED: 0,  1,  2,  3,  4,  5,  6
-LOAD_PRESET: NON,RAW,ALL,ANA,CAL,EVA,ANA
+LOAD_PRESET: NON,RAW,ANA,ANA,EVA,EVA,ANA
 SAVE_PRESET: NON,ALL,EVA,CAL,CAL,NON,DEC
+
+########################
+####  ANA DEFAULTS  ####
+########################
+PED_KEY: PreTriggerMean
 
 ########################
 ####  CHARGE INFO   ####
 ########################
-TYPE: ChargeAveRange,ChargeRange
+TYPE: ChargeAveRange,ChargePedRange,ChargeRange
 REF: AveWvf
 I_RANGE: 0.1,0.1,0.1,0.1,0.1
 F_RANGE: 0.4,0.9,1.9,2.9,3.9
-ANA_KEY: RawADC
-PED_KEY: PreTriggerMean
 
 ########################
 ####   CUTS INFO    ####
 ########################
-#0CUT_CHAN: 
-#0CUT_TYPE: 
-#0CUT_KEYS: 
-#0CUT_LOGIC: 
-#0CUT_VALUE: 
-#0CUT_INCLUSIVE: 
+#0CUT_CHAN: 0
+#0CUT_TYPE: cut_df
+#0CUT_KEYS: AnaValleyAmp
+#0CUT_LOGIC: bigger
+#0CUT_VALUE: 0
+#0CUT_INCLUSIVE: False
