@@ -3,6 +3,7 @@ curve
 dash
 icecream
 inquirer
+ipykernel
 ipywidgets
 jupyter
 jupyter-dash
