@@ -14,7 +14,11 @@ from .io_functions import print_colored, print_keys, check_key
 
 def compute_ana_wvfs(my_runs, info, debug = False):
     '''
-    \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
+    \nComputes the AnaADC wvfs from the RawADC and the baseline value computed from PED_KEY.
+    \n**VARIABLES**:
+    \n**- my_runs**: dictionary containing the data.
+    \n**- info**:    dictionary containing the info.
+    \n**- debug**:   boolean to print debug messages.
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         if check_key(my_runs[run][ch],"RawADC") == False:
@@ -28,7 +32,13 @@ def compute_ana_wvfs(my_runs, info, debug = False):
 
 def compute_fft_wvfs(my_runs, info, key, label, debug = False):
     '''
-    \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
+    \nComputes the FFT wvfs from the given ADC key.
+    \n**VARIABLES**:
+    \n**- my_runs**: dictionary containing the data.
+    \n**- info**:    dictionary containing the info.
+    \n**- key**:     key to be inserted.
+    \n**- label**:   label to be inserted.
+    \n**- debug**:   boolean to print debug messages.
     '''            
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         my_runs[run][ch][label+"FFT"] = np.abs(np.fft.rfft(my_runs[run][ch][key]))
@@ -40,7 +50,14 @@ def compute_fft_wvfs(my_runs, info, key, label, debug = False):
 
 def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False):
     '''
-    \nComputes the peaktime and amplitude of a collection of a run's collection in standard format
+    \nComputes the peaktime and amplitude for a given ADC key.
+    \n**VARIABLES**:
+    \n**- my_runs**: dictionary containing the data.
+    \n**- info**:    dictionary containing the info.
+    \n**- key**:     key to be inserted.
+    \n**- label**:   label to be inserted.
+    \n**- buffer**:  size in bins of the buffer to compute the valley amplitude
+    \n**- debug**:   boolean to print debug messages.
     '''
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         aux_ADC = my_runs[run][ch][key]   
@@ -66,24 +83,27 @@ def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False
 
             my_runs[run][ch][label+"ValleyAmp" ] = np.min(this_aux_ADC[:,:buffer],axis=1)
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
-
-        print_colored("--> Computed Peak Variables!!!", "SUCCESS")
+    print_colored("--> Computed Peak Variables!!!", "SUCCESS")
 
 def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 100, sliding = 100, debug = False):
     '''
     \nComputes the pedestal variables of a collection of a run's collection in several windows.
     \n**VARIABLES:**
-    \n- label: string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD
-    \n- ped_lim: size in bins of the sliding window
-    \n- sliding: bins moved between shifts of the window
-    \n- pretrigger: amount of bins to study. Eg: ped_lim = 400, sliding = 50, pretrigger = 800 --> 8 windows to compute
-    \n- start: the bin where starts the window. This way you can check the end of the window
+    \n**- my_runs**: dictionary containing the data.
+    \n**- info**:    dictionary containing the info.
+    \n**- key**:     key to be inserted.
+    \n**- label**:   string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD.
+    \n**- ped_lim**: size in bins of the sliding window.
+    \n**- buffer**:  size in bins of the buffer to compute the valley amplitude.
+    \n**- sliding**: bins moved between shifts of the window. 
+    \n**- debug**:   boolean to print debug messages.
     '''
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         if type(ped_lim) != int:
             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
             ped_lim = values[np.argmax(counts)]-buffer
             if ped_lim <= 0: ped_lim = 5*buffer
+        
         ADC_aux=my_runs[run][ch][key]
         my_runs[run][ch][label+"PreTriggerSTD"]   = np.std (ADC_aux[:,:ped_lim],axis=1)
         my_runs[run][ch][label+"PreTriggerMean"]  = np.mean(ADC_aux[:,:ped_lim],axis=1)
@@ -91,20 +111,24 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
         my_runs[run][ch][label+"PreTriggerMin"]   = np.min (ADC_aux[:,:ped_lim],axis=1)
 
         ADC, start_window=compute_pedestal_sliding_windows(ADC_aux, ped_lim=ped_lim, sliding=sliding)
+        my_runs[run][ch][label+"PedLim"]   = ped_lim
         my_runs[run][ch][label+"PedSTD"]   = np.std (ADC[:,:sliding],axis=1)
         my_runs[run][ch][label+"PedMean"]  = np.mean(ADC[:,:sliding],axis=1)
         my_runs[run][ch][label+"PedMax"]   = np.max (ADC[:,:sliding],axis=1)
         my_runs[run][ch][label+"PedMin"]   = np.min (ADC[:,:sliding],axis=1)
-        my_runs[run][ch][label+"PedLim"]   = ped_lim
         my_runs[run][ch][label+"PedStart"] = start_window
         my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
-        # my_runs[run][ch][label+"PedRMS"]  = np.sqrt(np.mean(np.abs(ADC[:,start:(start+ped_lim)]**2),axis=1))
-        print_colored("--> Computed Pedestal Variables!!!", "SUCCESS")
+    print_colored("--> Computed Pedestal Variables!!!", "SUCCESS")
 
 def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 500, debug = False):
     '''
-    \nTaking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
-    \nIt checks for the best window.
+    \nTaking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window". 
+    It checks for the best window.
+    \n**VARIABLES:**
+    \n**- ADC**:      array containing the ADCs.
+    \n**- ped_lim**:  size in bins of the sliding window.
+    \n**- sliding**:  bins moved between shifts of the window.
+    \n**- debug**:    boolean to print debug messages.
     '''
     if ped_lim < sliding:
         ped_lim = sliding
@@ -128,7 +152,11 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 500, debug = False)
 
 def compute_power_spec(ADC, timebin, debug = False):
     ''' 
-    \nComputes the power spectrum of the given events. It returns both axis. 
+    \nComputes the power spectrum of the given events. It returns both axis.
+    \n**VARIABLES**:
+    \n**- ADC**:     array containing the ADCs.
+    \n**- timebin**: timebin of the data.
+    \n**- debug**:   boolean to print debug messages. 
     '''
     aux = [] 
     aux_X = np.fft.rfftfreq(len(ADC[0]), timebin)
@@ -140,6 +168,10 @@ def compute_power_spec(ADC, timebin, debug = False):
 def shift_ADCs(ADC, shift, debug = False):
     ''' 
     \nUsed for the sliding window. 
+    \n**VARIABLES**:
+    \n**- ADC**:   array containing the ADCs.
+    \n**- shift**: array containing the shift values.
+    \n**- debug**: boolean to print debug messages.
     '''
     N_wvfs=ADC.shape[0]
     aux_ADC=np.zeros(ADC.shape)
@@ -149,13 +181,18 @@ def shift_ADCs(ADC, shift, debug = False):
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
 @numba.njit
-def shift4_numba(arr, num, fill_value = 0): #default shifted value is 0, remember to always substract your pedestal first
+def shift4_numba(arr, num, fill_value = 0, debug = False): #default shifted value is 0, remember to always substract your pedestal first
     ''' 
     \nUsed for the sliding window.
+    \n**VARIABLES**:
+    \n**- arr**:        array to be shifted.
+    \n**- num**:        number of bins to be shifted.
+    \n**- fill_value**: value to be inserted in the empty bins.
+    \n**- debug**:      boolean to print debug messages.
     '''
     if   num > 0: return np.concatenate((np.full(num, fill_value), arr[:-num]))
     elif num < 0: return np.concatenate((arr[-num:], np.full(-num, fill_value)))
-    else: return arr #no shift 
+    else: return arr
 
 #===========================================================================#
 #************************ GENERAL FUNCTIONS ********************************#
@@ -165,10 +202,10 @@ def insert_variable(my_runs, var, key, debug = False):
     '''
     \nInsert values for each type of signal.
     \n**VARIABLES**:
-    \n- my_runs: dictionary containing the data
-    \n- var:     array of values to be inserted
-    \n- key:     key to be inserted
-    \n- debug:   boolean to print debug messages
+    \n**- my_runs**: dictionary containing the data
+    \n**- var**:     array of values to be inserted
+    \n**- key**:     key to be inserted
+    \n**- debug**:   boolean to print debug messages
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
         i = np.where(np.array(my_runs["NRun"]).astype(int) == run)[0][0]
@@ -182,9 +219,9 @@ def get_ADC_key(my_runs, key, debug = False):
     '''
     \nThis function returns the ADC key for a given run.
     \n**VARIABLES**:
-    \n- my_runs: dictionary containing the data
-    \n- key:     key to be inserted
-    \n- debug:   boolean to print debug messages
+    \n**- my_runs**: dictionary containing the data
+    \n**- key**:     key to be inserted
+    \n**- debug**:   boolean to print debug messages
     '''
     found_duplicate = 0
     if key == "":
@@ -212,10 +249,10 @@ def get_wvf_label(my_runs, key, label, debug = False):
     '''
     \nThis function returns the label for a given run. This depends on the found ADC key or the one provided by the user.
     \n**VARIABLES**:
-    \n- my_runs: dictionary containing the data
-    \n- key:     key to be inserted
-    \n- label:   label to be inserted
-    \n- debug:   boolean to print debug messages
+    \n**- my_runs**: dictionary containing the data
+    \n**- key**:     key to be inserted
+    \n**- label**:   label to be inserted
+    \n**- debug**:   boolean to print debug messages
     '''
     if key == "" and label == "":
         found_key, found_label = get_ADC_key(my_runs, key, debug = debug)
@@ -257,12 +294,11 @@ def get_wvf_label(my_runs, key, label, debug = False):
     
 def generate_cut_array(my_runs, ref = "", debug = False):
     '''
-    \nThis function generates an array of bool = True with length = NEvts. 
-    \nIf cuts are applied and then you run this function, it resets the cuts.
+    \nThis function generates an array of bool = True. If cuts are applied and then you run this function, it resets the cuts.
     \n**VARIABLES**:
-    \n- my_runs: dictionary containing the data
-    \n- ref:     reference variable to generate the cut array
-    \n- debug:   boolean to print debug messages
+    \n**- my_runs**: dictionary containing the data
+    \n**- ref**:     reference variable to generate the cut array
+    \n**- debug**:   boolean to print debug messages
     '''
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
         # if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
@@ -292,8 +328,8 @@ def get_units(my_runs, debug = False):
     '''
     \nComputes and store in a dictionary the units of each variable.  
     \n**VARIABLES**:
-    \n- my_runs: dictionary containing the data
-    \n- debug:   boolean to print debug messages
+    \n**- my_runs**: dictionary containing the data
+    \n**- debug**:   boolean to print debug messages
     '''
     if debug: print("Getting units...")
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
