@@ -11,10 +11,11 @@ import plotly.graph_objs as go
 import plotly.io         as pio
 import ipywidgets        as widgets
 
-from scipy.signal   import find_peaks
-from scipy.optimize import curve_fit
-from scipy.special  import erf
-from itertools      import product
+from scipy.signal    import find_peaks
+from scipy.optimize  import curve_fit
+from scipy.special   import erf
+from plotly.subplots import make_subplots
+from itertools       import product
 
 from .head_functions import *
 from .io_functions   import *

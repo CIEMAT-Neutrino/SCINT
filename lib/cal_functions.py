@@ -107,11 +107,11 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
 
                         peak_idx, valley_idx = peak_valley_finder(x, y, new_params)
                         ax_cal.axhline(np.max(y)*new_params["THRESHOLD"], ls='--')
-                        ax_cal.plot(x[peak_idx][:4], y[peak_idx][:4], 'r.', lw=4)
-                        ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
+                        ax_cal.plot(x[peak_idx][:4], y[peak_idx][:4], 'r.', lw=4, label="Peaks")
+                        ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6, label="Valleys")
 
                         popt, pcov, perr = gaussian_train_fit(x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
-                        ax_cal.plot(x,gaussian_train(x, *popt))
+                        ax_cal.plot(x,gaussian_train(x, *popt), label="Final fit")
 
                     else: #Particular calibration fit for PMTs
                         print("Hello, we are working on a funtion to fit PMT spe :)")

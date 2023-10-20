@@ -1,36 +1,42 @@
 #!/bin/bash
 
-#Script must be run from scripts folder or paths will be messed up
-
-#create data and fit_data directory if not present
-if [ ! -d "../data" ]; then
-mkdir -p ../data/TUTORIAL/raw
-mkdir -p ../data/TUTORIAL/npy
+# The confirmation message need to be run with $ bash setup.sh (this lines are to allow $ sh setup.sh too)
+if [ ! "$BASH_VERSION" ] ; then
+    exec /bin/bash "$0" "$@"
 fi
 
-if [ ! -d "../fit_data" ]; then
-mkdir ../fit_data
+#Script must be run from SCRIPTS folder or paths will be messed up
+echo -e "\e[31mWARNING: Only run this script from scripts directory!\e[0m"
+# Ask if sure to continue
+read -p "Are you sure you want to continue? (y/n) " -n 1 -r
+echo
+# If the user did not answer with y, exit the script
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 1
 fi
 
 # copy notebooks folder if not present
 if [ -d "../notebooks" ]; then
-echo "\033[0;31m" WARNING: notebooks folder NOT updated. Delete it if you want to update it. '\033[0m'
+echo -e "\e[31mWARNING: notebooks folder NOT updated. Delete it if you want to update it. \e[0m"
 fi
 
 if [ ! -d "../notebooks" ]; then
-echo "\033[0;36m" Copying notebooks... '\033[0m'
-cp -r ../00TUTORIAL ../notebooks
+echo -e "\e[36mCreating notebooks... \e[0m"
+cp -r ../vault/notebooks ../notebooks
+rm -rf ../notebooks/cleaning
+rm -rf ../notebooks/__pycache__
 fi
 
 
-### COMMON VIRTUAL ENVIROMENT TO RUN THE MACROS ###
-# source /pnfs/ciemat.es/data/neutrinos/venv_python3.7/bin/activate 
-pip install --upgrade pip
-pip3 install -r requirements.txt
-#sudo apt install <requirementsTeX.txt
-#deactivate 
-
-echo "\033[0;32m" SUCCESS! '\033[0m'
-
-# Next run:
-# sshfs USER@pcaeXXX.ciemat.es:/pnfs/ciemat.es/data/neutrinos/SBND_XA_PDE ../data
+# If you already have the packages installed (i.e. .venv with VSCode), you can skip this step
+read -p "Do you want to INSTALL the packages (y/n)?" -n 1 -r
+echo
+# If the user did not answer with y, exit the script
+if [[ ! $REPLY =~ ^[Nn]$ ]]
+then
+    pip install --upgrade pip
+    pip3 install -r requirements.txt
+    #sudo apt install <requirementsTeX.txt
+    # echo "\033[0;32m" SUCCESS! '\033[0m'
+fi
