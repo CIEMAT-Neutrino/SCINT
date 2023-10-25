@@ -67,7 +67,7 @@ You can navigate through the documentation using the table of contents below and
 
 
 **SUMMARY**
-------------
+-------------
 
 For a quick summary or just as a reminder follow the next steps:
 
