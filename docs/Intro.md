@@ -65,7 +65,7 @@ or run `git checkout -b <your_branch_name>` in a terminal.
 
 📂 `\lib` → all the functions of the library itself are stored here
 
-📂 `\macros` → macros to run the analysis. 0i are use for visualize and 0# are used for process data (they are sorted to make easy to remember the work-flow)
+📂 `\macros` → macros to run the analysis. 0i are used for visualizing and 0# are used for processing data (they are sorted to make easy to remember the work-flow)
 
 📂 `\notebooks` → some useful notebooks for interactive visualization 🙂.
 
