@@ -22,8 +22,8 @@ ALPHA_RUNS: 24,25,26,27,46,47,48,67,68,69,123,124,125
 MUONS_RUNS: 34,55
 CHAN_LABEL: SiPM0,SiPM1,PMT,SC
 CHAN_TOTAL: 0,1,4,6
-CHAN_POLAR: 1,1,1,-1
-CHAN_AMPLI: 250,250,50,250
+CHAN_POLAR: -1,-1,-1,1
+CHAN_AMPLI: 250,250,50,1000
 ########################
 ####   BRANCH INFO  ####
 ########################
@@ -33,11 +33,10 @@ SAVE_PRESET: NON,ALL,EVA,WVF,CAL,NON,DEC
 ########################
 ####  CHARGE INFO   ####
 ########################
-TYPE: ChargeAveRange,ChargePedRange
+TYPE: ChargeAveRange,ChargePedRange,ChargeRange
 REF: AveWvf
-I_RANGE: -1
-F_RANGE: 0.1,0.5,1
-ANA_KEY: RawADC
+I_RANGE: 0.1,0.1,0.1,0.1,0.1
+F_RANGE: 0.4,0.9,1.9,2.9,3.9
 ########################
 ####   CUTS INFO    ####
 ########################
