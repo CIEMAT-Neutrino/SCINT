@@ -180,6 +180,11 @@ def compute_peak_RMS(my_runs, info, key, label, debug = False):
             print_colored("WARNING: Invalid integration range for RUN %i CH %i, REF %s"%(run,ch,label+"AveWvf"),"WARNING")
             idx, f_idx = find_amp_decrease(ref,1e-3)
             if debug: print_colored("Using amp decrease instead: [%.2E, %.2E] \u03BCs"%(idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]),"DEBUG")
+            if f_idx - i_idx <= 0:
+                print_colored("ERROR: Invalid integration range for RUN %i CH %i, REF %s"%(run,ch,label+"AveWvf"),"ERROR")
+                idx, f_idx = my_runs[run][ch][label+"PedLim"], my_runs[run][ch][label+"PedLim"]+1000
+                if debug: print_colored("Using pedlim instead: [%.2E, %.2E] \u03BCs"%(idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]),"DEBUG")
+                        
         pulse_peak = np.argmax(ref)
         pulse_max = np.max(ref)
         pulse_width = f_idx-i_idx
