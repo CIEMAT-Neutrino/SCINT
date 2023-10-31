@@ -203,7 +203,7 @@ def peak_valley_finder(x, y, params):
     print("Peaks found at: ", peak_idx)
     print("Valleys found at: ", valley_idx)
 
-    print_colored("PeakFinder using parameters: thresh = %i, wdth = %i, prom = %.2f, acc = %i"%(thresh, wdth, prom, acc), "INFO")
+    print_colored("PeakFinder using parameters: thresh = %.2f, wdth = %i, prom = %.2f, acc = %i"%(thresh, wdth, prom, acc), "INFO")
     return peak_idx, valley_idx
 
 def gaussian_train_fit(x, y, y_intrp, peak_idx, valley_idx, params, debug=False):
@@ -543,7 +543,7 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     # print("\n")
     return aux,popt,perr,labels
 
-def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={}):
+def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={},path="../data/",debug=False):
     ''' 
     \nDOC 
     '''
@@ -571,16 +571,21 @@ def fit_wvfs(my_runs,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC
             PE_std = np.std(raw[i][:i_idx])
             
             if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
+                folder_path  = info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
+                if not os.path.exists(path+folder_path): 
+                    os.makedirs(name=path+folder_path,exist_ok=True)
+                    os.chmod(path+folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                
                 print("Fitting wvf %i for run %i, ch %i"%(i,run,ch))
                 
                 print("\n---------- TOTAL FIT ----------")
-                with open("../fit_data/DeconvolutionFit_%i_%i.txt"%(run,ch),"w+") as f:
+                with open(path+folder_path+"/DeconvolutionFit_%i_%i.txt"%(run,ch),"w+") as f:
                     f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
                     for i in range(len(labels)):
                         print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
                         f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
                 f.close()
-                os.chmod("../fit_data/DeconvolutionFit_%i_%i.txt"%(run,ch), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                os.chmod(path+folder_path+"/DeconvolutionFit_%i_%i.txt"%(run,ch), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 print("--------------------------------\n")
         
         my_runs[run][ch]["Fit"+signal_type+out_key] = aux
