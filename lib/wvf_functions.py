@@ -163,7 +163,11 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
             for k in range(len(f_range)):
                 i_idx = int(np.round(i_range[k]*1e-6/my_runs[run][ch]["Sampling"]))
                 f_idx = int(np.round(f_range[k]*1e-6/my_runs[run][ch]["Sampling"]))
-                this_aux_ADC = shift_ADCs(aux_ADC, -np.asarray(my_runs[run][ch][label+"PeakTime"])+i_idx, debug = debug)
+                try:
+                    this_aux_ADC = shift_ADCs(aux_ADC, -np.asarray(my_runs[run][ch][label+"PeakTime"])+i_idx, debug = debug)
+                except ValueError:
+                    print_colored("WARNING: Failed wvf shift for RUN %i CH %i TYPE %s, REF %s; trying with PedLim."%(run,ch,typ,label+ref),"WARNING")
+                    this_aux_ADC = shift_ADCs(aux_ADC, -my_runs[run][ch][label+"PedLim"], debug = debug)
                 charge_name = label+typ+str(k)+cut_label
                 my_runs[run][ch][charge_name] = np.sum(this_aux_ADC[:,:f_idx], axis = 1)
                 print_colored("--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"%(charge_name,typ,i_idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]), "SUCCESS")
