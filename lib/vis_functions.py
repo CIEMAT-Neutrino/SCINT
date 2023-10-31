@@ -211,6 +211,8 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
                     except KeyError: print_colored("Sampling not found!", color="ERROR")
                     try: print("- TimeStamp:\t{:.2E}".format(my_run[run][ch_list[j]]["TimeStamp"][idx]))
                     except KeyError: print_colored("TimeStamp not found!", color="ERROR") 
+                    try: print("- Polarity:\t{}".format(my_run[run][ch_list[j]]["PChannel"]))
+                    except KeyError: print_colored("Polarity not found!", color="ERROR")
                     print("\n--- PreTrigger ---")
                     try: print("- PreTrigger mean:\t{:.2E}".format(my_run[run][ch_list[j]][label+"PreTriggerMean"][idx]))
                     except KeyError: print_colored("PreTrigger mean not found!", color="ERROR")
