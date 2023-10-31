@@ -303,7 +303,9 @@ def vis_compare_wvf(my_run, keys, OPT = {}, debug = False):
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
     
-    if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
+    a_list = r_list
+    b_list = ch_list
+    if not check_key(OPT, "COMPARE"):OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
     if OPT["COMPARE"] == "RUNS":     a_list = ch_list; b_list = r_list 
 
@@ -340,9 +342,9 @@ def vis_compare_wvf(my_run, keys, OPT = {}, debug = False):
                 if ref_max_idx == -1: ref_max_idx = ref_threshold
                 ave = np.roll(ave, ref_max_idx-ref_threshold)
 
-            if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
-                fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[keys[counter]])
-                axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit*norm_ave, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
+            # if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
+            #     fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[keys[counter]])
+            #     axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit*norm_ave, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
             
             axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "))
 
