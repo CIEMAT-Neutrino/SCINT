@@ -20,3 +20,4 @@ TERMINAL_MODE: True
 PRINT_KEYS: False
 SCINT_FIT: True
 FIT: gaussian
+STYLE: CIEMAT_style

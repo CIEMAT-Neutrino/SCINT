@@ -7,8 +7,9 @@ for style in styles: print(" \t * You can change your plotting style with "+ '\0
 
 #  Import from other libraries
 from .io_functions  import check_key
+from .fig_config import (figure_features, add_grid); 
 def style_selector(OPT):
     if check_key(OPT,"STYLE") == False: OPT["STYLE"] = "CIEMAT_style"
-    if OPT["STYLE"] == "CIEMAT_style": from lib.fig_config import (figure_features, add_grid); figure_features()
+    if OPT["STYLE"] == "CIEMAT_style": figure_features()
     if OPT["STYLE"] == "DUNE_style":   import dunestyle.matplotlib as dune
     if OPT["STYLE"] == "HEP_style":    import mplhep as hep
