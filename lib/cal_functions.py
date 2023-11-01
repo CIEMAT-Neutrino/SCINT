@@ -136,6 +136,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                             while not plt.waitforbuttonpress(-1): pass
                             plt.close()
 
+
                     try:
                         my_runs[run][ch]["Gain"]         = popt[3]-abs(popt[0])
                         my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
@@ -145,8 +146,9 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                         my_runs[run][ch]["Gain"]         = -99
                         my_runs[run][ch]["MaxChargeSPE"] = -99
                         my_runs[run][ch]["MinChargeSPE"] = -99
-
-    return popt, pcov, perr
+    
+    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: return fig_cal,ax_cal,popt, pcov, perr
+    else: return popt, pcov, perr
 
 def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
     '''
@@ -207,7 +209,7 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
 def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
     gains = dict.fromkeys(channels) ; Dgain = dict.fromkeys(channels)
     for c, ch in enumerate(channels):
-        my_table = pd.read_csv("../fit_data/"+folder_path+"/Anagain_ch%i.txt"%ch, header=None,sep = "\t",usecols=np.arange(16),names=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
+        my_table = pd.read_csv(folder_path+"/fit_data/run%i_ch%i/gain_ch%i.txt"%(run,ch,ch), header=None,sep = "\t",usecols=np.arange(16),names=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
         my_table = my_table.iloc[1:]
         gains[ch] = list(np.array(my_table["GAIN" ]).astype(float)[my_table["RUN"]==str(run)])
         Dgain[ch] = list(np.array(my_table["DGAIN"]).astype(float)[my_table["RUN"]==str(run)])
