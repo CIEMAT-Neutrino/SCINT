@@ -27,5 +27,5 @@ from .ply_functions  import *
 from .cut_functions  import *
 from .fit_functions  import *
 from .dec_functions  import *
-
-from .fig_config import (add_grid, figure_features)  # <--- import customized functions
+from .sty_functions  import (style_selector)
+from .fig_config     import (add_grid, figure_features)  # <--- import customized functions

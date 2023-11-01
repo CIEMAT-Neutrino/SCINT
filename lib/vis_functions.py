@@ -16,6 +16,7 @@ from .io_functions  import check_key,print_colored
 from .fig_config    import figure_features, add_grid
 from .ana_functions import get_wvf_label,generate_cut_array,get_units
 from .fit_functions import fit_wvfs
+from .sty_functions import style_selector
 
 def vis_npy(my_run, info, keys, OPT = {}, debug = False):
     '''
@@ -40,7 +41,7 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
     if not check_key(OPT, "SAME_PLOT"): OPT["SAME_PLOT"] = False; print_colored("SAME_PLOT not defined, setting to False", "WARNING")
 
     axs = []
-    figure_features()
+    style_selector(OPT)
     ch_list = my_run["NChannel"]; nch = len(my_run["NChannel"])
 
     for run, key in product(my_run["NRun"],keys):
@@ -284,7 +285,7 @@ def vis_compare_wvf(my_run, keys, OPT = {}, debug = False):
       (b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     '''
 
-    figure_features()
+    style_selector(OPT)
     r_list = my_run["NRun"]
     if type(r_list) != list:
         try: r_list = r_list.tolist()
@@ -379,7 +380,7 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
     \nWARNING! Maybe the binning stuff should be studied in more detail.
     '''
 
-    figure_features()
+    style_selector(OPT)
     all_counts = []; all_bins = []; all_bars = []
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
     if type(ch_loaded) != list:
@@ -513,7 +514,8 @@ def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = Fals
     \n- select_range: if we still have many outliers we can select the ranges in x and y axis.
     '''
 
-    figure_features()
+
+    style_selector(OPT)
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
 
     # Make query to user: choose loaded chanels or select specific channels

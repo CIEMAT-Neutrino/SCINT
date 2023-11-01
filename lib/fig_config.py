@@ -1,9 +1,10 @@
+tex_installed = False
 
 import sys
 if not sys.platform.startswith('win'):
     import subprocess
     try:
-        # print("WORKING ON CENTOS")
+        # print("WORKING ON WINDOWS")
         bashCommand = "yum info texlive-latex-base"
         process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     except FileNotFoundError:
@@ -17,7 +18,7 @@ if not sys.platform.startswith('win'):
     else:
         print("You have latex installed!. Applying default configuration (tex=True)")
         tex_installed = True
-
+        
 from matplotlib        import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 def figure_features(tex=tex_installed, font="serif", dpi=300):
