@@ -218,7 +218,8 @@ def gaussian_train_fit(x, y, y_intrp, peak_idx, valley_idx, params, debug=False)
         n_peaks = len(peak_idx)  #Number of peaks found by find_peak
     else:
         n_peaks = len(valley_idx)
-    labels=["","","","Inital fit"]
+    
+    labels = [""]*(n_peaks-1) + ["Initial fit"]
     for i in range(n_peaks):
         if i == 0:
             x_gauss = np.linspace(x[peak_idx[i]] - (x[valley_idx[i]]-x[peak_idx[i]]), x[valley_idx[i]], params["ACCURACY"]) #Array with values between the x_coord of 2 consecutives peaks
@@ -237,7 +238,7 @@ def gaussian_train_fit(x, y, y_intrp, peak_idx, valley_idx, params, debug=False)
             initial.append(popt[0])         # CENTER
             initial.append(popt[1])         # HEIGHT
             initial.append(np.abs(popt[2])) # WIDTH
-            plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5)
+            plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5,label=labels[i])
         except: continue
 
     pcov = np.zeros((len(initial),len(initial)))
@@ -585,7 +586,7 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
                         print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
                         f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
                 f.close()
-                os.chmod(path+folder_path+"/DeconvolutionFit_%i_%i.txt"%(run,ch), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                # os.chmod(path+folder_path+"DeconvolutionFit_%i_%i.txt"%(run,ch), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 print("--------------------------------\n")
         
         my_runs[run][ch]["Fit"+signal_type+out_key] = aux
