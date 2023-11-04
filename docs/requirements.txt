@@ -23,5 +23,6 @@ shapely
 curve
 pandas
 openpyxl
+icecream
 ipywidgets
 inquirer
