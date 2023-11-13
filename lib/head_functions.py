@@ -79,7 +79,7 @@ def update_user_input(user_input, new_input_list, info, debug=False):
         if check_key(user_input, key_label) == False:
             if key_label != "filter":
                 q = [ inquirer.Text(key_label, message=" select %s [flag: %s]"%(key_label,flags[key_label]), default=defaults[key_label]) ]
-                new_user_input[key_label] =  inquirer.prompt(q)[key_label].split(",")
+                new_user_input[key_label] = inquirer.prompt(q)[key_label].split(",")
                 # print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
             else:
                 new_user_input["filter"] = apply_cuts(user_input, info, debug=debug)
