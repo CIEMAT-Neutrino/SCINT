@@ -12,8 +12,8 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-PATH: ../data/
-MONTH: Aug23
+PATH: ../
+MONTH: Prueba
 OV_LABEL: OV7,OV7,0V4.5,OV4.5,0V3.5,OV3.5
 CALIB_RUNS: 19,00,16,00,13,00
 LIGHT_RUNS: 20,00,17,00,14,00
