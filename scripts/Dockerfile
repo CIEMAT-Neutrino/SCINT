@@ -6,14 +6,15 @@ WORKDIR /home
 RUN dnf -y install 'dnf-command(config-manager)'
 RUN dnf config-manager --set-enabled crb && dnf -y install epel-release && dnf -y update
 # Install packages needed for ROOT
-RUN dnf -y install python3 python3-pip git root\* python3-root python3-jupyroot
+RUN dnf -y install python3 python3-pip python-devel git root\* python3-root python3-jupyroot
 
 # Install python packages 
-RUN pip3 install --upgrade pip iminuit urllib3 tables metakernel ipykernel jupyter-server
+RUN pip3 install --upgrade pip wheel iminuit urllib3 tables metakernel ipykernel jupyter-server
 COPY requirements.txt ./ 
 RUN pip3 install -r requirements.txt
 
 RUN git clone --recursive "https://github.com/CIEMAT-Neutrino/SCINT.git"
+RUN git clone --recursive "https://github.com/CIEMAT-Neutrino/UTILS.git"
 RUN rm -rf requirements.txt && dnf clean all
 
 # Set up environment variables
