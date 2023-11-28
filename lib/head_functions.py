@@ -1,6 +1,5 @@
 import sys, inquirer, os
 import numpy as np
-import icecream as ic
 from .io_functions import print_colored, check_key, read_input_file, cuts_info2dict
 
 def get_flag_dict():
@@ -61,7 +60,7 @@ def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = 
 
     if debug:
         print_colored("\nUser input:","INFO")
-        ic.ic(user_input)
+        print(user_input)
     return user_input, info
 
 def update_user_input(user_input, new_input_list, info, debug=False):
@@ -99,7 +98,7 @@ def select_input_file(user_input, debug=False):
     
     new_user_input = user_input.copy()
     if check_key(user_input, "input_file") == False:
-        file_names = [file_name.replace(".txt", "") for file_name in os.listdir('../input')]
+        file_names = [file_name.split(".")[0] for file_name in os.listdir('../input')]
         q = [ inquirer.List("input_file", message=" select input file [flag: -i]", choices=file_names, default="TUTORIAL") ]
         new_user_input["input_file"] = [inquirer.prompt(q)["input_file"]]
     if debug: print_colored("Using input file %s"%new_user_input["input_file"][0],"INFO")
@@ -243,5 +242,5 @@ def opt_selector(filename = "VisConfig.txt", debug = False):
 
     if debug:
         print_colored("\nUsing visualization options:","INFO")
-        ic.ic(my_opt)
+        print(my_opt)
     return my_opt
