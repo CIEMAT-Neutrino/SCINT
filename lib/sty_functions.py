@@ -9,8 +9,8 @@ except: pass
 for style in styles: print(" \t * You can change your plotting style with "+ '\033[1m' + "OPT[STYLE]=" + style + '\033[0m' +" !")
 
 #  Import from other libraries
-from .io_functions  import check_key
-from .fig_config import (figure_features, add_grid); 
+from .io_functions import check_key
+from .fig_config   import (figure_features, add_grid); 
 def style_selector(OPT):
     if check_key(OPT,"STYLE") == False: OPT["STYLE"] = "CIEMAT_style"
     if OPT["STYLE"] == "None": pass

@@ -18,6 +18,7 @@ pandas
 plotly
 plotly_express
 pynput
+rich
 scipy 
 shapely
 uproot
