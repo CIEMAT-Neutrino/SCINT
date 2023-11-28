@@ -34,7 +34,7 @@ EXPOSE 8888
 
 ### UPLOAD IMAGE ###
 # docker tag myimage:latest myusername/myrepo:v1.0
-# docker login
+# docker login -u myusername
 # docker push myusername/myrepo:v1.0
 
 ### DOWNLOAD IMAGE ###
