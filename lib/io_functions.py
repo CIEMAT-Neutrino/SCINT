@@ -2,7 +2,7 @@
 # This library contains general functions used to read/write files, load/save data, etc.                                                         #
 #================================================================================================================================================#
 
-import os, gc, uproot, copy, stat
+import os, gc, uproot, copy, stat, yaml
 import numpy  as np
 import pandas as pd
 from itertools import product
@@ -27,12 +27,19 @@ def print_colored(string, color="white", styles=[]):
 #===========================================================================#
 
 # TRYING TO USE YAML INSTEAD OF TXT
-# import yaml
+def read_yaml_file(input,path = "../input/",debug = False):
+    '''
+    \nObtain the information stored in a .yml input file to load the runs and channels needed.
+    \n**VARIABLES**:
+    \n- input: name of the input file
+    \n- path:  path to the input file
+    \n- debug: if True, print debug messages
+    '''
 
-# def read_yaml_file(filepath):
-#     with open(filepath, 'r') as file:
-#         data = yaml.safe_load(file)
-#     return data
+    if debug: print_colored("\nReading input file: "+str(input)+".yml\n", "DEBUG")
+    with open(str(path+input)+".yml", 'r') as file: data = yaml.safe_load(file)
+    data["NAME"] = [input]
+    return data
 
 def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "../input/",debug = False):
     '''
