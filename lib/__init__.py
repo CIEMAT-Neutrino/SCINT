@@ -1,21 +1,20 @@
 import os, copy, gc, math, gc
 
-import matplotlib.pyplot as plt
-import numpy             as np
 import numba
-import icecream          as ic
+import numpy             as np
+import matplotlib.pyplot as plt
 import scipy             as sc
 import pandas            as pd
 import plotly.express    as px
 import plotly.graph_objs as go 
 import plotly.io         as pio
 import ipywidgets        as widgets
-
 from scipy.signal    import find_peaks
 from scipy.optimize  import curve_fit
 from scipy.special   import erf
 from plotly.subplots import make_subplots
 from itertools       import product
+from rich            import print as print
 
 from .head_functions import *
 from .io_functions   import *
