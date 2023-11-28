@@ -9,9 +9,9 @@ notebooks*/*
 scratch/
 larsoft/
 # Ignore everything from input files
-input/*.txt
+input/*
 # But not the template one
-!input/TUTORIAL*.txt
+!input/TUTORIAL*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
