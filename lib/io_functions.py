@@ -38,7 +38,7 @@ def read_yaml_file(input,path = "../input/",debug = False):
 
     if debug: print_colored("\nReading input file: "+str(input)+".yml\n", "DEBUG")
     with open(str(path+input)+".yml", 'r') as file: data = yaml.safe_load(file)
-    data["NAME"] = [input]
+    data["NAME"] = input
     return data
 
 def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "../input/",debug = False):
@@ -204,10 +204,9 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
     par_list = list(range(len(output[0])))
     for p in not_saved: par_list.remove(p) #removing parameters before saving in txt (height by default)
 
-    confirmation = input(color_list("magenta")+"\nConfirmation to save in"+folder_path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch+color_list("end"))
+    confirmation = input("\nConfirmation to save in "+folder_path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch)
     if "y" in confirmation:
         print("\n----------- Saving -----------")
-
         if not os.path.exists(folder_path+filename+"_ch%i.txt"%ch): #HEADER#
             os.makedirs(name=folder_path,exist_ok=True)             # Create the directory if it doesnt exist
             with open(folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:  f.write("\t".join(header_list)+"\n") # Write the header
@@ -555,7 +554,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
-            print_colored("\n....... Load npy runs %s & %s channels --> DONE! .......\n"%(runs,channels), color="SUCCESS", bold=True)
+            print_colored("\n....... Load npy runs %s & %s channels --> DONE! .......\n"%(runs,channels), color="SUCCESS", styles=["bold"])
             del branch_list # Delete the branch list to avoid loading the same branches again
     return my_runs
 
@@ -576,7 +575,7 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
-            print_colored("\n--> Saving Computed Variables (according to preset %s)!"%(preset), color="INFO", bold=True)
+            print_colored("\n--> Saving Computed Variables (according to preset %s)!"%(preset), color="INFO", styles=["bold"])
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             os.makedirs(name=path+out_folder,exist_ok=True)
             files = os.listdir(path+out_folder)

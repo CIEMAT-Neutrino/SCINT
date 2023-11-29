@@ -1,4 +1,3 @@
-
 styles = ["CIEMAT_style"]
 import importlib.util
 try: importlib.util.find_spec("dunestyle.matplotlib"); styles.append("DUNE_style")

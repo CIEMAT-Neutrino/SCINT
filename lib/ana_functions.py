@@ -5,6 +5,8 @@
 import numba
 import numpy as np
 from itertools import product
+from rich      import print as print
+
 # Import from other libraries
 from .io_functions import print_colored, print_keys, check_key
 
@@ -21,7 +23,7 @@ def compute_ana_wvfs(my_runs, info, debug = False):
     \n**- debug**:   boolean to print debug messages.
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
-        if check_key(my_runs[run][ch],"RawADC") == False:
+        if check_key(my_runs[run][ch],"RawADC") == False: 
             print_colored("ERROR: RawADC not found!", "ERROR")
             exit()
         if check_key(my_runs[run][ch],"Raw"+info["PED_KEY"][0]) == False:
@@ -134,13 +136,12 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 500, debug = False)
         ped_lim = sliding
         print_colored("WARNING: Pedestal window is smaller than sliding window. Setting ped_lim = %s"%sliding, "WARNING")
     
-    slides=int(ped_lim/sliding);
-    nwvfs=ADC.shape[0]
-    aux=np.zeros((nwvfs,slides))
+    slides = int(ped_lim/sliding);
+    nwvfs  = ADC.shape[0]
+    aux    = np.zeros((nwvfs,slides))
 
     for i in range(slides): aux[:,i]=np.std(ADC[:,(i*sliding):((i+1)*sliding)],axis=1)
-    try:
-        start_window = np.argmin(aux,axis=1)*sliding
+    try: start_window = np.argmin(aux,axis=1)*sliding
     except ValueError:
         print_colored("ERROR: There is a problem with the pedestal computation. Check the data!", "ERROR")
         start_window = np.zeros(nwvfs)
@@ -173,10 +174,9 @@ def shift_ADCs(ADC, shift, debug = False):
     \n**- shift**: array containing the shift values.
     \n**- debug**: boolean to print debug messages.
     '''
-    N_wvfs=ADC.shape[0]
-    aux_ADC=np.zeros(ADC.shape)
+    N_wvfs  = ADC.shape[0]
+    aux_ADC = np.zeros(ADC.shape)
     for i in range(N_wvfs): aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
-    # print("ADCs have been shifted")
     return aux_ADC
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
@@ -234,10 +234,8 @@ def get_ADC_key(my_runs, key, debug = False):
                 if found_duplicate > 1:
                     print_colored("ERROR: Found more than one ADC key! Please check load preset.", "ERROR")
                     exit()
-        if found_duplicate == 0:
-            label = ""
-            print_colored("WARNING: No ADC branch found!", "WARNING")
-        if debug: print_colored("--> Returning key: '%s' and label: '%s'!!!"%(key,label), "SUCCESS")
+        if found_duplicate == 0: print_colored("WARNING: No ADC branch found!", "WARNING"); label = ""
+        if debug:                print_colored("--> Returning key: '%s' and label: '%s'!!!"%(key,label), "SUCCESS")
 
     else:
         label = key.split("ADC")[0]
@@ -256,7 +254,7 @@ def get_wvf_label(my_runs, key, label, debug = False):
     '''
     if key == "" and label == "":
         found_key, found_label = get_ADC_key(my_runs, key, debug = debug)
-        out_key = found_key
+        out_key   = found_key
         out_label = found_label
 
     elif key == "" and label != "":
@@ -301,7 +299,6 @@ def generate_cut_array(my_runs, ref = "", debug = False):
     \n**- debug**:   boolean to print debug messages
     '''
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):    
-        # if debug: print_colored("Keys in my_run before generating cut array: " +str(my_runs[run][ch].keys()), "DEBUG")
         try:
             if debug: print("Check cut array ref: ",my_runs[run][ch][ref])
             my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]),dtype=bool)
@@ -320,8 +317,6 @@ def generate_cut_array(my_runs, ref = "", debug = False):
                 except KeyError:
                     if debug: print_colored("Key "+key+" does not exist", "DEBUG")
                     pass
-        
-        # if debug: print_colored("Keys in my_run after generating cut array: "+str(my_runs[run][ch].keys()), "DEBUG")
     return my_runs
 
 def get_units(my_runs, debug = False):

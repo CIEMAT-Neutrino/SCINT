@@ -9,6 +9,8 @@ from itertools                import product
 from scipy.signal             import find_peaks
 from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
+from rich                     import print as print
+
 
 # Import from other libraries
 from .io_functions  import print_colored, check_key
@@ -43,7 +45,7 @@ def cut_df(my_runs, cut_dict={}, debug=False):
     This function cuts the data using a dictionary with the cuts. The dictionary must be in the following format:
     cut_dict = {(key, logic, value, inclusive): channels}
     '''
-    print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
+    print_colored("---- LET'S CUT! ----", color = "SUCCESS",styles=["bold"])
     for run in (np.asarray(my_runs["NRun"]).astype(int)):
         my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
         my_runs_df = pd.DataFrame(my_runs[run]).T
@@ -74,7 +76,7 @@ def cut_df(my_runs, cut_dict={}, debug=False):
             print_cut_info(my_cuts, stage="final")
             
         for loaded_ch in my_runs["NChannel"]: my_runs[run][loaded_ch]["MyCuts"] = my_cuts
-    print_colored("---- DONE CUT! ----\n", color = "SUCCESS", bold=True)
+    print_colored("---- DONE CUT! ----\n", color = "SUCCESS",styles=["bold"])
 
 def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_chs = False, debug = False):
     """
@@ -89,7 +91,7 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
     \nExample: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
     """
 
-    print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
+    print_colored("---- LET'S CUT! ----", color = "SUCCESS",styles=["bold"])
     if chs_cut == []: chs_cut = my_runs["NChannel"]
     idx_list = []
     initial_evts = 0
@@ -149,7 +151,7 @@ def cut_ped_std(my_runs, n_std = 2, chs_cut = [], apply_all_chs = False, debug=F
     \n- apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
     '''
 
-    print_colored("---- LET'S CUT! ----", color = "SUCCESS", bold=True)
+    print_colored("---- LET'S CUT! ----", color = "SUCCESS",styles=["bold"])
     if chs_cut == []: chs_cut = my_runs["NChannel"]
     idx_list = []
     initial_evts = 0
@@ -207,7 +209,7 @@ def cut_lin_rel(my_runs, keys, compare = "NONE", percentile = [0.1,99.9]):
     \n- percentile: the percentile used to reject outliers in the histogram
     '''
 
-    print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
+    print_colored("---- LET'S CUT! ----", color = "cyan",styles=["bold"])
     counter = 0
     fig, ax = vis_two_var_hist(my_runs, keys, compare, percentile, OPT = {"SHOW": False})
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -271,7 +273,7 @@ def cut_peak_finder(my_runs, number_peaks, wdth = 4, prom = 0.01, dist = 30):
     \nWARNING! Maybe the values of width, prominence and distance may be changed.
     """
     
-    print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
+    print_colored("---- LET'S CUT! ----", color = "cyan",styles=["bold"])
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             print("...Running generate_cut_array...")
@@ -303,7 +305,7 @@ def cut_min_max_sim(my_runs, keys, limits, debug = False):
     \nExample: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
     '''
 
-    print_colored("---- LET'S CUT! ----", color = "cyan", bold=True)
+    print_colored("---- LET'S CUT! ----", color = "cyan",styles=["bold"])
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs); print("...Running generate_cut_array...")
             
@@ -323,4 +325,4 @@ def cut_min_max_sim(my_runs, keys, limits, debug = False):
                 print("Final result is", my_runs[run][ch]["MyCuts"][i])
 
         print("Nº cutted events: ", len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]))
-    if debug == True: print_colored("---- END OF CUTS ----", color = "cyan", bold=True)
+    if debug == True: print_colored("---- END OF CUTS ----", color = "cyan",styles=["bold"])

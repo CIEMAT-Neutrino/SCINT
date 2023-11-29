@@ -1,6 +1,8 @@
-import sys, inquirer, os
-import numpy as np
-from .io_functions import print_colored, check_key, read_input_file, cuts_info2dict
+import sys, inquirer, os, yaml
+import numpy   as np
+from rich      import print as print
+
+from .io_functions import print_colored, check_key, read_input_file, read_yaml_file, cuts_info2dict
 
 def get_flag_dict():
     '''
@@ -35,8 +37,8 @@ def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = 
             if arg == "-h" or arg == "--help":
                 for flag in flag_dict:
                     print_macro_info(macro)
-                    print_colored("Usage: python3 %s.py -i config_file *--flags"%macro,color="white",bold=True)
-                    print_colored("Available Flags:","INFO",bold=True)
+                    print_colored("Usage: python3 %s.py -i config_file *--flags"%macro,color="white",styles=["bold"])
+                    print_colored("Available Flags:","INFO",styles=["bold"])
                     for flag in flag_dict:
                         print_colored("%s: %s"%(flag[0],flag_dict[flag]),"INFO")
                     exit()
@@ -83,10 +85,7 @@ def update_user_input(user_input, new_input_list, info, debug=False):
             else:
                 new_user_input["filter"] = apply_cuts(user_input, info, debug=debug)
                 print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
-        else:
-            # print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
-            pass
-            # if debug: print("Using %s from user input"%key_label)
+        else: pass
     return new_user_input, info
 
 def select_input_file(user_input, debug=False):
@@ -185,62 +184,18 @@ def apply_cuts(user_input, info, debug=False):
             if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
             return cut_dict
 
-# Function to read and print the content of a text file
-def read_and_print_text_file(filename):
-    try:
-        first_words = []
-        with open(filename, 'r') as file:
-            content = file.read()
-            for l,line in enumerate(content.strip().split()):
-                if ":" in line: first_words.append(line)
-            print_colored("\nCurrent visualization parameters:","INFO")
-            print(content)
-            print("\n")
-        return content, first_words
-    except FileNotFoundError: print_colored(f"The file '{filename}' does not exist.","ERROR"); return None
-
-# Function to update a specific line in the text content
-def update_line(filename, content, first_words, line_label, new_text, debug = False):
-    read_lines  = content.split('\n')
-    line_number = np.where(np.asarray(first_words) == line_label)[0][0]
-    new_lines   = read_lines
-    new_lines[line_number] = line_label + " " + new_text
-    save_lines = [i + j for i,j in  zip(new_lines,["\n"]*int(len(new_lines)-1)+[""])]
-
-    with open(filename, 'w') as file:
-        for line in save_lines: file.write(line)
-    file.close()
-    # print("UPDATED",save_lines)
-    if debug: print_colored("Content has been updated and saved to '%s'."%filename, "DEBUG")
-
-    return save_lines
-
-def opt_selector(filename = "VisConfig.txt", debug = False):
-    content, first_words = read_and_print_text_file(filename)
-    # if content:
+def opt_selector(filename = "VisConfig", debug = False):
+    my_opt = read_yaml_file(filename, path="./", debug = debug)
+    print(my_opt)
     q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
     change_line =  inquirer.prompt(q)["change"].strip().lower()
     if change_line in ["yes","y","true","1"]:
-        q = [ inquirer.Checkbox("lines", message="Choose the lines to change", choices=first_words) ]
+        q = [ inquirer.Checkbox("lines", message="Choose the lines to change", choices=my_opt.keys()) ]
         line_label =  inquirer.prompt(q)["lines"]
         for line in line_label:
             new_text = input(f"Enter the new text for line {line} ")
-            updated_content = update_line(filename, content, first_words, line, new_text, debug = debug)
-        my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in updated_content}
-
-    else: my_opt = {j.split(':')[0]:j.split(':')[1].strip() for j in content.split('\n')}
-    
-    my_opt = read_input_file(filename.split(".txt")[0],path="",
-        BOOLEAN=["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","SHOW_PARAM","CHARGEDICT","PEAK_FINDER","SAME_PLOT","LEGEND","SHOW","TERMINAL_MODE","PRINT_KEYS","SCINT_FIT","STATS"],
-        STRINGS=["SHOW_AVE","CHARGE_KEY","COMPARE","FIT","STYLE"],
-        NUMBERS=["CUTTED_WVF","ACCURACY"],
-        DOUBLES=["THRESHOLD","WIDTH","PROMINENCE"],debug=False)
-    # Reformat the dict to select the first element of the list of each entry
-    for key in my_opt:
-        try: my_opt[key] = my_opt[key][0]
-        except IndexError: pass
-
-    if debug:
-        print_colored("\nUsing visualization options:","INFO")
-        print(my_opt)
+            if line in ["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","CHARGEDICT","PEAK_FINDER","LEGEND","SHOW_PARAM","SHOW","TERMINAL_MODE","PRINT_KEYS","SCINT_FIT"]:
+                new_text = new_text.lower() in ['true', '1', 't', 'y', 'yes']
+            my_opt[line] = new_text
+        with open('VisConfig.yml', 'w') as outfile: yaml.safe_dump(my_opt, outfile,default_flow_style=False,sort_keys=False)
     return my_opt

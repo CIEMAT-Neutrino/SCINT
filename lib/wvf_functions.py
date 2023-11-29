@@ -1,6 +1,8 @@
 import numpy             as np
 import matplotlib.pyplot as plt
 from itertools import product
+from rich      import print as print
+
 # Imports from other libraries
 from .io_functions  import print_colored, check_key
 from .ana_functions import generate_cut_array, get_units, get_wvf_label, shift_ADCs, compute_ana_wvfs
