@@ -239,7 +239,7 @@ def peak_valley_finder(x, y, params):
     y = y/max_y
 
     peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
-    valley_idx, _ = find_peaks(-y, height = [-1, -thresh], width = wdth, prominence = prom)
+    valley_idx, _ = find_peaks(1-y, height = thresh, width = wdth, prominence = prom)
     print("Peaks found at: ", peak_idx)
     print("Valleys found at: ", valley_idx)
 
