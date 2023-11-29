@@ -1,0 +1,25 @@
+MICRO_SEC: true
+NORM: false
+LOGX: false
+LOGY: false
+LOGZ: false
+CHARGE_KEY: ChargeAveRange
+CHARGEDICT: false
+PEAK_FINDER: false
+CUTTED_WVF: 0
+LEGEND: true
+THRESHOLD: 0.1
+WIDTH: 5
+PROMINENCE: 0.01
+ACCURACY: 75
+# ACCURACY: 450
+SHOW_AVE: AveWvf
+SHOW_PARAM: true
+SHOW: true
+COMPARE: CHANNELS
+TERMINAL_MODE: true
+PRINT_KEYS: false
+SCINT_FIT: true
+FIT: gaussian
+STYLE: CIEMAT_style
+NAME: VisConfig

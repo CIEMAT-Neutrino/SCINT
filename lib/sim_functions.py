@@ -1,4 +1,5 @@
 import numpy as np
+from rich    import print as print
 
 # Imports from other libraries
 from .io_functions import print_colored

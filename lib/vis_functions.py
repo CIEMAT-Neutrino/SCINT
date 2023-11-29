@@ -223,7 +223,7 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
                     except KeyError: print_colored("PreTrigger min/max not found!", color="ERROR")
                     try: print("- PreTrigger limit:\t{:.2E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PedLim"]))
                     except KeyError: print_colored("PreTrigger time limit not found!", color="ERROR")
-                    print("\n--- Pedestal from SlidingWindow Algo. ---")
+                    print("\n--- Pedestal from SlidingWindow Algorithm ---")
                     try: print("- S. Pedestal mean:\t{:.2E}".format(my_run[run][ch_list[j]][label+"PedMean"][idx]))
                     except KeyError: print_colored("Pedestal mean not found!", color="ERROR")
                     try: print("- S. Pedestal std:\t{:.4f}".format(my_run[run][ch_list[j]][label+"PedSTD"][idx]))

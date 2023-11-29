@@ -11,51 +11,23 @@ from scipy.signal   import find_peaks
 from scipy.special  import erf
 from scipy.stats    import poisson
 from math           import factorial as fact
+from rich           import print as print
+
+from lmfit import models
+from iminuit import Minuit, cost
+from numba_stats import norm, t
+from jacobi import propagate
 
 #Imports from other libraries
 from .io_functions  import check_key, print_colored
+from .ana_functions import generate_cut_array, get_units
 from .wvf_functions import find_amp_decrease
 
 np.seterr(divide = 'ignore') 
 
-# THIS LIBRARY NEED MIMO PORQUE HAY COSAS REDUNDAANTES QUE SE PUEDEN UNIFICAR
-def fit_gaussians(x, y, *p0):
-    assert x.shape == y.shape, "Input arrays must have the same shape."
-    popt, pcov = curve_fit(gaussian_train, x,y, p0=p0[0])
-    fit_y=gaussian_train(x,*popt)
-    chi_squared = np.sum((y[abs(fit_y)>0.1] - fit_y[abs(fit_y)>0.1]) ** 2 / fit_y[abs(fit_y)>0.1]) / (y.size - len(popt))
-    return popt,fit_y, chi_squared
-
-##Binomial+Poisson distribution
-def B(i,k,debug=False):
-    '''
-    \nFactorial factor of F
-    '''
-    if (i==0) & (k==0):return 1;
-    if (i==0) & (k>0): return 0;
-    else:              return ( fact(k-1)*fact(k) / (fact(i-1)*fact(i)*fact(k-i)) )
-
-def F(K,p,L,debug=False):
-    '''
-    \nComputes prob of the kth point in a convoluted poisson+binomial distribution,.
-    \nL is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
-    '''
-
-    aux_sum=0
-    if debug: print(K)
-    for i in range(K+1): aux_sum+=B(i,K)*((L *(1 - p))**i)  *  (p**(K - i)) 
-    return np.exp(-L)*aux_sum/fact(K);
-
-def PoissonPlusBinomial(x,p,L,debug=False):
-    N   = len(x)
-    aux = np.zeros(shape=N)
-    for i in range(N):
-        if debug: print(x,i,x[i])
-        aux[i] = F(int(x[i]),p,L);
-    return aux/sum(aux);
 
 #===========================================================================#
-#********************** TH FUNCTIONS TO USE ********************************#
+#************************** THEORETICAL FUNCTIONS **************************#
 #===========================================================================#
 def chi_squared(x,y,popt):
     fit_y = np.sum([gaussian(x, popt[j], popt[j+1], popt[j+2]) for j in range(0, len(popt), 3)])
@@ -116,11 +88,79 @@ def fit_dec_gauss(f, fc, n):
     y = np.log10(dec_gauss(f, fc, n)); y[0] = 0
     return y
 
+
+def lmfit_models(function):
+    if function == "gaussian":    return models.GaussianModel()
+    if function == "linear":      return models.LinearModel()
+    if function == "lorentzian":  return models.LorentzianModel()
+    if function == "exponential": return models.ExponentialModel()
+    if function == "powerlaw":    return models.PowerLawModel()
+
+
+def fit_selector(xdata,ydata,function,min_method="LSQ",debug=True):
+    # Lmfit for initial parameters
+    # model  = lmfit_models(function)
+    # params = model.guess(ydata, x=xdata)
+    # result = model.fit  (ydata, params, x=xdata)
+    # print(f'Chi-square = {result.chisqr:.4f}, Reduced Chi-square = {result.redchi:.4f}')
+    
+    if debug: print_colored("Default fit method: Least Squares", "WARNING")
+    function = globals()[function]
+    c = cost.LeastSquares(xdata, ydata, np.sqrt(ydata), function)
+    m = Minuit(c,*(np.mean(xdata),np.max(ydata),np.std(xdata)/2)) #mu,A,sigma
+    m.migrad()  # find minimum
+    m.hesse()
+    if debug:
+        print_colored("Fitting with Minuit", "INFO", styles=["bold"])
+        print(m.hesse())
+
+ 
+    y, ycov = propagate(lambda p: function(xdata,  *p), m.values, m.covariance)
+    yerr_prop = np.diag(ycov) ** 0.5
+
+    return m, y, yerr_prop
+
+
+# --------------------------------------------------------------------------- #
+# THIS LIBRARY NEED MIMO PORQUE HAY COSAS REDUNDAANTES QUE SE PUEDEN UNIFICAR
+def fit_gaussians(x, y, *p0):
+    assert x.shape == y.shape, "Input arrays must have the same shape."
+    popt, pcov = curve_fit(gaussian_train, x,y, p0=p0[0])
+    fit_y=gaussian_train(x,*popt)
+    chi_squared = np.sum((y[abs(fit_y)>0.1] - fit_y[abs(fit_y)>0.1]) ** 2 / fit_y[abs(fit_y)>0.1]) / (y.size - len(popt))
+    return popt,fit_y, chi_squared
+
+##Binomial+Poisson distribution
+def B(i,k,debug=False):
+    '''
+    \nFactorial factor of F
+    '''
+    if (i==0) & (k==0):return 1;
+    if (i==0) & (k>0): return 0;
+    else:              return ( fact(k-1)*fact(k) / (fact(i-1)*fact(i)*fact(k-i)) )
+
+def F(K,p,L,debug=False):
+    '''
+    \nComputes prob of the kth point in a convoluted poisson+binomial distribution,.
+    \nL is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
+    '''
+
+    aux_sum=0
+    if debug: print(K)
+    for i in range(K+1): aux_sum+=B(i,K)*((L *(1 - p))**i)  *  (p**(K - i)) 
+    return np.exp(-L)*aux_sum/fact(K);
+
+def PoissonPlusBinomial(x,p,L,debug=False):
+    N   = len(x)
+    aux = np.zeros(shape=N)
+    for i in range(N):
+        if debug: print(x,i,x[i])
+        aux[i] = F(int(x[i]),p,L);
+    return aux/sum(aux);
+
 #===========================================================================#
 #*********************** FITTING FUNCTIONS *********************************#
 #===========================================================================#
-
-
 def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit=[0]):
     '''
     \nThis function fits the histogram, to a gaussians, which has been previoulsy visualized with: 

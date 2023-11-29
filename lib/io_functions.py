@@ -2,52 +2,45 @@
 # This library contains general functions used to read/write files, load/save data, etc.                                                         #
 #================================================================================================================================================#
 
-import os, gc, uproot, copy, stat
-import numpy as np
+import os, gc, uproot, copy, stat, yaml
+import numpy  as np
 import pandas as pd
 from itertools import product
+from rich      import print as print
 
-def color_list(color):
+def print_colored(string, color="white", styles=[]):
     '''
-    \nFunction which returns the color in ascii.
-    '''
-    colors = {
-              "DEBUG":   '\033[35m', #PURPLE
-              "ERROR":   '\033[91m', #RED
-              "SUCCESS": '\033[92m', #GREEN
-              "WARNING": '\033[93m', #YELLOW
-              "INFO":    '\033[94m', #BLUE
-              "blue":    '\033[94m', #BLUE
-              "magenta": '\033[95m',
-              "cyan":    '\033[96m',
-              "white":   '\033[97m',
-              "black":   '\033[98m',
-              "end":     '\033[0m'
-              }
-    
-    return colors[color]
+    Print a string in a specific styles
 
-def print_colored(string, color, bold=False, end = "\n"):
+    Args:
+        string (str):       string to be printed
+        color  (str):       color to be used (default: white)
+        styles (list(str)): list of styles to be used (i.e bold, underline, etc)
     '''
-    \nPrint a string in a specific color.
-    '''  
-    
-    color = color_list(color)
-    if bold == False: output = color + str(string) + color_list("end")
-    if bold == True:  output = '\033[1m' + color + string + color_list("end")
-    
-    print(output, end = end)
-
-def print_dict(dictionary, debug=False):
-    '''
-    \nPrint the keys and values of a dictionary.
-    '''
-    
-    for key, value in dictionary.items(): print(str(key) + ": " + str(value))
+    colors = { "DEBUG": 'magenta', "ERROR": 'red', "SUCCESS": 'green', "WARNING": 'yellow', "INFO": 'cyan' }
+    if color in list(colors.keys()): color = colors[color]
+    for style in styles: color += f' {style}'
+    print(f'[{color}]{string}[/]')
 
 #===========================================================================#
 #************************** INPUT FILE *************************************#
 #===========================================================================#
+
+# TRYING TO USE YAML INSTEAD OF TXT
+def read_yaml_file(input,path = "../input/",debug = False):
+    '''
+    \nObtain the information stored in a .yml input file to load the runs and channels needed.
+    \n**VARIABLES**:
+    \n- input: name of the input file
+    \n- path:  path to the input file
+    \n- debug: if True, print debug messages
+    '''
+
+    if debug: print_colored("\nReading input file: "+str(input)+".yml\n", "DEBUG")
+    with open(str(path+input)+".yml", 'r') as file: data = yaml.safe_load(file)
+    data["NAME"] = input
+    return data
+
 def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "../input/",debug = False):
     '''
     \nObtain the information stored in a .txt input file to load the runs and channels needed.
@@ -70,7 +63,6 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
     for line in lines:
         for LABEL in DOUBLES: 
             if line.startswith(LABEL):
-                # if debug: print_colored(line, "DEBUG")
                 try:
                     info[LABEL] = []
                     numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
@@ -86,7 +78,6 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
 
         for LABEL in NUMBERS:
             if line.startswith(LABEL):
-                # if debug: print_colored(line, "DEBUG")
                 try:
                     info[LABEL] = []
                     numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
@@ -198,7 +189,7 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
             file.write(branch+": "+list_to_string(info[branch])+"\n")
 
 
-def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1], path = "../data/"):
+def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1]):
     '''
     \nGeneral function to write a txt file with the outputs obtained.
     \nThe file name is defined by the given "filename" variable + _chX. 
@@ -207,21 +198,20 @@ def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[]
     '''
 
     # Check if folder exists
-    folder_path  = info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
-    if not os.path.exists(path+folder_path): os.makedirs(name=path+folder_path,exist_ok=True)
+    folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
+    if not os.path.exists(folder_path): os.makedirs(name=folder_path,exist_ok=True)
     fitted_peaks = len(output)
     par_list = list(range(len(output[0])))
     for p in not_saved: par_list.remove(p) #removing parameters before saving in txt (height by default)
 
-    confirmation = input(color_list("magenta")+"\nConfirmation to save in"+path+folder_path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch+color_list("end"))
+    confirmation = input("\nConfirmation to save in "+folder_path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch)
     if "y" in confirmation:
         print("\n----------- Saving -----------")
+        if not os.path.exists(folder_path+filename+"_ch%i.txt"%ch): #HEADER#
+            os.makedirs(name=folder_path,exist_ok=True)             # Create the directory if it doesnt exist
+            with open(folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:  f.write("\t".join(header_list)+"\n") # Write the header
 
-        if not os.path.exists(path+folder_path+filename+"_ch%i.txt"%ch): #HEADER#
-            os.makedirs(name=path+folder_path,exist_ok=True)             # Create the directory if it doesnt exist
-            with open(path+folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:  f.write("\t".join(header_list)+"\n") # Write the header
-
-        with open(path+folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:
+        with open(folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:
             for i in np.arange(fitted_peaks):
                 if fitted_peaks != 1: aux_label = str(i)+"\t"
                 if fitted_peaks == 1: aux_label = ""
@@ -247,10 +237,10 @@ def binary2npy_express(in_file, header_lines=6, debug=False):
     try:    data = np.fromfile(in_file, dtype='H')               # Reading .dat file as uint16
     except: data = np.frombuffer(in_file.getbuffer(), dtype='H') # io.UnsupportedOperation: fileno --> when browsing file
     
-    header     = headers[:6]                             # Read first event header
-    NSamples   = int(header[0]/2-header_lines*2)         # Number of samples per event (as uint16)
-    Event_size = header_lines*2+NSamples                 # Number of uint16 per event
-    N_Events   = int(data.shape[0]/Event_size)           # Number of events in the file
+    header     = headers[:6]                     # Read first event header
+    NSamples   = int(header[0]/2-header_lines*2) # Number of samples per event (as uint16)
+    Event_size = header_lines*2+NSamples         # Number of uint16 per event
+    N_Events   = int(data.shape[0]/Event_size)   # Number of events in the file
 
     #reshape everything, delete unused header
     ADC        = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]              # Data reshaped as (N_Events,NSamples)
@@ -564,7 +554,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
                  
-            print_colored("\n....... Load npy runs %s & %s channels --> DONE! .......\n"%(runs,channels), color="SUCCESS", bold=True)
+            print_colored("\n....... Load npy runs %s & %s channels --> DONE! .......\n"%(runs,channels), color="SUCCESS", styles=["bold"])
             del branch_list # Delete the branch list to avoid loading the same branches again
     return my_runs
 
@@ -585,7 +575,7 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
-            print_colored("\n--> Saving Computed Variables (according to preset %s)!"%(preset), color="INFO", bold=True)
+            print_colored("\n--> Saving Computed Variables (according to preset %s)!"%(preset), color="INFO", styles=["bold"])
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             os.makedirs(name=path+out_folder,exist_ok=True)
             files = os.listdir(path+out_folder)

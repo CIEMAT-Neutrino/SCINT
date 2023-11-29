@@ -8,16 +8,19 @@ import pandas            as pd
 from matplotlib.colors import LogNorm
 from matplotlib.cm     import viridis
 from itertools         import product
-# from scipy import stats as st
+from rich              import print as print
+
 
 # Import from other libraries
-from .io_functions  import check_key, print_colored, color_list, write_output_file
+from .io_functions  import check_key, print_colored, write_output_file
 from .ana_functions import generate_cut_array, get_units, get_wvf_label, compute_ana_wvfs
 from .fig_config    import figure_features, add_grid
 from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder
 from .vis_functions import vis_var_hist
+from .sty_functions import style_selector
 
-def vis_persistence(my_run, info, debug=False):
+
+def vis_persistence(my_run, info, OPT, debug=False):
     '''
     \nThis function plot the PERSISTENCE histogram of the given runs&ch.
     \nIt perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
@@ -27,7 +30,7 @@ def vis_persistence(my_run, info, debug=False):
     \nWARNING! flattening long arrays leads to MEMORY problems :/
     '''
 
-    figure_features()
+    style_selector(OPT)
     plt.ion()
     true_key, true_label = get_wvf_label(my_run, "", "", debug=debug)
     if true_key == "RawADC":
@@ -65,7 +68,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
       (b) SHOW: if True, it will show the calibration plot
     '''
 
-    figure_features()
+    style_selector(OPT)
     for run in my_runs["NRun"]:
         for ch in my_runs["NChannel"]:
             for key in keys:
@@ -289,11 +292,11 @@ def charge_fit(my_runs, keys, OPT={}):
             plt.ylim(ymin=1, ymax=1.2*max(counts))
 
         ## Repeat customized fit ##
-        confirmation = input(color_list("magenta")+"Are you happy with the fit? (y/n) "+color_list("end"))
+        confirmation = input("Are you happy with the fit? (y/n) ")
         if "n" in confirmation:
             print("\n--- Repeating the fit with input parameters (\u03BC \u00B1 \u03C3) \u03B5 [{:0.2f}, {:0.2f}] ---".format(x[0],x[-1]))
-            mean  = input(color_list("magenta")+"Introduce MEAN value for the fit: " +color_list("end"))
-            sigma = input(color_list("magenta")+"Introduce SIGMA value for the fit: "+color_list("end"))
+            mean  = input("Introduce MEAN value for the fit: " )
+            sigma = input("Introduce SIGMA value for the fit: ")
 
             x, popt, pcov, perr = gaussian_fit(counts, bins, bars,thresh,custom_fit=[float(mean),float(sigma)])
             ax_ch.plot(x, gaussian(x, *popt), label="")

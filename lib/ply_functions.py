@@ -5,6 +5,7 @@ import plotly.graph_objs    as go
 import plotly.offline       as pyoff
 import matplotlib.pyplot    as plt
 import ipywidgets           as widgets
+from rich                   import print as print
 
 from .io_functions import binary2npy_express
 

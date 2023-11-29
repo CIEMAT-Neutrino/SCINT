@@ -13,7 +13,6 @@ io_functions
 
    These functions are used to format the output of the code, for the moment they are helping us to print colored lines in the output to detect errors or warnings.
 
-.. autoclass:: lib.io_functions.color_list
 .. autoclass:: lib.io_functions.print_colored
 
 .. admonition:: **Input/Output files**
