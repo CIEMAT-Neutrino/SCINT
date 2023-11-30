@@ -12,14 +12,13 @@ from scipy.special  import erf
 from scipy.stats    import poisson
 from math           import factorial as fact
 from rich           import print as print
-
-from lmfit import models
-from iminuit import Minuit, cost
-from numba_stats import norm, t
-from jacobi import propagate
+from lmfit          import models
+from iminuit        import Minuit, cost
+from numba_stats    import norm, expon # uniform,truncexpon,poisson,qgaussian #https://github.com/HDembinski/numba-stats/tree/main/src/numba_stats
+from jacobi         import propagate
 
 #Imports from other libraries
-from .io_functions  import check_key, print_colored
+from .io_functions  import check_key, print_colored, read_yaml_file
 from .ana_functions import generate_cut_array, get_units
 from .wvf_functions import find_amp_decrease
 
@@ -55,6 +54,9 @@ def loggaussian_train(x, *params):
 
 def gaussian(x, center, height, width):
     return height * np.exp(-0.5*((x - center)/width)**2)
+
+def test_gaussian(x, center, width):
+    return np.exp(-0.5*((x - center)/width)**2)
 
 # def pmt_spe(x, height, center, width):
 #     return height * np.exp(-0.5*((x - center)/width)**2)
@@ -95,30 +97,50 @@ def lmfit_models(function):
     if function == "lorentzian":  return models.LorentzianModel()
     if function == "exponential": return models.ExponentialModel()
     if function == "powerlaw":    return models.PowerLawModel()
-
-
-def fit_selector(xdata,ydata,function,min_method="LSQ",debug=True):
     # Lmfit for initial parameters
     # model  = lmfit_models(function)
     # params = model.guess(ydata, x=xdata)
     # result = model.fit  (ydata, params, x=xdata)
     # print(f'Chi-square = {result.chisqr:.4f}, Reduced Chi-square = {result.redchi:.4f}')
+
+def fitting_functions(function,debug=False): 
+    if function == "norm_gaussian": return norm.pdf
+    if function == "exponential":   return expon.pdf
+    else: 
+        if debug: print_colored("Not configured, looking for a local defined function",color="WARNING")
+        try: function = globals()[function]; return function
+        except KeyError: print_colored("Function (%s) not found"%function, color="ERROR"); pass
+
+def initial_values(xdata,function,debug=False):
+
+    my_fits = read_yaml_file("FitConfig", path="./", debug=debug)
+    ini_fun = my_fits[function]
+    xdata_s = ', '.join(map(str, xdata)); xdata_s = "["+xdata_s+"]"
+    ini_val = [eval(f"{i}({xdata_s})") if isinstance(i, str) else i for i in ini_fun]
+    if "np.std" in ini_fun: 
+        std_idx = ini_fun.index("np.std");
+        ini_val[std_idx] = ini_val[std_idx]/2
+    if debug: print_colored("Initial values: " +str(ini_val), "DEBUG")
+    return ini_val
+
+def minuit_fit(xdata,function,debug=True):
+    '''
+    \nThis function performs a fit to the data, using the function specified in the input using MINUIT.
+    \nIt returns the parameters of the fit (if performed)
+    '''
     
-    if debug: print_colored("Default fit method: Least Squares", "WARNING")
-    function = globals()[function]
-    c = cost.LeastSquares(xdata, ydata, np.sqrt(ydata), function)
-    m = Minuit(c,*(np.mean(xdata),np.max(ydata),np.std(xdata)/2)) #mu,A,sigma
-    m.migrad()  # find minimum
-    m.hesse()
+    print_colored("DEFAULT MINUIT UNBINNED FIT (%s)"%function, "WARNING")
+    ini_val = initial_values(xdata,function,debug=debug)
+    function = fitting_functions(function) 
+    c = cost.UnbinnedNLL(xdata, function)
+    m = Minuit(c,*(ini_val))
+    m.migrad() # find minimum
+    m.hesse()  # accurate error estimates
     if debug:
         print_colored("Fitting with Minuit", "INFO", styles=["bold"])
         print(m.hesse())
 
- 
-    y, ycov = propagate(lambda p: function(xdata,  *p), m.values, m.covariance)
-    yerr_prop = np.diag(ycov) ** 0.5
-
-    return m, y, yerr_prop
+    return m
 
 
 # --------------------------------------------------------------------------- #

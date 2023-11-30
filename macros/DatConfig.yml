@@ -1,3 +1,4 @@
+PERCENTILE: [0.1,99.9]
 NORM: false
 CHARGE_KEY: ChargeAveRange
 CHARGEDICT: false
@@ -11,5 +12,5 @@ COMPARE: CHANNELS
 TERMINAL_MODE: true
 PRINT_KEYS: false
 SCINT_FIT: true
-FIT: gaussian
+FIT: norm_gaussian
 NAME: DatConfig
