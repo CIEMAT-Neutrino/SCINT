@@ -189,37 +189,50 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
             file.write(branch+": "+list_to_string(info[branch])+"\n")
 
 
-def write_output_file(run, ch, output, filename, info, header_list, extra_tab=[], not_saved=[1]):
+def write_output_file(run, ch, output, filename, info, header_list, write_mode = 'a+', not_saved = [2,3], debug = False):
     '''
     \nGeneral function to write a txt file with the outputs obtained.
     \nThe file name is defined by the given "filename" variable + _chX. 
     \nIf the file existed previously it appends the new fit values (it save the run for each introduced row)
     \nBy default we dont save the height of the fitted gaussian in the txt.
     '''
+    def remove_columns(flattened_data, columns_to_remove):
+        return [[item for j, item in enumerate(row) if j not in columns_to_remove] for row in flattened_data]
 
-    # Check if folder exists
+    def flatten_data_recursive(data):
+        flattened = []
+        for item in data:
+            if isinstance(item, list):
+                flattened.extend(flatten_data_recursive(item))
+            else:
+                flattened.append(item)
+        return flattened
+
+    def flatten_data(data):
+        return [flatten_data_recursive(row) for row in data]
+
     folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
     if not os.path.exists(folder_path): os.makedirs(name=folder_path,exist_ok=True)
-    fitted_peaks = len(output)
-    par_list = list(range(len(output[0])))
-    for p in not_saved: par_list.remove(p) #removing parameters before saving in txt (height by default)
-
+    
+    flat_data = flatten_data(output)
+    flat_data = remove_columns(flat_data,not_saved)
+    
     confirmation = input("\nConfirmation to save in "+folder_path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch)
     if "y" in confirmation:
         print("\n----------- Saving -----------")
         if not os.path.exists(folder_path+filename+"_ch%i.txt"%ch): #HEADER#
             os.makedirs(name=folder_path,exist_ok=True)             # Create the directory if it doesnt exist
-            with open(folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:  f.write("\t".join(header_list)+"\n") # Write the header
+            with open(folder_path+filename+"_ch%i.txt"%ch, '+a') as f:  f.write("\t".join(header_list)+"\n") # Write the header
 
-        with open(folder_path+filename+"_ch%i.txt"%ch, 'a+') as f:
-            for i in np.arange(fitted_peaks):
-                if fitted_peaks != 1: aux_label = str(i)+"\t"
-                if fitted_peaks == 1: aux_label = ""
-                f.write(str(int(run))+"\t"+info["OV_LABEL"][0]+"\t"+aux_label) #OVLABEL no funciona bien
-                for k in par_list[:len(par_list)-1]:                           #save all the parameter list except last element to include \n after it
-                    if any (k == t for t in extra_tab): f.write("\t")          # if k == 3: # for calibration format
-                    f.write(str(output[i][k][0]) +"\t" + str(output[i][k][1])+"\t")
-                f.write(str(output[i][-1][0]) +"\t" + str(output[i][-1][1])+"\n")
+        with open(folder_path+filename+"_ch%i.txt"%ch, write_mode) as f:
+            if write_mode in ['w']:
+                column_widths = [max(len(str(item)) for item in col) for col in zip(*flat_data)]
+                header_line = '\t'.join('{{:<{}}}'.format(width) for width in column_widths).format(*header_list) + '\n'
+                f.write(header_line)
+
+            for i,row in enumerate(flat_data):
+                data_line = '\t'.join('{{:<{}}}'.format(width) for width in column_widths).format(*map(str, row)) + '\n'
+                f.write(data_line)
 
 #===========================================================================#
 #************************* RAW TO NUMPY ************************************#

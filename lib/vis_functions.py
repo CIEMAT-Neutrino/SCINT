@@ -207,7 +207,7 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
                     except: pass
                     
                 if check_key(OPT, "SHOW_PARAM") == True and OPT["SHOW_PARAM"]:
-                    print_colored("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]), "white", bold=True)
+                    print_colored("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]), "white", styles=["bold"])
                     try: print("- Sampling:\t{:.0E}".format(sampling))
                     except KeyError: print_colored("Sampling not found!", color="ERROR")
                     try: print("- TimeStamp:\t{:.2E}".format(my_run[run][ch_list[j]]["TimeStamp"][idx]))
@@ -258,7 +258,7 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
-                if idx > len(my_run[run][ch_list[j]]["MyCuts"]): idx = len(my_run[run][ch_list[j]]["MyCuts"])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", bold=True)
+                if idx > len(my_run[run][ch_list[j]]["MyCuts"]): idx = len(my_run[run][ch_list[j]]["MyCuts"])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", styles=["bold"])
             elif tecla == "p":
                 fig.savefig('run{}_evt{}.png'.format(run,idx), dpi = 500)
                 idx = idx+1

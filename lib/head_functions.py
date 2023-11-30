@@ -1,4 +1,4 @@
-import sys, inquirer, os, yaml
+import sys, inquirer, os, yaml, ast
 import numpy   as np
 from rich      import print as print
 
@@ -189,13 +189,32 @@ def opt_selector(filename = "VisConfig", debug = False):
     print(my_opt)
     q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
     change_line =  inquirer.prompt(q)["change"].strip().lower()
+    update_opt = dict()
     if change_line in ["yes","y","true","1"]:
         q = [ inquirer.Checkbox("lines", message="Choose the lines to change", choices=my_opt.keys()) ]
         line_label =  inquirer.prompt(q)["lines"]
         for line in line_label:
             new_text = input(f"Enter the new text for line {line} ")
-            if line in ["MICRO_SEC","NORM","LOGX","LOGY","LOGZ","CHARGEDICT","PEAK_FINDER","LEGEND","SHOW_PARAM","SHOW","TERMINAL_MODE","PRINT_KEYS","SCINT_FIT"]:
-                new_text = new_text.lower() in ['true', '1', 't', 'y', 'yes']
-            my_opt[line] = new_text
-        with open('VisConfig.yml', 'w') as outfile: yaml.safe_dump(my_opt, outfile,default_flow_style=False,sort_keys=False)
+            update_opt[line] = new_text
+        update_yaml_file(f'./{filename}.yml',update_opt)
+    my_opt = read_yaml_file(filename, path="./", debug = debug)
     return my_opt
+
+def convert_str_to_type(value, debug = False):
+    try:
+        return ast.literal_eval(value)
+    except (ValueError, SyntaxError):
+        return value
+
+def update_yaml_file(file_path, new_data, debug = False):
+    try:
+        with open(file_path, 'r') as file:
+            existing_data = yaml.safe_load(file)
+        new_data = {key: convert_str_to_type(value) for key, value in new_data.items()}
+        existing_data.update(new_data)
+        with open(file_path, 'w') as file:
+            yaml.dump(existing_data, file, default_flow_style=False, sort_keys=False)
+        print(f"YAML file '{file_path}' successfully updated.")
+    
+    except Exception as e:
+        print(f"Error updating YAML file: {e}")

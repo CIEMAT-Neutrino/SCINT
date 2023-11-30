@@ -141,7 +141,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
 
 
                     try:
-                        my_runs[run][ch]["Gain"]         = popt[3]-abs(popt[0])
+                        my_runs[run][ch]["Gain"]         = popt[3] - abs(popt[0])
                         my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
                         my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
                     except IndexError:
@@ -193,8 +193,10 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
                 sn2 = (copy_cal[i+1][0][0]-copy_cal[i][0][0])/(np.sqrt(copy_cal[i][2][0]**2+copy_cal[i+1][2][0]**2))
                 dsn2 = sn2 * np.sqrt((dgain/gain)**2+((copy_cal[i][2][0]*copy_cal[i][2][1])/((copy_cal[i][2][0])**2+(copy_cal[i+1][2][0])**2))**2+((copy_cal[i+1][2][0]*copy_cal[i+1][2][1])/((copy_cal[i][2][0])**2+(copy_cal[i+1][2][0])**2))**2)
 
-            cal_parameters[i].append([gain, dgain]); 
-            cal_parameters[i].append([sn0, dsn0]);cal_parameters[i].append([sn1, dsn1]);cal_parameters[i].append([sn2, dsn2])
+            cal_parameters[i].append([gain, dgain]) 
+            cal_parameters[i].append([sn0, dsn0])
+            cal_parameters[i].append([sn1, dsn1])
+            cal_parameters[i].append([sn2, dsn2])
 
         fitted_peaks = len(cal_parameters)
         for i in np.arange(fitted_peaks): #three parameters fitted for each peak
@@ -207,7 +209,7 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
                     print("SN1    +- DSN1:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][5]])
                     print("SN2    +- DSN2:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][6]])
         
-        write_output_file(run, ch, cal_parameters, filename, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"], extra_tab=[3])
+        write_output_file(run, ch, cal_parameters, filename, info, write_mode = 'w', header_list=["MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
 
 def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
     gains = dict.fromkeys(channels) ; Dgain = dict.fromkeys(channels)
@@ -246,7 +248,7 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
     print("HEIGHT +- DHEIGHT:",       ['{:.2f}'.format(item) for item in charge_parameters[0][1]])
     print("SIGMA +- DSIGMA:",         ['{:.2f}'.format(item) for item in charge_parameters[0][2]])
     
-    write_output_file(run, ch, charge_parameters, filename, info, header_list=["RUN","MU","DMU","SIG","DSIG"])
+    write_output_file(run, ch, charge_parameters, filename, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG"])
 
 
 def charge_fit(my_runs, keys, OPT={}):
