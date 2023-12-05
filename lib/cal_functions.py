@@ -9,6 +9,8 @@ from matplotlib.colors import LogNorm
 from matplotlib.cm     import viridis
 from itertools         import product
 from rich              import print as print
+from rich.table        import Table
+from rich.console      import Console
 
 
 # Import from other libraries
@@ -200,15 +202,20 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
 
         fitted_peaks = len(cal_parameters)
         for i in np.arange(fitted_peaks): #three parameters fitted for each peak
-                    print("\nPeak:", i)
-                    print("MU     +- DMU:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][0]])
-                    print("HEIGHT +- DHEIGHT:",['{:.2E}'.format(item) for item in cal_parameters[i][1]])
-                    print("SIGMA  +- DSIGMA: ",['{:.2E}'.format(item) for item in cal_parameters[i][2]])
-                    print("GAIN   +- DGAIN:  ",['{:.2E}'.format(item) for item in cal_parameters[i][3]])
-                    print("SN0    +- DSN0:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][4]])
-                    print("SN1    +- DSN1:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][5]])
-                    print("SN2    +- DSN2:\t  ",['{:.2E}'.format(item) for item in cal_parameters[i][6]])
-        
+            console = Console()
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Parameter")
+            table.add_column("Value")
+            table.add_column("Error")
+
+            parameters = ["MU", "HEIGHT", "SIGMA", "GAIN", "SN0", "SN1", "SN2"]
+            for j, parameter in enumerate(parameters):
+                value, error = '{:.2E}'.format(cal_parameters[i][j][0]), '{:.2E}'.format(cal_parameters[i][j][1])
+                table.add_row(parameter, value, error)
+
+            console.print("\nPeak:", i)
+            console.print(table)
+
         write_output_file(run, ch, cal_parameters, filename, info, write_mode = 'w', header_list=["MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
 
 def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
