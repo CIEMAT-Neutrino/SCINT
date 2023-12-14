@@ -459,8 +459,8 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
                     while x1 == -1e6:
                         try:    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
                         except: x1 = -1e6 
-                    counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", range=(x1,x2), density=density) # , zorder = 2 f
-                else:counts, bins, bars = ax.hist(data,binning, label=label, histtype="step", density=density) # , zorder = 2 f
+                    counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", align="left", range=(x1,x2), density=density) # , zorder = 2 f
+                else:counts, bins, bars = ax.hist(data,binning, label=label, histtype="step", align="left", density=density) # , zorder = 2 f
                     
                 label = label.replace(" - " + k,"")
                 all_counts.append(counts)
@@ -517,10 +517,11 @@ def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = Fals
 
     style_selector(OPT)
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
-
+    if type(ch_loaded) != list:
+        try: ch_loaded = ch_loaded.tolist()
+        except: print_colored("Imported channels as list!", "INFO")
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
         q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
