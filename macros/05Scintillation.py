@@ -1,7 +1,7 @@
 import sys; sys.path.insert(0, '../'); from lib import *
 
 default_dict = {"runs":["ALPHA_RUNS"],"channels":["CHAN_TOTAL"]}
-user_input, info = initialize_macro("05Scintillation",["input_file","load_preset","variables","filter","debug"],default_dict=default_dict, debug=True)
+user_input, info = initialize_macro("05Scintillation",["input_file","preset_load","variables","filter","debug"],default_dict=default_dict, debug=True)
 dat_config = read_yaml_file("DatConfig", path="./", debug=user_input["debug"])
 OPT = opt_selector(debug=user_input["debug"])
 ## 05Scintillation

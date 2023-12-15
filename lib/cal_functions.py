@@ -88,7 +88,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                     
                     OPT["SHOW"] == False
                     OPT["NORM"] == True
-                    counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT)
+                    counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT, percentile = [1, 99])
                     counts = counts[0]; bins = bins[0]; bars = bars[0]
 
                     ## New Figure with the fit ##

@@ -1,8 +1,8 @@
 import sys; sys.path.insert(0, '../'); from lib import *
-user_input, info = initialize_macro("06Deconvolution",["input_file","load_preset","save_preset","runs","channels","debug"])
+user_input, info = initialize_macro("06Deconvolution",["input_file","preset_load","preset_save","runs","channels","debug"])
 # info = read_input_file(user_input["input_file"][0])
 # 06Deconvolution
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int), np.asarray(user_input["channels"]).astype(int), preset=user_input["load_preset"][0], info=info, compressed=True, debug=user_input["debug"])  # Select runs to be deconvolved (tipichaly alpha)     
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(int), np.asarray(user_input["channels"]).astype(int), preset=user_input["preset_load"][0], info=info, compressed=True, debug=user_input["debug"])  # Select runs to be deconvolved (tipichaly alpha)     
 keys = ["AnaAveWvfSignal","AnaAveWvfSER","AveWvf"] # keys contains the 3 labels required for deconvolution keys[0] = raw, keys[1] = det_response and keys[2] = deconvolution 
 
 OPT = {
