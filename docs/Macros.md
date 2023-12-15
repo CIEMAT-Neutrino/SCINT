@@ -361,7 +361,7 @@ SCINT_FIT: True            # True if you want to fit the scintillation peaks
 We can visualize the individual events from the moment we pre-process the waveforms and obtain RawInfo.
 
 ```python
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int),preset=user_input["load_preset"][0],info=info,compressed=True) # preset could be RAW or ANA
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int),preset=user_input["preset_load"][0],info=info,compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
 vis_npy(my_runs, user_input["key"],OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
 ```
@@ -427,7 +427,7 @@ python3 0ZVisHist2D.py -r 1 -c 0,6
 
 ### 0WVisWvf
 ```python
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=user_input["load_preset"][0], compressed=True, debug=user_input["debug"])
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
 vis_compare_wvf(my_runs, user_input["variables"], OPT=OPT)
 ```
 
@@ -443,7 +443,7 @@ python3 0WVisWvf.py -r 1 -c 0,6
 
 ### 0VVisPersistence
 ```python
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=user_input["load_preset"][0], compressed=True, debug=user_input["debug"])
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
 vis_persistence(my_runs)
 ```
 

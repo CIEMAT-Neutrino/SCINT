@@ -10,7 +10,7 @@ from matplotlib.cm               import viridis
 from itertools                   import product
 from scipy.signal                import find_peaks
 from scipy.ndimage.interpolation import shift
-
+from rich                        import print as rprint
 # Imports from other libraries
 from .io_functions  import check_key,print_colored
 from .fig_config    import figure_features, add_grid
@@ -18,7 +18,7 @@ from .ana_functions import get_wvf_label,generate_cut_array,get_units
 from .fit_functions import fit_wvfs
 from .sty_functions import style_selector
 
-def vis_npy(my_run, info, keys, OPT = {}, debug = False):
+def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
     '''
     \nThis function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
     \nWe can interact with the plot and pass through the events freely (go back, jump to a specific event...)
@@ -270,7 +270,7 @@ def vis_npy(my_run, info, keys, OPT = {}, debug = False):
         except: axs.clear()
         plt.close()
 
-def vis_compare_wvf(my_run, keys, OPT = {}, debug = False):
+def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
     '''
     \nThis function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
     \n**VARIABLES:**
@@ -365,7 +365,7 @@ def vis_compare_wvf(my_run, keys, OPT = {}, debug = False):
         except: axs.clear()
         plt.close()   
 
-def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False, debug = False):
+def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False, save = False, debug = False):
     '''
     \nThis function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
     \nOutliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
@@ -481,11 +481,14 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
             plt.show()
             if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
                 while not plt.waitforbuttonpress(-1): pass
-                plt.close()
+        if save: 
+            fig.savefig('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join(key)), dpi = 500)
+            if debug: rprint("Saved figure as: run{}_ch{}_{}_Hist.png".format(run,ch,'_'.join(key)))
+        plt.close()
 
     return all_counts, all_bins, all_bars
 
-def print_stats(my_run, run, ch, ax, data, debug = False):
+def print_stats(my_run, run, ch, ax, data, save = False, debug = False):
     '''
     \nThis function prints the statistics of the data.
     '''
@@ -503,7 +506,7 @@ def print_stats(my_run, run, ch, ax, data, debug = False):
     ax.axvline(np.mean(data)+np.std(data), c="k", ls="--", alpha=0.5)
     ax.axvline(np.mean(data)-np.std(data), c="k", ls="--", alpha=0.5)
 
-def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = False, OPT={}, debug = False):
+def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range = False, OPT={}, save = False, debug = False):
     '''
     \nThis function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. 
     \nIt plots values below and above the indicated percetiles, but values are not removed from data.
@@ -595,6 +598,11 @@ def vis_two_var_hist(my_run, keys, percentile = [0.1, 99.9], select_range = Fals
             figures_list.append(fig)
             axes_list.append(ax)
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.yscale('log'); 
+            if save == True: 
+                fig.savefig('{}_{}_vs_{}.png'.format(title,keys[0],keys[1]), dpi = 500)
+                if debug: rprint("Saved figure as: {}_{}_vs_{}.png".format(title,keys[0],keys[1]))
+            # Save to specific folder determined by OPT
+
             if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True: 
                 plt.ion()
                 plt.show()

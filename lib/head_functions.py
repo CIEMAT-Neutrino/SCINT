@@ -11,13 +11,14 @@ def get_flag_dict():
     \n- **flag_dict** (*dict*) - Dictionary with the available flags for the macros.
     '''
     flag_dict = {("-i","--input_file"):"input_file",
-        ("-l","--load_preset"):"load_preset \t(RAW, ANA, etc.)",
-        ("-s","--save_preset"): "save_preset \t(RAW, ANA, etc.)",
-        ("-k","--key"):"key \t(AnaADC, RawADC, etc.)",
-        ("-v","--variables"): "variables \t(ChargeAveRange, ChargeRange0, etc.)",
-        ("-r","--runs"):"runs \t(optional)",
-        ("-c","--channels"):"channels \t(optional)",
-        ("-f","--filter"): "filter \t(optional)",
+        ("-pl","--preset_load"): "preset_load \t(RAW, ANA, etc.)",
+        ("-ps","--preset_save"): "preset_save \t(RAW, ANA, etc.)",
+        ("-k", "--key"):"key \t(AnaADC, RawADC, etc.)",
+        ("-v", "--variables"): "variables \t(ChargeAveRange, ChargeRange0, etc.)",
+        ("-r", "--runs"):"runs \t(optional)",
+        ("-c", "--channels"):"channels \t(optional)",
+        ("-f", "--filter"): "filter \t(optional)",
+        ("-s", "--save"):"save \t(optional)",
         ("-d","--debug"):"debug \t(True/False)"}
     return flag_dict
 
@@ -57,6 +58,7 @@ def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = 
     
     info = read_input_file(user_input["input_file"][0], debug = debug)
     user_input, info = update_user_input(user_input, input_list, info, debug = debug)
+    user_input["save"] = user_input["save"][0].lower() in ['true', '1', 't', 'y', 'yes']
     user_input["debug"] = user_input["debug"][0].lower() in ['true', '1', 't', 'y', 'yes']
     user_input = use_default_input(user_input, default_dict, info, debug = debug)
 
@@ -74,8 +76,8 @@ def update_user_input(user_input, new_input_list, info, debug=False):
     '''
 
     new_user_input = user_input.copy()
-    defaults = {"load_preset":"ANA","save_preset":"ANA","key":"AnaADC","variables":"AnaPeakAmp","runs":"1","channels":"0","debug":"y"}
-    flags = {"load_preset":"-l","save_preset":"-s","key":"-k","variables":"-v","runs":"-r","channels":"-c","debug":"-d"}
+    defaults = {"preset_load":"ANA","preset_save":"ANA","key":"AnaADC","variables":"AnaPeakAmp","runs":"1","channels":"0","save":"n","debug":"y"}
+    flags = {"preset_load":"-pl","preset_save":"-ps","key":"-k","variables":"-v","runs":"-r","channels":"-c","save":"-s","debug":"-d"}
     for key_label in new_input_list:
         if check_key(user_input, key_label) == False:
             if key_label != "filter":
