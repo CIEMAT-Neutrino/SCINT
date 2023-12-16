@@ -58,7 +58,8 @@ def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = 
     
     info = read_input_file(user_input["input_file"][0], debug = debug)
     user_input, info = update_user_input(user_input, input_list, info, debug = debug)
-    user_input["save"] = user_input["save"][0].lower() in ['true', '1', 't', 'y', 'yes']
+    try: user_input["save"] = user_input["save"][0].lower() in ['true', '1', 't', 'y', 'yes']
+    except KeyError: print("WARNING: No save flag provided --> Using False as default.")
     user_input["debug"] = user_input["debug"][0].lower() in ['true', '1', 't', 'y', 'yes']
     user_input = use_default_input(user_input, default_dict, info, debug = debug)
 
@@ -208,7 +209,7 @@ def convert_str_to_type(value, debug = False):
     except (ValueError, SyntaxError):
         return value
 
-def update_yaml_file(file_path, new_data, debug = False):
+def update_yaml_file(file_path: str, new_data: dict, debug: bool = False):
     try:
         with open(file_path, 'r') as file:
             existing_data = yaml.safe_load(file)
