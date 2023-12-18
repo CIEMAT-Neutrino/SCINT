@@ -7,5 +7,5 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(use
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][4], compressed=True, debug=user_input["debug"])
 
     label, my_runs = cut_selector(my_runs, user_input)
-    popt, pcov, perr = calibrate(my_runs,[user_input["variables"][0]],OPT, debug=user_input["debug"])
+    popt, pcov, perr = calibrate(my_runs, info, [user_input["variables"][0]],OPT, debug=user_input["debug"])
     calibration_txt(run, ch, popt, pcov, filename="gain", info=info, debug=user_input["debug"])

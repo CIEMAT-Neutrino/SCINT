@@ -58,7 +58,7 @@ def vis_persistence(my_run, info, OPT, debug=False):
     plt.ioff()
     plt.clf()
 
-def calibrate(my_runs, keys, OPT={}, debug=False):
+def calibrate(my_runs, info, keys, OPT={}, debug=False):
     '''
     \nComputes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as 
     \na return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
@@ -88,7 +88,7 @@ def calibrate(my_runs, keys, OPT={}, debug=False):
                     
                     OPT["SHOW"] == False
                     OPT["NORM"] == True
-                    counts, bins, bars = vis_var_hist(my_runs, [key], OPT=OPT, percentile = [1, 99])
+                    counts, bins, bars = vis_var_hist(my_runs, info=info, key=[key], OPT=OPT, percentile = [1, 99])
                     counts = counts[0]; bins = bins[0]; bars = bars[0]
 
                     ## New Figure with the fit ##
