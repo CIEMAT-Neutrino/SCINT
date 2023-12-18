@@ -6,9 +6,13 @@ from .io_functions import print_colored, check_key, read_input_file, read_yaml_f
 
 def get_flag_dict():
     '''
-    \nThis function returns a dictionary with the available flags for the macros.
-    \n**RETURNS:**
-    \n- **flag_dict** (*dict*) - Dictionary with the available flags for the macros.
+    This function returns a dictionary with the available flags for the macro.
+
+    Args:
+        None
+
+    Returns:
+        flag_dict (dict): Dictionary with the available flags for the macro.
     '''
     flag_dict = {("-i","--input_file"):"input_file",
         ("-pl","--preset_load"): "preset_load \t(RAW, ANA, etc.)",
@@ -22,13 +26,13 @@ def get_flag_dict():
         ("-d","--debug"):"debug \t(True/False)"}
     return flag_dict
 
+
 def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = {}, debug = False):
     '''
     \nThis function initializes the macro by reading the input file and the user input.
     \n**VARIABLES:**
     \n- **macro** (*str*) - Name of the macro to be executed.
     '''
-
     flag_dict = get_flag_dict()
     user_input = dict()
     
@@ -68,6 +72,7 @@ def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = 
         print(user_input)
     return user_input, info
 
+
 def update_user_input(user_input, new_input_list, info, debug=False):
     '''
     \nThis function updates the user input by asking the user to provide the missing information.
@@ -75,7 +80,6 @@ def update_user_input(user_input, new_input_list, info, debug=False):
     \n- **user_input** (*dict*) - Dictionary with the user input.
     \n- **new_input_list** (*list*) - List with the keys of the user input that need to be updated.
     '''
-
     new_user_input = user_input.copy()
     defaults = {"preset_load":"ANA","preset_save":"ANA","key":"AnaADC","variables":"AnaPeakAmp","runs":"1","channels":"0","save":"n","debug":"y"}
     flags = {"preset_load":"-pl","preset_save":"-ps","key":"-k","variables":"-v","runs":"-r","channels":"-c","save":"-s","debug":"-d"}
@@ -91,6 +95,7 @@ def update_user_input(user_input, new_input_list, info, debug=False):
         else: pass
     return new_user_input, info
 
+
 def select_input_file(user_input, debug=False):
     '''
     \nThis function asks the user to select the input file.
@@ -105,6 +110,7 @@ def select_input_file(user_input, debug=False):
         new_user_input["input_file"] = [inquirer.prompt(q)["input_file"]]
     if debug: print_colored("Using input file %s"%new_user_input["input_file"][0],"INFO")
     return new_user_input
+
 
 def use_default_input(user_input, default_dict, info, debug = False):
     '''
@@ -126,6 +132,7 @@ def use_default_input(user_input, default_dict, info, debug = False):
             if new_user_input["debug"]: print_colored("No %s provided. Using all %s from input file. %s"%(default_key,default_key,runs),"WARNING")
     return new_user_input
 
+
 def print_macro_info(macro, debug=False):
     f = open('info/'+macro+'.txt', 'r')
     file_contents = f.read()
@@ -133,12 +140,14 @@ def print_macro_info(macro, debug=False):
     f.close
     if debug: print_colored("....... Debug Mode Activated! .......", "DEBUG")
 
+
 def print_header():
     f = open('info/header.txt', 'r')
     file_contents = f.read()
     print (file_contents)
     f.close
     print_colored("....... Starting Macro .......", "INFO")
+
 
 def apply_cuts(user_input, info, debug=False):
     '''
@@ -187,6 +196,7 @@ def apply_cuts(user_input, info, debug=False):
             if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
             return cut_dict
 
+
 def opt_selector(filename = "VisConfig", debug = False):
     my_opt = read_yaml_file(filename, path="./", debug = debug)
     print(my_opt)
@@ -209,11 +219,22 @@ def convert_str_to_type(value, debug = False):
     except (ValueError, SyntaxError):
         return value
 
-def update_yaml_file(file_path: str, new_data: dict, debug: bool = False):
+
+def update_yaml_file(file_path: str, new_data: dict, convert: bool = True, debug: bool = False):
+    # If file path doesn't exist, create it. Take into account that the file name is included in the path.
+    if not os.path.exists(file_path):
+        print(f"YAML file '{file_path}' doesn't exist. Creating it...")
+        with open(file_path, 'w') as file:
+            yaml.dump(new_data, file, default_flow_style=False, sort_keys=False)
+        print(f"YAML file '{file_path}' successfully created.")
+        return
+
+    # Update YAML file
     try:
         with open(file_path, 'r') as file:
             existing_data = yaml.safe_load(file)
-        new_data = {key: convert_str_to_type(value) for key, value in new_data.items()}
+        if convert:
+            new_data = {key: convert_str_to_type(value) for key, value in new_data.items()}
         existing_data.update(new_data)
         with open(file_path, 'w') as file:
             yaml.dump(existing_data, file, default_flow_style=False, sort_keys=False)

@@ -1,3 +1,4 @@
+import yaml
 import numpy             as np
 import matplotlib.pyplot as plt
 from itertools import product
@@ -5,6 +6,7 @@ from rich      import print as print
 
 # Imports from other libraries
 from .io_functions  import print_colored, check_key
+from .head_functions import update_yaml_file
 from .ana_functions import generate_cut_array, get_units, get_wvf_label, shift_ADCs, compute_ana_wvfs
 
 #===========================================================================#
@@ -128,6 +130,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
     \nI_RANGE must have same length than F_RANGE!
     '''
 
+    integration_dict = {"ChargeAveRange": {}, "ChargePedRange": {}, "ChargeRange": {}}
     conversion_factor = info["DYNAMIC_RANGE"][0] / info["BITS"][0] # Amplification factor of the system
     ch_amp = dict(zip(info["CHAN_TOTAL"],info["CHAN_AMPLI"])) # Creates a dictionary with amplification factors according to each detector
     
@@ -152,6 +155,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
                 charge_name = label+typ+ref.split("Wvf")[-1]+cut_label
                 my_runs[run][ch][charge_name] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1) # Integrated charge from the DECONVOLUTED average waveform
                 print_colored("--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"%(charge_name,typ,i_idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]), "SUCCESS")
+                integration_dict[typ][charge_name] = [int(i_idx),int(f_idx)]
                 
         if typ == "ChargePedRange":
             for j in range(len(f_range)):
@@ -160,20 +164,23 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
                 charge_name = label+typ+str(j)+cut_label
                 my_runs[run][ch][charge_name] = np.sum(aux_ADC[:,i_idx:f_idx], axis = 1)
                 print_colored("--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"%(charge_name,typ,i_idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]), "SUCCESS")
-
+                integration_dict[typ][charge_name] = [int(i_idx),int(f_idx)]
+        
         if typ == "ChargeRange":
             for k in range(len(f_range)):
                 i_idx = int(np.round(i_range[k]*1e-6/my_runs[run][ch]["Sampling"]))
                 f_idx = int(np.round(f_range[k]*1e-6/my_runs[run][ch]["Sampling"]))
-                try:
-                    this_aux_ADC = shift_ADCs(aux_ADC, -np.asarray(my_runs[run][ch][label+"PeakTime"])+i_idx, debug = debug)
-                except ValueError:
-                    print_colored("WARNING: Failed wvf shift for RUN %i CH %i TYPE %s, REF %s; trying with PedLim."%(run,ch,typ,label+ref),"WARNING")
-                    this_aux_ADC = shift_ADCs(aux_ADC, -my_runs[run][ch][label+"PedLim"], debug = debug)
+                this_aux_ADC = shift_ADCs(aux_ADC, -np.asarray(my_runs[run][ch][label+"PeakTime"])+i_idx, debug = debug)
                 charge_name = label+typ+str(k)+cut_label
                 my_runs[run][ch][charge_name] = np.sum(this_aux_ADC[:,:f_idx], axis = 1)
                 print_colored("--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"%(charge_name,typ,i_idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]), "SUCCESS")
+                integration_dict[typ][charge_name] = [int(i_idx),int(f_idx)]
+
+    # print(integration_dict)
+    filename = info["PATH"][0]+info["MONTH"][0]+"/npy/run"+str(run).zfill(2)+f"_{ch}/int_dict.yaml"
+    update_yaml_file(filename, integration_dict, convert = False, debug = debug)
     return my_runs
+
 
 def compute_peak_RMS(my_runs, info, key, label, debug = False):
     '''
