@@ -252,7 +252,7 @@ def peak_valley_finder(x, y, params):
     \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
     \nAnd return the indices of the peaks and valleys.
     '''
-    
+    dist         = params["PEAK_DISTANCE"]
     thresh       = params["THRESHOLD"]
     wdth         = params["WIDTH"]
     prom         = params["PROMINENCE"]
@@ -260,8 +260,8 @@ def peak_valley_finder(x, y, params):
     max_y = np.max(y)
     y = y/max_y
 
-    peak_idx, _ = find_peaks(y, height = thresh, width = wdth, prominence = prom)
-    valley_idx, _ = find_peaks(1-y, height = thresh, width = wdth, prominence = prom)
+    peak_idx, _   = find_peaks(y,   height = thresh, width = wdth, prominence = prom, distance = dist)
+    valley_idx, _ = find_peaks(1-y, height = thresh, width = wdth, prominence = prom, distance = dist)
     print("Peaks found at: ", peak_idx)
     print("Valleys found at: ", valley_idx)
 

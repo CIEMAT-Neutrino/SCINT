@@ -100,7 +100,7 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                     #This if could be simplified!!!
                     if det_label != "PMT": #Fit for SiPMs/SC
                         new_params = {}
-                        params = {"THRESHOLD": 0.1, "WIDTH": 5, "PROMINENCE": 0.01, "ACCURACY": 1000, "FIT": "gaussian"}
+                        params = {"THRESHOLD": 0.1, "WIDTH": 5, "PROMINENCE": 0.01, "PEAK_DISTANCE":20, "ACCURACY": 1000, "FIT": "gaussian"}
                         for i,param in enumerate(list(params.keys())):
                             if check_key(OPT,param) == True: new_params[param] = OPT[param]
                             else:                            new_params[param] = params[param]
