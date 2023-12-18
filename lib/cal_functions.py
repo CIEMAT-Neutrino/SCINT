@@ -58,7 +58,7 @@ def vis_persistence(my_run, info, OPT, debug=False):
     plt.ioff()
     plt.clf()
 
-def calibrate(my_runs, info, keys, OPT={}, debug=False):
+def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
     '''
     \nComputes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as 
     \na return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
@@ -139,8 +139,11 @@ def calibrate(my_runs, info, keys, OPT={}, debug=False):
                             plt.ion()
                             plt.show()
                             while not plt.waitforbuttonpress(-1): pass
-                            plt.close()
-
+                            # plt.close()
+                    if save: 
+                        fig_cal.savefig('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join(key)), dpi = 500)
+                        if debug: print("Saved figure as: run{}_ch{}_{}_Hist.png".format(run,ch,'_'.join(key)))
+                    plt.close()
 
                     try:
                         my_runs[run][ch]["Gain"]         = popt[3] - abs(popt[0])
