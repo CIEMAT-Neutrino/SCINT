@@ -177,7 +177,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
                 integration_dict[typ][charge_name] = [int(i_idx),int(f_idx)]
 
     # print(integration_dict)
-    filename = info["PATH"][0]+info["MONTH"][0]+"/npy/run"+str(run).zfill(2)+f"_{ch}/int_dict.yaml"
+    filename = info["PATH"][0]+info["MONTH"][0]+"/npy/run"+str(run).zfill(2)+f"_ch{ch}/int_dict.yaml"
     update_yaml_file(filename, integration_dict, convert = False, debug = debug)
     return my_runs
 
