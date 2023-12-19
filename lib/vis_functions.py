@@ -303,20 +303,20 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
         # if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
-        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
+        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded, default=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
     
     a_list = r_list
     b_list = ch_list
     if not check_key(OPT, "COMPARE"):OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
-    if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
     if OPT["COMPARE"] == "RUNS":     a_list = ch_list; b_list = r_list 
-
-    for a in a_list:
-        if OPT["COMPARE"] == "CHANNELS": run = a
+    if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
+    if OPT["COMPARE"] == "NONE":     a_list = r_list;  b_list = ch_list
+    for a_idx, a in enumerate(a_list):
         if OPT["COMPARE"] == "RUNS":      ch = a
-
+        if OPT["COMPARE"] == "CHANNELS": run = a
+        if OPT["COMPARE"] == "NONE":     run = a; ch = b_list
         plt.ion()
         fig, ax = plt.subplots(1 ,1, figsize = (8,6))
         axs = ax
@@ -330,27 +330,26 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
         print(b_list)
         print(a_list)
         for b in b_list:
-            if OPT["COMPARE"] == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
             if OPT["COMPARE"] == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]);title = "Average Waveform - Ch {}".format(ch)
-            if   len(keys) == 1: ave = my_run[run][ch][keys[counter]][0]
-            elif len(keys) > 1:  ave = my_run[run][ch][keys[counter]][0]; counter = counter + 1
+            if OPT["COMPARE"] == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
+            if OPT["COMPARE"] == "NONE":     run = a; ch = b
+            for key in keys:
+                if OPT["COMPARE"] == "NONE": label = "Run {} - Channel {} ({}) - {}".format(run,ch,my_run[run][ch]["Label"],key); title = "Average Waveform"
+                ave = my_run[run][ch][key][0]
+                counter = counter + 1
 
-            norm_ave = np.max(ave)
-            sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
-            thrld = 1e-6
-            if check_key(OPT,"NORM") == True and OPT["NORM"] == True:          ave = ave/norm_ave
-            if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True: fig.supxlabel(r'Time [$\mu$s]'); sampling = my_run[run][ch]["Sampling"]*1e6
-            if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:         axs.semilogy()
-            if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
-                ref_threshold = np.argmax(ave>np.max(ave)*2/3)
-                if ref_max_idx == -1: ref_max_idx = ref_threshold
-                ave = np.roll(ave, ref_max_idx-ref_threshold)
-
-            # if check_key(OPT, "SCINT_FIT") == True and OPT["SCINT_FIT"]==True:
-            #     fit, popt = fit_wvfs(my_run, "Scint", thrld, fit_range=[200,4000],sigma = 1e-8, a_fast = 1e-8, a_slow = 1e-6,OPT={"SHOW":False}, in_key=[keys[counter]])
-            #     axs.plot(my_run[run][ch]["Sampling"]*np.arange(len(fit)),fit*norm_ave, linestyle="--", alpha = 0.95, linewidth=1.0, label = label+" (Fit)")
-            
-            axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "))
+                norm_ave = np.max(ave)
+                sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
+                thrld = 1e-6
+                if check_key(OPT,"NORM") == True and OPT["NORM"] == True:          ave = ave/norm_ave
+                if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True: fig.supxlabel(r'Time [$\mu$s]'); sampling = my_run[run][ch]["Sampling"]*1e6
+                if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:         axs.semilogy()
+                if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
+                    ref_threshold = np.argmax(ave>np.max(ave)*2/3)
+                    if ref_max_idx == -1: ref_max_idx = ref_threshold
+                    ave = np.roll(ave, ref_max_idx-ref_threshold)
+                
+                axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "))
 
         axs.grid(True, alpha = 0.7)
         axs.set_title(title,size = 14)
@@ -392,7 +391,7 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
 
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
+        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded, default=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
 
@@ -406,8 +405,8 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
         if OPT["COMPARE"] != "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
         for b in b_list:
-            if OPT["COMPARE"] == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
             if OPT["COMPARE"] == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
+            if OPT["COMPARE"] == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
             if OPT["COMPARE"] == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
             if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run,debug=True)
             if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
@@ -480,7 +479,7 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                     while not plt.waitforbuttonpress(-1): pass
                     plt.close()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] != "NONE":
-            if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,run,ch,ax,data)
+            # if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,run,ch,ax,data)
             plt.show()
             if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
                 while not plt.waitforbuttonpress(-1): pass
@@ -528,7 +527,7 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
         except: print_colored("Imported channels as list!", "INFO")
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
+        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded, default=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
 
