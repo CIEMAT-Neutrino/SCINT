@@ -21,7 +21,7 @@ def style_selector(OPT):
     if OPT["STYLE"] == "None": pass
     if OPT["STYLE"] == "CIEMAT_style":
         figure_features()
-        # mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=get_prism_colors()) 
+        mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=get_prism_colors()) 
     if OPT["STYLE"] == "DUNE_style":   import dunestyle.matplotlib as dune
     if OPT["STYLE"] == "HEP_style": import mplhep as hep
     if OPT["STYLE"] == "ATLAS_style":
