@@ -104,7 +104,7 @@ which imports all the funcions of the library (from `lib` folder) to be used and
 This macro converts the raw files, usually `*.dat`, from `/data/MONTH/raw` into `.npz` files at `/data/MONTH/npy`. It is using the `binary2npy()` function. Notice that once you run this macro you will have a new folder `/data/MONTH/npy/runXX_chYY` where the `*.npz` files are stored. 
 
 ```python
-binary2npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int),user_input=user_input,compressed=True,force=True)
+binary2npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str),user_input=user_input,compressed=True,force=True)
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
@@ -125,7 +125,7 @@ This macro will process the {RawPedestal, RawPeak} variables for the RawADC that
 
 
 ```python
-for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int)):
+for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][1], compressed=True, debug=user_input["debug"])
     
     compute_peak_variables(my_runs, key=user_input["key"][0], label="", debug=user_input["debug"])
@@ -152,7 +152,7 @@ python3 01PreProcess.py
 This macro will process the {Pedestal, Peak} variables for the ADC are computed and saved in .npz files. You will see as terminal output the saved files. By default the saving is set to force = True and so if you pre-process files that already existed they will be overwritten. However, we delete the RawKeys from the my_runs dictionary to save computing time (RawInfo don’t change).
 
 ```python
-for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int)):
+for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][2], compressed=True, debug=user_input["debug"])
     compute_ana_wvfs(my_runs,debug=False)
     delete_keys(my_runs,['RawADC','RawPeakAmp', 'RawPeakTime', 'RawPedSTD', 'RawPedMean', 'RawPedMax', 'RawPedMin', 'RawPedLim']) # Delete branches to avoid overwritting
@@ -176,7 +176,7 @@ python3 02Process.py
 ### 03Integration <a ID="integration"></a>
 In this macro we compute the charge (example: `integrate_wvfs(my_runs, ["ChargeAveRange"], "AveWvf", ["DAQ", 250], [0,100])`)
 ```python  
- for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int)):
+ for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][3], compressed=True, debug=user_input["debug"])
     
     integrate_wvfs(my_runs, info=info, key=user_input["key"][0], debug=user_input["debug"])
@@ -201,7 +201,7 @@ python3 03Integration.py
 Compute a calibration histogram where the peaks for the PED/1PE/2PE... are fitted to obtain the gain. 
 
 ```python
- for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int)):
+ for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][4], compressed=True, debug=user_input["debug"])
 
     label, my_runs = cut_selector(my_runs, user_input)
@@ -232,10 +232,10 @@ If everything is working as it should you should obtain the following histograms
 ```python
 
     ## Visualize average waveforms by runs/channels ##
-    my_runs = load_npy(runs.astype(int),channels.astype(int),branch_list=["Label","Sampling","AveWvf"],info=info,compressed=True) #Remember to LOAD your wvf
+    my_runs = load_npy(runs.astype(str),channels.astype(str),branch_list=["Label","Sampling","AveWvf"],info=info,compressed=True) #Remember to LOAD your wvf
     vis_compare_wvf(my_runs, ["AveWvf"], compare="RUNS", OPT=OPT)
 
-    for run, ch in product(runs.astype(int),channels.astype(int)):
+    for run, ch in product(runs.astype(str),channels.astype(str)):
         my_runs = load_npy([run],[ch], branch_list=["ADC","TimeStamp","Sampling","ChargeAveRange", "NEventsChargeAveRange","AveWvf"], info=info,compressed=True)  #preset="ANA"
         print_keys(my_runs)
 
@@ -361,7 +361,7 @@ SCINT_FIT: True            # True if you want to fit the scintillation peaks
 We can visualize the individual events from the moment we pre-process the waveforms and obtain RawInfo.
 
 ```python
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int),preset=user_input["preset_load"][0],info=info,compressed=True) # preset could be RAW or ANA
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str),preset=user_input["preset_load"][0],info=info,compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
 vis_npy(my_runs, user_input["key"],OPT=OPT) # Remember to change key accordingly (ADC or RawADC)
 ```
@@ -393,7 +393,7 @@ The individual events of different channels can be visualized together and with 
 
 ### 0YVisHist1D <a ID="vishist1d"></a>
 ```python
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int), np.asarray(user_input["channels"]).astype(int), preset="EVA", info=info, compressed=True) # preset could be RAW or ANA
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(str), np.asarray(user_input["channels"]).astype(str), preset="EVA", info=info, compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
 vis_var_hist(my_runs, user_input["variables"], percentile = [0.1, 99.9], OPT = OPT, select_range=False, debug=user_input["debug"])
 ```
@@ -410,7 +410,7 @@ python3 0YVisHist1D.py -r 1 -c 0,6
 
 ### 0ZVisHist2D <a ID="vishist2d"></a>
 ```python
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int), np.asarray(user_input["channels"]).astype(int), preset="EVA",info=info,compressed=True) # preset could be RAW or ANA
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(str), np.asarray(user_input["channels"]).astype(str), preset="EVA",info=info,compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
 vis_two_var_hist(my_runs, user_input["variables"], OPT = OPT, percentile=[0.1,99.9], select_range=False)
 ```
@@ -427,7 +427,7 @@ python3 0ZVisHist2D.py -r 1 -c 0,6
 
 ### 0WVisWvf
 ```python
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
 vis_compare_wvf(my_runs, user_input["variables"], OPT=OPT)
 ```
 
@@ -443,7 +443,7 @@ python3 0WVisWvf.py -r 1 -c 0,6
 
 ### 0VVisPersistence
 ```python
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
 vis_persistence(my_runs)
 ```
 

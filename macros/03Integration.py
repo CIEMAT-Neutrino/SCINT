@@ -3,7 +3,7 @@ default_dict = {"runs":["CALIB_RUNS","LIGHT_RUNS","ALPHA_RUNS","MUONS_RUNS","NOI
 user_input, info = initialize_macro("03Integration",["input_file","debug"],default_dict=default_dict, debug=True)
 # info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 ### 03Integration
-for run, ch in product(np.asarray(user_input["runs"]).astype(int),np.asarray(user_input["channels"]).astype(int)):
+for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
     ### Load
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][3], compressed=True, debug=user_input["debug"])
     ### Process

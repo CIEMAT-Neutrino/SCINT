@@ -27,9 +27,11 @@ def cut_selector(my_runs, user_input, debug=False):
             this_cut = user_input["filter"]["cut_df"][1][ldx]
             cut_dict[(this_cut[1],this_cut[2],this_cut[3],this_cut[4],ldx)] = this_cut[0]
         cut_df(my_runs, cut_dict=cut_dict, debug=user_input["debug"])
+    
     if user_input["filter"]["cut_lin_rel"][0]: 
         label = "cut_lin_rel_"
         cut_lin_rel(my_runs, user_input["filter"]["cut_lin_rel"][1])
+    
     if user_input["filter"]["cut_peak_finder"][0]:
         label = "cut_peak_finder_"
         cut_peak_finder(my_runs, user_input["filter"]["cut_peak_finder"][1], user_input["filter"]["cut_peak_finder"][2], debug=user_input["debug"])
@@ -46,13 +48,13 @@ def cut_df(my_runs, cut_dict={}, debug=False):
     cut_dict = {(key, logic, value, inclusive): channels}
     '''
     print_colored("---- LET'S CUT! ----", color = "SUCCESS",styles=["bold"])
-    for run in (np.asarray(my_runs["NRun"]).astype(int)):
+    for run in (np.asarray(my_runs["NRun"]).astype(str)):
         my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
         my_runs_df = pd.DataFrame(my_runs[run]).T
         for cut in cut_dict:
             this_cut_cut_array = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
             channels = cut_dict[cut]; key = cut[0]; logic = cut[1]; value = cut[2]; inclusive = cut[3]
-            for ch_idx,ch in enumerate(np.asarray(channels).astype(int)):
+            for ch_idx,ch in enumerate(np.asarray(channels).astype(str)):
                 this_channel_cut_array = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
                 try: my_runs[run][ch]
                 except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()

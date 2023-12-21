@@ -22,7 +22,7 @@ def compute_ana_wvfs(my_runs, info, debug = False):
     \n**- info**:    dictionary containing the info.
     \n**- debug**:   boolean to print debug messages.
     '''
-    for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+    for run,ch in product(np.array(my_runs["NRun"]).astype(str),np.array(my_runs["NChannel"]).astype(str)):
         if check_key(my_runs[run][ch],"RawADC") == False: 
             print_colored("ERROR: RawADC not found!", "ERROR")
             exit()
@@ -42,7 +42,7 @@ def compute_fft_wvfs(my_runs, info, key, label, debug = False):
     \n**- label**:   label to be inserted.
     \n**- debug**:   boolean to print debug messages.
     '''            
-    for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
+    for run,ch in product(np.array(my_runs["NRun"]).astype(str),np.array(my_runs["NChannel"]).astype(str)):
         my_runs[run][ch][label+"FFT"] = np.abs(np.fft.rfft(my_runs[run][ch][key]))
         my_runs[run][ch][label+"Freq"] = [np.fft.rfftfreq(my_runs[run][ch][key][0].size, d=my_runs[run][ch]["Sampling"])]
         my_runs[run][ch][label+"MeanFFT"] = [np.mean(my_runs[run][ch][label+"FFT"],axis=0)]
@@ -207,9 +207,9 @@ def insert_variable(my_runs, var, key, debug = False):
     \n**- key**:     key to be inserted
     \n**- debug**:   boolean to print debug messages
     '''
-    for run,ch in product(np.array(my_runs["NRun"]).astype(int),np.array(my_runs["NChannel"]).astype(int)):
-        i = np.where(np.array(my_runs["NRun"]).astype(int) == run)[0][0]
-        j = np.where(np.array(my_runs["NChannel"]).astype(int) == ch)[0][0]
+    for run,ch in product(np.array(my_runs["NRun"]).astype(str),np.array(my_runs["NChannel"]).astype(str)):
+        i = np.where(np.array(my_runs["NRun"]).astype(str) == run)[0][0]
+        j = np.where(np.array(my_runs["NChannel"]).astype(str) == ch)[0][0]
 
         try: my_runs[run][ch][key] = var[j]
         except KeyError: 

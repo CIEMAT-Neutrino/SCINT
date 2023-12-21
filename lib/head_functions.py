@@ -14,16 +14,19 @@ def get_flag_dict():
     Returns:
         flag_dict (dict): Dictionary with the available flags for the macro.
     '''
-    flag_dict = {("-i","--input_file"):"input_file",
-        ("-pl","--preset_load"): "preset_load \t(RAW, ANA, etc.)",
-        ("-ps","--preset_save"): "preset_save \t(RAW, ANA, etc.)",
-        ("-k", "--key"):"key \t(AnaADC, RawADC, etc.)",
-        ("-v", "--variables"): "variables \t(ChargeAveRange, ChargeRange0, etc.)",
-        ("-r", "--runs"):"runs \t(optional)",
-        ("-c", "--channels"):"channels \t(optional)",
-        ("-f", "--filter"): "filter \t(optional)",
-        ("-s", "--save"):"save \t(optional)",
-        ("-d","--debug"):"debug \t(True/False)"}
+    flag_dict = {
+        ("-c", "--channels"):   "channels \t(optional)",
+        ("-d","--debug"):       "debug \t(True/False)",
+        ("-f", "--filter"):     "filter \t(optional)",
+        ("-g", "--group"):      "group \t(True/False)",
+        ("-i","--input_file"):  "input_file",
+        ("-k", "--key"):        "key \t(AnaADC, RawADC, etc.)",
+        ("-pl","--preset_load"):"preset_load \t(RAW, ANA, etc.)",
+        ("-ps","--preset_save"):"preset_save \t(RAW, ANA, etc.)",
+        ("-v", "--variables"):  "variables \t(ChargeAveRange, ChargeRange0, etc.)",
+        ("-r", "--runs"):       "runs \t(optional)",
+        ("-s", "--save"):       "save \t(optional)",
+    }
     return flag_dict
 
 
@@ -62,9 +65,9 @@ def initialize_macro(macro, input_list = ["input_file","debug"], default_dict = 
     
     info = read_input_file(user_input["input_file"][0], debug = debug)
     user_input, info = update_user_input(user_input, input_list, info, debug = debug)
-    try: user_input["save"] = user_input["save"][0].lower() in ['true', '1', 't', 'y', 'yes']
-    except KeyError: print("WARNING: No save flag provided --> Using False as default.")
-    user_input["debug"] = user_input["debug"][0].lower() in ['true', '1', 't', 'y', 'yes']
+    for flag in ["group", "save", "debug"]:
+        try: user_input[flag] = user_input[flag][0].lower() in ['true', '1', 't', 'y', 'yes']
+        except KeyError: print("WARNING: No %s flag provided --> Using False as default."%flag)
     user_input = use_default_input(user_input, default_dict, info, debug = debug)
 
     if debug:
@@ -81,8 +84,8 @@ def update_user_input(user_input, new_input_list, info, debug=False):
     \n- **new_input_list** (*list*) - List with the keys of the user input that need to be updated.
     '''
     new_user_input = user_input.copy()
-    defaults = {"preset_load":"ANA","preset_save":"ANA","key":"AnaADC","variables":"AnaPeakAmp","runs":"1","channels":"0","save":"n","debug":"y"}
-    flags = {"preset_load":"-pl","preset_save":"-ps","key":"-k","variables":"-v","runs":"-r","channels":"-c","save":"-s","debug":"-d"}
+    defaults = {"preset_load":"ANA","preset_save":"ANA","key":"AnaADC","variables":"AnaPeakAmp","runs":"1","channels":"0","group":"n","save":"n","debug":"y"}
+    flags = {"preset_load":"-pl","preset_save":"-ps","key":"-k","variables":"-v","runs":"-r","channels":"-c","group":"-g","save":"-s","debug":"-d"}
     for key_label in new_input_list:
         if check_key(user_input, key_label) == False:
             if key_label != "filter":

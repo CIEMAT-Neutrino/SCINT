@@ -55,9 +55,9 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
     lines = file.readlines()
     info = dict()
     info["NAME"] = [input]
-    if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","CHAN_POLAR","CHAN_AMPLI"]
+    if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","CHAN_POLAR","CHAN_AMPLI"]
     if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    if STRINGS == []: STRINGS = ["DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
+    if STRINGS == []: STRINGS = ["MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
     if BOOLEAN == []: BOOLEAN = []
     # Strips the newline character
     for line in lines:
@@ -283,7 +283,7 @@ def binary2npy(runs, channels, user_input, compressed=True, header_lines=6, forc
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     os.makedirs(name=out_path,exist_ok=True)
-    for run, ch in product(runs.astype(int),channels.astype(int)):
+    for run, ch in product(runs.astype(str),channels.astype(str)):
         print("\n....... READING RUN%i CH%i ......."%(run, ch))
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
@@ -354,7 +354,7 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
 
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
-    for run, ch in product (runs.astype(int),channels.astype(int)):
+    for run, ch in product (runs.astype(str),channels.astype(str)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
@@ -539,6 +539,8 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
 
     my_runs = dict()
+    runs = np.asarray(runs).astype(str)
+    channels = np.asarray(channels).astype(str)
     my_runs["NRun"]     = runs
     my_runs["NChannel"] = channels
     aux_PChannel = dict(zip(info["CHAN_TOTAL"], info["CHAN_POLAR"]))
@@ -561,7 +563,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
                 except FileNotFoundError:
                     # my_runs["NRun"].remove(run)
                     # my_runs["NChannel"].remove(ch)
-                    print_colored("\nRun %i, channels %i --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
+                    print_colored("\nRun %s, channels %s --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
 
             my_runs[run][ch]["Label"]    = aux_Label[ch]
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]

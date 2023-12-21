@@ -159,55 +159,6 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
                                     transform = axs[j].transAxes, color = 'red', fontweight = "bold", alpha = 0.5)
                         figure_features()
                 except: pass
-                
-                # else:
-                #     if check_key(OPT, "LOGY") == True and OPT["LOGY"]:
-                #         axs.semilogy()
-                #         std = 0 # It is ugly if we see this line in log plots
-                #     axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j], drawstyle = "steps", alpha = 0.95, linewidth=1.2,label = "Ch {} ({})".format(ch_list[j],my_run[run][ch_list[j]]["Label"]).replace("#"," "))
-                #     axs.grid(True, alpha = 0.7)
-                #     try: axs.scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx],c="tab:red", alpha = 0.8)
-                #     except KeyError: print_colored("PeakAmp not computed!", "ERROR")
-                #     try: axs.scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx],c="tab:green", alpha = 0.8)
-                #     except KeyError: print_colored("ValleyAmp not computed!", "ERROR")
-                #     try: axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="red",lw=2., alpha = 0.8)
-                #     except KeyError: print_colored("PedLim not computed!", "ERROR")
-                #     try:
-                #         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedStart"][idx],my_run[run][ch_list[j]][label+"PedStart"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
-                #         axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedEnd"][idx],my_run[run][ch_list[j]][label+"PedEnd"][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j],c="k",lw=1., alpha = 0.8)
-                #     except KeyError: print_colored("PedWindow not compued!", "ERROR")
-                #     axs.set_title("Run {} - Event Number {}".format(run,idx),size = 14)
-                #     axs.xaxis.offsetText.set_fontsize(14)
-                    
-                #     if check_key(OPT, "SHOW_AVE") == True:   
-                #         try:
-                #             ave_key = label+OPT["SHOW_AVE"]
-                #             ave = my_run[run][ch_list[j]][ave_key][0]
-                #             if OPT["NORM"] == True and OPT["NORM"] == True: ave = ave/np.max(ave)
-                #             if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
-                #                 ref_max_idx, = np.where(ave == np.max(ave))
-                #                 idx, = np.where(ave == np.max(ave))
-                #                 ave = shift(ave, ref_max_idx-idx, cval = 0)
-                #             axs.plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave,alpha=.5,label="AVE_WVF_%s"%ave_key)             
-                #         except KeyError: print_colored("Run has not been averaged!", "ERROR")
-
-                #     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
-                #     if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
-                #         # These parameters must be modified according to the run...
-                #         thresh = my_run[run][ch_list[j]]["PedMax"][idx]
-                #         wdth = 4; prom = 0.01; dist = 40
-                #         axs.axhline(thresh,c="salmon", alpha=.6, ls = "dotted")
-                #         # peak_idx, _ = find_peaks(raw[j], height = thresh, width = wdth, prominence = prom, distance=dist)
-                #         peak_idx, _ = find_peaks(raw[j], height = thresh)       
-                #         for p in peak_idx: axs.scatter(my_run[run][ch_list[j]]["Sampling"]*p,raw[j][p],c="tab:red", alpha = 0.9)
-
-                #     try:
-                #         if my_run[run][ch_list[j]]["MyCuts"][idx] == False:
-                #             figure_features(tex = False)
-                #             axs.text(0.5,0.5, s = 'CUT', fontsize = 100, horizontalalignment='center',verticalalignment='center',
-                #                         transform = axs.transAxes, color = 'red', fontweight = "bold", alpha = 0.5)
-                #             figure_features()
-                #     except: pass
                     
                 if check_key(OPT, "SHOW_PARAM") == True and OPT["SHOW_PARAM"]:
                     print_colored("\nEvent Number {} from RUN_{} CH_{} ({})".format(idx,run,ch_list[j],my_run[run][ch_list[j]]["Label"]), "white", styles=["bold"])
@@ -330,11 +281,17 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
         print(b_list)
         print(a_list)
         for b in b_list:
-            if OPT["COMPARE"] == "RUNS":    run = b; label = "Run {} - {}".format(run,keys[counter]);title = "Average Waveform - Ch {}".format(ch)
-            if OPT["COMPARE"] == "CHANNELS": ch = b; label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
+            if OPT["COMPARE"] == "RUNS":
+                run = b
+                label = "Run {} - {}".format(run,keys[counter]);title = "Average Waveform - Ch {}".format(ch)
+            if OPT["COMPARE"] == "CHANNELS": 
+                ch = b
+                # label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
             if OPT["COMPARE"] == "NONE":     run = a; ch = b
             for key in keys:
                 if OPT["COMPARE"] == "NONE": label = "Run {} - Channel {} ({}) - {}".format(run,ch,my_run[run][ch]["Label"],key); title = "Average Waveform"
+                if OPT["COMPARE"] == "RUNS": label = "Run {} - {}".format(run,key); title = "Average Waveform - Ch {}".format(ch)
+                if OPT["COMPARE"] == "CHANNELS": label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],key); title = "Average Waveform - Run {}".format(run)
                 ave = my_run[run][ch][key][0]
                 counter = counter + 1
 

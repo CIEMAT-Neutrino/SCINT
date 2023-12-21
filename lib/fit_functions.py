@@ -104,11 +104,14 @@ def lmfit_models(function):
     # print(f'Chi-square = {result.chisqr:.4f}, Reduced Chi-square = {result.redchi:.4f}')
 
 def fitting_functions(function,debug=False): 
+    if function == "gaussian":      return gaussian
     if function == "norm_gaussian": return norm.pdf
     if function == "exponential":   return expon.pdf
     else: 
         if debug: print_colored("Not configured, looking for a local defined function",color="WARNING")
-        try: function = globals()[function]; return function
+        try:
+            function = globals()[function]
+            return function
         except KeyError: print_colored("Function (%s) not found"%function, color="ERROR"); pass
 
 def initial_values(xdata,function,debug=False):
@@ -307,18 +310,11 @@ def gaussian_train_fit(x, y, y_intrp, peak_idx, valley_idx, params, debug=False)
     perr = np.zeros(len(initial))
     popt = initial
     ## GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
-    try:
-        if params["FIT"] == "gaussian":    popt, pcov = curve_fit(gaussian_train,x[:valley_idx[-1]],y[:valley_idx[-1]],p0=initial) 
-        if params["FIT"] == "loggaussian": 
-            try:
-                popt, pcov = curve_fit(loggaussian_train,x[:valley_idx[-1]],np.log(y[:valley_idx[-1]]),p0=initial)
-            except ValueError:
-                print_colored("Loggaussian fit could not be performed! Defaulting to gaussian fit", "WARNING")
-                popt, pcov = curve_fit(gaussian_train,x[:valley_idx[-1]],y[:valley_idx[-1]],p0=initial)
+    try:   
+        popt, pcov = curve_fit(gaussian_train,x[:valley_idx[-1]],y[:valley_idx[-1]],p0=initial) 
         perr = np.sqrt(np.diag(pcov))
     except ValueError:
         print_colored("Full fit could not be performed", "ERROR")
-    
     return popt, pcov, perr
 
 def pmt_spe_fit(counts, bins, bars, thresh):
@@ -606,7 +602,7 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     # print("\n")
     return aux,popt,perr,labels
 
-def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={},path="../data/",debug=False):
+def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={},save=False,debug=False):
     ''' 
     \nDOC 
     '''
@@ -634,28 +630,28 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
             PE_std = np.std(raw[i][:i_idx])
             
             if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-                folder_path  = info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
-                if not os.path.exists(path+folder_path): 
-                    os.makedirs(name=path+folder_path,exist_ok=True)
-                    os.chmod(path+folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
+                if not os.path.exists(folder_path): 
+                    os.makedirs(name=folder_path,exist_ok=True)
+                    os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 
-                print("Fitting wvf %i for run %i, ch %i"%(i,run,ch))
-                
-                print("\n---------- TOTAL FIT ----------")
-                with open(path+folder_path+"/DeconvolutionFit_%i_%i.txt"%(run,ch),"w+") as f:
-                    f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
-                    for i in range(len(labels)):
-                        print("%s:\t%.2E\t%.2E"%(labels[i], popt[i], perr[i]))
-                        f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
-                f.close()
-                # os.chmod(path+folder_path+"DeconvolutionFit_%i_%i.txt"%(run,ch), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                print("--------------------------------\n")
+                term_output = ""
+                term_output = term_output+"Fitting wvf %i for run %i, ch %i\n"%(i,run,ch)
+                term_output = term_output+"--------------------------------\n"
+                for i in range(len(labels)):
+                    term_output = term_output+"%s:\t%.2E\t%.2E\n"%(labels[i], popt[i], perr[i])
+                term_output = term_output+"--------------------------------\n"
+                print(term_output)
+
+                if save:
+                    with open(folder_path+"/DeconvolutionFit_%i_%i.txt"%(run,ch),"w+") as f:
+                        f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
+                        for i in range(len(labels)):
+                            f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
+                    if debug: print("File saved in: %s"%folder_path)
         
         my_runs[run][ch]["Fit"+signal_type+out_key] = aux
-
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ioff()
-    print("\n")
-
     return fit, popt
 
 def get_initial_parameters(i_param):
