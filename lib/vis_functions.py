@@ -117,10 +117,10 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
                     for value in ["PedStart", "PedEnd"]: axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+value][idx],my_run[run][ch_list[j]][label+value][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j], lw=2, c=colors[4], zorder=3)
                 except KeyError: print_colored("PedWindow not compued!", "ERROR")    
                 try:
-                    int_info = yaml.load(open(info["PATH"][0]+info["MONTH"][0]+"/npy/run"+str(run).zfill(2)+f"_ch{ch_list[j]}/int_dict.yaml"), Loader=yaml.FullLoader)
+                    int_info = yaml.load(open(info["PATH"][0]+info["MONTH"][0]+"/npy/run"+str(run).zfill(2)+f"_ch{ch_list[j]}/ChargeDict.yml"), Loader=yaml.FullLoader)
                     for charge in int_info[OPT["CHARGE_KEY"]]:
                         for i in range(2): axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([int_info[OPT["CHARGE_KEY"]][charge][i],int_info[OPT["CHARGE_KEY"]][charge][i]]),np.array([ped+4*std,ped-4*std])/norm_raw[j], lw=2, c=colors[3], zorder=3)
-                except FileNotFoundError: print("int_dict.yaml not found!")
+                except FileNotFoundError: print("ChargeDict.yml not found!")
                 axs[j].axhline((ped)/norm_raw[j],c="k",alpha=.55, zorder=2)
                 axs[j].axhline((ped+std)/norm_raw[j],c="k",alpha=.5,ls="--", zorder=2); axs[j].axhline((ped-std)/norm_raw[j],c="k",alpha=.5,ls="--", zorder=2)
                 axs[j].set_title("Run {} - Ch {} - Event Number {}".format(run,ch_list[j],idx),size = 14)
