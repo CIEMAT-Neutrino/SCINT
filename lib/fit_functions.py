@@ -90,9 +90,8 @@ def fit_dec_gauss(f, fc, n):
     y = np.log10(dec_gauss(f, fc, n)); y[0] = 0
     return y
 
-
 def lmfit_models(function):
-    if function == "gaussian":    return models.GaussianModel()
+    # if function == "gaussian":    return models.GaussianModel()
     if function == "linear":      return models.LinearModel()
     if function == "lorentzian":  return models.LorentzianModel()
     if function == "exponential": return models.ExponentialModel()
@@ -103,8 +102,7 @@ def lmfit_models(function):
     # result = model.fit  (ydata, params, x=xdata)
     # print(f'Chi-square = {result.chisqr:.4f}, Reduced Chi-square = {result.redchi:.4f}')
 
-def fitting_functions(function,debug=False): 
-    if function == "gaussian":      return gaussian
+def fitting_function(function, debug=False): 
     if function == "norm_gaussian": return norm.pdf
     if function == "exponential":   return expon.pdf
     else: 
@@ -114,40 +112,48 @@ def fitting_functions(function,debug=False):
             return function
         except KeyError: print_colored("Function (%s) not found"%function, color="ERROR"); pass
 
-def initial_values(xdata,function,debug=False):
+def setup_fitting_function(function_name, ydata, xdata, debug=False):
+    function = fitting_function(function_name, debug=debug)
+    if function_name == "gaussian":
+        ydata = ydata/np.max(ydata)
+        return function, ydata
+    elif function_name == "norm_gaussian":
+        ydata = ydata/np.sum(ydata*(xdata[1]-xdata[0]))
+        return function, ydata
+    else: return function, ydata
 
-    my_fits = read_yaml_file("FitConfig", path="./", debug=debug)
+def initial_values(info,data,function,debug=False):
+    my_fits = read_yaml_file("FitConfig", path="../config/", debug=debug)
     ini_fun = my_fits[function]
-    xdata_s = ', '.join(map(str, xdata)); xdata_s = "["+xdata_s+"]"
-    ini_val = [eval(f"{i}({xdata_s})") if isinstance(i, str) else i for i in ini_fun]
+    data_s = ', '.join(map(str, data)); data_s = "["+data_s+"]"
+    ini_val = [eval(f"{i}({data_s})") if isinstance(i, str) else i for i in ini_fun]
     if "np.std" in ini_fun: 
         std_idx = ini_fun.index("np.std");
         ini_val[std_idx] = ini_val[std_idx]/2
     if debug: print_colored("Initial values: " +str(ini_val), "DEBUG")
     return ini_val
 
-def minuit_fit(xdata,function,debug=True):
+def minuit_fit(info, data, ydata, xdata, function,debug=True):
     '''
     \nThis function performs a fit to the data, using the function specified in the input using MINUIT.
     \nIt returns the parameters of the fit (if performed)
     '''
-    
-    print_colored("DEFAULT MINUIT UNBINNED FIT (%s)"%function, "WARNING")
-    ini_val = initial_values(xdata,function,debug=debug)
-    function = fitting_functions(function) 
-    c = cost.UnbinnedNLL(xdata, function)
-    m = Minuit(c,*(ini_val))
+    print_colored("DEFAULT MINUIT BINNED FIT (%s)"%function, "WARNING")
+    ini_val = initial_values(info, data, function,debug=debug)
+    function, norm_ydata = setup_fitting_function(function, ydata, xdata, debug=debug)
+    c = cost.LeastSquares(xdata, norm_ydata, np.sqrt(norm_ydata), function)
+    m = Minuit(c,*ini_val) 
+    # Generate limits going from 0 to 1.5 times the initial value
     m.migrad() # find minimum
     m.hesse()  # accurate error estimates
+    # m.minos()  # accurate error estimates
     if debug:
         print_colored("Fitting with Minuit", "INFO", styles=["bold"])
         print(m.hesse())
-
-    return m
-
+    return m, norm_ydata
 
 # --------------------------------------------------------------------------- #
-# THIS LIBRARY NEED MIMO PORQUE HAY COSAS REDUNDAANTES QUE SE PUEDEN UNIFICAR
+# THIS LIBRARY NEED MIMO PORQUE HAY COSAS REDUNDANTES QUE SE PUEDEN UNIFICAR
 def fit_gaussians(x, y, *p0):
     assert x.shape == y.shape, "Input arrays must have the same shape."
     popt, pcov = curve_fit(gaussian_train, x,y, p0=p0[0])
@@ -156,7 +162,7 @@ def fit_gaussians(x, y, *p0):
     return popt,fit_y, chi_squared
 
 ##Binomial+Poisson distribution
-def B(i,k,debug=False):
+def B(i, k, debug=False):
     '''
     \nFactorial factor of F
     '''
@@ -164,12 +170,11 @@ def B(i,k,debug=False):
     if (i==0) & (k>0): return 0;
     else:              return ( fact(k-1)*fact(k) / (fact(i-1)*fact(i)*fact(k-i)) )
 
-def F(K,p,L,debug=False):
+def F(K, p, L, debug=False):
     '''
     \nComputes prob of the kth point in a convoluted poisson+binomial distribution,.
     \nL is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
     '''
-
     aux_sum=0
     if debug: print(K)
     for i in range(K+1): aux_sum+=B(i,K)*((L *(1 - p))**i)  *  (p**(K - i)) 
@@ -271,7 +276,7 @@ def peak_valley_finder(x, y, params):
     print_colored("PeakFinder using parameters: thresh = %.2f, wdth = %i, prom = %.2f, acc = %i"%(thresh, wdth, prom, acc), "INFO")
     return peak_idx, valley_idx
 
-def gaussian_train_fit(x, y, y_intrp, peak_idx, valley_idx, params, debug=False):
+def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=False):
     ''' 
     \nThis function fits the histogram, to a train of gaussians, which has been previoulsy visualized with: 
     \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
@@ -303,7 +308,7 @@ def gaussian_train_fit(x, y, y_intrp, peak_idx, valley_idx, params, debug=False)
             initial.append(popt[0])         # CENTER
             initial.append(popt[1])         # HEIGHT
             initial.append(np.abs(popt[2])) # WIDTH
-            plt.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5,label=labels[i])
+            fig.plot(x_gauss,gaussian(x_gauss, *popt), ls = "--", c = "black", alpha = 0.5,label=labels[i])
         except: continue
 
     pcov = np.zeros((len(initial),len(initial)))
