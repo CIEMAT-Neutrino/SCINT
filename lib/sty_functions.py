@@ -11,7 +11,7 @@ except: pass
 try: importlib.util.find_spec("mplhep"); styles.append("HEP_style")
 except: pass
 
-for style in styles: print(" \t * You can change your plotting style with "+ '\033[1m' + "OPT[STYLE]=" + style + '\033[0m' +" !")
+for style in styles: print(f" \t * You can change your plotting style with [green]OPT[STYLE]={style}![/green]")
 
 #  Import from other libraries
 from .io_functions import check_key
@@ -19,15 +19,13 @@ from .fig_config   import (figure_features, add_grid);
 def style_selector(OPT):
     if check_key(OPT,"STYLE") == False: OPT["STYLE"] = "CIEMAT_style"
     if OPT["STYLE"] == "None": pass
-    if OPT["STYLE"] == "CIEMAT_style":
-        figure_features()
-        mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=get_prism_colors()) 
-    if OPT["STYLE"] == "DUNE_style":   import dunestyle.matplotlib as dune
+    if OPT["STYLE"] == "CIEMAT_style": figure_features()
+    if OPT["STYLE"] == "DUNE_style": import dunestyle.matplotlib as dune
     if OPT["STYLE"] == "HEP_style": import mplhep as hep
     if OPT["STYLE"] == "ATLAS_style":
         import mplhep as hep
         hep.style.use("ATLAS")
-        mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=get_prism_colors()) 
+    mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=get_prism_colors()) 
 
 def get_prism_colors():
     prism = [c.split("rgb")[-1] for c in px.colors.qualitative.Prism]
