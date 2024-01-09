@@ -201,7 +201,7 @@ def apply_cuts(user_input, info, debug=False):
 
 
 def opt_selector(filename = "VisConfig", debug = False):
-    my_opt = read_yaml_file(filename, path="./", debug = debug)
+    my_opt = read_yaml_file(filename, path="../config/", debug = debug)
     print(my_opt)
     q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
     change_line =  inquirer.prompt(q)["change"].strip().lower()
@@ -213,7 +213,7 @@ def opt_selector(filename = "VisConfig", debug = False):
             new_text = input(f"Enter the new text for line {line} ")
             update_opt[line] = new_text
         update_yaml_file(f'./{filename}.yml',update_opt)
-    my_opt = read_yaml_file(filename, path="./", debug = debug)
+    my_opt = read_yaml_file(filename, path="../config/", debug = debug)
     return my_opt
 
 def convert_str_to_type(value, debug = False):
