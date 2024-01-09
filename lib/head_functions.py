@@ -212,7 +212,7 @@ def opt_selector(filename = "VisConfig", debug = False):
         for line in line_label:
             new_text = input(f"Enter the new text for line {line} ")
             update_opt[line] = new_text
-        update_yaml_file(f'./{filename}.yml',update_opt)
+        update_yaml_file(f'../config/{filename}.yml',update_opt)
     my_opt = read_yaml_file(filename, path="../config/", debug = debug)
     return my_opt
 
