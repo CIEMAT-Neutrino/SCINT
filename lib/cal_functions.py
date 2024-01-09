@@ -19,7 +19,7 @@ from .ana_functions import generate_cut_array, get_units, get_wvf_label, compute
 from .fig_config    import figure_features, add_grid
 from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder
 from .vis_functions import vis_var_hist
-from .sty_functions import style_selector
+from .sty_functions import style_selector, get_prism_colors
 
 
 def vis_persistence(my_run, info, OPT, debug=False):
@@ -117,7 +117,7 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
 
                         popt, pcov, perr = gaussian_train_fit(x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
                         
-                        ax_cal.plot(x,gaussian_train(x, *popt), label="Final fit")
+                        ax_cal.plot(x,gaussian_train(x, *popt), label="Final fit", color=get_prism_colors()[4])
 
                     else: #Particular calibration fit for PMTs
                         print("Hello, we are working on a funtion to fit PMT spe :)")
