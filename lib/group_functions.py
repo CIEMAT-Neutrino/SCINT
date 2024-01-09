@@ -35,7 +35,7 @@ def group_selector(data, remove = False, operation = "add", debug = False):
     comb_data = group_data(data, combination_dict, remove=remove, operation=operation, debug=debug)
     return comb_data
 
-def group_data(data, combination_dict, remove = True, operation = "add", debug = False):
+def group_data(data, combination_dict, remove = False, operation = "add", debug = False):
     '''
     group runs and/or chs in the data dictionary
     '''
@@ -84,7 +84,9 @@ def group_runs(data, runs: tuple, operation, remove = True, debug = False):
     grouped_runs["NRun"].append(new_run)
 
     for run, ch, var in product(data["NRun"], data["NChannel"], data[data["NRun"][0]][data["NChannel"][0]].keys()):
+        print(run, runs, remove)
         if run not in runs and remove:
+            if debug: print("Skipping: run %s - ch %s", run, ch)
             continue
         # Check if the run already exists in the grouped_runs dictionary
         if run not in grouped_runs.keys():
@@ -130,7 +132,9 @@ def group_chns(data, chs: tuple, operation, remove = True, debug = False):
                 grouped_chns = group_vars(operation, data, grouped_chns, run, new_ch, var, ch, debug=debug)
 
     for run, ch, var in product(data["NRun"], data["NChannel"], data[data["NRun"][0]][data["NChannel"][0]].keys()):
+        print(ch, chs, remove)
         if ch not in chs and remove:
+            if debug: print("Skipping: run %s - ch %s", run, ch)
             continue
         # Check if the ch already exists in the grouped_chns dictionary
         if ch not in grouped_chns[run].keys():
@@ -153,6 +157,8 @@ def group_vars(operation, data, grouped_chns, run, new_ch, var, ch, debug=False)
         elif operation == "multiply":
             grouped_chns[run][new_ch][var] = grouped_chns[run][new_ch][var] * data[run][ch][var]
     except ValueError:
+        print(f"Could not {operation} {var} arrays")
+    except TypeError:
         print(f"Could not {operation} {var} arrays")
     except KeyError: 
         grouped_chns[run][new_ch][var] = []
