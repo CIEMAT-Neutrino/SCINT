@@ -2,7 +2,7 @@
 # This library contains general functions used to read/write files, load/save data, etc.                                                         #
 #================================================================================================================================================#
 
-import os, gc, uproot, copy, stat, yaml
+import os, gc, uproot, copy, stat, yaml, glob
 import numpy  as np
 import pandas as pd
 from itertools import product
@@ -51,76 +51,84 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
     '''
     if debug: print_colored("\nReading input file: "+str(input)+".txt\n", "DEBUG")
     # Using readlines()
-    file  = open(path+input+".txt", 'r')
-    lines = file.readlines()
-    info = dict()
-    info["NAME"] = [input]
-    if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","CHAN_POLAR","CHAN_AMPLI"]
-    if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
-    if STRINGS == []: STRINGS = ["MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
-    if BOOLEAN == []: BOOLEAN = []
-    # Strips the newline character
-    for line in lines:
-        for LABEL in DOUBLES: 
-            if line.startswith(LABEL):
-                try:
-                    info[LABEL] = []
-                    numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
-                except IndexError:
-                    if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
-                    continue
+    # Check if file is .txt or .yml
+    if glob.glob(path+input+".txt") != []:
+        file  = open(path+input+".txt", 'r')
+        lines = file.readlines()
+        info = dict()
+        info["NAME"] = [input]
+        if NUMBERS == []: NUMBERS = ["BITS","DYNAMIC_RANGE","CHAN_POLAR","CHAN_AMPLI"]
+        if DOUBLES == []: DOUBLES = ["SAMPLING","I_RANGE","F_RANGE"]
+        if STRINGS == []: STRINGS = ["MUONS_RUNS","LIGHT_RUNS","ALPHA_RUNS","CALIB_RUNS","NOISE_RUNS","CHAN_TOTAL","DAQ","MODEL","PATH","MONTH","RAW_DATA","OV_LABEL","CHAN_LABEL","LOAD_PRESET","SAVE_PRESET","TYPE","REF","ANA_KEY","PED_KEY"]
+        if BOOLEAN == []: BOOLEAN = []
+        # Strips the newline character
+        for line in lines:
+            for LABEL in DOUBLES: 
+                if line.startswith(LABEL):
+                    try:
+                        info[LABEL] = []
+                        numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                    except IndexError:
+                        if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
+                        continue
 
-                for i in numbers.split(","):
-                    try:   info[LABEL].append(float(i)) # Try to convert to float and append to LABEL list
-                    except ValueError: 
-                        if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
-                if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+                    for i in numbers.split(","):
+                        try:   info[LABEL].append(float(i)) # Try to convert to float and append to LABEL list
+                        except ValueError: 
+                            if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
+                    if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
-        for LABEL in NUMBERS:
-            if line.startswith(LABEL):
-                try:
-                    info[LABEL] = []
-                    numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
-                except IndexError:
-                    if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
-                    continue
+            for LABEL in NUMBERS:
+                if line.startswith(LABEL):
+                    try:
+                        info[LABEL] = []
+                        numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                    except IndexError:
+                        if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
+                        continue
 
-                for i in numbers.split(","):
-                    try:   info[LABEL].append(int(i)) # Try to convert to int and append to LABEL list
-                    except ValueError:
-                        if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
-                if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+                    for i in numbers.split(","):
+                        try:   info[LABEL].append(int(i)) # Try to convert to int and append to LABEL list
+                        except ValueError:
+                            if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
+                    if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
-        for LABEL in STRINGS:
-            if line.startswith(LABEL):
-                # if debug: print_colored(line, "DEBUG")
-                try:
-                    info[LABEL] = []
-                    numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
-                except IndexError:
-                    if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
-                    continue
+            for LABEL in STRINGS:
+                if line.startswith(LABEL):
+                    # if debug: print_colored(line, "DEBUG")
+                    try:
+                        info[LABEL] = []
+                        numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                    except IndexError:
+                        if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
+                        continue
 
-                for i in numbers.split(","):
-                    try:   info[LABEL].append(i) # Try to append the string to LABEL list
-                    except ValueError:
-                        if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
-                if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
-        for LABEL in BOOLEAN:
-            if line.startswith(LABEL):
-                # if debug: print_colored(line, "DEBUG")
-                try:
-                    info[LABEL] = []
-                    numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
-                except IndexError:
-                    if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
-                    continue
+                    for i in numbers.split(","):
+                        try:   info[LABEL].append(i) # Try to append the string to LABEL list
+                        except ValueError:
+                            if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
+                    if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+            for LABEL in BOOLEAN:
+                if line.startswith(LABEL):
+                    # if debug: print_colored(line, "DEBUG")
+                    try:
+                        info[LABEL] = []
+                        numbers = line.split(" ")[1].strip("\n") # Takes the second element of the line
+                    except IndexError:
+                        if debug == True: print_colored(str(LABEL)+":\nNo value found!\n", "WARNING")
+                        continue
 
-                for i in numbers.split(","):
-                    try:   info[LABEL].append(i.lower() in ["yes","y","true","t","si","s"]) # Try to append the string to LABEL list
-                    except ValueError:
-                        if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
-                if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+                    for i in numbers.split(","):
+                        try:   info[LABEL].append(i.lower() in ["yes","y","true","t","si","s"]) # Try to append the string to LABEL list
+                        except ValueError:
+                            if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
+                    if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+    elif glob.glob(path+input+".yml") != []:
+        info = read_yaml_file(input,path=path,debug=debug)
+    else:
+        print_colored("Input file not found!", "ERROR")
+        raise ValueError("Input file not found!")
+    
     return info
 
 def cuts_info2dict(user_input, info, debug=False):
@@ -211,20 +219,23 @@ def write_output_file(run, ch, output, filename, info, header_list, write_mode =
     def flatten_data(data):
         return [flatten_data_recursive(row) for row in data]
 
-    folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
-    if not os.path.exists(folder_path): os.makedirs(name=folder_path,exist_ok=True)
+    folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fits/run"+str(run)+"_ch"+str(ch)+"/"
+    if not os.path.exists(folder_path): 
+        os.makedirs(name=folder_path,exist_ok=True)
+        os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+    if debug: print("Saving in: "+str(folder_path+filename+"Ch%s.txt"%ch))
     
     flat_data = flatten_data(output)
     flat_data = remove_columns(flat_data,not_saved)
     
-    confirmation = input("\nConfirmation to save in "+folder_path+filename+"_ch%i.txt the printed parameters (except HEIGHT) (y/n)? "%ch)
+    confirmation = input("\nConfirmation to save in "+folder_path+filename+"Ch%s.txt the printed parameters (except HEIGHT) (y/n)? "%ch)
     if "y" in confirmation:
         print("\n----------- Saving -----------")
-        if not os.path.exists(folder_path+filename+"_ch%i.txt"%ch): #HEADER#
+        if not os.path.exists(folder_path+filename+"Ch%s.txt"%ch): #HEADER#
             os.makedirs(name=folder_path,exist_ok=True)             # Create the directory if it doesnt exist
-            with open(folder_path+filename+"_ch%i.txt"%ch, '+a') as f:  f.write("\t".join(header_list)+"\n") # Write the header
+            with open(folder_path+filename+"Ch%s.txt"%ch, '+a') as f:  f.write("\t".join(header_list)+"\n") # Write the header
 
-        with open(folder_path+filename+"_ch%i.txt"%ch, write_mode) as f:
+        with open(folder_path+filename+"Ch%s.txt"%ch, write_mode) as f:
             if write_mode in ['w']:
                 column_widths = [max(len(str(item)) for item in col) for col in zip(*flat_data)]
                 header_line = '\t'.join('{{:<{}}}'.format(width) for width in column_widths).format(*header_list) + '\n'
@@ -284,7 +295,7 @@ def binary2npy(runs, channels, user_input, compressed=True, header_lines=6, forc
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(str),channels.astype(str)):
-        print("\n....... READING RUN%i CH%i ......."%(run, ch))
+        print("\n....... READING RUN%s CH%s ......."%(run, ch))
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
@@ -551,19 +562,20 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
         for ch_idx,ch in enumerate(channels):
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
-            if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug) # Get the branch list if preset is used
+            if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug=False) # Get the branch list if preset is used
             for branch in branch_list:   
-                try:
-                    if compressed:
+                if compressed:
+                    try:
                         my_runs[run][ch][branch.replace(".npz","")] = np.load(path+in_folder+branch.replace(".npz","")+".npz",allow_pickle=True, mmap_mode="w+")["arr_0"]     
                         if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npz","")]=my_runs[run][ch][branch.replace(".npz","")].astype(float)
-                    else:
+                    except FileNotFoundError:
+                        print_colored("\nRun %s, channels %s %s --> NOT LOADED (FileNotFound)"%(run,ch,branch), "WARNING")
+                else:
+                    try:
                         my_runs[run][ch][branch.replace(".npy","")] = np.load(path+in_folder+branch.replace(".npy","")+".npy",allow_pickle=True, mmap_mode="w+").item()
                         if branch.__contains__("RawADC"):my_runs[run][ch][branch.replace(".npy","")]=my_runs[run][ch][branch.replace(".npy","")].astype(float)
-                except FileNotFoundError:
-                    # my_runs["NRun"].remove(run)
-                    # my_runs["NChannel"].remove(ch)
-                    print_colored("\nRun %s, channels %s --> NOT LOADED (FileNotFound)"%(run,ch), "ERROR")
+                    except FileNotFoundError:
+                        print_colored("\nRun %s, channels %s %s --> NOT LOADED (FileNotFound)"%(run,ch,branch), "WARNING")
 
             my_runs[run][ch]["Label"]    = aux_Label[ch]
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
