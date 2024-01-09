@@ -333,7 +333,8 @@ def get_units(my_runs, debug = False):
         for key in keys:
             if "Amp" in key or "Ped" in key or "ADC" in key or "PreTrigger" in key: aux_dic[key] = "ADC"
             elif "Time" in key or "Sampling" in key:                                aux_dic[key] = "ticks"
-            elif "Charge" in key and "Ana" in key:                                  aux_dic[key] = "ADC x ticks"
+            elif "Charge" in key and "Ana" in key and "PE" not in key:              aux_dic[key] = "ADC x ticks"
+            elif "PE" in key and "Ana" in key:                                      aux_dic[key] = "PE"
             elif "Charge" in key and "Gauss" in key:                                aux_dic[key] = "PE"
             else:                                                                   aux_dic[key] = "a.u."
             
