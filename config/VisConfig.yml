@@ -1,8 +1,8 @@
 MICRO_SEC: true
-NORM: true
+NORM: false
 LOGX: false
 LOGY: false
-LOGZ: true
+LOGZ: false
 CHARGE_KEY: ChargeAveRange
 CHARGEDICT: false
 PEAK_FINDER: false
@@ -10,10 +10,10 @@ CUTTED_WVF: 0
 STATS: false
 LEGEND: true
 THRESHOLD: 0
-WIDTH: 15
-PROMINENCE: 0.02
-PEAK_DISTANCE: 80
-ACCURACY: 250
+WIDTH: 10
+PROMINENCE: 0.01
+PEAK_DISTANCE: 40
+ACCURACY: 150
 SHOW_AVE: AveWvf
 SHOW_PARAM: true
 SHOW: true
@@ -21,10 +21,10 @@ COMPARE: CHANNELS
 TERMINAL_MODE: true
 PRINT_KEYS: false
 SCINT_FIT: true
-FIT: norm_gaussian
+FIT: gaussian
 STYLE: HEP_style
 NAME: VisConfig
 ALIGN: false
 PERCENTILE:
 - 1
-- 99
+- 98
