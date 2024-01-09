@@ -9,5 +9,6 @@ from .head_functions    import *
 from .io_functions      import *
 from .ply_functions     import *
 from .sty_functions     import (style_selector)
+from .unit_functions    import *
 from .vis_functions     import *
 from .wvf_functions     import *
