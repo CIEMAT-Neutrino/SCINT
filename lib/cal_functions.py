@@ -11,13 +11,13 @@ from itertools         import product
 from rich              import print as print
 from rich.table        import Table
 from rich.console      import Console
-
+from scipy.optimize    import curve_fit
 
 # Import from other libraries
 from .io_functions  import check_key, print_colored, write_output_file
 from .ana_functions import generate_cut_array, get_units, get_wvf_label, compute_ana_wvfs
 from .fig_config    import figure_features, add_grid
-from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder
+from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder, PoissonPlusBinomial
 from .vis_functions import vis_var_hist
 from .sty_functions import style_selector, get_prism_colors
 
@@ -87,15 +87,21 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                     if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
                     
                     OPT["SHOW"] == False
-                    OPT["NORM"] == True
                     counts, bins, bars = vis_var_hist(my_runs, info=info, key=[key], OPT=OPT, percentile = [1, 99])
                     counts = counts[0]; bins = bins[0]; bars = bars[0]
 
                     ## New Figure with the fit ##
-                    plt.ion(); fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6)); add_grid(ax_cal)
-                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step",label="Data")
+                    plt.ion() 
+                    fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
+                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step",label="Data", align="left")
                     fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
                     fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
+                    add_grid(ax_cal)
+                    
+                    fig_xt, ax_xt = plt.subplots(1,1, figsize = (8,6))
+                    fig_xt.suptitle("Run_{} Ch_{} - {} Vinogradov X-Talk".format(run,ch,key))
+                    fig_xt.supxlabel("PE"); fig_xt.supylabel("Counts (density)")
+                    add_grid(ax_xt)
 
                     #This if could be simplified!!!
                     if det_label != "PMT": #Fit for SiPMs/SC
@@ -115,9 +121,25 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                         ax_cal.plot(x[peak_idx][:4], y[peak_idx][:4], 'r.', lw=4, label="Peaks")
                         ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6, label="Valleys")
 
-                        popt, pcov, perr = gaussian_train_fit(x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
-                        
+                        popt, pcov, perr = gaussian_train_fit(ax_cal, x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
                         ax_cal.plot(x,gaussian_train(x, *popt), label="Final fit", color=get_prism_colors()[4])
+                        
+                        # Prob is proportional to A*sigma (sqrt(2pi))
+                        PNs=popt[1::3]*np.abs(popt[2::3])/sum(popt[1::3]*np.abs(popt[2::3]))
+                        PNs_err=(popt[1::3]*np.abs(popt[2::3]))**0.5/sum(popt[1::3]*np.abs(popt[2::3]))
+
+                        l=-np.log(PNs[0])
+                        p=1-PNs[1]/(l*PNs[0])
+                        # print("Initial vars:",p,"\t",l)
+                        xdata = np.arange(len(PNs))
+                        # ax_cal[1].errorbar(x=xdata,y=PNs,yerr=PNs_err, color="k",linestyle="none",marker="s",markersize=2,capsize=2,)
+                        ax_xt.bar(np.array(xdata),PNs,label="Data",width=0.4)
+                        xt_popt, xt_pcov = curve_fit(PoissonPlusBinomial, xdata, PNs, p0=[p,l])
+                        ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x',label="Fit: CT=" +str(int(xt_popt[0]*100)) +"%",color="red")
+
+                        print("Fitted vars: ",xt_popt)
+                        xt_perr = np.sqrt(np.diag(xt_pcov))
+                        print("Rel Error: ", xt_perr/xt_popt*100)
 
                     else: #Particular calibration fit for PMTs
                         print("Hello, we are working on a funtion to fit PMT spe :)")
@@ -130,8 +152,12 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                         ## Plot the fit ##
                         ax_cal.plot(x,gaussian_train(x, *popt), label="")
 
-                    if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True: ax_cal.legend()
-                    if check_key(OPT,"LOGY")   == True and OPT["LOGY"]   == True: ax_cal.semilogy(); ax_cal.set_ylim(1)
+                    if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
+                        ax_cal.legend()
+                        ax_xt.legend()
+                    if check_key(OPT,"LOGY")   == True and OPT["LOGY"]   == True: 
+                        ax_cal.semilogy()
+                        ax_cal.set_ylim(1)
                     if check_key(OPT,"SHOW")   == True and OPT["SHOW"]   == True:
                         # print("SHOW BUT NO TERMINAL FRIEND")
 
@@ -143,7 +169,10 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                             # plt.close()
                     if save: 
                         fig_cal.savefig('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), dpi = 500)
-                        if debug: print("Saved figure as: run{}_ch{}_{}_Hist.png".format(run,ch,'_'.join([key])))
+                        fig_xt.savefig('{}{}/images/run{}_ch{}_{}_XTalk.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), dpi = 500)
+                        if debug:
+                            print("Saved figure as: run{}_ch{}_{}_Hist.png".format(run,ch,'_'.join([key])))
+                            print("Saved figure as: run{}_ch{}_{}_XTalk.png".format(run,ch,'_'.join([key])))
                     plt.close()
 
                     try:
@@ -159,7 +188,7 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: return fig_cal,ax_cal,popt, pcov, perr
     else: return popt, pcov, perr
 
-def calibration_txt(run, ch, popt, pcov, filename, info, debug=False):
+def calibration_txt(run, ch, popt, pcov, filename, info, debug = False):
     '''
     \nComputes calibration parameters for each peak.
     \nGiven popt and pcov which are the output for the best parameters when performing the Gaussian fit.
