@@ -21,7 +21,10 @@ def style_selector(OPT):
     if OPT["STYLE"] == "None": pass
     if OPT["STYLE"] == "CIEMAT_style": figure_features()
     if OPT["STYLE"] == "DUNE_style": import dunestyle.matplotlib as dune
-    if OPT["STYLE"] == "HEP_style": import mplhep as hep
+    if OPT["STYLE"] == "HEP_style":
+        import mplhep as hep
+        plt.rcParams.update({'font.size': 16})
+
     if OPT["STYLE"] == "ATLAS_style":
         import mplhep as hep
         hep.style.use("ATLAS")
