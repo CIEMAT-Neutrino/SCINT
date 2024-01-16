@@ -197,7 +197,7 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
             file.write(branch+": "+list_to_string(info[branch])+"\n")
 
 
-def write_output_file(run, ch, output, filename, info, header_list, write_mode = 'a+', not_saved = [2,3], debug = False):
+def write_output_file(run, ch, output, filename, info, header_list, write_mode = 'w', not_saved = [2,3], debug = False):
     '''
     \nGeneral function to write a txt file with the outputs obtained.
     \nThe file name is defined by the given "filename" variable + _chX. 
