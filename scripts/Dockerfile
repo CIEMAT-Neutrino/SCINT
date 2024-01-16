@@ -6,7 +6,7 @@ WORKDIR /home
 RUN dnf -y install 'dnf-command(config-manager)'
 RUN dnf config-manager --set-enabled crb && dnf -y install epel-release && dnf -y update
 # Install packages needed for ROOT
-RUN dnf -y install python3 python3-pip python-devel git root\* python3-root python3-jupyroot
+RUN dnf -y install python3 python3-pip python-devel git root\* python3-root python3-jupyroot wget
 
 # Install python packages 
 RUN pip3 install --upgrade pip wheel iminuit urllib3 tables metakernel ipykernel jupyter-server
@@ -20,12 +20,16 @@ RUN rm -rf requirements.txt && dnf clean all
 # Set up environment variables
 RUN echo "alias myjupyter='jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root'" >> ~/.bashrc
 
+RUN wget https://github.com/DUNE/dune_plot_style/archive/refs/tags/v01_00.tar.gz -O dune_plot_style.tar.gz
+RUN tar -xvzf dune_plot_style.tar.gz && rm dune_plot_style.tar.gz
+RUN python3 -m pip install dune_plot_style-01_00/
+
 # Expose port for Jupyter notebook server
 EXPOSE 8888
 # To run jupyter when this docker container is started.
 # CMD ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--NotebookApp.token=''", "--NotebookApp.password=''", "--no-browser", "--NotebookApp.allow_origin='*'"]
 
-# TODO: install vscode extensions + add UTILS repo + data example
+# TODO: install vscode extensions + data example
 
 ### BUILD IMAGE & RUN ###
 # docker build -t scint .
