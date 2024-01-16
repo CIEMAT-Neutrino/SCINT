@@ -2,7 +2,7 @@
 # In this library we have all the functions related with visualization. They are mostly used in 0XVis*.py macros but can be included anywhere !! #
 #================================================================================================================================================#
 
-import math, inquirer, yaml
+import math, inquirer, yaml, os, stat
 import numpy             as np
 import matplotlib        as mpl
 import matplotlib.pyplot as plt
@@ -238,7 +238,6 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
       (a) "RUNS" to get a plot for each channel and the selected runs. Type: String
       (b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     '''
-
     style_selector(OPT)
     r_list = my_run["NRun"]
     if type(r_list) != list:
@@ -338,7 +337,6 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
     \n- percentile: percentile used for outliers removal
     \nWARNING! Maybe the binning stuff should be studied in more detail.
     '''
-
     style_selector(OPT)
     all_counts = []; all_bins = []; all_bars = []
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
@@ -359,7 +357,9 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
 
     data = []
     for a in a_list:
-        if OPT["COMPARE"] != "NONE": plt.ion(); fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
+        if OPT["COMPARE"] != "NONE":
+            plt.ion()
+            fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
         for b in b_list:
             if OPT["COMPARE"] == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
@@ -381,8 +381,6 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                 
                 if k == "PeakAmp":
                     data = aux_data
-                    max_amp = np.max(data)
-                    # binning = int(max_amp)+1
                     if binning == 0: binning = 1000
                 
                 elif k == "PeakTime":
@@ -394,7 +392,7 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                     ypbot = np.percentile(data, percentile[0]); yptop = np.percentile(data, percentile[1])
                     ypad = 0.2*(yptop - ypbot)
                     ymin = ypbot - ypad; ymax = yptop + ypad
-                    data = [i for i in data if ymin<i<ymax]
+                    data = [i for i in data if ymin < i < ymax]
                     if binning == 0: binning = 400 # FIXED VALUE UNTIL BETTER SOLUTION
 
                 density = False
@@ -436,7 +434,6 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                     while not plt.waitforbuttonpress(-1): pass
                     plt.close()
         if check_key(OPT,"SHOW") == True and OPT["SHOW"] == True and OPT["COMPARE"] != "NONE":
-            # if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,run,ch,ax,data)
             plt.show()
             if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
                 while not plt.waitforbuttonpress(-1): pass
@@ -475,8 +472,6 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
     \n- percentile: percentile used for outliers removal
     \n- select_range: if we still have many outliers we can select the ranges in x and y axis.
     '''
-
-
     style_selector(OPT)
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
     if type(ch_loaded) != list:
@@ -521,10 +516,12 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
 
             aux_x_data = aux_x_data[~np.isnan(aux_x_data)]; aux_y_data = aux_y_data[~np.isnan(aux_y_data)]
             x_data = aux_x_data; y_data = aux_y_data
+            
             #### Calculate range with percentiles for x-axis ####
             x_ypbot = np.percentile(x_data, percentile[0]); x_yptop = np.percentile(x_data, percentile[1])
             x_ypad = 0.2*(x_yptop - x_ypbot)
             x_ymin = x_ypbot - x_ypad; x_ymax = x_yptop + x_ypad
+            
             #### Calculate range with percentiles for y-axis ####
             y_ypbot = np.percentile(y_data, percentile[0]); y_yptop = np.percentile(y_data, percentile[1])
             y_ypad = 0.2*(y_yptop - y_ypbot)
@@ -538,6 +535,7 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
                 if check_key(OPT, "LOGZ") == True and OPT["LOGZ"] == True: hist = ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], cmap = viridis, norm=LogNorm())
                 else: hist = ax.hist2d(x_data, y_data, bins=[600,600], range = [[x_ymin,x_ymax],[y_ymin, y_ymax]], cmap = viridis)
                 plt.colorbar(hist[3])
+            
             ax.grid("both")
             fig.supxlabel(label0 + " " + keys[0]+" ("+my_run[run][ch]["UnitsDict"][keys[0]]+")"); fig.supylabel(label1 + " " + keys[1]+" ("+my_run[run][ch]["UnitsDict"][keys[1]]+")")
             fig.suptitle(title)
@@ -559,16 +557,15 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.yscale('log'); 
             if save == True: 
                 fig.savefig('{}_{}_vs_{}.png'.format(title,keys[0],keys[1]), dpi = 500)
+                os.chmod('{}_{}_vs_{}.png'.format(title,keys[0],keys[1]), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 if debug: rprint("Saved figure as: {}_{}_vs_{}.png".format(title,keys[0],keys[1]))
+            
             # Save to specific folder determined by OPT
-
             if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True: 
                 plt.ion()
                 plt.show()
                 while not plt.waitforbuttonpress(-1): pass
                 plt.close()
-            # else:
-            #     plt.close()
             if OPT["COMPARE"] != "NONE": break
 
     return figures_list, axes_list
