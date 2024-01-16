@@ -28,7 +28,7 @@ for i in range(len(template_list)):
     my_run[i+1] = dict()
     my_run["NRun"].append(i+1)
     # For each run ch variable can be used to test different features (in this case template length)
-    for j in np.linspace(500,1000,6).astype(int):
+    for j in np.linspace(500,1000,6).astype(str):
         # Load list of template files
         SER = []
         for template in template_list:

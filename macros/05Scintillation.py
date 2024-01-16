@@ -44,3 +44,18 @@ for run, ch, variable in product(np.asarray(my_runs["NRun"]).astype(str),np.asar
     legend.append(r'$\chi^2$ = %.2f'%(m_fit.fval))
     plt.legend(loc="upper right", frameon=False, title=' '.join(legend),title_fontsize=8)   
     plt.show()
+    if user_input["save"]: 
+        fig.savefig('{}{}/images/run{}_ch{}_{}_Fit.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([variable])), dpi = 500)
+        try:
+            os.chmod('{}{}/images/run{}_ch{}_{}_Fit.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([variable])), 0o777)
+        except:
+            pass
+
+        if user_input["debug"]: print("Saving plot in {}{}/images/run{}_ch{}_{}_Fit.png".format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([variable])))
+
+    # Save fit parameters
+    parameters = [[[m_fit.values[idx], m_fit.errors[idx]] for idx in range(len(m_fit.values))]]
+    header = [m_fit.parameters[int(idx/2)].upper() if idx%2==0 else "D"+m_fit.parameters[int(idx/2)].upper() for idx in range(len(m_fit.values)*2)]
+    write_output_file(run, ch, output=parameters, filename=variable, header_list=header, info=info, not_saved = [], debug=user_input["debug"])
+    plt.close()
+    
