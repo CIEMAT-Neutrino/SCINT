@@ -1,7 +1,8 @@
 #================================================================================================================================================#
 # This library contains function to perform the calibration of our sensors. They are mostly used in the 04Calibration.py macro.                  #
 #================================================================================================================================================#
-import scipy
+from jacobi import propagate
+import scipy, os, stat
 import numpy             as np
 import matplotlib.pyplot as plt
 import pandas            as pd
@@ -92,6 +93,7 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
 
                     ## New Figure with the fit ##
                     plt.ion() 
+                    plt.rcParams.update({'font.size': 16})
                     fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
                     ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step",label="Data", align="left")
                     fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
@@ -118,10 +120,10 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
 
                         peak_idx, valley_idx = peak_valley_finder(x, y, new_params)
                         ax_cal.axhline(np.max(y)*new_params["THRESHOLD"], ls='--')
-                        ax_cal.plot(x[peak_idx][:4], y[peak_idx][:4], 'r.', lw=4, label="Peaks")
+                        ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4, label="Peaks")
                         ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6, label="Valleys")
 
-                        popt, pcov, perr = gaussian_train_fit(ax_cal, x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
+                        popt, pcov = gaussian_train_fit(ax_cal, x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
                         ax_cal.plot(x,gaussian_train(x, *popt), label="Final fit", color=get_prism_colors()[4])
                         
                         # Prob is proportional to A*sigma (sqrt(2pi))
@@ -130,17 +132,11 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
 
                         l=-np.log(PNs[0])
                         p=1-PNs[1]/(l*PNs[0])
-                        # print("Initial vars:",p,"\t",l)
                         xdata = np.arange(len(PNs))
-                        # ax_cal[1].errorbar(x=xdata,y=PNs,yerr=PNs_err, color="k",linestyle="none",marker="s",markersize=2,capsize=2,)
                         ax_xt.bar(np.array(xdata),PNs,label="Data",width=0.4)
-                        xt_popt, xt_pcov = curve_fit(PoissonPlusBinomial, xdata, PNs, p0=[p,l])
-                        ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x',label="Fit: CT=" +str(int(xt_popt[0]*100)) +"%",color="red")
-
-                        print("Fitted vars: ",xt_popt)
-                        xt_perr = np.sqrt(np.diag(xt_pcov))
-                        print("Rel Error: ", xt_perr/xt_popt*100)
-
+                        xt_popt, xt_pcov = curve_fit(PoissonPlusBinomial, xdata, PNs, sigma=PNs_err, p0=[len(PNs),p,l], bounds=([len(PNs)-1e-12,0,0],[len(PNs)+1e-12,1,10]))
+                        ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x',label="Fit: CT = " +str(int(xt_popt[1]*100)) +"% - "+r'$\lambda = {:.2f}$'.format(xt_popt[2]),color="red")
+                    
                     else: #Particular calibration fit for PMTs
                         print("Hello, we are working on a funtion to fit PMT spe :)")
                         thresh = int(len(my_runs[run][ch][key])/1e4)
@@ -168,27 +164,40 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                             while not plt.waitforbuttonpress(-1): pass
                             # plt.close()
                     if save: 
+                        # Increase the fontsize of the figures
                         fig_cal.savefig('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), dpi = 500)
                         fig_xt.savefig('{}{}/images/run{}_ch{}_{}_XTalk.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), dpi = 500)
+                        # Check if the file exists or give it permissions
+                        try:
+                            os.chmod('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                            os.chmod('{}{}/images/run{}_ch{}_{}_XTalk.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                        except:
+                            print("File permissions could not be changed. Check if the file exists & if you have permissions change them manually.")
+                        
+                        # Print the path of the saved file
                         if debug:
                             print("Saved figure as: run{}_ch{}_{}_Hist.png".format(run,ch,'_'.join([key])))
                             print("Saved figure as: run{}_ch{}_{}_XTalk.png".format(run,ch,'_'.join([key])))
+                    
+                    plt.close()
                     plt.close()
 
                     try:
                         my_runs[run][ch]["Gain"]         = popt[3] - abs(popt[0])
                         my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
                         my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
+                    
                     except IndexError:
                         print_colored("Fit failed to find min of 3 calibration peaks!", "WARNING")
                         my_runs[run][ch]["Gain"]         = -99
                         my_runs[run][ch]["MaxChargeSPE"] = -99
                         my_runs[run][ch]["MinChargeSPE"] = -99
     
-    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: return fig_cal,ax_cal,popt, pcov, perr
-    else: return popt, pcov, perr
+    # if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: return fig_cal,ax_cal,popt, pcov, perr
+    # else: 
+    return popt, pcov, xt_popt, xt_pcov
 
-def calibration_txt(run, ch, popt, pcov, filename, info, debug = False):
+def calibration_txt(run, ch, popt, pcov, xt_popt, xt_pcov, info, debug = False):
     '''
     \nComputes calibration parameters for each peak.
     \nGiven popt and pcov which are the output for the best parameters when performing the Gaussian fit.
@@ -198,10 +207,11 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug = False):
     \nSave in a txt the calibration parameters to be exported directly.
     \nTakes as input an array of arrays with the computed parameters (see compute_cal_parameters())
     '''
-
     if all(x !=-99 for x in popt):
         cal_parameters = []
-        perr = np.sqrt(np.diag(pcov))    #error for each variable
+        xt_parameters = []
+        perr = np.sqrt(np.diag(pcov))          #error for each variable
+        xt_perr = np.sqrt(np.diag(xt_pcov))    #error for each variable
         fitted_peaks = int(len(popt)/3)  #three parameters fitted for each peak
         for i in np.arange(fitted_peaks): 
             mu     = [popt[(i+0)+2*i], perr[(i+0)+2*i]]  # mu +- dmu
@@ -209,23 +219,24 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug = False):
             sigma  = [popt[(i+2)+2*i], perr[(i+2)+2*i]]  # sigma +- dsigma
             cal_parameters.append([mu,height,sigma])
             copy_cal = cal_parameters
+        
+        npeaks = [xt_popt[0], xt_perr[0]]
+        xt = [xt_popt[1], xt_perr[1]]
+        l  = [xt_popt[2], xt_perr[2]]
+        xt_parameters.append([npeaks,xt,l])
 
         for i in np.arange(fitted_peaks): #distances between peaks
             if i == fitted_peaks-1: gain = -99; dgain = -99; sn0 = -99; dsn0 = -99; sn1 = -99; dsn1 = -99; sn2 = -99; dsn2 = -99
             else:
-                # GAIN = [mu(i+1) - mu(i)] * 1e-12 /    e-19 (pC)
                 gain  = (copy_cal[i+1][0][0]-copy_cal[i][0][0]);
                 dgain = (np.sqrt(copy_cal[i+1][0][1]**2+copy_cal[i][0][1]**2)) #*1e-12/1.602e-19 #when everythong was pC
                 
-                # SN0 = [mu(i+1)-mu(i)]/sigma(i)
                 sn0 = (copy_cal[i+1][0][0]-copy_cal[i][0][0])/copy_cal[i][2][0]
                 dsn0 = sn0 * np.sqrt(((copy_cal[i+1][0][1]**2+copy_cal[i][0][1]**2)/((copy_cal[i+1][0][0]-copy_cal[i][0][0])))**2+(copy_cal[i][2][1]/copy_cal[i][2][0])**2)
                 
-                # SN1 = [mu(i+1)-mu(i)]/sigma(i+1)
                 sn1 = (copy_cal[i+1][0][0]-copy_cal[i][0][0])/copy_cal[i+1][2][0]
                 dsn1 = sn1 * np.sqrt(((copy_cal[i+1][0][1]**2+copy_cal[i][0][1]**2)/((copy_cal[i+1][0][0]-copy_cal[i][0][0]))**2)+(copy_cal[i+1][2][1]/copy_cal[i+1][2][0])**2)
                 
-                # SNC = [mu(i+1)-mu(i)]/sqrt(sigma(i)**2+sigma(i+1)**2)
                 sn2 = (copy_cal[i+1][0][0]-copy_cal[i][0][0])/(np.sqrt(copy_cal[i][2][0]**2+copy_cal[i+1][2][0]**2))
                 dsn2 = sn2 * np.sqrt((dgain/gain)**2+((copy_cal[i][2][0]*copy_cal[i][2][1])/((copy_cal[i][2][0])**2+(copy_cal[i+1][2][0])**2))**2+((copy_cal[i+1][2][0]*copy_cal[i+1][2][1])/((copy_cal[i][2][0])**2+(copy_cal[i+1][2][0])**2))**2)
 
@@ -249,8 +260,21 @@ def calibration_txt(run, ch, popt, pcov, filename, info, debug = False):
 
             console.print("\nPeak:", i)
             console.print(table)
+        
+        console = Console()
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("Parameter")
+        table.add_column("Value")
+        table.add_column("Error")
+        parameters = ["NPEAK", "XT", "LAMBDA"]
+        for j, parameter in enumerate(parameters):
+            value, error = '{:.2f}'.format(xt_parameters[0][j][0]), '{:.2f}'.format(xt_parameters[0][j][1])
+            table.add_row(parameter, value, error)
+        console.print("\nX-Talk:")
+        console.print(table)
 
-        write_output_file(run, ch, cal_parameters, filename, info, write_mode = 'w', header_list=["MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
+        write_output_file(run, ch, cal_parameters, "Calibration", info, write_mode = 'w', header_list=["MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
+        write_output_file(run, ch, xt_parameters, "XTalk", info, write_mode = 'w', header_list=["NPEAK","XT","DXT","LAMBDA","DLAMBDA"], not_saved = [1])
 
 def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
     gains = dict.fromkeys(channels) ; Dgain = dict.fromkeys(channels)
@@ -259,7 +283,7 @@ def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
         my_table = my_table.iloc[1:]
         gains[ch] = list(np.array(my_table["GAIN" ]).astype(float)[my_table["RUN"]==str(run)])
         Dgain[ch] = list(np.array(my_table["DGAIN"]).astype(float)[my_table["RUN"]==str(run)])
-        if debug: print("\nGAIN TXT FOR CHANNEL %i"%ch ); display(my_table)
+        # if debug: print("\nGAIN TXT FOR CHANNEL %i"%ch ); display(my_table)
     
     return gains, Dgain
 

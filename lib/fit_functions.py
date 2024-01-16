@@ -130,7 +130,7 @@ def initial_values(info,data,function,debug=False):
     if "np.std" in ini_fun: 
         std_idx = ini_fun.index("np.std");
         ini_val[std_idx] = ini_val[std_idx]/2
-    if debug: print_colored("Initial values: " +str(ini_val), "DEBUG")
+    # if debug: print_colored("Initial values: " +str(ini_val), "DEBUG")
     return ini_val
 
 def minuit_fit(info, data, ydata, xdata, function,debug=True):
@@ -180,8 +180,9 @@ def F(K, p, L, debug=False):
     for i in range(K+1): aux_sum+=B(i,K)*((L *(1 - p))**i)  *  (p**(K - i)) 
     return np.exp(-L)*aux_sum/fact(K);
 
-def PoissonPlusBinomial(x,p,L,debug=False):
-    N   = len(x)
+def PoissonPlusBinomial(x,N,p,L,debug=False):
+    # N   = len(x)
+    N = int(N)
     aux = np.zeros(shape=N)
     for i in range(N):
         if debug: print(x,i,x[i])
@@ -273,7 +274,7 @@ def peak_valley_finder(x, y, params):
     print("Peaks found at: ", peak_idx)
     print("Valleys found at: ", valley_idx)
 
-    print_colored("PeakFinder using parameters: thresh = %.2f, wdth = %i, prom = %.2f, acc = %i"%(thresh, wdth, prom, acc), "INFO")
+    print_colored("PeakFinder using parameters: dist = %i, thresh = %.2f, wdth = %i, prom = %.2f, acc = %i"%(dist, thresh, wdth, prom, acc), "INFO")
     return peak_idx, valley_idx
 
 def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=False):
@@ -320,7 +321,7 @@ def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=F
         perr = np.sqrt(np.diag(pcov))
     except ValueError:
         print_colored("Full fit could not be performed", "ERROR")
-    return popt, pcov, perr
+    return popt, pcov
 
 def pmt_spe_fit(counts, bins, bars, thresh):
     '''
