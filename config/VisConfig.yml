@@ -1,5 +1,5 @@
 MICRO_SEC: true
-NORM: false
+NORM: true
 LOGX: false
 LOGY: false
 LOGZ: false
@@ -10,9 +10,9 @@ CUTTED_WVF: 0
 STATS: false
 LEGEND: true
 THRESHOLD: 0
-WIDTH: 10
+WIDTH: 20
 PROMINENCE: 0.01
-PEAK_DISTANCE: 40
+PEAK_DISTANCE: 20
 ACCURACY: 150
 SHOW_AVE: AveWvf
 SHOW_PARAM: true
@@ -21,10 +21,10 @@ COMPARE: CHANNELS
 TERMINAL_MODE: true
 PRINT_KEYS: false
 SCINT_FIT: true
-FIT: gaussian
+FIT: megacell_v3
 STYLE: HEP_style
 NAME: VisConfig
 ALIGN: false
 PERCENTILE:
-- 1
-- 98
+- 2
+- 99

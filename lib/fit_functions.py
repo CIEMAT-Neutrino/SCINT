@@ -22,8 +22,63 @@ from .io_functions  import check_key, print_colored, read_yaml_file
 from .ana_functions import generate_cut_array, get_units
 from .wvf_functions import find_amp_decrease
 
-np.seterr(divide = 'ignore') 
+np.seterr(divide = 'ignore')
 
+#===========================================================================#
+#*************************** EMPIRICAL FUNCTIONS ***************************#
+#===========================================================================#
+
+def expand_bins(bins, data):
+    if np.max(bins) > np.max(data) and np.min(bins) < np.min(data):
+        pass
+    elif np.max(bins) > np.max(data):
+        bin_width = bins[1] - bins[0]
+        bins = np.arange(np.min(data), np.max(bins)+bin_width, bin_width)
+    elif np.min(bins) < np.min(data):
+        bin_width = bins[1] - bins[0]
+        bins = np.arange(np.min(bins), np.max(data)+bin_width, bin_width)
+    return bins
+
+def interpolate_sim_data(bins, path, percentile=(1,99)):
+    data = np.load(path)
+    data = data[(data > np.percentile(data, percentile[0])) & (data < np.percentile(data, percentile[1]))]
+    if type(bins) == int:
+        hist, bin_edges = np.histogram(data, bins=bins, density=True)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    
+    elif type(bins) == np.ndarray:
+        bins = expand_bins(bins, data)
+        hist, bin_edges = np.histogram(data, bins=bins, density=True)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+    return bin_centers, hist
+
+def combi_convolve_poisson(bins, height, eff):
+    from scipy.stats import poisson
+    from scipy.interpolate import interp1d
+    path = "../data/MegaCell_LAr/Dic23/sim/combi.npy"
+    bin_centers, hist = interpolate_sim_data(50, path)  
+    new_bins = np.arange(int(np.min(bins)),int(np.max(bins)+1))
+    convolved_hist = np.zeros(len(new_bins))
+    for i in range(len(hist)):
+        convolved_hist += hist[i] * poisson.pmf(new_bins, eff*bin_centers[i])
+    # Interpolate the convolved histogram to the original binning
+    f = interp1d(new_bins, convolved_hist, kind='cubic', fill_value="extrapolate", bounds_error=False)
+    convolved_hist = f(bins)
+    return height*convolved_hist/np.max(convolved_hist)
+
+def sipm1_convolve_poisson(bins, height, eff):
+    from scipy.stats import poisson
+    from scipy.interpolate import interp1d
+    path = "../data/MegaCell_LAr/Dic23/sim/sipm1.npy"
+    bin_centers, hist = interpolate_sim_data(50, path)  
+    new_bins = np.arange(int(np.min(bins)),int(np.max(bins)+1))
+    convolved_hist = np.zeros(len(new_bins))
+    for i in range(len(hist)):
+        convolved_hist += hist[i] * poisson.pmf(new_bins, eff*bin_centers[i])
+    # Interpolate the convolved histogram to the original binning
+    f = interp1d(new_bins, convolved_hist, kind='cubic', fill_value="extrapolate", bounds_error=False)
+    convolved_hist = f(bins)
+    return height*convolved_hist/np.max(convolved_hist)
 
 #===========================================================================#
 #************************** THEORETICAL FUNCTIONS **************************#
@@ -102,9 +157,11 @@ def lmfit_models(function):
     # result = model.fit  (ydata, params, x=xdata)
     # print(f'Chi-square = {result.chisqr:.4f}, Reduced Chi-square = {result.redchi:.4f}')
 
-def fitting_function(function, debug=False): 
-    if function == "norm_gaussian": return norm.pdf
-    if function == "exponential":   return expon.pdf
+def fitting_function(function, debug=False):
+    if function == "megacell_v3":       return combi_convolve_poisson 
+    if function == "megacell_v3_sipm1": return sipm1_convolve_poisson
+    if function == "norm_gaussian":     return norm.pdf
+    if function == "exponential":       return expon.pdf
     else: 
         if debug: print_colored("Not configured, looking for a local defined function",color="WARNING")
         try:
@@ -114,7 +171,7 @@ def fitting_function(function, debug=False):
 
 def setup_fitting_function(function_name, ydata, xdata, debug=False):
     function = fitting_function(function_name, debug=debug)
-    if function_name == "gaussian":
+    if function_name == "gaussian" or "megacell_v3" in function_name:
         ydata = ydata/np.max(ydata)
         return function, ydata
     elif function_name == "norm_gaussian":

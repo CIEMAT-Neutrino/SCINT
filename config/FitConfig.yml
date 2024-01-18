@@ -1,2 +1,4 @@
+megacell_v3: [1,0.12]
+megacell_v3_sipm1: [1,0.12]
 gaussian: ["np.mean",1,"np.std"] 
 norm_gaussian: ["np.mean","np.std"] 
