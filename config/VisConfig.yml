@@ -1,5 +1,6 @@
 MICRO_SEC: true
 NORM: true
+DENSITY: false
 LOGX: false
 LOGY: false
 LOGZ: false
@@ -17,14 +18,14 @@ ACCURACY: 150
 SHOW_AVE: AveWvf
 SHOW_PARAM: true
 SHOW: true
-COMPARE: CHANNELS
+COMPARE: RUNS
 TERMINAL_MODE: true
 PRINT_KEYS: false
 SCINT_FIT: true
-FIT: megacell_v3
+FIT: megacell_v3_sipm1
 STYLE: HEP_style
 NAME: VisConfig
-ALIGN: false
+ALIGN: true
 PERCENTILE:
-- 2
+- 1
 - 99

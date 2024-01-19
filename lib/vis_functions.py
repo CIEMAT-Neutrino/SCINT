@@ -264,7 +264,7 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
     if OPT["COMPARE"] == "NONE":     a_list = r_list;  b_list = ch_list
     for a_idx, a in enumerate(a_list):
-        if OPT["COMPARE"] == "RUNS":      ch = a
+        if OPT["COMPARE"] == "RUNS":     ch = a
         if OPT["COMPARE"] == "CHANNELS": run = a
         if OPT["COMPARE"] == "NONE":     run = a; ch = b_list
         plt.ion()
@@ -282,7 +282,7 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
         for b in b_list:
             if OPT["COMPARE"] == "RUNS":
                 run = b
-                label = "Run {} - {}".format(run,keys[counter]);title = "Average Waveform - Ch {}".format(ch)
+                # label = "Run {} - {}".format(run,keys[counter]);title = "Average Waveform - Ch {}".format(ch)
             if OPT["COMPARE"] == "CHANNELS": 
                 ch = b
                 # label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
@@ -297,7 +297,9 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
                 norm_ave = np.max(ave)
                 sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
                 thrld = 1e-6
-                if check_key(OPT,"NORM") == True and OPT["NORM"] == True:          ave = ave/norm_ave
+                if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
+                    ave = ave/norm_ave
+                    fig.supylabel("Norm")
                 if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True: fig.supxlabel(r'Time [$\mu$s]'); sampling = my_run[run][ch]["Sampling"]*1e6
                 if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:         axs.semilogy()
                 if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
@@ -397,8 +399,8 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
 
                 density = False
                 y_label = "Counts"
-                if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
-                    y_label = "Normalized Counts"
+                if check_key(OPT, "DENSITY") == True and OPT["DENSITY"] == True:
+                    y_label = "Density"
                     density = True
 
                 if len(key) > 1:
@@ -416,13 +418,19 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                     while x1 == -1e6:
                         try:    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
                         except: x1 = -1e6 
-                    counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", align="left", range=(x1,x2), density=density) # , zorder = 2 f
-                else:counts, bins, bars = ax.hist(data,binning, label=label, histtype="step", align="left", density=density) # , zorder = 2 f
-                    
+                    # counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", align="left", range=(x1,x2), density=density) # , zorder = 2 f
+                        counts, bins = np.histogram(data, bins = int(binning), range=(x1,x2), density=density)
+                else: 
+                    # counts, bins, bars = ax.hist(data,binning, label=label, histtype="step", align="left", density=density) # , zorder = 2 f
+                    counts, bins = np.histogram(data, bins = int(binning), density=density)
+                if check_key(OPT, "NORM") and OPT["NORM"]: counts = counts/np.max(counts)   
+
+                ax.plot(bins[:-1], counts, drawstyle = "steps", label=label, alpha = 0.95, linewidth=1.2)  
+                
                 label = label.replace(" - " + k,"")
                 all_counts.append(counts)
                 all_bins.append(bins)
-                all_bars.append(bars)
+                # all_bars.append(bars)
             
             if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:        ax.legend()
             if check_key(OPT, "LOGY")   == True and OPT["LOGY"]  == True: ax.semilogy()
@@ -442,7 +450,7 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
             if debug: rprint("Saved figure as: run{}_ch{}_{}_Hist.png".format(run,ch,'_'.join(key)))
         plt.close()
 
-    return all_counts, all_bins, all_bars
+    return all_counts, all_bins
 
 def print_stats(my_run, run, ch, ax, data, save = False, debug = False):
     '''
