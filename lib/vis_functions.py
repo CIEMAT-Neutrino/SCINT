@@ -277,8 +277,6 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
         norm_raw = [1]*nch # Generates a list with the norm correction for std bar
         counter = 0
         ref_max_idx = -1
-        print(b_list)
-        print(a_list)
         for b in b_list:
             if OPT["COMPARE"] == "RUNS":
                 run = b
@@ -306,7 +304,9 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
                     ref_threshold = np.argmax(ave>np.max(ave)*2/3)
                     if ref_max_idx == -1: ref_max_idx = ref_threshold
                     ave = np.roll(ave, ref_max_idx-ref_threshold)
-                
+                if check_key(OPT, "SPACE_OUT") and OPT["SPACE_OUT"] != 0:
+                    # for each b in b_list, we want to plot the same waveform with a different offset in x
+                    ave = np.roll(ave, int(b)*int(OPT["SPACE_OUT"]))
                 axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "))
 
         axs.grid(True, alpha = 0.7)
@@ -403,6 +403,18 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                     y_label = "Density"
                     density = True
 
+                if select_range:
+                    x1 = -1e6
+                    while x1 == -1e6:
+                        try:    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
+                        except: x1 = -1e6 
+                        counts, bins = np.histogram(data, bins = int(binning), range=(x1,x2), density=density)
+                else: 
+                    counts, bins = np.histogram(data, bins = int(binning), density=density)
+                if check_key(OPT, "NORM") and OPT["NORM"]:
+                    counts = counts/np.max(counts)   
+                    y_label = "Norm (a.u.)"
+
                 if len(key) > 1:
                     fig.supxlabel(my_run[run][ch]["UnitsDict"][k]);
                     fig.supylabel(y_label)
@@ -412,18 +424,6 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                     fig.supxlabel(k+" ("+my_run[run][ch]["UnitsDict"][k]+")"); 
                     fig.supylabel(y_label)
                     fig.suptitle(title + " - {} histogram".format(k))
-
-                if select_range:
-                    x1 = -1e6
-                    while x1 == -1e6:
-                        try:    x1 = float(input("xmin: ")); x2 = float(input("xmax: "))
-                        except: x1 = -1e6 
-                    # counts, bins, bars = ax.hist(data, bins = int(binning), label=label, histtype="step", align="left", range=(x1,x2), density=density) # , zorder = 2 f
-                        counts, bins = np.histogram(data, bins = int(binning), range=(x1,x2), density=density)
-                else: 
-                    # counts, bins, bars = ax.hist(data,binning, label=label, histtype="step", align="left", density=density) # , zorder = 2 f
-                    counts, bins = np.histogram(data, bins = int(binning), density=density)
-                if check_key(OPT, "NORM") and OPT["NORM"]: counts = counts/np.max(counts)   
 
                 ax.plot(bins[:-1], counts, drawstyle = "steps", label=label, alpha = 0.95, linewidth=1.2)  
                 
