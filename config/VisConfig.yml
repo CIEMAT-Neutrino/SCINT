@@ -1,5 +1,5 @@
-MICRO_SEC: true
-NORM: true
+MICRO_SEC: false
+NORM: false
 DENSITY: false
 LOGX: false
 LOGY: false
@@ -8,7 +8,7 @@ CHARGE_KEY: ChargeAveRange
 CHARGEDICT: false
 PEAK_FINDER: false
 CUTTED_WVF: 0
-STATS: true
+STATS: false
 LEGEND: false
 THRESHOLD: 0
 WIDTH: 20
@@ -27,5 +27,5 @@ NAME: VisConfig
 ALIGN: false
 SPACE_OUT: 0
 PERCENTILE:
-- 2
+- 1
 - 99
