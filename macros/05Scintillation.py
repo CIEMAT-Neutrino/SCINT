@@ -34,15 +34,16 @@ for run, ch, variable in product(np.asarray(my_runs["NRun"]).astype(str),np.asar
     # Plotting the fit curve using the parameters obtained from fit_selector
     y_fit, ycov = propagate(lambda p: fitting_function(OPT["FIT"], debug=False)(xdata,  *p), m_fit.values, m_fit.covariance)
 
-    plt.hist(xdata, xdata, weights=ydata, label="run {} ch {}".format(run,ch), histtype="step", align="left")
-    plt.hist(xdata, xdata, weights=y_fit, label="{} fit".format(OPT["FIT"]), histtype="step", align="left")
+    colors = get_prism_colors()
+    plt.hist(xdata, xdata, weights=ydata, label="run {} ch {}".format(run,ch), histtype="step", align="left", color = colors[6])
+    plt.hist(xdata, xdata, weights=y_fit, label="{} fit".format(OPT["FIT"]), histtype="step", align="left", color = "red")
 
     yerr = np.sqrt(np.diag(ycov))
-    plt.fill_between(xdata, (y_fit - yerr), (y_fit + yerr), alpha=0.2)
+    plt.fill_between(xdata, (y_fit - yerr), (y_fit + yerr), alpha=0.2, color=colors[7])
 
     legend = [ f"${m_fit.parameters[m]} = {value:.2f} \pm {m_fit.errors[m]:.2f}$\n" for m,value in enumerate(m_fit.values) ]
     legend.append(r'$\chi^2$ = %.2f'%(m_fit.fval))
-    plt.legend(loc="upper right", frameon=False, title=' '.join(legend))
+    plt.legend(frameon=False, title=' '.join(legend))
     # Increase font size of legend
     plt.setp(ax.get_legend().get_texts(), fontsize='14')   
     plt.show()
