@@ -221,7 +221,7 @@ def fit_gaussians(x, y, *p0):
 ##Binomial+Poisson distribution
 def B(i, k, debug=False):
     '''
-    \nFactorial factor of F
+    Factorial factor of F
     '''
     if (i==0) & (k==0):return 1;
     if (i==0) & (k>0): return 0;
@@ -229,8 +229,8 @@ def B(i, k, debug=False):
 
 def F(K, p, L, debug=False):
     '''
-    \nComputes prob of the kth point in a convoluted poisson+binomial distribution,.
-    \nL is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
+    Computes prob of the kth point in a convoluted poisson+binomial distribution.
+    L is the mean value of the poisson, p is the binomial coef, i.e. the crosstalk we want to compute
     '''
     aux_sum=0
     if debug: print(K)
@@ -699,7 +699,7 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
                     os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 
                 term_output = ""
-                term_output = term_output+"Fitting wvf %i for run %i, ch %i\n"%(i,run,ch)
+                term_output = term_output+"Fitting wvf %s for run %s, ch %s\n"%(i,run,ch)
                 term_output = term_output+"--------------------------------\n"
                 for i in range(len(labels)):
                     term_output = term_output+"%s:\t%.2E\t%.2E\n"%(labels[i], popt[i], perr[i])
@@ -715,7 +715,7 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
         
         my_runs[run][ch]["Fit"+signal_type+out_key] = aux
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ioff()
-    return fit, popt
+    return fit, popt, perr, labels
 
 def get_initial_parameters(i_param):
     '''
@@ -744,7 +744,11 @@ def tau_slow_profile(x,a_s,tau_s):
     return 2*a_s/tau_s*np.exp(-(x)/tau_s)
 
 def log_tau_slow_profile(x,a_s,tau_s):
-    return np.log(tau_slow_profile(x,a_s,tau_s))
+    y = np.log(tau_slow_profile(x,a_s,tau_s))
+    # Replace infs and nans from the array by 0
+    y[np.isinf(y)] = 0
+    y[np.isnan(y)] = 0
+    return y
 
 def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     '''
@@ -842,7 +846,10 @@ def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     initial2 = (a2, tau2)
     # try:
     # popt, pcov = curve_fit(scint_profile, raw_x[:buffer2] ,raw[raw_max:raw_max+buffer2],p0=initial2, bounds=bounds2)
-    popt, pcov = curve_fit(log_tau_slow_profile, raw_x[:buffer2-buffer1] ,np.log(raw[raw_max+buffer1:raw_max+buffer2]),p0=initial2, bounds=bounds2)
+    y = np.log(raw[raw_max+buffer1:raw_max+buffer2])
+    y[np.isinf(y)] = 0
+    y[np.isnan(y)] = 0
+    popt, pcov = curve_fit(log_tau_slow_profile, raw_x[:buffer2-buffer1], y, p0=initial2, bounds=bounds2)
     perr = np.sqrt(np.diag(pcov))
     
     # except:
