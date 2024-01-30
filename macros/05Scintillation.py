@@ -43,7 +43,7 @@ for run, ch, variable in product(np.asarray(my_runs["NRun"]).astype(str),np.asar
 
     legend = [ f"${m_fit.parameters[m]} = {value:.2f} \pm {m_fit.errors[m]:.2f}$\n" for m,value in enumerate(m_fit.values) ]
     legend.append(r'$\chi^2$ = %.2f'%(m_fit.fval))
-    plt.legend(frameon=False, title=' '.join(legend))
+    plt.legend(loc="upper right", frameon=False, title=' '.join(legend))
     # Increase font size of legend
     plt.setp(ax.get_legend().get_texts(), fontsize='14')   
     plt.show()
