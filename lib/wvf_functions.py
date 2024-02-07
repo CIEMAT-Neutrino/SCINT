@@ -149,7 +149,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
             if typ == "ChargeAveRange": # Integrated charge from the average waveform
                 i_idx,f_idx = find_baseline_cuts(ave[i])
                 if f_idx - i_idx <= 0:
-                    print_colored("WARNING: Invalid integration range for RUN %i CH %i TYPE %s, REF %s"%(run,ch,typ,label+ref),"WARNING")
+                    print_colored("WARNING: Invalid integration range for RUN %s CH %s TYPE %s, REF %s"%(run,ch,typ,label+ref),"WARNING")
                     idx, f_idx = find_amp_decrease(ave[i],1e-3)
                     if debug: print_colored("Using amp decrease instead: [%.2f, %.2f] \u03BCs"%(idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]),"DEBUG")
                 charge_name = label+typ+ref.split("Wvf")[-1]+cut_label
@@ -190,11 +190,11 @@ def compute_peak_RMS(my_runs, info, key, label, debug = False):
         ref = np.asarray(my_runs[run][ch][label+"AveWvf"][0])
         i_idx,f_idx = find_baseline_cuts(ref)
         if f_idx - i_idx <= 0:
-            print_colored("WARNING: Invalid integration range for RUN %i CH %i, REF %s"%(run,ch,label+"AveWvf"),"WARNING")
+            print_colored("WARNING: Invalid integration range for RUN %s CH %s, REF %s"%(run,ch,label+"AveWvf"),"WARNING")
             idx, f_idx = find_amp_decrease(ref,1e-3)
             if debug: print_colored("Using amp decrease instead: [%.2E, %.2E] \u03BCs"%(idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]),"DEBUG")
             if f_idx - i_idx <= 0:
-                print_colored("ERROR: Invalid integration range for RUN %i CH %i, REF %s"%(run,ch,label+"AveWvf"),"ERROR")
+                print_colored("ERROR: Invalid integration range for RUN %s CH %s, REF %s"%(run,ch,label+"AveWvf"),"ERROR")
                 idx, f_idx = my_runs[run][ch][label+"PedLim"], my_runs[run][ch][label+"PedLim"]+1000
                 if debug: print_colored("Using pedlim instead: [%.2E, %.2E] \u03BCs"%(idx*my_runs[run][ch]["Sampling"],f_idx*my_runs[run][ch]["Sampling"]),"DEBUG")
                         
