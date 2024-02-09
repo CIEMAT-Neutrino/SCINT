@@ -10,12 +10,12 @@ try: importlib.util.find_spec("dunestyle.matplotlib"); styles.append("DUNE_style
 except: pass
 try: importlib.util.find_spec("mplhep"); styles.append("HEP_style")
 except: pass
+from .io_functions import check_key
+from .fig_config   import (figure_features, add_grid); 
 
 for style in styles: print(f" \t * You can change your plotting style with [green]OPT[STYLE]={style}![/green]")
 
-#  Import from other libraries
-from .io_functions import check_key
-from .fig_config   import (figure_features, add_grid); 
+
 def style_selector(OPT):
     if check_key(OPT,"STYLE") == False: OPT["STYLE"] = "CIEMAT_style"
     if OPT["STYLE"] == "None": pass
@@ -23,7 +23,7 @@ def style_selector(OPT):
     if OPT["STYLE"] == "DUNE_style": import dunestyle.matplotlib as dune
     if OPT["STYLE"] == "HEP_style":
         import mplhep as hep
-        plt.rcParams.update({'font.size': 16})
+        plt.rcParams.update({'font.size': 14})
 
     if OPT["STYLE"] == "ATLAS_style":
         import mplhep as hep
