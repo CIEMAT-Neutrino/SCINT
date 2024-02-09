@@ -88,8 +88,8 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                     if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
                     
                     OPT["SHOW"] == False
-                    counts, bins, bars = vis_var_hist(my_runs, info=info, key=[key], OPT=OPT, percentile = [1, 99])
-                    counts = counts[0]; bins = bins[0]; bars = bars[0]
+                    counts, bins = vis_var_hist(my_runs, info=info, key=[key], OPT=OPT, percentile = [1, 99])
+                    counts = counts[0]; bins = bins[0]
 
                     ## New Figure with the fit ##
                     plt.ion() 
