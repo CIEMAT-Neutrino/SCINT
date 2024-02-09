@@ -447,49 +447,42 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     aux = []
     branch_list = dict_option[option]
-    if preset == "ALL":  # Save all branches
-        for key in branch_list:
-            if key and not "Label" in key and not "PChannel" in key and not "UnitsDict" in key and not "MyCuts" in key: aux.append(key)
+    for key in branch_list:
+        if preset == "ALL":  # Save all branches
+            if not "UnitsDict" in key and not "MyCuts" in key: aux.append(key)
 
-    elif preset == "ANA": # Remove Raw, Dict and Cuts branches
-        aux = ["RawADC"]
-        for key in branch_list:
-            if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Gauss" in key and not "Label" in key and not "PChannel" in key: aux.append(key)
+        elif preset == "ANA": # Remove Raw, Dict and Cuts branches
+            if "ANA" in key: aux.append(key)
 
-    elif preset == "RAW":  # Save aux + Raw branches
-        for key in branch_list:
-            if "Raw" in key and not "Label" in key and not "PChannel" in key: aux.append(key) 
+        elif preset == "RAW":  # Save aux + Raw branches
+            if "Raw" in key: aux.append(key) 
 
-    elif preset == "EVA": # Remove ADC, Dict and Cuts branches
-        for key in branch_list:
-            if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Label" in key and not "PChannel" in key: aux.append(key) # and key not in aux # add??
+        elif preset == "EVA": # Remove ADC, Dict and Cuts branches
+            if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
 
-    elif preset == "DEC": # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
-        for key in branch_list:
-            if "Gauss" in key or "Wiener" in key or "Dec" in key and not "Label" in key and not "PChannel" in key: aux.append(key) # and key not in aux # add??
+        elif preset == "DEC": # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
+            if "Gauss" in key or "Wiener" in key or "Dec" in key: aux.append(key)
 
-    elif preset == "CAL": # Save aux + Charge* branches
-        for key in branch_list:
-            if "Charge" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
+        elif preset == "CAL": # Save aux + Charge* branches
+            if "Charge" in key and key not in aux: aux.append(key)
 
-    elif preset == "WVF": # Save aux + Wvf* branches
-        for key in branch_list:
-            if "Wvf" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
+        elif preset == "WVF": # Save aux + Wvf* branches
+            if "Wvf" in key and key not in aux: aux.append(key)
 
-    elif preset == "INT": # Save aux + Wvf* branches
-        for key in branch_list:
-            if "Wvf" in key or "Charge" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
-
-    elif preset == "FFT": # Save aux + Wvf* branches
-        for key in branch_list:
-            if "MeanFFT" in key or "Freq" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
+        elif preset == "FFT": # Save aux + Wvf* branches
+            if "MeanFFT" in key or "Freq" in key and key not in aux: aux.append(key)
     
     else:
         print_colored("Preset not found. Returning all the branches.", "WARNING")
         raise ValueError("Preset not found. Returning all the branches.")
 
     branch_list = aux
-    
+    try:
+        branch_list.remove("Label")
+        branch_list.remove("PChannel")
+        branch_list.remove("Sampling")
+    except ValueError: pass
+
     if debug: print_colored("Branch list: "+str(branch_list), "DEBUG")
     return branch_list
 
