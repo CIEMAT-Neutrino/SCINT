@@ -8,7 +8,7 @@ from itertools import product
 from rich      import print as print
 
 # Import from other libraries
-from .io_functions import print_colored, print_keys, check_key
+from .io_functions import print_colored, check_key
 
 #===========================================================================#
 #************************* PEAK + PEDESTAL *********************************#
@@ -47,7 +47,6 @@ def compute_fft_wvfs(my_runs, info, key, label, debug = False):
         my_runs[run][ch][label+"Freq"] = [np.fft.rfftfreq(my_runs[run][ch][key][0].size, d=my_runs[run][ch]["Sampling"])]
         my_runs[run][ch][label+"MeanFFT"] = [np.mean(my_runs[run][ch][label+"FFT"],axis=0)]
         print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "blue")
-        if debug: print_keys(my_runs)
     print_colored("--> Computed AnaFFT Wvfs!!!", "SUCCESS")
 
 def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False):
@@ -87,7 +86,7 @@ def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
     print_colored("--> Computed Peak Variables!!!", "SUCCESS")
 
-def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 100, sliding = 100, debug = False):
+def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 100, sliding = 200, debug = False):
     '''
     \nComputes the pedestal variables of a collection of a run's collection in several windows.
     \n**VARIABLES:**
@@ -122,7 +121,7 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
         my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
     print_colored("--> Computed Pedestal Variables!!!", "SUCCESS")
 
-def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 500, debug = False):
+def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 200, debug = False):
     '''
     \nTaking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window". 
     It checks for the best window.

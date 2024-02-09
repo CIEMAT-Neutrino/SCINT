@@ -76,7 +76,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
                         try:   info[LABEL].append(float(i)) # Try to convert to float and append to LABEL list
                         except ValueError: 
                             if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
-                    if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+                    # if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
             for LABEL in NUMBERS:
                 if line.startswith(LABEL):
@@ -91,7 +91,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
                         try:   info[LABEL].append(int(i)) # Try to convert to int and append to LABEL list
                         except ValueError:
                             if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
-                    if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+                    # if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
             for LABEL in STRINGS:
                 if line.startswith(LABEL):
@@ -107,7 +107,7 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
                         try:   info[LABEL].append(i) # Try to append the string to LABEL list
                         except ValueError:
                             if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
-                    if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+                    # if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
             for LABEL in BOOLEAN:
                 if line.startswith(LABEL):
                     # if debug: print_colored(line, "DEBUG")
@@ -122,9 +122,11 @@ def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "..
                         try:   info[LABEL].append(i.lower() in ["yes","y","true","t","si","s"]) # Try to append the string to LABEL list
                         except ValueError:
                             if debug == True: print_colored("Error when reading: " + str(LABEL), "ERROR")
-                    if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+                    # if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
+    
     elif glob.glob(path+input+".yml") != []:
         info = read_yaml_file(input,path=path,debug=debug)
+    
     else:
         print_colored("Input file not found!", "ERROR")
         raise ValueError("Input file not found!")
@@ -184,12 +186,6 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
                 info[branch][3] = "DEC"
                 info[branch][4] = "DEC"
                 file.write(branch+": "+list_to_string(info[branch])+"\n")
-        # elif branch == "REF":
-        #     if label == "Gauss" or label == "Wiener": 
-        #         info[branch][0] = label+"AveWvf"; file.write(branch+": "+list_to_string(info[branch])+"\n")
-        # elif branch == "LIGHT_RUNS" or branch == "CALIB_RUNS" or branch == "MUON_RUNS":    
-        #     if label == "Gauss" or label == "Wiener": 
-        #         info[branch] = []; file.write(branch+": "+list_to_string(info[branch])+"\n")
         elif branch == "ANA_KEY":
             if label == "Gauss" or label == "Wiener": 
                 info[branch] = label; file.write(branch+": "+list_to_string(info[branch])+"\n")
@@ -261,36 +257,32 @@ def binary2npy_express(in_file, header_lines=6, debug=False):
     try:    data = np.fromfile(in_file, dtype='H')               # Reading .dat file as uint16
     except: data = np.frombuffer(in_file.getbuffer(), dtype='H') # io.UnsupportedOperation: fileno --> when browsing file
     
-    header     = headers[:6]                     # Read first event header
-    NSamples   = int(header[0]/2-header_lines*2) # Number of samples per event (as uint16)
-    Event_size = header_lines*2+NSamples         # Number of uint16 per event
-    N_Events   = int(data.shape[0]/Event_size)   # Number of events in the file
+    header  = headers[:6]                       # Read first event header
+    samples = int(header[0]/2-header_lines*2)   # Number of samples per event (as uint16)
+    size    = header_lines*2+samples            # Number of uint16 per event
+    events  = int(data.shape[0]/size)           # Number of events in the file
 
-    #reshape everything, delete unused header
-    ADC        = np.reshape(data,(N_Events,Event_size))[:,header_lines*2:]              # Data reshaped as (N_Events,NSamples)
-    headers    = np.reshape(headers,(N_Events , int(Event_size/2) )  )[:,:header_lines] # Headers reshaped as (N_Events,header_lines)
-    TIMESTAMP  = (headers[:,4]*2**32+headers[:,5]) * 8e-9                               # Unidades TriggerTimeStamp(PC_Units) * 8e-9
+    ADC       = np.reshape(data,(events,size))[:,header_lines*2:]              # Data reshaped as (N_Events,NSamples)
+    headers   = np.reshape(headers,(events , int(size/2) )  )[:,:header_lines] # Headers reshaped as (N_Events,header_lines)
+    TIMESTAMP = (headers[:,4]*2**32+headers[:,5]) * 8e-9                       # Unidades TriggerTimeStamp(PC_Units) * 8e-9
         
     if debug:
-        print_colored("#####################################################################","DEBUG")
-        print_colored("Header:"+str(header),"DEBUG")
-        print_colored("Waveform Samples:"+str(NSamples),"DEBUG")
-        print_colored("Event_size(wvf+header):"+str(Event_size),"DEBUG")
-        print_colored("N_Events:"+str(N_Events),"DEBUG")
-        print_colored("Run time: {:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " min" ,"DEBUG")
-        print_colored("Rate: {:.2f}".format(N_Events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " Events/s" ,"DEBUG")
-        print_colored("#####################################################################\n","DEBUG")
+        print(f"#################################")
+        # print(f"Header:\t{header}")
+        print(f"Ticks:\t{samples}")
+        print(f"Events:\t{events}")
+        print("Time:\t{:.2f}".format((TIMESTAMP[-1]-TIMESTAMP[0])/60) + " (min)")
+        print("Rate:\t{:.2f}".format(events/(TIMESTAMP[-1]-TIMESTAMP[0])) + " (Hz)")
+        print(f"#################################\n")
 
     return ADC, TIMESTAMP
 
-def binary2npy(runs, channels, user_input, compressed=True, header_lines=6, force=False, debug=False):
+def binary2npy(runs, channels, info, compressed=True, header_lines=6, force=False, debug=False):
     '''
     \nDumper from binary format to npy tuples. 
     \nInput are binary input file path and npy outputfile as strings. 
     \nDepends numpy. 
     '''
-    info = read_input_file(user_input["input_file"][0],debug=user_input["debug"])
-
     in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
     out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
     os.makedirs(name=out_path,exist_ok=True)
@@ -308,12 +300,11 @@ def binary2npy(runs, channels, user_input, compressed=True, header_lines=6, forc
         except FileExistsError: print_colored("DATA STRUCTURE ALREADY EXISTS", "WARNING") 
 
         try:
-            ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug) # Read the file
-            branches       = ["RawADC","TimeStamp","NBinsWvf","Sampling"]                                # Branches to be saved
-            content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0]]                          # Content to be saved
-            files          = os.listdir(out_path+out_folder)                                             # List of files in the output folder
-            # branches       = ["RawADC","TimeStamp","NBinsWvf", "Sampling", "Label", "RawPChannel"]                                 # Branches to be saved
-            # content        = [ADC,TIMESTAMP, ADC.shape[0], info["SAMPLING"][0], info["CHAN_LABEL"][j], int(info["CHAN_POLAR"][j])] # Content to be saved
+            ADC, TIMESTAMP = binary2npy_express(in_path+in_file, header_lines=header_lines, debug=debug)
+            branches       = ["RawADC","TimeStamp"]
+            content        = [ADC,TIMESTAMP]
+            files          = os.listdir(out_path+out_folder)
+
             for i, branch in enumerate(branches):
                 try:
                     # If the file already exists and force is True, overwrite it
@@ -414,17 +405,6 @@ def check_key(OPT, key):
     try:   OPT[key]; return True   # If the key is found, return True 
     except KeyError: return False  # If the key is not found, return False
 
-def print_keys(my_runs, debug=False):
-    '''
-    \nPrints the keys of the run_dict which can be accesed with run_dict[runs][channels][BRANCH] 
-    '''
-    try:
-        for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-            print("------------------------------------------------------------------------------------------------------------------------------------------------------")
-            print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
-            print("------------------------------------------------------------------------------------------------------------------------------------------------------\n")
-    except KeyError: print_colored("Empty dictionary. No keys to print.", "ERROR")
-    if debug: print_colored("Keys printed", "DEBUG")
 
 def delete_keys(my_runs, keys, debug=False):
     '''
@@ -465,64 +445,51 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     dict_option["LOAD"] = os.listdir(path+folder)
     dict_option["SAVE"] = my_run.keys()
 
+    aux = []
+    branch_list = dict_option[option]
     if preset == "ALL":  # Save all branches
-        branch_list = dict_option[option]; aux = []
         for key in branch_list:
             if key and not "Label" in key and not "PChannel" in key and not "UnitsDict" in key and not "MyCuts" in key: aux.append(key)
-        branch_list = aux
 
     elif preset == "ANA": # Remove Raw, Dict and Cuts branches
-        branch_list = dict_option[option]; aux = ["RawADC"]
+        aux = ["RawADC"]
         for key in branch_list:
             if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Gauss" in key and not "Label" in key and not "PChannel" in key: aux.append(key)
-        branch_list = aux
 
     elif preset == "RAW":  # Save aux + Raw branches
-        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Raw" in key and not "Label" in key and not "PChannel" in key: aux.append(key) 
-        branch_list = aux
 
     elif preset == "EVA": # Remove ADC, Dict and Cuts branches
-        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Label" in key and not "PChannel" in key: aux.append(key) # and key not in aux # add??
-        branch_list = aux
 
     elif preset == "DEC": # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
-        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Gauss" in key or "Wiener" in key or "Dec" in key and not "Label" in key and not "PChannel" in key: aux.append(key) # and key not in aux # add??
-        branch_list = aux
 
     elif preset == "CAL": # Save aux + Charge* branches
-        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Charge" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
-        branch_list = aux
 
     elif preset == "WVF": # Save aux + Wvf* branches
-        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Wvf" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
-        branch_list = aux
 
     elif preset == "INT": # Save aux + Wvf* branches
-        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "Wvf" in key or "Charge" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
-        branch_list = aux
 
     elif preset == "FFT": # Save aux + Wvf* branches
-        branch_list = dict_option[option]; aux = ["TimeStamp"]
         for key in branch_list:
             if "MeanFFT" in key or "Freq" in key and key not in aux and not "Label" in key and not "PChannel" in key: aux.append(key)
-        branch_list = aux
     
     else:
         print_colored("Preset not found. Returning all the branches.", "WARNING")
         raise ValueError("Preset not found. Returning all the branches.")
 
+    branch_list = aux
+    
     if debug: print_colored("Branch list: "+str(branch_list), "DEBUG")
     return branch_list
 
@@ -707,3 +674,15 @@ def npy2df(my_runs, debug = False):
     
     if debug: print_colored("npy2df --> DONE!\n", "SUCCESS")
     return df
+
+# def print_keys(my_runs, debug=False):
+#     '''
+#     \nPrints the keys of the run_dict which can be accesed with run_dict[runs][channels][BRANCH] 
+#     '''
+#     try:
+#         for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
+#             print("------------------------------------------------------------------------------------------------------------------------------------------------------")
+#             print("Dictionary keys --> ",list(my_runs[run][ch].keys()))
+#             print("------------------------------------------------------------------------------------------------------------------------------------------------------\n")
+#     except KeyError: print_colored("Empty dictionary. No keys to print.", "ERROR")
+#     if debug: print_colored("Keys printed", "DEBUG")
