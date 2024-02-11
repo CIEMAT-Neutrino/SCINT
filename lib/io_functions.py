@@ -451,11 +451,14 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         if preset == "ALL":  # Save all branches
             if not "UnitsDict" in key and not "MyCuts" in key: aux.append(key)
 
-        elif preset == "ANA": # Remove Raw, Dict and Cuts branches
-            if "ANA" in key: aux.append(key)
-
         elif preset == "RAW":  # Save aux + Raw branches
             if "Raw" in key: aux.append(key) 
+        
+        elif preset == "ANA" and option == "LOAD": # Remove Raw, Dict and Cuts branches
+            if "Ana" in key or "Raw" in key: aux.append(key)
+
+        elif preset == "ANA" and option == "SAVE": # Remove Raw, Dict and Cuts branches
+            if "Ana" in key: aux.append(key)
 
         elif preset == "EVA": # Remove ADC, Dict and Cuts branches
             if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
@@ -472,9 +475,9 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         elif preset == "FFT": # Save aux + Wvf* branches
             if "MeanFFT" in key or "Freq" in key and key not in aux: aux.append(key)
     
-    else:
-        print_colored("Preset not found. Returning all the branches.", "WARNING")
-        raise ValueError("Preset not found. Returning all the branches.")
+        else:
+            print_colored("Preset not found. Returning all the branches.", "WARNING")
+            raise ValueError("Preset not found. Returning all the branches.")
 
     branch_list = aux
     try:
@@ -483,7 +486,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list.remove("Sampling")
     except ValueError: pass
 
-    if debug: print_colored("Branch list: "+str(branch_list), "DEBUG")
+    if debug: print(f"[bold cyan]--> Loading Variables (according to preset {preset})![/bold cyan]\n{branch_list}\n")
     return branch_list
 
 def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):
@@ -506,7 +509,6 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     \n- info: dictionary with the info of the run
     \n- debug: if True, print debug info
     '''
-    if debug: print_colored("\nLoading npy files...", "DEBUG")
     path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
 
     my_runs = dict()
@@ -520,9 +522,11 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     for run in runs:
         my_runs[run]=dict()
         for ch_idx,ch in enumerate(channels):
+            print(f"[bold cyan]\n....... Load npy run {run} ch {ch} --> DONE! .......\n[/bold cyan]")
+            
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
-            if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug=False) # Get the branch list if preset is used
+            if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug=debug) # Get the branch list if preset is used
             for branch in branch_list:   
                 if compressed:
                     try:
@@ -540,9 +544,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             my_runs[run][ch]["Label"]    = aux_Label[ch]
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
-                 
-            print_colored("\n....... Load npy runs %s & %s channels --> DONE! .......\n"%(runs,channels), color="SUCCESS", styles=["bold"])
-            del branch_list # Delete the branch list to avoid loading the same branches again
+            del branch_list
     return my_runs
 
 def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, compressed=True, debug = False):
@@ -602,21 +604,7 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
 
     print_colored("--> Saved Data Succesfully!!!", "SUCCESS")
     del my_runs 
-    
-#DEPREACTED??#
-def copy_single_run(my_runs, runs, channels, keys):
-    my_run = dict()
-    my_run["NRun"] = []
-    my_run["NChannel"] = []
-    for run, ch, key in product(runs,channels,keys):
-        try:
-            my_run["NRun"].append(run)
-            my_run["NChannel"].append(ch)
-            my_run[run] = dict()
-            my_run[run][ch] = dict()
-            my_run[run][ch][key] = my_runs[run][ch][key]
-        except KeyError: print_colored(str(run) + str(ch)  +str(key) + " key combination is not found in my_runs", "ERROR")
-    return my_run
+
 
 def npy2root(my_runs, debug = False):
     '''

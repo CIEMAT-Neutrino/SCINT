@@ -16,10 +16,10 @@ def get_flag_dict():
     '''
     flag_dict = {
         ("-c", "--channels"):   "channels \t(optional)",
-        ("-d","--debug"):       "debug \t(True/False)",
+        ("-d", "--debug"):       "debug \t(True/False)",
         ("-f", "--filter"):     "filter \t(optional)",
         ("-g", "--group"):      "group \t(True/False)",
-        ("-i","--input_file"):  "input_file",
+        ("-i", "--input_file"):  "input_file",
         ("-k", "--key"):        "key \t(AnaADC, RawADC, etc.)",
         ("-pl","--preset_load"):"preset_load \t(RAW, ANA, etc.)",
         ("-ps","--preset_save"):"preset_save \t(RAW, ANA, etc.)",

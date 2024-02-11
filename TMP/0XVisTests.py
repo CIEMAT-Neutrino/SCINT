@@ -17,21 +17,11 @@ OPT  = {
     "PEAK_FINDER": False,                # Finds possible peaks in the window (True/False)
     "LEGEND":      True,                # Shows plot legend (True/False)
     "SHOW":        True,
-    "CHARGEDICT":  False
     }
 ###################################
 
 ##### LOAD RUNS #####
-# my_runs = load_npy(runs,channels,preset="RAW",info=info,compressed=True) # Load to visualize raw events
 my_runs = load_npy(runs,channels,preset="ANA",info=info,compressed=True) # Load to visualize processed events
-# my_runs = load_npy(runs, channels,preset="EVA",info=info,compressed=True) # Fast load (no ADC)
-#####################
-##### READ CHARGE DICTIONARY #####
-# if OPT["CHARGEDICT"] == True:
-#     for r in runs:
-#         for c in channels:
-#             dicti = np.load(info["PATH"][0]+info["MONTH"][0]+"/npy/run"+str(r).zfill(2)+"_ch"+str(c)+"/ChargeRangeDict.npz",allow_pickle=True, mmap_mode="w+")["arr_0"].item()
-#             print("ChargeRanges for RUN", r, " and CHANNEL ",c, " :\n", dicti, "\n")
 
 ##### CUTS #####
 cut_ped_std(my_runs, n_std = 2, chs_cut=channels, apply_all_chs=True)

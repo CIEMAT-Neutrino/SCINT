@@ -24,13 +24,14 @@ def compute_ana_wvfs(my_runs, info, debug = False):
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(str),np.array(my_runs["NChannel"]).astype(str)):
         if check_key(my_runs[run][ch],"RawADC") == False: 
-            print_colored("ERROR: RawADC not found!", "ERROR")
+            print("[red]ERROR: RawADC not found![/red]")
             exit()
         if check_key(my_runs[run][ch],"Raw"+info["PED_KEY"][0]) == False:
             print_colored("ERROR: Raw"++info["PED_KEY"][0]+" not found! Please run 01PreProcess.py", "ERROR")
             exit()
         my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
     print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")
+
 
 def compute_fft_wvfs(my_runs, info, key, label, debug = False):
     '''
@@ -48,6 +49,7 @@ def compute_fft_wvfs(my_runs, info, key, label, debug = False):
         my_runs[run][ch][label+"MeanFFT"] = [np.mean(my_runs[run][ch][label+"FFT"],axis=0)]
         print_colored("FFT wvfs have been computed for run %i ch %i"%(run,ch), "blue")
     print_colored("--> Computed AnaFFT Wvfs!!!", "SUCCESS")
+
 
 def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False):
     '''
@@ -86,6 +88,7 @@ def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
     print_colored("--> Computed Peak Variables!!!", "SUCCESS")
 
+
 def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 100, sliding = 200, debug = False):
     '''
     \nComputes the pedestal variables of a collection of a run's collection in several windows.
@@ -121,6 +124,7 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
         my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
     print_colored("--> Computed Pedestal Variables!!!", "SUCCESS")
 
+
 def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 200, debug = False):
     '''
     \nTaking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window". 
@@ -150,6 +154,7 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 200, debug = False)
     if debug: print_colored("Calculating pedestal variables from sliding window of %i bins"%(sliding), "INFO")
     return ADC_s, start_window
 
+
 def compute_power_spec(ADC, timebin, debug = False):
     ''' 
     \nComputes the power spectrum of the given events. It returns both axis.
@@ -164,6 +169,7 @@ def compute_power_spec(ADC, timebin, debug = False):
 
     return np.absolute(np.mean(aux, axis = 0)), np.absolute(aux_X)
 
+
 @numba.njit
 def shift_ADCs(ADC, shift, debug = False):
     ''' 
@@ -177,6 +183,7 @@ def shift_ADCs(ADC, shift, debug = False):
     aux_ADC = np.zeros(ADC.shape)
     for i in range(N_wvfs): aux_ADC[i]=shift4_numba(ADC[i],int(shift[i])) # Shift the wvfs
     return aux_ADC
+
 
 # eficient shifter (c/fortran compiled); https://stackoverflow.com/questions/30399534/shift-elements-in-a-numpy-array
 @numba.njit
