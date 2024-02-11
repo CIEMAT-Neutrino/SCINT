@@ -334,12 +334,12 @@ python3 06Deconvolution.py
 All the visualizing macros use the `VisConfig.txt` stored in the `macros` folder. This file contains the default values for the visualization. You can change the values in the file or when running the macro (it will show you the loaded values and ask the user if need to change a line).
 ```python
 MICRO_SEC: True            # True if you want to see the time in microseconds
+PE: True                   # True if you want to see the charge in PE (requres calibration.yml file --> saved to the data/analysis folder) 
 NORM: False                # True if you want to normalize the waveforms
 LOGX: False                # True if you want to see the x axis in log scale
 LOGY: False                # True if you want to see the y axis in log scale
 LOGZ: False                # True if you want to see the z axis in log scale
 CHARGE_KEY: ChargeAveRange # Key to be used for the charge 
-CHARGEDICT: False          #
 PEAK_FINDER: False         #
 CUTTED_WVF: 0              # To show all the events (-1), the cutted (0) or the uncutted (1)
 LEGEND: False              # True if you want to see the legend
