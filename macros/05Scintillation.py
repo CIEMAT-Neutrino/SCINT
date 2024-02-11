@@ -5,7 +5,9 @@ user_input, info = initialize_macro("05Scintillation",["input_file","preset_load
 OPT = opt_selector(debug=user_input["debug"])
 ## 05Scintillation
 my_runs = load_npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str), info, preset=info["LOAD_PRESET"][4], compressed=True, debug=user_input["debug"])
-my_runs = calibrate_charges(my_runs, info, user_input, debug=user_input["debug"])
+if check_key(OPT,"PE") and OPT["PE"]: 
+    my_runs = calibrate_charges(my_runs, info, user_input, debug=user_input["debug"])
+    for var_idx,var in enumerate(user_input["variables"]): user_input["variables"][var_idx] = var+"PE"
 if user_input["group"]: my_runs = group_selector(my_runs, remove = True, operation = "add", debug = user_input["debug"])
 get_units(my_runs, debug = user_input["debug"])
 label, my_runs = cut_selector(my_runs, user_input)
@@ -34,12 +36,11 @@ for run, ch, variable in product(np.asarray(my_runs["NRun"]).astype(str),np.asar
     # Plotting the fit curve using the parameters obtained from fit_selector
     y_fit, ycov = propagate(lambda p: fitting_function(OPT["FIT"], debug=False)(xdata,  *p), m_fit.values, m_fit.covariance)
 
-    colors = get_prism_colors()
-    plt.hist(xdata, xdata, weights=ydata, label="run {} ch {}".format(run,ch), histtype="step", align="left", color = colors[6])
+    plt.hist(xdata, xdata, weights=ydata, label="run {} ch {}".format(run,ch), histtype="step", align="left", color = get_color(ch, even = True))
     plt.hist(xdata, xdata, weights=y_fit, label="{} fit".format(OPT["FIT"]), histtype="step", align="left", color = "red")
 
     yerr = np.sqrt(np.diag(ycov))
-    plt.fill_between(xdata, (y_fit - yerr), (y_fit + yerr), alpha=0.2, color=colors[7])
+    plt.fill_between(xdata, (y_fit - yerr), (y_fit + yerr), alpha=0.2, color = get_color(ch, even = False))
 
     legend = [ f"${m_fit.parameters[m]} = {value:.2f} \pm {m_fit.errors[m]:.2f}$\n" for m,value in enumerate(m_fit.values) ]
     legend.append(r'$\chi^2$ = %.2f'%(m_fit.fval))

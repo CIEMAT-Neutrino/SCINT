@@ -38,3 +38,24 @@ def get_prism_colors():
     prism.insert(-1, prism.pop(0))
     # print(prism)
     return prism
+
+def get_color(number, even = True, style = "prism", debug = False):
+    if style == "prism":
+        colors = get_prism_colors()
+    else:
+        # Use standard matplotlib colors
+        colors = [c for c in plt.rcParams['axes.prop_cycle'].by_key()['color']]
+    if even:
+        number = get_even_color(number)
+    else:
+        number = 1+get_even_color(number)
+    return colors[number]
+
+def get_even_color(number):
+    number = int(number)
+    number = number - 2
+    if number % 2 == 0:
+        pass
+    else:
+        number = number - 1 if number > 0 else number + 1
+    return number

@@ -20,7 +20,7 @@ from .ana_functions import generate_cut_array, get_units, get_wvf_label, compute
 from .fig_config    import figure_features, add_grid
 from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder, PoissonPlusBinomial
 from .vis_functions import vis_var_hist
-from .sty_functions import style_selector, get_prism_colors
+from .sty_functions import style_selector, get_prism_colors, get_color
 
 
 def vis_persistence(my_run, info, OPT, debug=False):
@@ -95,7 +95,7 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                     plt.ion() 
                     plt.rcParams.update({'font.size': 16})
                     fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
-                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step",label="Data", align="left")
+                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step",label="Data", align="left", color = get_color(ch,even=False,debug=debug), lw=2)
                     fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
                     fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
                     add_grid(ax_cal)
@@ -124,7 +124,7 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                         ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6, label="Valleys")
 
                         popt, pcov = gaussian_train_fit(ax_cal, x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
-                        ax_cal.plot(x,gaussian_train(x, *popt), label="Final fit", color=get_prism_colors()[4])
+                        ax_cal.plot(x,gaussian_train(x, *popt), label="Final fit", color="red")
                         
                         # Prob is proportional to A*sigma (sqrt(2pi))
                         PNs=popt[1::3]*np.abs(popt[2::3])/sum(popt[1::3]*np.abs(popt[2::3]))
@@ -133,20 +133,9 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                         l=-np.log(PNs[0])
                         p=1-PNs[1]/(l*PNs[0])
                         xdata = np.arange(len(PNs))
-                        ax_xt.bar(np.array(xdata),PNs,label="Data",width=0.4)
+                        ax_xt.bar(np.array(xdata),PNs,label="Data",width=0.4,color=get_color(ch, even=True, debug=debug))
                         xt_popt, xt_pcov = curve_fit(PoissonPlusBinomial, xdata, PNs, sigma=PNs_err, p0=[len(PNs),p,l], bounds=([len(PNs)-1e-12,0,0],[len(PNs)+1e-12,1,10]))
                         ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x',label="Fit: CT = " +str(int(xt_popt[1]*100)) +"% - "+r'$\lambda = {:.2f}$'.format(xt_popt[2]),color="red")
-                    
-                    else: #Particular calibration fit for PMTs
-                        print("Hello, we are working on a funtion to fit PMT spe :)")
-                        thresh = int(len(my_runs[run][ch][key])/1e4)
-                        x, y, peak_idx, valley_idx, popt, pcov, perr = pmt_spe_fit(counts, bins, bars, thresh)
-                        ## Plot threshold, peaks (red) and valleys (blue) ##
-                        ax_cal.axhline(thresh, ls='--')
-                        ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4)
-                        ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6)
-                        ## Plot the fit ##
-                        ax_cal.plot(x,gaussian_train(x, *popt), label="")
 
                     if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
                         ax_cal.legend()

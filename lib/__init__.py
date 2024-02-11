@@ -8,7 +8,7 @@ from .fit_functions     import *
 from .head_functions    import *
 from .io_functions      import *
 from .ply_functions     import *
-from .sty_functions     import (style_selector)
+from .sty_functions     import (style_selector, get_prism_colors, get_color)
 from .unit_functions    import *
 from .vis_functions     import *
 from .wvf_functions     import *
