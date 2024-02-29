@@ -445,7 +445,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     dict_option["LOAD"] = os.listdir(path+folder)
     dict_option["SAVE"] = my_run.keys()
 
-    aux = []
+    aux = ["TimeStamp"]
     branch_list = dict_option[option]
     for key in branch_list:
         if preset == "ALL":  # Save all branches

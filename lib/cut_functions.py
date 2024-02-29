@@ -61,7 +61,7 @@ def cut_df(my_runs, cut_dict={}, debug=False):
 
                 if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs, debug=debug)
                 if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs, debug=debug)
-                print_colored("... Cutting events for run %i channel %i with %s %s %0.2f ..."%(run, ch, key, logic, value),"INFO")
+                print_colored("... Cutting events for run %s channel %s with %s %s %0.2f ..."%(run, ch, key, logic, value),"INFO")
                 if logic == "bigger":  this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(this_channel_cut_array)
                 if logic == "smaller": this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(this_channel_cut_array)
                 if logic == "equal":   this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(this_channel_cut_array)

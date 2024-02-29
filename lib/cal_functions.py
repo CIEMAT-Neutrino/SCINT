@@ -23,7 +23,7 @@ from .vis_functions import vis_var_hist
 from .sty_functions import style_selector, get_prism_colors, get_color
 
 
-def vis_persistence(my_run, info, OPT, debug=False):
+def vis_persistence(my_run, info, OPT, save=False, debug=False):
     '''
     \nThis function plot the PERSISTENCE histogram of the given runs&ch.
     \nIt perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. 
@@ -36,23 +36,31 @@ def vis_persistence(my_run, info, OPT, debug=False):
     style_selector(OPT)
     plt.ion()
     true_key, true_label = get_wvf_label(my_run, "", "", debug=debug)
+    print_colored("True key: %s"%true_key, "DEBUG")
+    print_colored("True label: %s"%true_label, "DEBUG")
     if true_key == "RawADC":
-        compute_ana_wvfs(my_run, info, debug=False)
+        print_colored("\nAnaADC not saved but we compute it now :)", "WARNING")
+        compute_ana_wvfs(my_run, info, debug=debug)
         key = "AnaADC"
     else: key = true_key
+                
     for run, ch in product(my_run["NRun"],my_run["NChannel"]):
         if check_key(my_run[run][ch], "MyCuts") == False: generate_cut_array(my_run, debug=debug)
-        data_flatten = my_run[run][ch][true_key][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() ##### Flatten the data array
-        time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch][true_key][0])) # Time array
+        data_flatten = my_run[run][ch][key][np.where(my_run[run][ch]["MyCuts"] == True)].flatten() ##### Flatten the data array
+        time = my_run[run][ch]["Sampling"]*np.arange(len(my_run[run][ch][key][0])) # Time array
         time_flatten = np.array([time] * int(len(data_flatten)/len(time))).flatten() 
 
-        plt.hist2d(time_flatten,data_flatten,density=True,bins=[5000,1000], cmap = viridis, norm=LogNorm()) 
-
+        plt.hist2d(time_flatten,data_flatten,density=True,bins=[5000,1000],cmap = viridis,norm=LogNorm()) 
         plt.colorbar()
         plt.grid(True, alpha = 0.7) # , zorder = 0 for grid behind hist
         plt.title("Run_{} Ch_{} - Persistence".format(run,ch),size = 14)
         plt.xticks(size = 11); plt.yticks(size = 11)
-        plt.xlabel("Time (s)", size = 11); plt.ylabel("Counts", size = 11)
+        plt.xlabel("Time [s]", size = 11); plt.ylabel("Amplitude [ADC]", size = 11)
+        if OPT["XLIM"] != False: plt.xlim(OPT["XLIM"])
+        if OPT["YLIM"] != False: plt.ylim(OPT["YLIM"])
+        if OPT["LOGX"] == True: plt.xscale("log")
+        if OPT["LOGY"] == True: plt.yscale("log")
+        if save: plt.savefig('{}{}/images/run{}_ch{}_Persistence.png'.format(info["PATH"][0],info["MONTH"][0],run,ch), dpi = 500)
         del data_flatten, time, time_flatten
         while not plt.waitforbuttonpress(-1): pass
         plt.clf()
