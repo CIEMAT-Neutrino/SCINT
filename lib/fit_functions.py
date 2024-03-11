@@ -707,7 +707,7 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
                 print(term_output)
 
                 if save:
-                    with open(folder_path+"/DeconvolutionFit_%i_%i.txt"%(run,ch),"w+") as f:
+                    with open(folder_path+"/DeconvolutionFit_%s_%s.txt"%(run,ch),"w+") as f:
                         f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
                         for i in range(len(labels)):
                             f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
