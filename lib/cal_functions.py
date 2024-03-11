@@ -162,6 +162,9 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
                             # plt.close()
                     if save: 
                         # Increase the fontsize of the figures
+                        save_path = f'{info["PATH"][0]}{info["MONTH"][0]}/images/'
+                        try: os.makedirs(save_path, exist_ok=True)
+                        except: print_colored("Folder already exists. No need to create it.", "WARNING")
                         fig_cal.savefig('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), dpi = 500)
                         fig_xt.savefig('{}{}/images/run{}_ch{}_{}_XTalk.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), dpi = 500)
                         # Check if the file exists or give it permissions
