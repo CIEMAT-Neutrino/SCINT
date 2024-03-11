@@ -200,7 +200,7 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
                 next_plot = False
                 plt.rcParams['figure.figsize'] = [16,8]
                 plt.subplot(1, 2, 1)
-                plt.title("DECONVOLUTION RUN %i CH %i"%(run,ch))
+                plt.title("DECONVOLUTION RUN %s CH %s"%(run,ch))
 
                 if check_key(OPT, "NORM") ==  True and OPT["NORM"] ==  True:
                     plt.plot(X, signal/np.max(signal), label = "SIGNAL: int = %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", ds = "steps")
@@ -256,6 +256,8 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
                 plt.legend()
 
                 while not plt.waitforbuttonpress(-1): pass
+                if check_key(OPT, "SAVE") ==  True and OPT["SAVE"] ==  True:
+                    plt.savefig("DECONVOLUTION_RUN_%s_CH_%s_%s.png"%(run, ch, label))
                 plt.clf()
         
         plt.ioff()
