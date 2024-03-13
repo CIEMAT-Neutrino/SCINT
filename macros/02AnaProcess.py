@@ -21,7 +21,7 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(use
     average_wvfs(my_runs, info=info, key=key, label=label, centering="PEAK", debug=user_input["debug"])
     compute_peak_RMS(my_runs, info=info, key=key, label=label, debug=user_input["debug"])
     ### Remove branches to exclude from saving
-    save_proccesed_variables(my_runs,preset=str(info["SAVE_PRESET"][2]),info=info, force=True)
+    save_proccesed_variables(my_runs,preset=info["SAVE_PRESET"][2],info=info, force=True)
     ### Free memory
     del my_runs
     gc.collect()

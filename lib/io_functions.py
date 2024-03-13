@@ -451,9 +451,12 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         if preset == "ALL":  # Save all branches
             if not "UnitsDict" in key and not "MyCuts" in key: aux.append(key)
 
-        elif preset == "RAW":  # Save aux + Raw branches
+        elif preset == "RAW" and option == "LOAD":  # Save aux + Raw branches
             if "Raw" in key: aux.append(key) 
         
+        elif preset == "RAW" and option == "SAVE":  # Save aux + Raw branches
+            if "Raw" in key and "ADC" not in key: aux.append(key) 
+
         elif preset == "ANA" and option == "LOAD": # Remove Raw, Dict and Cuts branches
             if "Ana" in key or "Raw" in key: aux.append(key)
 
@@ -484,6 +487,13 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list.remove("Label")
         branch_list.remove("PChannel")
         branch_list.remove("Sampling")
+        # if option == "SAVE" remove branches in aux
+        for branch in ["TimeStamp"]:
+            if option == "SAVE":
+                try:
+                    branch_list.remove(branch)
+                except:
+                    pass
     except ValueError: pass
 
     if debug: print(f"[bold cyan]--> Loading Variables (according to preset {preset})![/bold cyan]\n{branch_list}\n")

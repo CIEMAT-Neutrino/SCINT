@@ -1,0 +1,44 @@
+# Do not use spaces " " except between KEYWORD and input variables
+# If input variables are a list, use "," as a separator
+########################
+####   DAQ INFO     ####
+########################
+TYPE: ADC
+MODEL: 5725S
+BITS: 16384
+DYNAMIC_RANGE: 2
+SAMPLING: 4e-9
+########################
+####   RUNS INFO    ####
+########################
+RAW_DATA: DAT
+PATH: ../data/MegaCell_LAr/
+MONTH: Mar24
+OV_LABEL:
+CALIB_RUNS: 
+LIGHT_RUNS: 
+NOISE_RUNS: 
+ALPHA_RUNS: 
+MUONS_RUNS: 
+########CHANNELS########
+CHAN_LABEL: XA0,XA1,SiPM1,SiPM2,SiPM3,SiPM4,SiPM5,SiPM6
+CHAN_TOTAL: 0,1,2,3,4,5,6,7
+CHAN_POLAR: 1,1,-1,-1,-1,-1,-1,-1
+CHAN_AMPLI: 10813,10813,250,250,250,250,250,250
+########################
+####   BRANCH INFO  ####
+########################
+#PRESETS USED: 0,  1,  2,  3,  4,  5,  6
+LOAD_PRESET: NON,RAW,ANA,ANA,CAL,EVA,ANA
+SAVE_PRESET: NON,RAW,ANA,CAL,CAL,NON,DEC
+########################
+####  CHARGE INFO   ####
+########################
+TYPE: ChargeAveRange,ChargePedRange
+REF: AveWvf
+I_RANGE: 0.1,0.1,0.1,0.1,0.1
+F_RANGE: 0.4,0.9,1.9,2.9,3.9
+PED_KEY: PreTriggerMean
+########################
+####   CUTS INFO    ####
+########################
