@@ -84,7 +84,7 @@ def update_user_input(user_input, new_input_list, info, debug=False):
     \n- **new_input_list** (*list*) - List with the keys of the user input that need to be updated.
     '''
     new_user_input = user_input.copy()
-    defaults = {"preset_load":"ANA","preset_save":"ANA","key":"AnaADC","variables":"AnaPeakAmp","runs":"1","channels":"0","group":"n","save":"n","debug":"y"}
+    defaults = {"preset_load":"ANA","preset_save":"ANA","key":"AnaADC","variables":"AnaChargeAveRange","runs":"1","channels":"0","group":"n","save":"n","debug":"y"}
     flags = {"preset_load":"-pl","preset_save":"-ps","key":"-k","variables":"-v","runs":"-r","channels":"-c","group":"-g","save":"-s","debug":"-d"}
     for key_label in new_input_list:
         if check_key(user_input, key_label) == False:
