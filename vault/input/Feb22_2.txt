@@ -12,7 +12,7 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-PATH: ../data/
+PATH: ../data/Super-cells_LAr/
 MONTH: Feb22_2
 OV_LABEL: OV1,0V2,0V3
 CALIB_RUNS: 1,2,3,35,36,37,56,57,58,112,113,114
