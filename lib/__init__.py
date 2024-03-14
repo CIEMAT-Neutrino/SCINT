@@ -1,3 +1,5 @@
+from src.utils import get_project_root
+
 from .ana_functions     import *
 from .cal_functions     import *
 from .group_functions   import*
