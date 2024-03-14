@@ -461,7 +461,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Ana" in key or "Raw" in key: aux.append(key)
 
         elif preset == "ANA" and option == "SAVE": # Remove Raw, Dict and Cuts branches
-            if "Ana" in key: aux.append(key)
+            if "Ana" in key and "ADC" not in key: aux.append(key)
 
         elif preset == "EVA": # Remove ADC, Dict and Cuts branches
             if not "ADC" in key and not "Dict" in key and not "Cuts" in key: aux.append(key)
@@ -483,17 +483,17 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             raise ValueError("Preset not found. Returning all the branches.")
 
     branch_list = aux
+    for branch in ["TimeStamp"]:
+        if option == "SAVE":
+            try:
+                branch_list.remove(branch)
+            except:
+                pass
     try:
         branch_list.remove("Label")
         branch_list.remove("PChannel")
         branch_list.remove("Sampling")
         # if option == "SAVE" remove branches in aux
-        for branch in ["TimeStamp"]:
-            if option == "SAVE":
-                try:
-                    branch_list.remove(branch)
-                except:
-                    pass
     except ValueError: pass
 
     if debug: print(f"[bold cyan]--> Loading Variables (according to preset {preset})![/bold cyan]\n{branch_list}\n")
