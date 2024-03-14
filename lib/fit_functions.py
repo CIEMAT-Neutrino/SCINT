@@ -693,7 +693,7 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
             PE_std = np.std(raw[i][:i_idx])
             
             if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-                folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fit_data/run"+str(run)+"_ch"+str(ch)+"/"
+                folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fits/run"+str(run)+"_ch"+str(ch)+"/"
                 if not os.path.exists(folder_path): 
                     os.makedirs(name=folder_path,exist_ok=True)
                     os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)

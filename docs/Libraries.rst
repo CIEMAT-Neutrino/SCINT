@@ -17,7 +17,7 @@ io_functions
 
 .. admonition:: **Input/Output files**
    
-   These functions are used to read and write files. The input files are stored in the `input` folder as `.txt` files (`read_input_file`). Once the deconvolution is performed, there are new input files generated that can be used to re-run the analysis workflow using the deconvolved waveforms (`list_to_string` + `generate_input_file`). In some functions we need to save some results in a file, for example the results of the calibration/charge fit. The output files are stored in the `fit_data` folder as `.txt` files using `write_output_file` function:
+   These functions are used to read and write files. The input files are stored in the `input` folder as `.txt` files (`read_input_file`). Once the deconvolution is performed, there are new input files generated that can be used to re-run the analysis workflow using the deconvolved waveforms (`list_to_string` + `generate_input_file`). In some functions we need to save some results in a file, for example the results of the calibration/charge fit. The output files are stored in the `fits` folder as `.txt` files using `write_output_file` function:
 
 .. autoclass:: lib.io_functions.read_input_file
 .. autoclass:: lib.io_functions.list_to_string

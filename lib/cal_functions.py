@@ -279,7 +279,7 @@ def calibration_txt(run, ch, popt, pcov, xt_popt, xt_pcov, info, debug = False):
 def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
     gains = dict.fromkeys(channels) ; Dgain = dict.fromkeys(channels)
     for c, ch in enumerate(channels):
-        my_table = pd.read_csv(folder_path+"/fit_data/run%i_ch%i/gain_ch%i.txt"%(run,ch,ch), header=None,sep = "\t",usecols=np.arange(16),names=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
+        my_table = pd.read_csv(folder_path+"/fits/run%i_ch%i/gain_ch%i.txt"%(run,ch,ch), header=None,sep = "\t",usecols=np.arange(16),names=["RUN","OV","PEAK","MU","DMU","SIG","DSIG","\t","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
         my_table = my_table.iloc[1:]
         gains[ch] = list(np.array(my_table["GAIN" ]).astype(float)[my_table["RUN"]==str(run)])
         Dgain[ch] = list(np.array(my_table["DGAIN"]).astype(float)[my_table["RUN"]==str(run)])
