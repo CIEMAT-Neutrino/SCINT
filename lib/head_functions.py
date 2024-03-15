@@ -2,7 +2,10 @@ import sys, inquirer, os, yaml, ast
 import numpy   as np
 from rich      import print as print
 
+from src.utils import get_project_root
 from .io_functions import print_colored, check_key, read_input_file, read_yaml_file, cuts_info2dict
+
+root = get_project_root()
 
 def get_flag_dict():
     '''
@@ -84,7 +87,7 @@ def update_user_input(user_input, new_input_list, info, debug=False):
     \n- **new_input_list** (*list*) - List with the keys of the user input that need to be updated.
     '''
     new_user_input = user_input.copy()
-    defaults = {"preset_load":"ANA","preset_save":"ANA","key":"AnaADC","variables":"AnaChargeAveRange","runs":"1","channels":"0","group":"n","save":"n","debug":"y"}
+    defaults = {"preset_load":"ANA","preset_save":"ANA","key":"AnaADC","variables":"AnaChargeAveRange","runs":"1","channels":"0","group":"n","save":"y","debug":"y"}
     flags = {"preset_load":"-pl","preset_save":"-ps","key":"-k","variables":"-v","runs":"-r","channels":"-c","group":"-g","save":"-s","debug":"-d"}
     for key_label in new_input_list:
         if check_key(user_input, key_label) == False:
@@ -108,7 +111,7 @@ def select_input_file(user_input, debug=False):
     
     new_user_input = user_input.copy()
     if check_key(user_input, "input_file") == False:
-        file_names = [file_name.split(".")[0] for file_name in os.listdir('../input')]
+        file_names = [file_name.split(".")[0] for file_name in os.listdir(f'{root}/config/input')]
         q = [ inquirer.List("input_file", message=" select input file [flag: -i]", choices=file_names, default="TUTORIAL") ]
         new_user_input["input_file"] = [inquirer.prompt(q)["input_file"]]
     if debug: print_colored("Using input file %s"%new_user_input["input_file"][0],"INFO")
@@ -201,7 +204,7 @@ def apply_cuts(user_input, info, debug=False):
 
 
 def opt_selector(filename = "VisConfig", debug = False):
-    my_opt = read_yaml_file(filename, path="../config/", debug = debug)
+    my_opt = read_yaml_file(filename, path=f"{root}/config/", debug = debug)
     print(my_opt)
     q = [ inquirer.List("change", message="Do you want to change a line? (yes/no)", choices=["yes","no"], default="no") ]
     change_line =  inquirer.prompt(q)["change"].strip().lower()
@@ -213,8 +216,9 @@ def opt_selector(filename = "VisConfig", debug = False):
             new_text = input(f"Enter the new text for line {line} ")
             update_opt[line] = new_text
         update_yaml_file(f'../config/{filename}.yml',update_opt)
-    my_opt = read_yaml_file(filename, path="../config/", debug = debug)
+    my_opt = read_yaml_file(filename, path=f"{root}/config/", debug = debug)
     return my_opt
+
 
 def convert_str_to_type(value, debug = False):
     try:

@@ -203,21 +203,21 @@ def format_coustom_plotly(
         try:
             fig.update_xaxes(
                 title_text=fig.layout.xaxis.title.text
-                + get_units(fig.layout.xaxis.title.text, debug=debug)
+                + get_run_units(fig.layout.xaxis.title.text, debug=debug)
             )
         except AttributeError:
             pass
         try:
             fig.update_yaxes(
                 title_text=fig.layout.yaxis.title.text
-                + get_units(fig.layout.yaxis.title.text, debug=debug)
+                + get_run_units(fig.layout.yaxis.title.text, debug=debug)
             )
         except AttributeError:
             pass
     return fig
 
 
-def get_units(var, debug=False):
+def get_run_units(var, debug=False):
     """
     Returns the units of a variable based on the variable name
 

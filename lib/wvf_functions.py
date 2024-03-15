@@ -8,7 +8,7 @@ from rich      import print as print
 from src.utils import get_project_root
 from .io_functions  import print_colored, check_key
 from .head_functions import update_yaml_file
-from .ana_functions import generate_cut_array, get_units, get_wvf_label, shift_ADCs, compute_ana_wvfs
+from .ana_functions import generate_cut_array, get_run_units, get_wvf_label, shift_ADCs, compute_ana_wvfs
 
 root = get_project_root()
 
@@ -25,7 +25,7 @@ def average_wvfs(my_runs, info, key, label, centering = "NONE", threshold = 0, c
     '''
     for run,ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs) 
-        if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
+        if check_key(my_runs[run][ch], "UnitsDict") == False: get_run_units(my_runs)
 
         buffer = 200  
         aux_ADC = my_runs[run][ch][key][my_runs[run][ch]["MyCuts"] == True]
@@ -143,7 +143,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
     if debug: print_colored("\n--- Integrating RUN %s CH %s TYPE %s, REF %s ---"%(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]), "DEBUG")
     for run,ch,typ,ref in product(my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]):
         if check_key(my_runs[run][ch], "MyCuts") == False: generate_cut_array(my_runs)
-        if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs) # If there are no units, it calculates them
+        if check_key(my_runs[run][ch], "UnitsDict") == False: get_run_units(my_runs) # If there are no units, it calculates them
         if check_key(my_runs[run][ch], label+"ChargeRangeDict") == False: my_runs[run][ch][label+"ChargeRangeDict"] = {} # Creates a dictionary with ranges for each ChargeRange entry
             
         ave = my_runs[run][ch][label+ref+cut_label] # Load the reference average waveform

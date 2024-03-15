@@ -54,7 +54,7 @@ git pull
 ⚠️ This will RESET ALL YOUR local changes ⚠️ and get the last version of the main branch of the repository.
 
 ```
-cd scripts
+cd src/scripts
 sh setup.sh
 cd ../macros
 ```
@@ -140,7 +140,7 @@ F_RANGE: 0.4,0.9,1.9,2.9,3.9
 All the previous instructions are based on a Linux operating system. In summary to run the macros you will need to type:
 
 ```bash
-cd ../macros
+cd ../src/macros
 python3 XXmacro.py (--flags input)
 ```
 

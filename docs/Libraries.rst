@@ -72,11 +72,11 @@ ana_functions
 
 .. admonition:: **General analysis**
    
-   These functions are used to perform general analysis of the data. For example, we can use the `insert_variable` function to insert a new variable in the dictionary. The `generate_cut_array` function is used to generate the cut array that we will use to select the events that we want to analyze. The `get_units` function is used to get the units of the variables stored in the dictionary.
+   These functions are used to perform general analysis of the data. For example, we can use the `insert_variable` function to insert a new variable in the dictionary. The `generate_cut_array` function is used to generate the cut array that we will use to select the events that we want to analyze. The `get_run_units` function is used to get the units of the variables stored in the dictionary.
 
 .. autoclass:: lib.ana_functions.insert_variable
 .. autoclass:: lib.ana_functions.generate_cut_array
-.. autoclass:: lib.ana_functions.get_units
+.. autoclass:: lib.ana_functions.get_run_units
 
 .. admonition:: **Computing peak/pedestal variables**
    

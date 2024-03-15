@@ -20,7 +20,7 @@ from scipy.optimize    import curve_fit
 # Import from other libraries
 from .io_functions   import check_key, print_colored, write_output_file
 from .head_functions import update_yaml_file
-from .ana_functions  import generate_cut_array, get_units, get_wvf_label, compute_ana_wvfs
+from .ana_functions  import generate_cut_array, get_run_units, get_wvf_label, compute_ana_wvfs
 from .fig_config     import figure_features, add_grid
 from .fit_functions  import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder, PoissonPlusBinomial
 from .vis_functions  import vis_var_hist
@@ -100,7 +100,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                 generate_cut_array(my_runs, debug=debug) # If cuts not generated, generate them
             
             if check_key(my_runs[run][ch], "UnitsDict") == False: 
-                get_units(my_runs)          # Get units
+                get_run_units(my_runs)          # Get units
             
             OPT["SHOW"] == False
             counts, bins = vis_var_hist(my_runs, info=info, key=[key], OPT=OPT, percentile=[1, 99])
@@ -388,7 +388,7 @@ def charge_fit(my_runs, keys, OPT={}):
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):        
         
         if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs) #if no cuts, generate them
-        if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          #if no units, generate them
+        if check_key(my_runs[run][ch], "UnitsDict") == False: get_run_units(my_runs)          #if no units, generate them
         # try:
         thresh = int(len(my_runs[run][ch][key])/1000)
 

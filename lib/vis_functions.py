@@ -15,7 +15,7 @@ from rich                        import print as rprint
 # Imports from other libraries
 from .io_functions  import check_key,print_colored
 from .fig_config    import figure_features, add_grid
-from .ana_functions import get_wvf_label,generate_cut_array,get_units
+from .ana_functions import get_wvf_label,generate_cut_array,get_run_units
 from .fit_functions import fit_wvfs
 from .sty_functions import style_selector, get_prism_colors
 
@@ -368,7 +368,7 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
             if OPT["COMPARE"] == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
             if OPT["COMPARE"] == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
             if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run,debug=True)
-            if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
+            if check_key(my_run[run][ch], "UnitsDict") == False: get_run_units(my_run)
             
             if OPT["COMPARE"] == "NONE": fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
             
@@ -500,7 +500,7 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
     for run in r_list:
         for ch in ch_list:
             if check_key(my_run[run][ch], "MyCuts") == False:    generate_cut_array(my_run)
-            if check_key(my_run[run][ch], "UnitsDict") == False: get_units(my_run)
+            if check_key(my_run[run][ch], "UnitsDict") == False: get_run_units(my_run)
     figures_list = []
     axes_list = []
     for a in a_list:

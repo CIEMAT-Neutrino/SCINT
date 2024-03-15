@@ -14,76 +14,19 @@ from scipy.stats    import poisson
 from math           import factorial as fact
 from rich           import print as print
 from lmfit          import models
-from iminuit        import Minuit, cost
-from numba_stats    import norm, expon # uniform,truncexpon,poisson,qgaussian #https://github.com/HDembinski/numba-stats/tree/main/src/numba_stats
-from jacobi         import propagate
 
 #Imports from other libraries
 from .io_functions  import check_key, print_colored, read_yaml_file
-from .ana_functions import generate_cut_array, get_units
+from .ana_functions import generate_cut_array, get_run_units
 from .wvf_functions import find_amp_decrease
 
 np.seterr(divide = 'ignore')
 root = get_project_root()
-#===========================================================================#
-#*************************** EMPIRICAL FUNCTIONS ***************************#
-#===========================================================================#
-
-def expand_bins(bins, data):
-    if np.max(bins) > np.max(data) and np.min(bins) < np.min(data):
-        pass
-    elif np.max(bins) > np.max(data):
-        bin_width = bins[1] - bins[0]
-        bins = np.arange(np.min(data), np.max(bins)+bin_width, bin_width)
-    elif np.min(bins) < np.min(data):
-        bin_width = bins[1] - bins[0]
-        bins = np.arange(np.min(bins), np.max(data)+bin_width, bin_width)
-    return bins
-
-def interpolate_sim_data(bins, path, percentile=(1,99)):
-    data = np.load(path)
-    data = data[(data > np.percentile(data, percentile[0])) & (data < np.percentile(data, percentile[1]))]
-    if type(bins) == int:
-        hist, bin_edges = np.histogram(data, bins=bins, density=True)
-        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-    
-    elif type(bins) == np.ndarray:
-        bins = expand_bins(bins, data)
-        hist, bin_edges = np.histogram(data, bins=bins, density=True)
-        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-    return bin_centers, hist
-
-def combi_convolve_poisson(bins, height, eff):
-    from scipy.stats import poisson
-    from scipy.interpolate import interp1d
-    path = "../data/MegaCell_LAr/Dic23/sim/combi.npy"
-    bin_centers, hist = interpolate_sim_data(50, path)  
-    new_bins = np.arange(int(np.min(bins)),int(np.max(bins)+1))
-    convolved_hist = np.zeros(len(new_bins))
-    for i in range(len(hist)):
-        convolved_hist += hist[i] * poisson.pmf(new_bins, eff*bin_centers[i])
-    # Interpolate the convolved histogram to the original binning
-    f = interp1d(new_bins, convolved_hist, kind='cubic', fill_value="extrapolate", bounds_error=False)
-    convolved_hist = f(bins)
-    return height*convolved_hist/np.max(convolved_hist)
-
-def sipm1_convolve_poisson(bins, height, eff):
-    from scipy.stats import poisson
-    from scipy.interpolate import interp1d
-    path = "../data/MegaCell_LAr/Dic23/sim/sipm1.npy"
-    bin_centers, hist = interpolate_sim_data(50, path)  
-    new_bins = np.arange(int(np.min(bins)),int(np.max(bins)+1))
-    convolved_hist = np.zeros(len(new_bins))
-    for i in range(len(hist)):
-        convolved_hist += hist[i] * poisson.pmf(new_bins, eff*bin_centers[i])
-    # Interpolate the convolved histogram to the original binning
-    f = interp1d(new_bins, convolved_hist, kind='cubic', fill_value="extrapolate", bounds_error=False)
-    convolved_hist = f(bins)
-    return height*convolved_hist/np.max(convolved_hist)
 
 #===========================================================================#
 #************************** THEORETICAL FUNCTIONS **************************#
 #===========================================================================#
+
 def chi_squared(x,y,popt):
     fit_y = np.sum([gaussian(x, popt[j], popt[j+1], popt[j+2]) for j in range(0, len(popt), 3)])
     return np.sum((y - fit_y) ** 2 / fit_y) / (y.size - len(popt))
@@ -157,58 +100,6 @@ def lmfit_models(function):
     # params = model.guess(ydata, x=xdata)
     # result = model.fit  (ydata, params, x=xdata)
     # print(f'Chi-square = {result.chisqr:.4f}, Reduced Chi-square = {result.redchi:.4f}')
-
-def fitting_function(function, debug=False):
-    if function == "megacell_v3":       return combi_convolve_poisson 
-    if function == "megacell_v3_sipm1": return sipm1_convolve_poisson
-    if function == "norm_gaussian":     return norm.pdf
-    if function == "exponential":       return expon.pdf
-    else: 
-        if debug: print_colored("Not configured, looking for a local defined function",color="WARNING")
-        try:
-            function = globals()[function]
-            return function
-        except KeyError: print_colored("Function (%s) not found"%function, color="ERROR"); pass
-
-def setup_fitting_function(function_name, ydata, xdata, debug=False):
-    function = fitting_function(function_name, debug=debug)
-    if function_name == "gaussian" or "megacell_v3" in function_name:
-        ydata = ydata/np.max(ydata)
-        return function, ydata
-    elif function_name == "norm_gaussian":
-        ydata = ydata/np.sum(ydata*(xdata[1]-xdata[0]))
-        return function, ydata
-    else: return function, ydata
-
-def initial_values(info,data,function,debug=False):
-    my_fits = read_yaml_file("FitConfig", path="../config/", debug=debug)
-    ini_fun = my_fits[function]
-    data_s = ', '.join(map(str, data)); data_s = "["+data_s+"]"
-    ini_val = [eval(f"{i}({data_s})") if isinstance(i, str) else i for i in ini_fun]
-    if "np.std" in ini_fun: 
-        std_idx = ini_fun.index("np.std");
-        ini_val[std_idx] = ini_val[std_idx]/2
-    # if debug: print_colored("Initial values: " +str(ini_val), "DEBUG")
-    return ini_val
-
-def minuit_fit(info, data, ydata, xdata, function,debug=True):
-    '''
-    \nThis function performs a fit to the data, using the function specified in the input using MINUIT.
-    \nIt returns the parameters of the fit (if performed)
-    '''
-    print_colored("DEFAULT MINUIT BINNED FIT (%s)"%function, "WARNING")
-    ini_val = initial_values(info, data, function,debug=debug)
-    function, norm_ydata = setup_fitting_function(function, ydata, xdata, debug=debug)
-    c = cost.LeastSquares(xdata, norm_ydata, np.sqrt(norm_ydata), function)
-    m = Minuit(c,*ini_val) 
-    # Generate limits going from 0 to 1.5 times the initial value
-    m.migrad() # find minimum
-    m.hesse()  # accurate error estimates
-    # m.minos()  # accurate error estimates
-    if debug:
-        print_colored("Fitting with Minuit", "INFO", styles=["bold"])
-        print(m.hesse())
-    return m, norm_ydata
 
 # --------------------------------------------------------------------------- #
 # THIS LIBRARY NEED MIMO PORQUE HAY COSAS REDUNDANTES QUE SE PUEDEN UNIFICAR
@@ -709,7 +600,8 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
 
                 if save:
                     with open(folder_path+"/DeconvolutionFit_%s_%s.txt"%(run,ch),"w+") as f:
-                        f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
+                        if signal_type == "Scint" or signal_type == "SimpleScint":
+                            f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
                         for i in range(len(labels)):
                             f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
                     if debug: print("File saved in: %s"%folder_path)

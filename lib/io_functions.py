@@ -30,7 +30,7 @@ def print_colored(string, color="white", styles=[]):
 #===========================================================================#
 
 # TRYING TO USE YAML INSTEAD OF TXT
-def read_yaml_file(input,path = f"{root}/input/",debug = False):
+def read_yaml_file(input, path = f"{root}/config/input/", debug = False):
     '''
     \nObtain the information stored in a .yml input file to load the runs and channels needed.
     \n**VARIABLES**:
@@ -44,7 +44,7 @@ def read_yaml_file(input,path = f"{root}/input/",debug = False):
     data["NAME"] = input
     return data
 
-def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = f"{root}/input/",debug = False):
+def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = f"{root}/config/input/",debug = False):
     '''
     \nObtain the information stored in a .txt input file to load the runs and channels needed.
     \n**VARIABLES**:
@@ -171,7 +171,7 @@ def list_to_string(input_list):
 
     return string 
 
-def generate_input_file(input_file,info,path=f"{root}/input/",label="",debug=False):
+def generate_input_file(input_file,info,path=f"{root}/config/input/",label="",debug=False):
     '''
     \nGenerate a .txt file with the information needed to load the runs and channels.
     \nUsed when deconvolving signals to be able to re-start the analysis workflow with the deconvolved waveforms.
@@ -450,7 +450,6 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     '''
 
     dict_option = dict()
-    print(f"[bold cyan]--> Loading Variables (according to preset {preset} from {path}{folder})![/bold cyan]")
     dict_option["LOAD"] = os.listdir(f"{path}{folder}")
     dict_option["SAVE"] = my_run.keys()
 
@@ -504,6 +503,8 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list.remove("Sampling")
         # if option == "SAVE" remove branches in aux
     except ValueError: pass
+
+    if debug: print(f"[bold cyan]--> Loading Variables (according to preset {preset} from {path}{folder})![/bold cyan]")
     return branch_list
 
 def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):

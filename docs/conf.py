@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath('../'));
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'SCINT'
-copyright = '2023, R. Alvárez, A. de la Torre, S. Manthey, L. Pérez'
+copyright = '2024, R. Alvárez, A. de la Torre, S. Manthey, L. Pérez'
 author = 'R. Alvárez, A. de la Torre, S. Manthey, L. Pérez'
 release = '1.1'
 

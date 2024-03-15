@@ -14,7 +14,7 @@ from rich                     import print as print
 
 # Import from other libraries
 from .io_functions  import print_colored, check_key
-from .ana_functions import generate_cut_array, get_units
+from .ana_functions import generate_cut_array, get_run_units
 from .vis_functions import vis_two_var_hist
 from .fig_config    import figure_features
 
@@ -60,7 +60,7 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                 except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()
 
                 if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs, debug=debug)
-                if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs, debug=debug)
+                if check_key(my_runs[run][ch], "UnitsDict") == False: get_run_units(my_runs, debug=debug)
                 print_colored("... Cutting events for run %s channel %s with %s %s %0.2f ..."%(run, ch, key, logic, value),"INFO")
                 if logic == "bigger":  this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(this_channel_cut_array)
                 if logic == "smaller": this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(this_channel_cut_array)
@@ -99,7 +99,7 @@ def cut_min_max(my_runs, keys, limits, ranges = [0,0], chs_cut = [], apply_all_c
     initial_evts = 0
     for run, ch, key in product(my_runs["NRun"], chs_cut, keys):
         if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs); print("...Running generate_cut_array...")
-        if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)
+        if check_key(my_runs[run][ch], "UnitsDict") == False: get_run_units(my_runs)
 
         initial_evts = len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True])
         if run != my_runs["NRun"][0] and ch == chs_cut[0] and key == keys[0]: idx_list = []; print_colored("... NEW RUN ...", color = "WARNING")
