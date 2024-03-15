@@ -6,5 +6,4 @@ OPT = opt_selector(debug=user_input["debug"])
 for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][4], compressed=True, debug=user_input["debug"])
     label, my_runs = cut_selector(my_runs, user_input)
-    popt, pcov, xt_popt, xt_pcov = calibrate(my_runs, info, [user_input["variables"][0]], OPT, save=user_input["save"], debug=user_input["debug"])
-    calibration_txt(run, ch, popt, pcov, xt_popt, xt_pcov, info=info, debug=user_input["debug"])
+    data = calibrate(my_runs, info, user_input["variables"], OPT, save=user_input["save"], debug=user_input["debug"])
