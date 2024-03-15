@@ -1,7 +1,0 @@
-# ---------------------------------------------------------------------------------------------------------------------- #
-#  ========================================= RUN:$ python3 03Integration.py TEST ======================================= #
-# This macro will calculate integration parametes of all individual wvfs, to be used in subsequent steps of calibration, #
-# charge and deconvolution.                                                                                              #
-# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
-# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
-# ---------------------------------------------------------------------------------------------------------------------- #

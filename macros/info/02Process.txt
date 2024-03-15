@@ -1,6 +1,0 @@
-# ---------------------------------------------------------------------------------------------------------------------- #
-#  =========================================== RUN:$ python3 02Process.py TEST ========================================= #
-# This macro will use peak/pedestal variables (PRE-PROCESS) and save the ADC wvf with the new baseline/polarity ...      #
-# Ideally we want to work in /pnfs/ciemat.es/data/neutrinos/FOLDER and so we mount the folder in our computer with:      #
-# $ sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data  --> making sure empty data folder exists #
-# ---------------------------------------------------------------------------------------------------------------------- #
