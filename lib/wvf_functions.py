@@ -5,9 +5,12 @@ from itertools import product
 from rich      import print as print
 
 # Imports from other libraries
+from src.utils import get_project_root
 from .io_functions  import print_colored, check_key
 from .head_functions import update_yaml_file
 from .ana_functions import generate_cut_array, get_units, get_wvf_label, shift_ADCs, compute_ana_wvfs
+
+root = get_project_root()
 
 #===========================================================================#
 #********************** AVERAGING FUCNTIONS ********************************#
@@ -177,7 +180,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label = "", debug = False):
                 integration_dict[typ][charge_name] = [int(i_idx),int(f_idx)]
 
     # print(integration_dict)
-    filename = info["PATH"][0]+info["MONTH"][0]+"/npy/run"+str(run).zfill(2)+f"_ch{ch}/ChargeDict.yml"
+    filename = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/npy/run{run.zfill(2)}_ch{ch}/ChargeDict.yml'
     update_yaml_file(filename, integration_dict, convert = False, debug = debug)
     return my_runs
 

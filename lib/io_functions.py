@@ -1,12 +1,15 @@
 #================================================================================================================================================#
 # This library contains general functions used to read/write files, load/save data, etc.                                                         #
 #================================================================================================================================================#
+from src.utils import get_project_root
 
 import os, gc, uproot, copy, stat, yaml, glob
 import numpy  as np
 import pandas as pd
 from itertools import product
 from rich      import print as print
+
+root = get_project_root()
 
 def print_colored(string, color="white", styles=[]):
     '''
@@ -27,7 +30,7 @@ def print_colored(string, color="white", styles=[]):
 #===========================================================================#
 
 # TRYING TO USE YAML INSTEAD OF TXT
-def read_yaml_file(input,path = "../input/",debug = False):
+def read_yaml_file(input,path = f"{root}/input/",debug = False):
     '''
     \nObtain the information stored in a .yml input file to load the runs and channels needed.
     \n**VARIABLES**:
@@ -41,7 +44,7 @@ def read_yaml_file(input,path = "../input/",debug = False):
     data["NAME"] = input
     return data
 
-def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = "../input/",debug = False):
+def read_input_file(input,NUMBERS=[],DOUBLES=[],STRINGS=[],BOOLEAN=[],path = f"{root}/input/",debug = False):
     '''
     \nObtain the information stored in a .txt input file to load the runs and channels needed.
     \n**VARIABLES**:
@@ -168,7 +171,7 @@ def list_to_string(input_list):
 
     return string 
 
-def generate_input_file(input_file,info,path="../input/",label="",debug=False):
+def generate_input_file(input_file,info,path=f"{root}/input/",label="",debug=False):
     '''
     \nGenerate a .txt file with the information needed to load the runs and channels.
     \nUsed when deconvolving signals to be able to re-start the analysis workflow with the deconvolved waveforms.
@@ -193,7 +196,7 @@ def generate_input_file(input_file,info,path="../input/",label="",debug=False):
             file.write(branch+": "+list_to_string(info[branch])+"\n")
 
 
-def write_output_file(run, ch, output, filename, info, header_list, write_mode = 'w', not_saved = [2,3], debug = False):
+def write_output_file(run, ch, output, filename, info, header_list, write_mode = 'w', not_saved = [2,3], debug = False) -> bool:
     '''
     \nGeneral function to write a txt file with the outputs obtained.
     \nThe file name is defined by the given "filename" variable + _chX. 
@@ -215,7 +218,7 @@ def write_output_file(run, ch, output, filename, info, header_list, write_mode =
     def flatten_data(data):
         return [flatten_data_recursive(row) for row in data]
 
-    folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fits/run"+str(run)+"_ch"+str(ch)+"/"
+    folder_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
     if not os.path.exists(folder_path): 
         os.makedirs(name=folder_path,exist_ok=True)
         os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
@@ -225,7 +228,7 @@ def write_output_file(run, ch, output, filename, info, header_list, write_mode =
     flat_data = remove_columns(flat_data,not_saved)
     
     confirmation = input("\nConfirmation to save in "+folder_path+filename+"Ch%s.txt the printed parameters (except HEIGHT) (y/n)? "%ch)
-    if "y" in confirmation:
+    if confirmation in ["yes","y","true","t","si","s"]:
         print("\n----------- Saving -----------")
         if not os.path.exists(folder_path+filename+"Ch%s.txt"%ch): #HEADER#
             os.makedirs(name=folder_path,exist_ok=True)             # Create the directory if it doesnt exist
@@ -241,6 +244,11 @@ def write_output_file(run, ch, output, filename, info, header_list, write_mode =
                 data_line = '\t'.join('{{:<{}}}'.format(width) for width in column_widths).format(*map(str, row)) + '\n'
                 f.write(data_line)
 
+        return True
+    else:
+        print("----------- Not saved -----------")
+        return False
+    
 #===========================================================================#
 #************************* RAW TO NUMPY ************************************#
 #===========================================================================#
@@ -283,8 +291,8 @@ def binary2npy(runs, channels, info, compressed=True, header_lines=6, force=Fals
     \nInput are binary input file path and npy outputfile as strings. 
     \nDepends numpy. 
     '''
-    in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
-    out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
+    in_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/raw/'
+    out_path = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/npy/'
     os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(str),channels.astype(str)):
         print("\n....... READING RUN%s CH%s ......."%(run, ch))
@@ -354,8 +362,8 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
     \nNEEDS UPDATE!! (see binary2npy)
     '''
 
-    in_path  = info["PATH"][0]+info["MONTH"][0]+"/raw/"
-    out_path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
+    in_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/raw/'
+    out_path = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/npy/'
     for run, ch in product (runs.astype(str),channels.astype(str)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
@@ -442,7 +450,8 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     '''
 
     dict_option = dict()
-    dict_option["LOAD"] = os.listdir(path+folder)
+    print(f"[bold cyan]--> Loading Variables (according to preset {preset} from {path}{folder})![/bold cyan]")
+    dict_option["LOAD"] = os.listdir(f"{path}{folder}")
     dict_option["SAVE"] = my_run.keys()
 
     aux = ["TimeStamp"]
@@ -495,8 +504,6 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         branch_list.remove("Sampling")
         # if option == "SAVE" remove branches in aux
     except ValueError: pass
-
-    if debug: print(f"[bold cyan]--> Loading Variables (according to preset {preset})![/bold cyan]\n{branch_list}\n")
     return branch_list
 
 def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):
@@ -519,7 +526,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     \n- info: dictionary with the info of the run
     \n- debug: if True, print debug info
     '''
-    path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
+    path = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/npy/'
 
     my_runs = dict()
     runs = np.asarray(runs).astype(str)
@@ -571,13 +578,13 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force
     '''
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-    path = info["PATH"][0]+info["MONTH"][0]+"/npy/"
+    path = f"{root}{info['PATH'][0]}{info['MONTH'][0]}/npy/"
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
             print_colored("\n--> Saving Computed Variables (according to preset %s)!"%(preset), color="INFO", styles=["bold"])
             out_folder = "run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
-            os.makedirs(name=path+out_folder,exist_ok=True)
-            files = os.listdir(path+out_folder)
+            os.makedirs(name=f"{path}{out_folder}",exist_ok=True)
+            files = os.listdir(f"{path}{out_folder}")
             if not branch_list: branch_list = get_preset_list(my_runs[run][ch],path, out_folder, preset, "SAVE", debug)
             for key in branch_list:
                 key = key.replace(".npz","")
