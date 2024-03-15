@@ -227,6 +227,9 @@ def update_yaml_file(file_path: str, new_data: dict, convert: bool = True, debug
     # If file path doesn't exist, create it. Take into account that the file name is included in the path.
     if not os.path.exists(file_path):
         print(f"YAML file '{file_path}' doesn't exist. Creating it...")
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        # Update folder permissions
+        os.system(f"chmod -R 770 {os.path.dirname(file_path)}")
         with open(file_path, 'w') as file:
             yaml.dump(new_data, file, default_flow_style=False, sort_keys=False)
         print(f"YAML file '{file_path}' successfully created.")
