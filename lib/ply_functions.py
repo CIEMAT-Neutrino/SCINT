@@ -14,6 +14,7 @@ def custom_legend_name(fig_px,new_names):
     for i, new_name in enumerate(new_names): fig_px.data[i].name = new_name
     return fig_px
 
+
 def custom_plotly_layout(fig_px, xaxis_title="", yaxis_title="", title="",barmode="stack",bargap=0):
     fig_px.update_layout( updatemenus=[ dict( buttons=list([ dict(args=[{"xaxis.type": "linear", "yaxis.type": "linear"}], label="LinearXY", method="relayout"),
                                                              dict(args=[{"xaxis.type": "log", "yaxis.type": "log"}],       label="LogXY",    method="relayout"),
@@ -26,12 +27,15 @@ def custom_plotly_layout(fig_px, xaxis_title="", yaxis_title="", title="",barmod
     fig_px.update_yaxes(showline=True,mirror=True,zeroline=False)
     return fig_px
 
+
 def show_html(fig_px):
     return pyoff.plot(fig_px, include_mathjax='cdn')
+
 
 def save_plot(fig_px,name):
     if ".hmtl" in name: return fig_px.write_html(name, include_mathjax = 'cdn')
     if ".json" in name: return fig_px.write_json(name)
+
 
 def vis_event(in_file):
     adc,timestamp = binary2npy_express(in_file,debug=False)
