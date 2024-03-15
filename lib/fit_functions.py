@@ -1,6 +1,7 @@
 #================================================================================================================================================#
 # This library contains functions to perform fits to the data.                                                                                   #
 #================================================================================================================================================#
+from src.utils import get_project_root
 
 import os, stat, math, scipy
 import numpy             as np
@@ -23,7 +24,7 @@ from .ana_functions import generate_cut_array, get_units
 from .wvf_functions import find_amp_decrease
 
 np.seterr(divide = 'ignore')
-
+root = get_project_root()
 #===========================================================================#
 #*************************** EMPIRICAL FUNCTIONS ***************************#
 #===========================================================================#
@@ -327,12 +328,12 @@ def peak_valley_finder(x, y, params):
     y = y/max_y
 
     peak_idx, _   = find_peaks(y,   height = thresh, width = wdth, prominence = prom, distance = dist)
-    valley_idx, _ = find_peaks(1-y, height = thresh, width = wdth, prominence = prom, distance = dist)
+    valley_idx, _ = find_peaks(1-y, height = 0, width = wdth, prominence = prom, distance = dist)
     print("Peaks found at: ", peak_idx)
     print("Valleys found at: ", valley_idx)
 
     print_colored("PeakFinder using parameters: dist = %i, thresh = %.2f, wdth = %i, prom = %.2f, acc = %i"%(dist, thresh, wdth, prom, acc), "INFO")
-    return peak_idx, valley_idx
+    return peak_idx, valley_idx[:len(peak_idx)]
 
 def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=False):
     ''' 
@@ -360,7 +361,7 @@ def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=F
 
         try:
             # popt, pcov = curve_fit(loggaussian,x_gauss,np.log10(y_gauss),p0=[np.log10(y[peak_idx[i]]),x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
-            popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[x[peak_idx[i]],y[peak_idx[i]],abs(params["WIDTH"]*(x_gauss[0]-x_gauss[1]))])
+            popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[x[peak_idx[i]],y[peak_idx[i]],abs(params["WIDTH"]*(x_gauss[0]-x_gauss[1]))],bounds=([x[peak_idx[i]]-params["WIDTH"],0,0],[x[peak_idx[i]]+params["WIDTH"],np.inf,10*abs(params["WIDTH"]*(x_gauss[0]-x_gauss[1]))]))
             perr = np.sqrt(np.diag(pcov))
             ## FITTED to gaussian(x, height, center, width) ##
             initial.append(popt[0])         # CENTER
@@ -693,7 +694,7 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
             PE_std = np.std(raw[i][:i_idx])
             
             if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-                folder_path  = info["PATH"][0]+info["MONTH"][0]+"/fits/run"+str(run)+"_ch"+str(ch)+"/"
+                folder_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
                 if not os.path.exists(folder_path): 
                     os.makedirs(name=folder_path,exist_ok=True)
                     os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
