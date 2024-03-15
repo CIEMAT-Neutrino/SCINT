@@ -1,11 +1,14 @@
 #================================================================================================================================================#
 # This library contains function to perform the calibration of our sensors. They are mostly used in the 04Calibration.py macro.                  #
 #================================================================================================================================================#
-from jacobi import propagate
-import scipy, os, stat
+from src.utils import get_project_root
+
+import scipy, os, stat, yaml
 import numpy             as np
 import matplotlib.pyplot as plt
 import pandas            as pd
+
+from jacobi            import propagate
 from matplotlib.colors import LogNorm
 from matplotlib.cm     import viridis
 from itertools         import product
@@ -15,13 +18,15 @@ from rich.console      import Console
 from scipy.optimize    import curve_fit
 
 # Import from other libraries
-from .io_functions  import check_key, print_colored, write_output_file
-from .ana_functions import generate_cut_array, get_units, get_wvf_label, compute_ana_wvfs
-from .fig_config    import figure_features, add_grid
-from .fit_functions import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder, PoissonPlusBinomial
-from .vis_functions import vis_var_hist
-from .sty_functions import style_selector, get_prism_colors, get_color
+from .io_functions   import check_key, print_colored, write_output_file
+from .head_functions import update_yaml_file
+from .ana_functions  import generate_cut_array, get_units, get_wvf_label, compute_ana_wvfs
+from .fig_config     import figure_features, add_grid
+from .fit_functions  import gaussian_train_fit, gaussian_train, pmt_spe_fit, gaussian_fit, gaussian, peak_valley_finder, PoissonPlusBinomial
+from .vis_functions  import vis_var_hist
+from .sty_functions  import style_selector, get_prism_colors, get_color
 
+root = get_project_root()
 
 def vis_persistence(my_run, info, OPT, save=False, debug=False):
     '''
@@ -67,7 +72,8 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
     plt.ioff()
     plt.clf()
 
-def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
+
+def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
     '''
     \nComputes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as 
     \na return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
@@ -78,140 +84,176 @@ def calibrate(my_runs, info, keys, OPT={}, save = False, debug=False):
       (a) LOGY: True if we want logarithmic y-axis
       (b) SHOW: if True, it will show the calibration plot
     '''
-
+    calibration = dict()
     style_selector(OPT)
-    for run in my_runs["NRun"]:
-        for ch in my_runs["NChannel"]:
-            for key in keys:
-                if len(my_runs[run][ch].keys()) == 0: 
-                    print_colored("\n RUN DOES NOT EXIST. Looking for the next", "WARNING")
-                    popt = [-99, -99, -99]; pcov= [-99, -99, -99]; perr = [-99, -99, -99]
-                
-                else: 
-                    det_label = my_runs[run][ch]["Label"]
-                    if check_key(my_runs[run][ch], "MyCuts") == False:
-                        print_colored("Cuts not generated. Generating them now...", "WARNING")
-                        generate_cut_array(my_runs,debug=debug) # If cuts not generated, generate them
-                    
-                    if check_key(my_runs[run][ch], "UnitsDict") == False: get_units(my_runs)          # Get units
-                    
-                    OPT["SHOW"] == False
-                    counts, bins = vis_var_hist(my_runs, info=info, key=[key], OPT=OPT, percentile = [1, 99])
-                    counts = counts[0]; bins = bins[0]
+    for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
+        calibration[(run, ch, key)] = dict()
+        if len(my_runs[run][ch].keys()) == 0: 
+            print_colored("\n RUN DOES NOT EXIST. Looking for the next", "WARNING")
+            popt = [-99, -99, -99]
+            pcov = [-99, -99, -99]
+        
+        else: 
+            det_label = my_runs[run][ch]["Label"]
+            if check_key(my_runs[run][ch], "MyCuts") == False:
+                print_colored("Cuts not generated. Generating them now...", "WARNING")
+                generate_cut_array(my_runs, debug=debug) # If cuts not generated, generate them
+            
+            if check_key(my_runs[run][ch], "UnitsDict") == False: 
+                get_units(my_runs)          # Get units
+            
+            OPT["SHOW"] == False
+            counts, bins = vis_var_hist(my_runs, info=info, key=[key], OPT=OPT, percentile=[1, 99])
+            counts = counts[0]
+            bins = bins[0]
 
-                    ## New Figure with the fit ##
-                    plt.ion() 
-                    plt.rcParams.update({'font.size': 16})
-                    fig_cal, ax_cal = plt.subplots(1,1, figsize = (8,6))
-                    ax_cal.hist(bins[:-1], bins, weights = counts, histtype = "step",label="Data", align="left", color = get_color(ch,even=False,debug=debug), lw=2)
-                    fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run,ch,key))
-                    fig_cal.supxlabel(key+" ("+my_runs[run][ch]["UnitsDict"][key]+")"); fig_cal.supylabel("Counts")
-                    add_grid(ax_cal)
-                    
-                    fig_xt, ax_xt = plt.subplots(1,1, figsize = (8,6))
-                    fig_xt.suptitle("Run_{} Ch_{} - {} Vinogradov X-Talk".format(run,ch,key))
-                    fig_xt.supxlabel("PE"); fig_xt.supylabel("Counts (density)")
-                    add_grid(ax_xt)
+            ## New Figure with the fit ##
+            plt.ion() 
+            plt.rcParams.update({'font.size': 16})
+            fig_cal, ax_cal = plt.subplots(1, 1, figsize=(8, 6))
+            # Add histogram from vis_var_hist
+            center_bins = (bins[:-1] + bins[1:]) / 2
+            ax_cal.hist(center_bins, bins, weights=counts, histtype="step", label=key, align="left", lw=2, color=get_color(ch, even=True, debug=debug))
+            fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run, ch, key))
+            fig_cal.supxlabel(key + " (" + my_runs[run][ch]["UnitsDict"][key] + ")")
+            fig_cal.supylabel("Counts")
+            add_grid(ax_cal)
 
-                    #This if could be simplified!!!
-                    if det_label != "PMT": #Fit for SiPMs/SC
-                        new_params = {}
-                        params = {"THRESHOLD": 0.1, "WIDTH": 5, "PROMINENCE": 0.01, "PEAK_DISTANCE":20, "ACCURACY": 1000, "FIT": "gaussian"}
-                        for i,param in enumerate(list(params.keys())):
-                            if check_key(OPT,param) == True: new_params[param] = OPT[param]
-                            else:                            new_params[param] = params[param]
+            popt, pcov = calibration_fit_plot(ax_cal, counts, bins, OPT, debug=debug)
+            data = {(run,ch,key):{"CALIB": {"popt": popt, "pcov": pcov}}}
+            if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
+                plt.show()
+                while not plt.waitforbuttonpress(-1): pass
+                plt.close()
+            export_txt(data, info, debug=debug)
 
-                        ## Create linear interpolation between bins to search peaks in these variables ##
-                        x = np.linspace(bins[1],bins[-2],params["ACCURACY"])
-                        y_intrp = scipy.interpolate.interp1d(bins[:-1],counts)
-                        y = y_intrp(x)
+            fig_xt, ax_xt = plt.subplots(1, 1, figsize=(8, 6))
+            fig_xt.suptitle("Run_{} Ch_{} - {} Vinogradov X-Talk".format(run, ch, key))
+            fig_xt.supxlabel("PE")
+            fig_xt.supylabel("Counts (density)")
+            add_grid(ax_xt)
 
-                        peak_idx, valley_idx = peak_valley_finder(x, y, new_params)
-                        ax_cal.axhline(np.max(y)*new_params["THRESHOLD"], ls='--')
-                        ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4, label="Peaks")
-                        ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6, label="Valleys")
+            xt_popt, xt_pcov = xtalk_fit_plot(ax_xt, popt, (run,ch,key), OPT, debug=debug)
+            data = {(run,ch,key):{"XTALK": {"popt": xt_popt, "pcov": xt_pcov}}}
+            if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
+                plt.show()
+                while not plt.waitforbuttonpress(-1): pass
+                plt.close()
+            export_txt(data, info, debug=debug)
 
-                        popt, pcov = gaussian_train_fit(ax_cal, x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
-                        ax_cal.plot(x,gaussian_train(x, *popt), label="Final fit", color="red")
-                        
-                        # Prob is proportional to A*sigma (sqrt(2pi))
-                        PNs=popt[1::3]*np.abs(popt[2::3])/sum(popt[1::3]*np.abs(popt[2::3]))
-                        PNs_err=(popt[1::3]*np.abs(popt[2::3]))**0.5/sum(popt[1::3]*np.abs(popt[2::3]))
+            if save: 
+                save_path = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/'
+                try: 
+                    os.makedirs(save_path, exist_ok=True)
+                except: 
+                    print_colored("Folder already exists. No need to create it.", "WARNING")
+                save_figures(fig_cal, fig_xt, (run, ch, key), save_path, debug=debug)
 
-                        l=-np.log(PNs[0])
-                        p=1-PNs[1]/(l*PNs[0])
-                        xdata = np.arange(len(PNs))
-                        ax_xt.bar(np.array(xdata),PNs,label="Data",width=0.4,color=get_color(ch, even=True, debug=debug))
-                        xt_popt, xt_pcov = curve_fit(PoissonPlusBinomial, xdata, PNs, sigma=PNs_err, p0=[len(PNs),p,l], bounds=([len(PNs)-1e-12,0,0],[len(PNs)+1e-12,1,10]))
-                        ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x',label="Fit: CT = " +str(int(xt_popt[1]*100)) +"% - "+r'$\lambda = {:.2f}$'.format(xt_popt[2]),color="red")
-
-                    if check_key(OPT,"LEGEND") == True and OPT["LEGEND"] == True:
-                        ax_cal.legend()
-                        ax_xt.legend()
-                    if check_key(OPT,"LOGY")   == True and OPT["LOGY"]   == True: 
-                        ax_cal.semilogy()
-                        ax_cal.set_ylim(1)
-                    if check_key(OPT,"SHOW")   == True and OPT["SHOW"]   == True:
-                        # print("SHOW BUT NO TERMINAL FRIEND")
-
-                        if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-                            # print("TERMINAL FRIEND")
-                            plt.ion()
-                            plt.show()
-                            while not plt.waitforbuttonpress(-1): pass
-                            # plt.close()
-                    if save: 
-                        # Increase the fontsize of the figures
-                        save_path = f'{info["PATH"][0]}{info["MONTH"][0]}/images/'
-                        try: os.makedirs(save_path, exist_ok=True)
-                        except: print_colored("Folder already exists. No need to create it.", "WARNING")
-                        fig_cal.savefig('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), dpi = 500)
-                        fig_xt.savefig('{}{}/images/run{}_ch{}_{}_XTalk.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), dpi = 500)
-                        # Check if the file exists or give it permissions
-                        try:
-                            os.chmod('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                            os.chmod('{}{}/images/run{}_ch{}_{}_XTalk.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join([key])), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                        except:
-                            print("File permissions could not be changed. Check if the file exists & if you have permissions change them manually.")
-                        
-                        # Print the path of the saved file
-                        if debug:
-                            print("Saved figure as: run{}_ch{}_{}_Hist.png".format(run,ch,'_'.join([key])))
-                            print("Saved figure as: run{}_ch{}_{}_XTalk.png".format(run,ch,'_'.join([key])))
-                    
-                    plt.close()
-                    plt.close()
-
-                    try:
-                        my_runs[run][ch]["Gain"]         = popt[3] - abs(popt[0])
-                        my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
-                        my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
-                    
-                    except IndexError:
-                        print_colored("Fit failed to find min of 3 calibration peaks!", "WARNING")
-                        my_runs[run][ch]["Gain"]         = -99
-                        my_runs[run][ch]["MaxChargeSPE"] = -99
-                        my_runs[run][ch]["MinChargeSPE"] = -99
+            try:
+                my_runs[run][ch]["Gain"] = popt[3] - abs(popt[0])
+                my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
+                my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
+            except IndexError:
+                print_colored("Fit failed to find min of 3 calibration peaks!", "WARNING")
+                my_runs[run][ch]["Gain"] = -99
+                my_runs[run][ch]["MaxChargeSPE"] = -99
+                my_runs[run][ch]["MinChargeSPE"] = -99
     
-    # if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: return fig_cal,ax_cal,popt, pcov, perr
-    # else: 
-    return popt, pcov, xt_popt, xt_pcov
+        calibration[(run, ch, key)]["XTALK"] = {"popt":xt_popt, "pcov":xt_pcov}
+        calibration[(run, ch, key)]["CALIB"] = {"popt":popt, "pcov":pcov}
 
-def calibration_txt(run, ch, popt, pcov, xt_popt, xt_pcov, info, debug = False):
+    return calibration
+
+
+def calibration_fit_plot(ax_cal, counts, bins, OPT, debug=False):
+    new_params = {}
+    params = {"THRESHOLD": 0.1, "WIDTH": 5, "PROMINENCE": 0.01, "PEAK_DISTANCE": 20, "ACCURACY": 1000, "FIT": "gaussian"}
+    for i, param in enumerate(list(params.keys())):
+        if check_key(OPT, param) == True: 
+            new_params[param] = OPT[param]
+        else:                            
+            new_params[param] = params[param]
+
+    x = np.linspace(bins[1], bins[-2], params["ACCURACY"])
+    y_intrp = scipy.interpolate.interp1d(bins[:-1], counts)
+    y = y_intrp(x)
+
+    peak_idx, valley_idx = peak_valley_finder(x, y, new_params)
+    ax_cal.axhline(np.max(y) * new_params["THRESHOLD"], ls='--')
+    ax_cal.plot(x[peak_idx], y[peak_idx], 'r.', lw=4, label="Peaks")
+    ax_cal.plot(x[valley_idx], y[valley_idx], 'b.', lw=6, label="Valleys")
+
+    popt, pcov = gaussian_train_fit(ax_cal, x=x, y=y, y_intrp=y_intrp, peak_idx=peak_idx, valley_idx=valley_idx, params=new_params, debug=debug)
+    ax_cal.plot(x, gaussian_train(x, *popt), label="Final fit", color="red")
+    
+    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"] == True:
+        ax_cal.legend()
+        
+    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: 
+        ax_cal.semilogy()
+        ax_cal.set_ylim(1)
+
+    return popt.tolist(), pcov.tolist()
+
+
+def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
+    run, ch, key = labels
+    PNs = popt[1::3] * np.abs(popt[2::3]) / sum(popt[1::3] * np.abs(popt[2::3]))
+    PNs_err = (popt[1::3] * np.abs(popt[2::3])) ** 0.5 / sum(popt[1::3] * np.abs(popt[2::3]))
+
+    if len(PNs) > 5:
+        print_colored(f"More than 5 peaks found. Using the first {len(PNs)} peaks for the fit.", "WARNING")
+        PNs = PNs[:-1]
+        PNs = PNs/np.sum(PNs)
+        PNs_err = PNs_err[:-1]
+
+    l = -np.log(PNs[0])
+    p = 1 - PNs[1] / (l * PNs[0])
+    xdata = np.arange(len(PNs))
+    
+    ax_xt.bar(np.array(xdata), PNs, label="Data", width=0.4, color=get_color(ch, even=True, debug=debug))
+    try:
+        xt_popt, xt_pcov = curve_fit(PoissonPlusBinomial, xdata, PNs, sigma=PNs_err, p0=[len(PNs), p, l], bounds=([len(PNs) - 1e-12, 0, 0], [len(PNs) + 1e-12, 1, 10]))
+        ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x', label="Fit: CT = " + str(int(xt_popt[1] * 100)) + "% - " + r'$\lambda = {:.2f}$'.format(xt_popt[2]), color="red")
+    except:
+        print_colored("Fit failed. Returning initial parameters.", "WARNING")
+        xt_popt = [len(PNs), p, l]
+        xt_pcov = [-99, -99, -99]
+
+    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"] == True:
+        ax_xt.legend()
+
+    return xt_popt.tolist(), xt_pcov.tolist()
+
+
+def export_txt(data:dict, info:dict, debug:bool = False) -> None:
+    for labels in data:
+        run, ch, key = labels
+        for measurement in data[labels]:
+            if measurement == "CALIB":
+                popt, pcov = data[labels][measurement]["popt"], data[labels][measurement]["pcov"]
+                export = calibration_txt(run, ch, popt, pcov, info, debug = debug)
+                # If export dump data to yml file
+                if export:
+                    print_colored("Data exported to txt file.", "INFO")
+                    update_yaml_file(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/calibration/calibration_run{run}_ch{ch}.yml', data[labels][measurement], debug=debug)
+
+            if measurement == "XTALK":
+                xt_popt, xt_pcov = data[labels][measurement]["popt"], data[labels][measurement]["pcov"]
+                export = xtalk_txt(run, ch, xt_popt, xt_pcov, info, debug = debug)
+                # If export dump data to yml file
+                if export:
+                    print_colored("Data exported to txt file.", "INFO")
+                    update_yaml_file(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/xtalk/xtalk_run{run}_ch{ch}.yml', data[labels][measurement], debug=debug)
+
+
+def calibration_txt(run, ch, popt, pcov, info, debug = False) -> bool:
     '''
-    \nComputes calibration parameters for each peak.
-    \nGiven popt and pcov which are the output for the best parameters when performing the Gaussian fit.
-    \nIt returns an array of arrays: 
-    \nsave_calibration = [ [[mu,dmu],[height,dheight],[height,dheight],[sigma,dsigma],
-    \n[gain,dgain],[sn0,dsn0],[sn1,dsn1],[sn2,dsn2]], [PEAK 1], [PEAK 2],...]
-    \nSave in a txt the calibration parameters to be exported directly.
-    \nTakes as input an array of arrays with the computed parameters (see compute_cal_parameters())
+    \nComputes calibration parameters.
     '''
     if all(x !=-99 for x in popt):
         cal_parameters = []
-        xt_parameters = []
         perr = np.sqrt(np.diag(pcov))          #error for each variable
-        xt_perr = np.sqrt(np.diag(xt_pcov))    #error for each variable
         fitted_peaks = int(len(popt)/3)  #three parameters fitted for each peak
         for i in np.arange(fitted_peaks): 
             mu     = [popt[(i+0)+2*i], perr[(i+0)+2*i]]  # mu +- dmu
@@ -219,11 +261,6 @@ def calibration_txt(run, ch, popt, pcov, xt_popt, xt_pcov, info, debug = False):
             sigma  = [popt[(i+2)+2*i], perr[(i+2)+2*i]]  # sigma +- dsigma
             cal_parameters.append([mu,height,sigma])
             copy_cal = cal_parameters
-        
-        npeaks = [xt_popt[0], xt_perr[0]]
-        xt = [xt_popt[1], xt_perr[1]]
-        l  = [xt_popt[2], xt_perr[2]]
-        xt_parameters.append([npeaks,xt,l])
 
         for i in np.arange(fitted_peaks): #distances between peaks
             if i == fitted_peaks-1: gain = -99; dgain = -99; sn0 = -99; dsn0 = -99; sn1 = -99; dsn1 = -99; sn2 = -99; dsn2 = -99
@@ -260,21 +297,36 @@ def calibration_txt(run, ch, popt, pcov, xt_popt, xt_pcov, info, debug = False):
 
             console.print("\nPeak:", i)
             console.print(table)
-        
-        console = Console()
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Parameter")
-        table.add_column("Value")
-        table.add_column("Error")
-        parameters = ["NPEAK", "XT", "LAMBDA"]
-        for j, parameter in enumerate(parameters):
-            value, error = '{:.2f}'.format(xt_parameters[0][j][0]), '{:.2f}'.format(xt_parameters[0][j][1])
-            table.add_row(parameter, value, error)
-        console.print("\nX-Talk:")
-        console.print(table)
 
-        write_output_file(run, ch, cal_parameters, "Calibration", info, write_mode = 'w', header_list=["MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
-        write_output_file(run, ch, xt_parameters, "XTalk", info, write_mode = 'w', header_list=["NPEAK","XT","DXT","LAMBDA","DLAMBDA"], not_saved = [1])
+        export = write_output_file(run, ch, cal_parameters, "Calibration", info, write_mode = 'w', header_list=["MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
+        return export
+
+def xtalk_txt(run, ch, xt_popt, xt_pcov, info, debug = False) -> bool:
+    '''
+    \nComputes xtalk parameters.
+    '''
+    xt_parameters = []
+    xt_perr = np.sqrt(np.diag(xt_pcov))    #error for each variable
+    
+    npeaks = [xt_popt[0], xt_perr[0]]
+    xt = [xt_popt[1], xt_perr[1]]
+    l  = [xt_popt[2], xt_perr[2]]
+    xt_parameters.append([npeaks,xt,l])
+    
+    console = Console()
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Parameter")
+    table.add_column("Value")
+    table.add_column("Error")
+    parameters = ["NPEAK", "XT", "LAMBDA"]
+    for j, parameter in enumerate(parameters):
+        value, error = '{:.2f}'.format(xt_parameters[0][j][0]), '{:.2f}'.format(xt_parameters[0][j][1])
+        table.add_row(parameter, value, error)
+    console.print("\nX-Talk:")
+    console.print(table)
+
+    export = write_output_file(run, ch, xt_parameters, "XTalk", info, write_mode = 'w', header_list=["NPEAK","XT","DXT","LAMBDA","DLAMBDA"], not_saved = [1])
+    return export
 
 def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
     gains = dict.fromkeys(channels) ; Dgain = dict.fromkeys(channels)
@@ -286,6 +338,7 @@ def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
         # if debug: print("\nGAIN TXT FOR CHANNEL %i"%ch ); display(my_table)
     
     return gains, Dgain
+
 
 def scintillation_txt(run, ch, popt, pcov, filename, info):
     '''
@@ -309,11 +362,11 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
     print(len(charge_parameters))
     print(charge_parameters)
 
-    print("MU +- DMU:",               ['{:.2f}'.format(item) for item in charge_parameters[0][0]])
-    print("HEIGHT +- DHEIGHT:",       ['{:.2f}'.format(item) for item in charge_parameters[0][1]])
-    print("SIGMA +- DSIGMA:",         ['{:.2f}'.format(item) for item in charge_parameters[0][2]])
+    print("MU +- DMU:",         ['{:.2f}'.format(item) for item in charge_parameters[0][0]])
+    print("HEIGHT +- DHEIGHT:", ['{:.2f}'.format(item) for item in charge_parameters[0][1]])
+    print("SIGMA +- DSIGMA:",   ['{:.2f}'.format(item) for item in charge_parameters[0][2]])
     
-    write_output_file(run, ch, charge_parameters, filename, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG"])
+    export = write_output_file(run, ch, charge_parameters, filename, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG"])
 
 
 def charge_fit(my_runs, keys, OPT={}):
@@ -381,3 +434,17 @@ def charge_fit(my_runs, keys, OPT={}):
         #     print("Empty dictionary. No computed charge.")
     
     return all_popt, all_pcov, all_perr
+
+
+def save_figures(fig_cal, fig_xt, labels, save_path, debug=False):
+    run, ch, key = labels
+    fig_cal.savefig(f'{save_path}run{run}_ch{ch}_{key}_Hist.png', dpi=500)
+    fig_xt.savefig(f'{save_path}run{run}_ch{ch}_{key}_XTalk.png', dpi=500)
+    try:
+        os.chmod(f'{save_path}run{run}_ch{ch}_{key}_Hist.png', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+        os.chmod(f'{save_path}run{run}_ch{ch}_{key}_XTalk.png', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+    except:
+        print(f"File permissions could not be changed. Check if the file exists & if you have permissions change them manually.")
+    if debug:
+        print(f"Saved figure as: run{run}_ch{ch}_{key}_Hist.png")
+        print(f"Saved figure as: run{run}_ch{ch}_{key}_XTalk.png")
