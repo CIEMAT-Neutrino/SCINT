@@ -221,6 +221,7 @@ def insert_variable(my_runs, var, key, debug = False):
         except KeyError: 
             if debug: print_colored("Inserting value...", "DEBUG")
 
+
 def get_ADC_key(my_runs, key, debug = False):
     '''
     \nThis function returns the ADC key for a given run.
@@ -248,6 +249,7 @@ def get_ADC_key(my_runs, key, debug = False):
         if debug: print_colored("Returning label from provided key:", "DEBUG")
     
     return key, label
+
 
 def get_wvf_label(my_runs, key, label, debug = False):
     '''
@@ -295,7 +297,8 @@ def get_wvf_label(my_runs, key, label, debug = False):
         out_label = label
     
     return out_key, out_label
-    
+
+
 def generate_cut_array(my_runs, ref = "", debug = False):
     '''
     \nThis function generates an array of bool = True. If cuts are applied and then you run this function, it resets the cuts.
@@ -324,6 +327,7 @@ def generate_cut_array(my_runs, ref = "", debug = False):
                     if debug: print_colored("Key "+key+" does not exist", "DEBUG")
                     pass
     return my_runs
+
 
 def get_units(my_runs, debug = False):
     '''
