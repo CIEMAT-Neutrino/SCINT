@@ -451,6 +451,8 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
 
     dict_option = dict()
     dict_option["LOAD"] = os.listdir(f"{path}{folder}")
+    # Remove files that are not .npz or .npy
+    dict_option["LOAD"] = [file for file in dict_option["LOAD"] if file.endswith(".npz") or file.endswith(".npy")]
     dict_option["SAVE"] = my_run.keys()
 
     aux = ["TimeStamp"]
