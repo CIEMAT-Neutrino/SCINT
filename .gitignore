@@ -12,9 +12,9 @@ notebooks*/*
 test/
 larsoft/
 # Ignore everything from input files
-input/*
+config/input/*
 # But not the template one
-!input/TUTORIAL*
+!config/input/TUTORIAL*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
