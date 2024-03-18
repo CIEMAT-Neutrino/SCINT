@@ -9,7 +9,7 @@ data
 Data/*
 Data
 notebooks*/*
-scratch/
+test/
 larsoft/
 # Ignore everything from input files
 input/*
