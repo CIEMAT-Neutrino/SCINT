@@ -12,7 +12,7 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-PATH: ../data/
+PATH: /data/
 MONTH: Jan22
 OV_LABEL: OV1,0V2,0V3
 CALIB_RUNS: 1,2,3,24,25,26,61,62,63,64,66,67,68,69

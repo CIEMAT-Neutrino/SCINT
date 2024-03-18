@@ -12,7 +12,7 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-PATH: ../data/MegaCell_LAr/
+PATH: /data/MegaCell_LAr/
 MONTH: Dic23
 OV_LABEL: 0V1
 CALIB_RUNS: 
