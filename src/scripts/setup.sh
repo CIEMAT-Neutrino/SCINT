@@ -23,9 +23,9 @@ fi
 
 if [ ! -d "../notebooks" ]; then
 echo -e "\e[36mCreating notebooks... \e[0m"
-cp -r ../vault/notebooks ../notebooks
-rm -rf ../notebooks/cleaning
-rm -rf ../notebooks/__pycache__
+cp -r ../vault/notebooks ../src/notebooks
+rm -rf ../src/notebooks/cleaning
+rm -rf ../src/notebooks/__pycache__
 fi
 
 
