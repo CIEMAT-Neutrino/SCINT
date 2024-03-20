@@ -37,7 +37,6 @@ io_functions
    These functions are used to check, print and delete the keys of a dictionary. The keys are the names of the variables stored in the dictionary that correspond to the names of the `.npy` files stored before.
 
 .. autoclass:: lib.io_functions.check_key
-.. autoclass:: lib.io_functions.print_keys
 .. autoclass:: lib.io_functions.delete_keys
 
 .. admonition:: **Load/Save npy/npz files**
