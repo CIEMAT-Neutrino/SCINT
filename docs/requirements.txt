@@ -30,3 +30,5 @@ icecream
 ipywidgets
 inquirer
 rich
+lxml==4.5.2
+requests-futures==1.0.0
