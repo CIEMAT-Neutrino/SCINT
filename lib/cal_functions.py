@@ -151,13 +151,13 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
 
             try:
                 my_runs[run][ch]["Gain"] = popt[3] - abs(popt[0])
-                my_runs[run][ch]["MaxChargeSPE"] = popt[3] + abs(popt[5])
-                my_runs[run][ch]["MinChargeSPE"] = popt[3] - abs(popt[5])
+                my_runs[run][ch]["AnaMaxChargeSPE"] = popt[3] + (popt[6]-popt[3])/2
+                my_runs[run][ch]["AnaMinChargeSPE"] = popt[3] - (popt[3]-popt[0])/2
             except IndexError:
                 print_colored("Fit failed to find min of 3 calibration peaks!", "WARNING")
                 my_runs[run][ch]["Gain"] = -99
-                my_runs[run][ch]["MaxChargeSPE"] = -99
-                my_runs[run][ch]["MinChargeSPE"] = -99
+                my_runs[run][ch]["AnaMaxChargeSPE"] = -99
+                my_runs[run][ch]["AnaMinChargeSPE"] = -99
     
         calibration[(run, ch, key)]["XTALK"] = {"popt":xt_popt, "pcov":xt_pcov}
         calibration[(run, ch, key)]["CALIB"] = {"popt":popt, "pcov":pcov}
@@ -217,8 +217,9 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
         ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x', label="Fit: CT = " + str(int(xt_popt[1] * 100)) + "% - " + r'$\lambda = {:.2f}$'.format(xt_popt[2]), color="red")
     except:
         print_colored("Fit failed. Returning initial parameters.", "WARNING")
-        xt_popt = [len(PNs), p, l]
-        xt_pcov = [-99, -99, -99]
+        xt_popt = np.asarray([len(PNs), p, l])
+        xt_pcov = np.asarray([-99, -99, -99])
+        ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x', label="Fit: CT = " + str(int(xt_popt[1] * 100)) + "% - " + r'$\lambda = {:.2f}$'.format(xt_popt[2]), color="red")
 
     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"] == True:
         ax_xt.legend()

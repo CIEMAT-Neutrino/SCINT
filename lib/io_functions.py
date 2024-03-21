@@ -485,6 +485,9 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
         elif preset == "WVF": # Save aux + Wvf* branches
             if "Wvf" in key and key not in aux: aux.append(key)
 
+        elif preset == "SPE": # Save aux + Wvf* branches
+            if "SPE" in key and key not in aux: aux.append(key)
+
         elif preset == "FFT": # Save aux + Wvf* branches
             if "MeanFFT" in key or "Freq" in key and key not in aux: aux.append(key)
     
