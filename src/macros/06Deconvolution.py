@@ -1,8 +1,9 @@
 import sys; sys.path.insert(0, '../../'); from lib import *
-user_input, info = initialize_macro("06Deconvolution",["input_file","preset_save","runs","channels","debug"])
+default_dict = {"preset_load":{"LOAD_PRESET":6},"preset_save":{"SAVE_PRESET":6}}
+user_input, info = initialize_macro("06Deconvolution",["input_file","runs","channels","debug"],default_dict=default_dict, debug=True)
 # info = read_input_file(user_input["input_file"][0])
 # 06Deconvolution
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(str), np.asarray(user_input["channels"]).astype(str), preset=user_input["preset_load"][6], info=info, compressed=True, debug=user_input["debug"])  # Select runs to be deconvolved (tipichaly alpha)     
+my_runs = load_npy(user_input["runs"], user_input["channels"], preset=user_input["preset_load"][0], info=info, compressed=True, debug=user_input["debug"])  # Select runs to be deconvolved (tipichaly alpha)     
 keys = ["AnaAveWvf","AnaAveWvfSER","AveWvf"] # keys contains the 3 labels required for deconvolution keys[0] = raw, keys[1] = det_response and keys[2] = deconvolution 
 
 OPT = {
@@ -34,7 +35,7 @@ deconvolve(my_runs,keys=keys, noise_run=[], OPT=OPT, debug=user_input["debug"])
 # keys[2] = "ADC"
 # deconvolve(my_runs,keys=keys,OPT=OPT, debug=user_input["debug"])
 
-save_proccesed_variables(my_runs, preset=info["SAVE_PRESET"][6], info=info, force=True, debug=user_input["debug"])
+save_proccesed_variables(my_runs, preset=user_input["preset_save"][0], info=info, force=True, debug=user_input["debug"])
 # del my_runs
 
 # generate_input_file(user_input["input_file"],info,label="Gauss", debug=user_input["debug"])

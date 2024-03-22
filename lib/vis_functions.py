@@ -18,7 +18,6 @@ from rich                        import print as rprint
 from .io_functions  import check_key,print_colored
 from .fig_config    import figure_features, add_grid
 from .ana_functions import get_wvf_label,generate_cut_array,get_run_units
-from .fit_functions import fit_wvfs
 from .sty_functions import style_selector, get_prism_colors
 
 root = get_project_root()
