@@ -11,7 +11,7 @@ jupyter-dash
 jupyterlab
 keyboard
 matplotlib
-mlphep
+# mlphep
 lmfit
 numba
 numba_stats
