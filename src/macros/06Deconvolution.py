@@ -26,16 +26,16 @@ OPT = {
 
 deconvolve(my_runs,keys=keys, noise_run=[], OPT=OPT, debug=user_input["debug"])
 
-# OPT = {
-#     "SHOW": False,
-#     "FIXED_CUTOFF": True
-# }
+OPT = {
+    "SHOW": False,
+    "FIXED_CUTOFF": True
+}
 
-# keys[0] = "RawADC"
-# keys[2] = "ADC"
-# deconvolve(my_runs,keys=keys,OPT=OPT, debug=user_input["debug"])
+keys[0] = "RawADC"
+keys[2] = "ADC"
+deconvolve(my_runs,keys=keys,OPT=OPT, debug=user_input["debug"])
 
 save_proccesed_variables(my_runs, preset=user_input["preset_save"][0], info=info, force=True, debug=user_input["debug"])
 # del my_runs
 
-# generate_input_file(user_input["input_file"],info,label="Gauss", debug=user_input["debug"])
+generate_input_file(user_input["input_file"],info,label="Gauss", debug=user_input["debug"])
