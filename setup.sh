@@ -19,21 +19,35 @@ fi
 # Activate the virtual environment
 source .venv/bin/activate
 
-# Create the data folder if not present
-if [ ! -d "../data" ]; then
-echo -e "\e[36mCreating data folder... \e[0m"
-mkdir data
+# Create the data folder if not present else ask if it should be unmounted
+if [ -d "data" ]; then
+    read -p "Data folder already exists. Do you want to unmount it? (y/n) " -n 1 -r
+    echo
+    # If the user did not answer with y, exit the script
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+        # Unmount without sudo
+        fusermount -u data
+        echo -e "\e[36mData folder unmounted \e[0m"
+    fi
 fi
 
 # Ask if data should be mounted to /pc/choozdsk01/DATA/SCINT
-read -p "Do you want to mount the data folder to /pc/choozdsk01/DATA/SCINT? (y/n) " -n 1 -r
+read -p "Do you want to mount the data folder to /pc/choozdsk01/DATA/SCINT/MegaCell_LAr? (y/n) " -n 1 -r
 echo
 # If the user did not answer with y, exit the script
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     # Mount without sudo
-    ln -s /pc/choozdsk01/DATA/SCINT data
+    ln -s /pc/choozdsk01/DATA/SCINT/MegaCell_LAr data
     echo -e "\e[36mData folder mounted to /pc/choozdsk01/DATA/SCINT \e[0m"
+fi
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    # Ask for differnt path to mount
+    read -p "Enter the path to mount the data folder: " -r
+    # Mount without sudo
+    ln -s $REPLY data
 fi
 
 
