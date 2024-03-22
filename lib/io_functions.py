@@ -177,7 +177,7 @@ def generate_input_file(input_file,info,path=f"{root}/config/input/",label="",de
     \nUsed when deconvolving signals to be able to re-start the analysis workflow with the deconvolved waveforms.
     '''
 
-    file = open(path+label+str(input_file)+".txt", 'w+')
+    file = open(path+label+str(input_file[0])+".txt", 'w+')
     for branch in info:
         if branch == "CHAN_POLAR":
             if label == "Gauss" or label == "Wiener": 
@@ -188,6 +188,10 @@ def generate_input_file(input_file,info,path=f"{root}/config/input/",label="",de
                 info[branch][2] = "DEC"
                 info[branch][3] = "DEC"
                 info[branch][4] = "DEC"
+                file.write(branch+": "+list_to_string(info[branch])+"\n")
+        if branch == "SAVE_PRESET":
+            if label == "Gauss" or label == "Wiener":
+                info[branch][2] = "DEC"
                 file.write(branch+": "+list_to_string(info[branch])+"\n")
         elif branch == "ANA_KEY":
             if label == "Gauss" or label == "Wiener": 
