@@ -561,12 +561,13 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
     ''' 
     \nDOC 
     '''
-
+    fit_dict, popt_dict, perr_dict, label_dict = {}, {}, {}, {}
     i_param = get_initial_parameters(i_param)
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ion()
     
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], in_key):
         aux = dict()
+    
         raw = my_runs[run][ch][key]
         raw_x = my_runs[run][ch]["Sampling"]*np.arange(len(raw[0]))
         
@@ -584,31 +585,35 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
             PE = np.sum(raw[i])
             PE_std = np.std(raw[i][:i_idx])
             
+            folder_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
+            if not os.path.exists(folder_path): 
+                os.makedirs(name=folder_path,exist_ok=True)
+                os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+            
+            term_output = ""
+            term_output = term_output+"Fitting wvf %s for run %s, ch %s\n"%(i,run,ch)
+            term_output = term_output+"--------------------------------\n"
+            for i in range(len(labels)):
+                term_output = term_output+"%s:\t%.2E\t%.2E\n"%(labels[i], popt[i], perr[i])
+            term_output = term_output+"--------------------------------\n"
             if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-                folder_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
-                if not os.path.exists(folder_path): 
-                    os.makedirs(name=folder_path,exist_ok=True)
-                    os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                
-                term_output = ""
-                term_output = term_output+"Fitting wvf %s for run %s, ch %s\n"%(i,run,ch)
-                term_output = term_output+"--------------------------------\n"
-                for i in range(len(labels)):
-                    term_output = term_output+"%s:\t%.2E\t%.2E\n"%(labels[i], popt[i], perr[i])
-                term_output = term_output+"--------------------------------\n"
                 print(term_output)
 
-                if save:
-                    with open(folder_path+"/DeconvolutionFit_%s_%s.txt"%(run,ch),"w+") as f:
-                        if signal_type == "Scint" or signal_type == "SimpleScint":
-                            f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
-                        for i in range(len(labels)):
-                            f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
-                    if debug: print("File saved in: %s"%folder_path)
+            if save:
+                with open(folder_path+"/DeconvolutionFit_%s_%s.txt"%(run,ch),"w+") as f:
+                    if signal_type == "Scint" or signal_type == "SimpleScint":
+                        f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
+                    for i in range(len(labels)):
+                        f.write("%s:\t%.4E\t%.4E\n"%(labels[i], popt[i], perr[i]))
+                if debug: print("File saved in: %s"%folder_path)
         
+        fit_dict[(run,ch,key)] = fit
+        popt_dict[(run,ch,key)] = popt
+        perr_dict[(run,ch,key)] = perr
+        label_dict[(run,ch,key)] = labels
         my_runs[run][ch]["Fit"+signal_type+out_key] = aux
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ioff()
-    return fit, popt, perr, labels
+    return fit_dict, popt_dict, perr_dict, label_dict
 
 def get_initial_parameters(i_param):
     '''
