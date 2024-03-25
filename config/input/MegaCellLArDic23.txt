@@ -48,10 +48,3 @@ PED_KEY: PreTriggerMean
 #0CUT_LOGIC: bigger
 #0CUT_VALUE: 250
 #0CUT_INCLUSIVE: False
-
-#1CUT_CHAN: 7
-#1CUT_TYPE: cut_df
-#1CUT_KEYS: AnaChargeAveRange
-#1CUT_LOGIC: smaller
-#1CUT_VALUE: 750
-#1CUT_INCLUSIVE: False

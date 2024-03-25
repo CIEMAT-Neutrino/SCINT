@@ -1,7 +1,6 @@
 import sys; sys.path.insert(0, '../../'); from lib import *
 default_dict = {"runs":["CALIB_RUNS","LIGHT_RUNS","ALPHA_RUNS","MUONS_RUNS","NOISE_RUNS"],"channels":["CHAN_TOTAL"],"preset_load":{"LOAD_PRESET":2},"preset_save":{"SAVE_PRESET":2}}
 user_input, info = initialize_macro("02AnaProcess",["input_file","debug"],default_dict=default_dict, debug=True)
-# info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 ### 02AnaProcess
 for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
     ### Load
