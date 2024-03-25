@@ -6,6 +6,7 @@ from src.utils import get_project_root
 import math, inquirer, yaml, os, stat
 import numpy             as np
 import matplotlib.pyplot as plt
+import pandas            as pd
 
 from matplotlib.colors           import LogNorm
 from matplotlib.cm               import viridis
@@ -441,7 +442,7 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
             
             if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:        ax.legend()
             if check_key(OPT, "LOGY")   == True and OPT["LOGY"]  == True: ax.semilogy()
-            if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,run,ch,ax,data)
+            if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,(run,ch,k),ax,data,info,save,debug)
             if check_key(OPT, "SHOW")   == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
                 plt.ion()
                 plt.show()
@@ -460,10 +461,11 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
 
     return all_counts, all_bins
 
-def print_stats(my_run, run, ch, ax, data, save = False, debug = False):
+def print_stats(my_run, labels, ax, data, info, save = False, debug = False):
     '''
     \nThis function prints the statistics of the data.
     '''
+    run,ch,key = labels
     times = np.asarray(my_run[run][ch]["TimeStamp"])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
     rate = 1/np.mean(np.diff(times))
     print_colored("\nStatistics of the histogram:", "INFO")
@@ -477,6 +479,14 @@ def print_stats(my_run, run, ch, ax, data, save = False, debug = False):
     ax.axvline(np.mean(data), c="k", alpha=0.5)
     ax.axvline(np.mean(data)+np.std(data), c="k", ls="--", alpha=0.5)
     ax.axvline(np.mean(data)-np.std(data), c="k", ls="--", alpha=0.5)
+    if save:
+        df = pd.DataFrame({"COUNTS": len(data), "RATE": rate, "MEAN": np.mean(data), "MEDIAN": np.median(data), "STD": np.std(data)}, index=[0])
+        # Save information as csv file
+        if not os.path.exists(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/'):
+            os.makedirs(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/')
+            os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/', 0o770)
+        df.to_csv(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/run{run}_ch{ch}_{key}_Stats.csv', index=False)
+        if debug: rprint(f"Saved statistics as: run{run}_ch{ch}_{key}_Stats.csv")
 
 def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range = False, OPT={}, save = False, debug = False):
     '''
@@ -572,9 +582,9 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
             axes_list.append(ax)
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.yscale('log'); 
             if save == True: 
-                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{title}_{keys[0]}_vs_{keys[1]}.png', dpi = 500)
-                os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{title}_{keys[0]}_vs_{keys[1]}.png', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                if debug: rprint(f"Saved figure as: run{run}_ch{ch}_{title}_{keys[0]}_vs_{keys[1]}.png")
+                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png', dpi = 500)
+                os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                if debug: rprint(f"Saved figure as: run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png")
             
             # Save to specific folder determined by OPT
             if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True: 
