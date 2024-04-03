@@ -28,7 +28,7 @@ cd SCINT
 git checkout -b <your_branch_name>
 ```
 
-* You can create an `scratch` folder for your custom scripts or code.
+* You can create a `test` folder for your custom scripts or code.
 
 * [OPTIONAL] Create a folder for your custom scripts and add them to the .gitignore file:
 
@@ -39,7 +39,7 @@ echo "<your_folder_name/*>" >> .gitignore
 
 1 To start RUN:
 
-* Go to the scripts folder and setup all the utilities needed for the macros:
+* Go to the scripts folder and set all the utilities needed for the macros:
   
 ```bash
 cd SCINT/scripts
@@ -53,7 +53,7 @@ mkdir data/
 sshfs user@server:path_to_data data
 ```
 
-2 Run the following macros FROM the macros folder:
+2 Run the following macros FROM the macros' folder:
 
 ```bash
 cd ../macros
