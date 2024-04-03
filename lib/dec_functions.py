@@ -9,6 +9,7 @@ from scipy.optimize import curve_fit
 from itertools      import product
 from curve          import Curve
 from rich           import print as print
+from rich.progress  import track
 
 
 #Imports from other libraries
@@ -28,8 +29,8 @@ def generate_SER(my_runs,light_runs,SPE_runs,scaling_type="Amplitude", debug=Fal
 
     for ii in range(len(my_runs["NRun"])):
         for jj in range(len(my_runs["NChannel"])):
-            det_response =    light_runs[light_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AnaAveWvf"][0]
-            single_response = SPE_runs[SPE_runs["NRun"][ii]][my_runs["NChannel"][jj]]["AnaAveWvfSPE"][0]
+            det_response =    light_runs[light_runs["NRun"][0]][my_runs["NChannel"][jj]]["AnaAveWvf"][0]
+            single_response = SPE_runs[SPE_runs["NRun"][0]][my_runs["NChannel"][jj]]["AnaAveWvfSPE"][0]
             
             if scaling_type == "Amplitude": SER = np.max(single_response)*det_response/np.max(det_response)
             if scaling_type == "Area":      SER = np.sum(single_response)*det_response/np.sum(det_response)
@@ -55,7 +56,8 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
         aux = []; trimm = 0 
         template = my_runs[run][ch][keys[1]][0]
         
-        for i in range(len(my_runs[run][ch][keys[0]])):
+        # Use a track for loop to print a progress bar
+        for i in track(range(len(my_runs[run][ch][keys[0]])), description="Processing..."):
             # Select required runs and parameters
             signal = my_runs[run][ch][keys[0]][i]
             if "Raw" in keys[0]:

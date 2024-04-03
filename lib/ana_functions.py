@@ -346,12 +346,11 @@ def get_run_units(my_runs, debug = False):
 
 
 def get_unit(key, debug=False):
-    unit = ""
+    unit = "a.u."
     if "Amp" in key or "Ped" in key or "ADC" in key or "PreTrigger" in key: unit = "ADC"
-    elif "Time" in key or "Sampling" in key:                                unit = "ticks"
-    elif "Charge" in key and "Ana" in key and "PE" not in key:              unit = "ADC x ticks"
-    elif "PE" in key and "Ana" in key:                                      unit = "PE"
-    elif "Charge" in key and "Gauss" in key:                                unit = "PE"
-    else:                                                                   unit = "a.u."
+    if "Time" in key or "Sampling" in key:                                unit = "ticks"
+    if "Charge" in key and "Ana" in key and "PE" not in key:              unit = "ADC x ticks"
+    if "PE" in key and "Ana" in key:                                      unit = "PE"
+    if "Charge" in key and "Gauss" in key:                                unit = "PE"
     
     return unit

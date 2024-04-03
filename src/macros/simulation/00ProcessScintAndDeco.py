@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, '../../')
 from lib.io_functions import load_npy, save_proccesed_variables
-from lib.fit_functions import fit_wvfs,scfunc, gauss
+from lib.fit_functions import scfunc, gauss
 from lib.sim_functions import rand_scint_times
 from lib.wvf_functions import find_baseline_cuts, find_amp_decrease
 from lib.dec_functions import deconvolve

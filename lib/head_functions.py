@@ -129,12 +129,20 @@ def use_default_input(user_input, default_dict, info, debug = False):
     for default_key in default_dict:
         if check_key(new_user_input, default_key) == False:
             runs = []
-            for key in default_dict[default_key]:
-                if check_key(info, key):
-                    for run in info[key]:
-                        if run not in runs:
-                            runs.append(run)
-            new_user_input[default_key] = runs
+            if type(default_dict[default_key]):
+                for key in default_dict[default_key]:
+                    if check_key(info, key):
+                        for run in info[key]:
+                            if run not in runs:
+                                runs.append(run)
+                new_user_input[default_key] = runs
+            
+            if type(default_dict[default_key]) == dict:
+                for key in default_dict[default_key]:
+                    if check_key(info, key):
+                        value = info[key][default_dict[default_key][key]]
+                        new_user_input[default_key] = [value]
+            
             if new_user_input["debug"]: print_colored("No %s provided. Using all %s from input file. %s"%(default_key,default_key,runs),"WARNING")
     return new_user_input
 
@@ -213,9 +221,16 @@ def opt_selector(filename = "VisConfig", debug = False):
         q = [ inquirer.Checkbox("lines", message="Choose the lines to change", choices=my_opt.keys()) ]
         line_label =  inquirer.prompt(q)["lines"]
         for line in line_label:
-            new_text = input(f"Enter the new text for line {line} ")
+            options = ""
+            if type(my_opt[line]) == bool:
+                options = "(True/False)"
+            if type(my_opt[line]) == str:
+                options = ""
+            if type(my_opt[line]) == list:
+                options = "(comma separated list)"
+            new_text = input(f"Enter new entry for line {line} {options}: ")
             update_opt[line] = new_text
-        update_yaml_file(f'../config/{filename}.yml',update_opt)
+        update_yaml_file(f'{root}/config/{filename}.yml',update_opt)
     my_opt = read_yaml_file(filename, path=f"{root}/config/", debug = debug)
     return my_opt
 

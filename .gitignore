@@ -8,9 +8,13 @@ data
 *Data*/*
 Data/*
 Data
-notebooks*/*
+*/notebooks/*
+notebooks/*
+vault/notebooks
+*/*/*.ipynb
 test/
 larsoft/
+
 # Ignore everything from input files
 config/input/*
 # But not the template one

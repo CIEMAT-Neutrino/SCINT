@@ -1,9 +1,13 @@
 from src.utils import get_project_root
 
+from plotly import graph_objects as go
+from plotly.subplots import make_subplots
+
 from .ana_functions     import *
 from .cal_functions     import *
 from .cut_functions     import *
 from .dec_functions     import *
+from .drive_functions   import *
 from .fig_config        import (add_grid, figure_features, format_coustom_plotly)  # <--- import customized functions
 from .fit_functions     import *
 from .group_functions   import *

@@ -10,9 +10,9 @@ jupyter
 jupyter-dash
 jupyterlab
 keyboard
+lmfit
 matplotlib
 mlphep
-lmfit
 numba
 numba_stats
 numexpr
@@ -21,10 +21,11 @@ openpyxl
 pandas
 plotly
 plotly_express
+pydrive
+pyqt5
 pynput
 pyyaml
 rich
 scipy 
 shapely
 uproot
-pyqt5

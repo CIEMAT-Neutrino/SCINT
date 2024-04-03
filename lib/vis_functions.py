@@ -1,23 +1,27 @@
 #================================================================================================================================================#
 # In this library we have all the functions related with visualization. They are mostly used in 0XVis*.py macros but can be included anywhere !! #
 #================================================================================================================================================#
+from src.utils import get_project_root
 
 import math, inquirer, yaml, os, stat
 import numpy             as np
-import matplotlib        as mpl
 import matplotlib.pyplot as plt
+import pandas            as pd
+
 from matplotlib.colors           import LogNorm
 from matplotlib.cm               import viridis
 from itertools                   import product
 from scipy.signal                import find_peaks
 from scipy.ndimage.interpolation import shift
 from rich                        import print as rprint
+
 # Imports from other libraries
 from .io_functions  import check_key,print_colored
 from .fig_config    import figure_features, add_grid
 from .ana_functions import get_wvf_label,generate_cut_array,get_run_units
-from .fit_functions import fit_wvfs
 from .sty_functions import style_selector, get_prism_colors
+
+root = get_project_root()
 
 def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
     '''
@@ -214,7 +218,7 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
                 idx = ev_num
                 if idx > len(my_run[run][ch_list[j]]["MyCuts"]): idx = len(my_run[run][ch_list[j]]["MyCuts"])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", styles=["bold"])
             elif tecla == "p":
-                fig.savefig('run{}_evt{}.png'.format(run,idx), dpi = 500)
+                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_event{idx}.png', dpi = 500)
                 idx = idx+1
             else: idx = idx + 1
             if idx == len(my_run[run][ch_list[j]]["MyCuts"]): break
@@ -317,7 +321,7 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
         tecla   = input("\nPress q to quit, p to save plot and any key to continue: ")
         counter = 0
         if tecla   == "q": break 
-        elif tecla == "p": fig.savefig('AveWvf_Ch{}.png'.format(ch), dpi = 500); counter += 1
+        elif tecla == "p": fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_AveWvf.png', dpi = 500); counter += 1
         else: counter += 1
         if   counter > len(ch_list): break
         elif counter > len(r_list):  break
@@ -358,12 +362,12 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
     if OPT["COMPARE"] == "NONE":     a_list = r_list;  b_list = ch_list
 
     data = []
-    for a in a_list:
+    for idx,a in enumerate(a_list):
         if OPT["COMPARE"] != "NONE":
             plt.ion()
             fig, ax = plt.subplots(1,1, figsize = (8,6)); add_grid(ax)
 
-        for b in b_list:
+        for jdx,b in enumerate(b_list):
             if OPT["COMPARE"] == "RUNS":     run = b; ch = a; title = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = "Run {}".format(run)
             if OPT["COMPARE"] == "CHANNELS": run = a; ch = b; title = "Run_{} ".format(run); label = "{}".format(my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch)
             if OPT["COMPARE"] == "NONE":     run = a; ch = b; title = "Run_{} - {}".format(run,my_run[run][ch]["Label"]).replace("#"," ") + " (Ch {})".format(ch); label = ""
@@ -425,7 +429,11 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                     fig.supylabel(y_label)
                     fig.suptitle(title + " - {} histogram".format(k))
 
-                ax.plot(bins[:-1], counts, drawstyle = "steps", label=label, alpha = 0.95, linewidth=1.2)  
+                colors = get_prism_colors()
+                factor = 1
+                if len(b_list) <= 4:
+                    factor = 2
+                ax.plot(bins[:-1], counts, drawstyle = "steps", label=label, alpha = 0.95, linewidth=1.2, c=colors[1+factor*(idx+jdx)])
                 
                 label = label.replace(" - " + k,"")
                 all_counts.append(counts)
@@ -434,7 +442,7 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
             
             if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:        ax.legend()
             if check_key(OPT, "LOGY")   == True and OPT["LOGY"]  == True: ax.semilogy()
-            if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,run,ch,ax,data)
+            if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,(run,ch,k),ax,data,info,save,debug)
             if check_key(OPT, "SHOW")   == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
                 plt.ion()
                 plt.show()
@@ -446,16 +454,18 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
             if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
                 while not plt.waitforbuttonpress(-1): pass
         if save: 
-            fig.savefig('{}{}/images/run{}_ch{}_{}_Hist.png'.format(info["PATH"][0],info["MONTH"][0],run,ch,'_'.join(key)), dpi = 500)
-            if debug: rprint("Saved figure as: run{}_ch{}_{}_Hist.png".format(run,ch,'_'.join(key)))
+            fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(key)}_Hist.png', dpi=500)
+            if debug:
+                rprint(f"Saved figure as: run{run}_ch{ch}_{'_'.join(key)}_Hist.png")
         plt.close()
 
     return all_counts, all_bins
 
-def print_stats(my_run, run, ch, ax, data, save = False, debug = False):
+def print_stats(my_run, labels, ax, data, info, save = False, debug = False):
     '''
     \nThis function prints the statistics of the data.
     '''
+    run,ch,key = labels
     times = np.asarray(my_run[run][ch]["TimeStamp"])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
     rate = 1/np.mean(np.diff(times))
     print_colored("\nStatistics of the histogram:", "INFO")
@@ -469,6 +479,14 @@ def print_stats(my_run, run, ch, ax, data, save = False, debug = False):
     ax.axvline(np.mean(data), c="k", alpha=0.5)
     ax.axvline(np.mean(data)+np.std(data), c="k", ls="--", alpha=0.5)
     ax.axvline(np.mean(data)-np.std(data), c="k", ls="--", alpha=0.5)
+    if save:
+        df = pd.DataFrame({"COUNTS": len(data), "RATE": rate, "MEAN": np.mean(data), "MEDIAN": np.median(data), "STD": np.std(data)}, index=[0])
+        # Save information as csv file
+        if not os.path.exists(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/'):
+            os.makedirs(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/')
+            os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/', 0o770)
+        df.to_csv(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/run{run}_ch{ch}_{key}_Stats.csv', index=False)
+        if debug: rprint(f"Saved statistics as: run{run}_ch{ch}_{key}_Stats.csv")
 
 def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range = False, OPT={}, save = False, debug = False):
     '''
@@ -564,9 +582,9 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
             axes_list.append(ax)
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.yscale('log'); 
             if save == True: 
-                fig.savefig('{}_{}_vs_{}.png'.format(title,keys[0],keys[1]), dpi = 500)
-                os.chmod('{}_{}_vs_{}.png'.format(title,keys[0],keys[1]), stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
-                if debug: rprint("Saved figure as: {}_{}_vs_{}.png".format(title,keys[0],keys[1]))
+                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png', dpi = 500)
+                os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                if debug: rprint(f"Saved figure as: run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png")
             
             # Save to specific folder determined by OPT
             if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True: 
