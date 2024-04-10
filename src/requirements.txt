@@ -9,10 +9,11 @@ jacobi
 jupyter
 jupyter-dash
 jupyterlab
+kaleido
 keyboard
 lmfit
 matplotlib
-mlphep
+mplhep
 numba
 numba_stats
 numexpr
@@ -22,7 +23,8 @@ pandas
 plotly
 plotly_express
 pydrive
-pyqt5
+# pyqt5
+PyQt5==5.9.2
 pynput
 pyyaml
 rich
