@@ -86,10 +86,10 @@ You need to have ``git``, ``python (>=3.7)`` and ``pip3`` installed.
 
 * **[RECOMENDED] Work with VSCode**:
    - Install VSCode and some extensions: Remote-SSH, Jupyter, vscode-numpy-viewer, **Python Environment Manager**
-   - CREATE VIRTUAL ENVIROMENT: **VSCode venv extension**. It will recomend you the ``/scripts/requirements.txt`` packages and it will automatically install them :)
+   - CREATE VIRTUAL ENVIRONMENT: **VSCode venv extension**. It will recommend you the ``/scripts/requirements.txt`` packages and it will automatically install them :)
    
 * From CIEMAT computers
-      - CREATE VIRTUAL ENVIROMENT: 
+      - CREATE VIRTUAL ENVIRONMENT: 
 
         .. code-block:: bash
 
@@ -106,11 +106,11 @@ You need to have ``git``, ``python (>=3.7)`` and ``pip3`` installed.
    sh setup.sh
 
 To be run from the ``scripts`` folder (it will ask you for confirmation) and it will download the ``notebooks`` folder to make your analysis. 
-Additionally, if you have created your own virtual enviroment in a CIEMAT computer you need to install some packages (make sure it is activated) and answer ``y`` to the INSTALL question. If have created the virtual enviroment with the VSCode extension you will have them installed already, answer ``n``.
+Additionally, if you have created your own virtual environment in a CIEMAT computer you need to install some packages (make sure it is activated) and answer ``y`` to the INSTALL question. If have created the virtual enviroment with the VSCode extension you will have them installed already, answer ``n``.
 
-3.- Make sure you have access to data to analyse:
+3.- Make sure you have access to data to analyze:
 
-* **[RECOMENDED] Configure VSCode SSH conection** and work from ``gaeuidc1.ciemat.es`` (you will have access to the data in ``/pc/choozdsk01/palomare/SCINT/folders``)
+* **[RECOMMENDED] Configure VSCode SSH connection** and work from ``gaeuidc1.ciemat.es`` (you will have access to the data in ``/pc/choozdsk01/palomare/SCINT/folders``)
 * Mount the folder with the data in your local machine ``sshfs pcaeXYZ:/pc/choozdsk01/palomare/SCINT/folder ../data`` making sure you have an empty ``data`` folder 📂.
 * Copy the data to your local machine. See ``sh scripts/copy_data.sh`` for an example on how to copy the ``TUTORIAL`` data
 
@@ -124,7 +124,7 @@ Additionally, if you have created your own virtual enviroment in a CIEMAT comput
 This folder is prepared **NOT** to be synchronized with the repository so you can make your own analysis without affecting the rest of the team.
 If you think your analysis can be useful for the rest of the team contact the authors to add it to the repository.
 
-If you want to have a personal folder to store your test files locally you can create an ``scratch`` folder (it wont be synchronized with the repository).
+If you want to have a personal folder to store your test files locally you can create an ``scratch`` folder (it won't be synchronized with the repository).
 Otherwise you can create a folder for your custom scripts and add them to the ``.gitignore`` file:
 
 .. code-block:: bash

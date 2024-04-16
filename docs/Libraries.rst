@@ -79,7 +79,7 @@ ana_functions
 
 .. admonition:: **Computing peak/pedestal variables**
    
-   These functions are used to compute the peak and pedestal varibales of the raw waveforms (`compute_peak_variables`, `compute_pedestal_variables`, `compute_pedestal_variables_sliding_window`, `compute_pedestal_sliding_windows`). We can also compute the processed waveforms with the pedestal subtracted as well as computing the power spectrum of the waveforms (`compute_ana_wvfs`, `compute_power_spec`). Finally, we are trying to optimize the functions by introducing `numba` libraries. The `shift_ADCs` function is used to shift the ADCs of the waveforms to the pedestal value. The `shift4_numba` function is used to shift the ADCs of the waveforms to the pedestal value using `numba` library.
+   These functions are used to compute the peak and pedestal variables of the raw waveforms (`compute_peak_variables`, `compute_pedestal_variables`, `compute_pedestal_variables_sliding_window`, `compute_pedestal_sliding_windows`). We can also compute the processed waveforms with the pedestal subtracted as well as computing the power spectrum of the waveforms (`compute_ana_wvfs`, `compute_power_spec`). Finally, we are trying to optimize the functions by introducing `numba` libraries. The `shift_ADCs` function is used to shift the ADCs of the waveforms to the pedestal value. The `shift4_numba` function is used to shift the ADCs of the waveforms to the pedestal value using `numba` library.
 
 .. autoclass:: lib.ana_functions.compute_peak_variables
 .. autoclass:: lib.ana_functions.compute_pedestal_variables
@@ -95,7 +95,7 @@ wvf_functions
 ..    :undoc-members:
 ..    :show-inheritance:
 
-These are more specific functions for analysing the waveforms. 
+These are more specific functions for analyzing the waveforms. 
 
 .. admonition:: **Average Waveforms**
    
@@ -127,7 +127,7 @@ These functions are used to visualize the data.
 
 .. admonition:: **Individual Events and Waveforms**
    
-   Individual events of a run prnting important parameters. We can compare them with the computed Average Waveform is computed and also we can plot several average waveforms in the same plot.
+   Individual events of a run printing important parameters. We can compare them with the computed Average Waveform is computed, and also we can plot several average waveforms in the same plot.
 
 .. autoclass:: lib.vis_functions.vis_npy
 .. autoclass:: lib.vis_functions.vis_compare_wvf
@@ -139,7 +139,7 @@ These functions are used to visualize the data.
 .. autoclass:: lib.vis_functions.vis_var_hist
 .. autoclass:: lib.vis_functions.vis_two_var_hist
 
-Finally we can print the statistics of the variables stored in the dictionary.
+Finally, we can print the statistics of the variables stored in the dictionary.
 .. autoclass:: lib.vis_functions.print_stats
 
 ---------------------------------------------------------------------------------------------------------------------------------------------

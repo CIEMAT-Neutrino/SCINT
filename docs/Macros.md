@@ -7,7 +7,7 @@ The first step to make the macros work is to configure the `input_file.txt`. The
 
 The formatting of this file need to be conserved to have read it correctly. Check `io_functions.py->read_input_file()`. You can turn `debug=True` when running the macros to check what is being loaded. You will see different sections:
 ### DAQ INFO
-(In principle this section do not need to be changed.)
+(In principle this section does not need to be changed.)
 ```python
 TYPE: ADC        # Acquisition system (ADC/OSC)
 MODEL: 5725S     # Model used
@@ -16,7 +16,7 @@ DYNAMIC_RANGE: 2 # Dynamic range
 SAMPLING: 4e-9   # Sampling: 4ns = 1 bin
 ```
 ### RUNS INFO
-Here you configure the runs you are going to analyse depending on the data taking.
+Here you configure the runs you are going to analyze depending on the data taking.
 ```python
 RAW_DATA: DAT                                 # Type of raw data you are using (DAT/ROOT)
 PATH: /pc/choozdsk01/palomare/SCINT/TUTORIAL/ # Path to the data (also ../data/ if you have the data mounted in your local machine)
@@ -34,7 +34,7 @@ CHAN_AMPLI: 250,1300                          # Amplification factor for each ch
 ```
 
 ### BRANCH INFO
-In this section the presets for loading/saving `*.npz` files are configured. In principle you dont need to change this but check in `io_functions.py -> get_preset_list()` for more info.
+In this section the presets for loading/saving `*.npz` files are configured. In principle, you don't need to change this but check in `io_functions.py -> get_preset_list()` for more info.
 ```python
 #PRESETS USED: 0,  1,  2,  3,  4,  5,  6
 LOAD_PRESET: NON,RAW,ANA,ANA,EVA,EVA,ANA
@@ -67,7 +67,7 @@ If you need to remove some events to perform the analysis you can include some c
 
 ## Flags
 
-You can start by running the macros in the `guide` mode and it will ask you for the input variables needed (see an example for the input file)
+You can start by running the macros in the `guide` mode, and it will ask you for the input variables needed (see an example for the input file)
 
 <img src="_static/starting_macro.png" alt="start"/>
 
@@ -91,7 +91,7 @@ python3 00Raw2Np.py -r 1,2 -c 0,1
 ```
 
 ## Analysis Macros
-You will see that the macros start with the ssome of these common lines:
+You will see that the macros start with the some of these common lines:
 ```python
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"runs":["CALIB_RUNS","LIGHT_RUNS","ALPHA_RUNS","MUONS_RUNS","NOISE_RUNS"],"channels":["CHAN_TOTAL"],"key":["ANA_KEY"]}
@@ -121,7 +121,7 @@ where we see the destination file and if the different files existed previously,
 
 ### 01PreProcess <a ID="pre-process"></a>
 
-This macro will process the {RawPedestal, RawPeak} variables for the RawADC that are computed and saved in .npz files. You will see as terminal output the saved files. By default the saving is set to force = True and so if you pre-process files that already existed they will be overwritten. 
+This macro will process the {RawPedestal, RawPeak} variables for the RawADC that are computed and saved in .npz files. You will see as terminal output the saved files. By default, the saving is set to force = True and so if you pre-process files that already existed they will be overwritten. 
 
 
 ```python
@@ -149,7 +149,7 @@ python3 01PreProcess.py
 
 ### 02AnaProcesss <a ID="process"></a>
 
-This macro will process the {Pedestal, Peak} variables for the ADC are computed and saved in .npz files. You will see as terminal output the saved files. By default the saving is set to force = True and so if you pre-process files that already existed they will be overwritten. However, we delete the RawKeys from the my_runs dictionary to save computing time (RawInfo don’t change).
+This macro will process the {Pedestal, Peak} variables for the ADC are computed and saved in .npz files. You will see as terminal output the saved files. By default, the saving is set to force = True and so if you pre-process files that already existed they will be overwritten. However, we delete the RawKeys from the my_runs dictionary to save computing time (RawInfo don’t change).
 
 ```python
 for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
@@ -264,7 +264,7 @@ If everything is working as it should you should obtain the following histograms
 ### 06Deconvolution <a ID="deconvolution"></a>
 🚧 ... updating ... 🚧
 
-Before runing the deconvolution macro make sure you have a clean laser/led signal that can be used as a template. The macro will load the alpha runs and rescale the light signal to the SPE amplitude according to AveWvfSPE calculated at calibration stage.
+Before running the deconvolution macro make sure you have a clean laser/led signal that can be used as a template. The macro will load the alpha runs and rescale the light signal to the SPE amplitude according to AveWvfSPE calculated at calibration stage.
 
  - Firstly, the average wvfs are deconvolved. From these the gauss filter cut-off (from the wiener filter fit) is extracted and saved.
  - Secondly, the previous calculated gauss filter is applied to deconvolve the ADC wvfs.
