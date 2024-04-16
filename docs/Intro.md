@@ -61,15 +61,17 @@ or run `git checkout -b <your_branch_name>` in a terminal.
   </div>
   <div>
 
-📂 `\input` → input txt files are stored here and they are used as input in all the macros (check `TUTORIAL.txt` as template)
+📂 `\config` → input txt files are stored here and they are used as input in all the macros (check `TUTORIAL.txt` as template). Also some `.yml` configuration files for customizing fits and visualization.
 
 📂 `\lib` → all the functions of the library itself are stored here
 
-📂 `\macros` → macros to run the analysis. 0i are used for visualizing and 0# are used for processing data (they are sorted to make easy to remember the work-flow)
+📂 `\src` → executable code trough terminal
+
+  * `\macros`: to run the analysis. 0i are used for visualizing and 0# are used for processing data (they are sorted to make easy to remember the work-flow)
+  * `\scripts` → the scripts are used to configure the needed packages for the library (`copy_data.sh`, `setup.sh`)
 
 📂 `\notebooks` → some useful notebooks for interactive visualization 🙂.
 
-📂 `\scripts` → the scripts are used to configure the needed packages for the library (`copy_data.sh`, `setup.sh`)
   </div>
 </div>
 
