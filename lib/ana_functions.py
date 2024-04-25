@@ -27,7 +27,7 @@ def compute_ana_wvfs(my_runs, info, debug = False):
             print("[red]ERROR: RawADC not found![/red]")
             exit()
         if check_key(my_runs[run][ch],"Raw"+info["PED_KEY"][0]) == False:
-            print_colored("ERROR: Raw"++info["PED_KEY"][0]+" not found! Please run 01PreProcess.py", "ERROR")
+            print(f"[red]ERROR: Raw {info['PED_KEY'][0]} not found! Please run 01PreProcess.py[/red]")
             exit()
         my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
     print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")

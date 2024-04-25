@@ -549,7 +549,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     for run in runs:
         my_runs[run]=dict()
         for ch_idx,ch in enumerate(channels):
-            print(f"[bold cyan]\n....... Load npy run {run} ch {ch} --> DONE! .......\n[/bold cyan]")
+            if debug: print(f"[bold cyan]\n....... Load npy run {run} ch {ch} --> DONE! .......\n[/bold cyan]")
             
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
@@ -572,6 +572,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
             del branch_list
+    print(f"[bold green]--> Loaded Data Succesfully!!![/bold green]")
     return my_runs
 
 def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, compressed=True, debug = False):
