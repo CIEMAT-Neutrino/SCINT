@@ -14,7 +14,7 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(use
     if key == "" and label == "": continue
     ### Compute
     compute_peak_variables(my_runs, info=info, key=key, label=label, debug=user_input["debug"])
-    compute_pedestal_variables(my_runs, info=info, key=key, label=label, debug=user_input["debug"])
+    compute_pedestal_variables(my_runs, info=info, key=key, label=label, buffer=50, debug=user_input["debug"])
     average_wvfs(my_runs, info=info, key=key, label=label, centering="NONE", debug=user_input["debug"])
     average_wvfs(my_runs, info=info, key=key, label=label, centering="PEAK", debug=user_input["debug"])
     ### Remove branches to exclude from saving

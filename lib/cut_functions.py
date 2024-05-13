@@ -54,10 +54,13 @@ def cut_df(my_runs, cut_dict={}, debug=False):
         for cut in cut_dict:
             this_cut_cut_array = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
             channels = cut_dict[cut]; key = cut[0]; logic = cut[1]; value = cut[2]; inclusive = cut[3]
+            print(channels, key, logic, value, inclusive)
             for ch_idx,ch in enumerate(np.asarray(channels).astype(str)):
                 this_channel_cut_array = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
-                try: my_runs[run][ch]
-                except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()
+                print(my_runs[run].keys())
+                print(my_runs[run][ch])
+                # try: my_runs[run][ch]
+                # except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); continue
 
                 if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs, debug=debug)
                 if check_key(my_runs[run][ch], "UnitsDict") == False: get_run_units(my_runs, debug=debug)

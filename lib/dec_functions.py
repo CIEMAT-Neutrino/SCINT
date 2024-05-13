@@ -54,7 +54,8 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux = []; trimm = 0 
-        template = my_runs[run][ch][keys[1]][0]
+        template = np.array(my_runs[run][ch][keys[1]])[0]+np.ones(1024)*1.6
+        template = template[50:]
         
         # Use a track for loop to print a progress bar
         for i in track(range(len(my_runs[run][ch][keys[0]])), description="Processing..."):
@@ -64,15 +65,12 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
                 label = "Raw"
                 signal = my_runs[run][ch]["PChannel"]*(signal-my_runs[run][ch][label+"PedMean"][i])
             # Arrays must be even for fft
-            signal = check_array_even(signal)
+            signal = check_array_even(signal[0][50:])
             template = check_array_even(template)
-            
             # Arrays must have the same length
             template,signal = check_array_len(template,signal)
-
             # Roll signal to align wvfs
-            # template = np.roll(template, np.argmax(signal)-np.argmax(template))    
-            
+            template = np.roll(template, np.argmax(signal)-np.argmax(template))
             # Can be used for test to trimm array
             if check_key(OPT,  "TRIMM") ==  True: trimm = OPT["TRIMM"]
             if check_key(OPT,  "AUTO_TRIMM") ==  True and OPT["AUTO_TRIMM"] ==  True:
@@ -125,12 +123,22 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
                 # Interpolate wiener envelop for fit of gaussian filter
                 wiener_buffer = 800
                 if check_key(OPT, "WIENER_BUFFER") ==  True: wiener_buffer = OPT["WIENER_BUFFER"]
+                # Check if wiener_buffer is larger than the size of fft_template_X
+                if wiener_buffer >= len(fft_template_X):
+                    print(f"Warning: wiener_buffer ({wiener_buffer}) is larger than the size of fft_template_X ({len(fft_template_X)}). Setting wiener_buffer to {len(fft_template_X) - 1}.")
+                    wiener_buffer = len(fft_template_X) - 1
                 wiener_curve = Curve(fft_template_X[:-wiener_buffer], (-1*wiener[:-wiener_buffer])+2)
+                print(wiener_curve)
+                # Check if wiener_curve has more than one point
+                # if len(wiener_curve.x) > 1:
+                # # env = wiener_curve.envelope2(tc = 1e6)
+                # else:
+                #     print(f"Warning: wiener_curve has only one point. Skipping envelope2.")
+
                 env = wiener_curve.envelope2(tc = 1e6)
                 env_wiener = scipy.interpolate.interp1d(env.x,  env.y)
                 env_wiener_Y = env_wiener(fft_signal_X[:-wiener_buffer])
                 env_wiener_min = np.argmin(-1*(env_wiener_Y-2))
-
                 # Select fit parameters and perform fit to determin cut-off
                 if check_key(OPT, "FIXED_CUTOFF") == True and OPT["FIXED_CUTOFF"]:
                     params = [my_runs[run][ch]["GaussCutOff"],2]
@@ -177,20 +185,20 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
             dec_std = np.mean(dec[:np.argmax(dec)-peak_buffer])
             dec = dec-dec_std
 
-            i_signal, f_signal = find_baseline_cuts(signal)
-            i_resp, f_resp = find_baseline_cuts(template)
-            i_dec, f_dec = find_baseline_cuts(dec)
-            dec_baseline_charge = np.trapz(dec[i_signal:f_signal],my_runs[run][ch]["Sampling"]*np.arange(len(dec[i_signal:f_signal])))
-            dec_charge = np.trapz(dec,my_runs[run][ch]["Sampling"]*np.arange(len(dec)))
+            # i_signal, f_signal = find_baseline_cuts(signal)
+            # i_resp, f_resp = find_baseline_cuts(template)
+            # i_dec, f_dec = find_baseline_cuts(dec)
+            # dec_baseline_charge = np.trapz(dec[i_signal:f_signal],my_runs[run][ch]["Sampling"]*np.arange(len(dec[i_signal:f_signal])))
+            # dec_charge = np.trapz(dec,my_runs[run][ch]["Sampling"]*np.arange(len(dec)))
 
-            if check_key(OPT, "CONVERT_ADC") == True and OPT["CONVERT_ADC"] == True: 
-                # dec = dec*np.sum(abs(fft_signal))/np.sum(abs(fft_dec))
-                dec = dec*np.max(abs(fft_signal))/np.max(abs(fft_dec))
-                dec_baseline_charge = np.trapz(dec[i_signal:f_signal],my_runs[run][ch]["Sampling"]*np.arange(len(dec[i_signal:f_signal])))
-                dec_charge = np.trapz(dec,my_runs[run][ch]["Sampling"]*np.arange(len(dec)))
-                if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True: print("\nDECONVOLUTION: baseline int  = \t %.2E" %dec_baseline_charge)
-                if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True: print("DECONVOLUTION: total int  = \t %.2E\n"%dec_charge)
-                # print("Converting dec wvf amp to ADC")
+            # if check_key(OPT, "CONVERT_ADC") == True and OPT["CONVERT_ADC"] == True: 
+            #     # dec = dec*np.sum(abs(fft_signal))/np.sum(abs(fft_dec))
+            #     dec = dec*np.max(abs(fft_signal))/np.max(abs(fft_dec))
+            #     dec_baseline_charge = np.trapz(dec[i_signal:f_signal],my_runs[run][ch]["Sampling"]*np.arange(len(dec[i_signal:f_signal])))
+            #     dec_charge = np.trapz(dec,my_runs[run][ch]["Sampling"]*np.arange(len(dec)))
+            #     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True: print("\nDECONVOLUTION: baseline int  = \t %.2E" %dec_baseline_charge)
+            #     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True: print("DECONVOLUTION: total int  = \t %.2E\n"%dec_charge)
+            #     # print("Converting dec wvf amp to ADC")
             
             aux.append(dec)
 
@@ -205,25 +213,35 @@ def deconvolve(my_runs, keys = [], noise_run = [], peak_buffer = 20, OPT = {}, d
                 plt.title("DECONVOLUTION RUN %s CH %s"%(run,ch))
 
                 if check_key(OPT, "NORM") ==  True and OPT["NORM"] ==  True:
-                    plt.plot(X, signal/np.max(signal), label = "SIGNAL: int = %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", ds = "steps")
-                    if check_key(OPT, "SHOW_GAUSS_SIGNAL") !=  False: plt.plot(X, filter_signal/np.max(filter_signal),  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
-                    plt.plot(X, template/np.max(template),  label = "DET_RESPONSE: int = %.4E" %(np.trapz(template[i_resp:f_resp], X[i_resp:f_resp])), c = "tab:orange", ds = "steps")
+                    plt.plot(X, signal/np.max(signal), label = "SIGNAL: int = ", c = "tab:blue", ds = "steps")
+                            #  %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", ds = "steps")
+                    if check_key(OPT, "SHOW_GAUSS_SIGNAL") !=  False: plt.plot(X, filter_signal/np.max(filter_signal),  label = "GAUSS_SIGNAL: int =", c = "blue")
+                                                                                # %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
+                    plt.plot(X, template/np.max(template),  label = "DET_RESPONSE: int = ", c = "tab:orange", ds = "steps")
+                            #  %.4E" %(np.trapz(template[i_resp:f_resp], X[i_resp:f_resp])), 
                     if check_key(OPT, "CONVERT_ADC") == True and OPT["CONVERT_ADC"] == True:
-                        plt.plot(X, dec, label = "DECONVOLUTION: int = %.2E" %dec_baseline_charge, c = "tab:red", ds = "steps", lw = 2.)
+                        plt.plot(X, dec, label = "DECONVOLUTION: int =" , c = "tab:red", ds = "steps", lw = 2.)
+                                #   %.2E" %dec_baseline_charge
                     else:
-                        plt.plot(X, dec, label = "DECONVOLUTION: int = %.2f PE" %(np.sum(dec[i_dec:f_dec])), c = "tab:red", ds = "steps", lw = 2.)
+                        plt.plot(X, dec, label = "DECONVOLUTION: int = " , c = "tab:red", ds = "steps", lw = 2.)
+                                #  %.2f PE" %(np.sum(dec[i_dec:f_dec])), c = "tab:red", ds = "steps", lw = 2.)
                 else:
-                    plt.plot(X, signal, label = "SIGNAL: int = %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])), c = "tab:blue", ds = "steps")
-                    if check_key(OPT, "SHOW_GAUSS_SIGNAL") !=  False: plt.plot(X, filter_signal,  label = "GAUSS_SIGNAL: int = %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
-                    plt.plot(X, template,  label = "DET_RESPONSE: int = %.4E" %(np.trapz(template[i_resp:f_resp], X[i_resp:f_resp])), c = "tab:orange", ds = "steps")
+                    plt.plot(X, signal, label = "SIGNAL: int =" , c = "tab:blue", ds = "steps")
+                            #  %.4E" %(np.trapz(signal[i_signal:f_signal], X[i_signal:f_signal])))
+                    if check_key(OPT, "SHOW_GAUSS_SIGNAL") !=  False: plt.plot(X, filter_signal,  label = "GAUSS_SIGNAL: int =", c = "blue")
+                                                                                # %.4E" %(np.trapz(filter_signal[i_signal:f_signal], X[i_signal:f_signal])), c = "blue")
+                    plt.plot(X, template,  label = "DET_RESPONSE: int = ", c = "tab:orange", ds = "steps")
+                            #  %.4E" %(np.trapz(template[i_resp:f_resp], X[i_resp:f_resp])), c = "tab:orange", ds = "steps")
                     if check_key(OPT, "CONVERT_ADC") == True and OPT["CONVERT_ADC"] == True:
-                        plt.plot(X, dec, label = "DECONVOLUTION: int = %.2E" %dec_baseline_charge, c = "tab:red", ds = "steps", lw = 2.)
+                        plt.plot(X, dec, label = "DECONVOLUTION: int =" , c = "tab:red", ds = "steps", lw = 2.)
+                                #   %.2E" %dec_baseline_charge, c = "tab:red", ds = "steps", lw = 2.)
                     else:
-                        plt.plot(X, dec, label = "DECONVOLUTION: int = %.2f PE" %(np.sum(dec[i_dec:f_dec])), c = "tab:red", ds = "steps", lw = 2.)
+                        plt.plot(X, dec, label = "DECONVOLUTION: int =", c = "tab:red", ds = "steps", lw = 2.) 
+                                #  %.2f PE" %(np.sum(dec[i_dec:f_dec])), c = "tab:red", ds = "steps", lw = 2.)
 
                 # plt.axhline(0, label = "Total # PE in deconvolved signal %f"%np.sum(dec), c = "black", alpha = 0.5, ls = "--")
                 if check_key(OPT, "CONVERT_ADC") == False or OPT["CONVERT_ADC"] == False:
-                    if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True: print("\nDECONVOLUTION: baseline int  = \t %.2f PE" %(np.sum(dec[i_dec:f_dec])))
+                    # if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True: print("\nDECONVOLUTION: baseline int  = \t %.2f PE" %(np.sum(dec[i_dec:f_dec])))
                     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True: print("DECONVOLUTION: total int  = \t %.2f PE\n"%np.sum(dec))
                 plt.axhline(0, c = "black", alpha = 0.5, ls = "--")
                 # print("# PE in deconvolved signal %f"%np.sum(dec[i_dec:f_dec]))
@@ -376,6 +394,7 @@ def check_array_len(wvf1,wvf2):
 def check_array_even(wvf):
     if len(wvf) % 2 > 0: return wvf[:-1]
     else:                return wvf
+
 
 def conv_func2(wvf, t0, sigma, tau1, a1, tau2, a2):
     resp = func2(wvf[0], 0, t0, sigma, a1, tau1, a2, tau2)

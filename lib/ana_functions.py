@@ -8,7 +8,7 @@ from itertools import product
 from rich      import print as print
 
 # Import from other libraries
-from .io_functions import print_colored, check_key
+from .io_functions import print_colored, check_key, load_npy
 
 #===========================================================================#
 #************************* PEAK + PEDESTAL *********************************#
@@ -23,14 +23,19 @@ def compute_ana_wvfs(my_runs, info, debug = False):
     \n**- debug**:   boolean to print debug messages.
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(str),np.array(my_runs["NChannel"]).astype(str)):
-        if check_key(my_runs[run][ch],"RawADC") == False: 
-            print("[red]ERROR: RawADC not found![/red]")
-            exit()
-        if check_key(my_runs[run][ch],"Raw"+info["PED_KEY"][0]) == False:
-            print_colored("ERROR: Raw"++info["PED_KEY"][0]+" not found! Please run 01PreProcess.py", "ERROR")
-            exit()
-        my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
-    print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")
+        print(run,ch)
+        try: 
+            my_runs[run][ch]["AnaADC"] = load_npy([run], [ch], info, branch_list = ["AnaADC"])
+        except FileNotFoundError:
+
+            if check_key(my_runs[run][ch],"RawADC") == False: 
+                print("[red]ERROR: RawADC not found![/red]")
+                exit()
+            if check_key(my_runs[run][ch],"Raw"+info["PED_KEY"][0]) == False:
+                print_colored("ERROR: Raw"++info["PED_KEY"][0]+" not found! Please run 01PreProcess.py", "ERROR")
+                exit()
+            my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
+        print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")
 
 
 def compute_fft_wvfs(my_runs, info, key, label, debug = False):
@@ -64,26 +69,37 @@ def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False
     '''
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         aux_ADC = my_runs[run][ch][key]   
+        start_index = 100  # replace with the start of the window
+        end_index = 200  # replace with the end of the window   
+
         if key == "RawADC" and label == "Raw":
-            my_runs[run][ch][label+"PeakAmp" ] = my_runs[run][ch]["PChannel"]*np.max(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
-            my_runs[run][ch][label+"PeakTime"] = np.argmax(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
+            # my_runs[run][ch][label+"PeakAmp" ] = my_runs[run][ch]["PChannel"]*np.max(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
+            # my_runs[run][ch][label+"PeakTime"] = np.argmax(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
+            my_runs[run][ch][label+"PeakAmp" ] = my_runs[run][ch]["PChannel"]*np.max(my_runs[run][ch]["PChannel"]*aux_ADC[:,start_index:end_index],axis=1)
+            my_runs[run][ch][label+"PeakTime"] = np.argmax(my_runs[run][ch]["PChannel"]*aux_ADC[:,start_index:end_index],axis=1)
 
             # Compute valley amplitude in the buffer around the peak to avoid noise
             i_idx = my_runs[run][ch][label+"PeakTime"]
             i_idx[i_idx < 0] = 0
             this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
 
+            # my_runs[run][ch][label+"ValleyAmp" ] = my_runs[run][ch]["PChannel"]*(np.min(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
+            # my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
             my_runs[run][ch][label+"ValleyAmp" ] = my_runs[run][ch]["PChannel"]*(np.min(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(my_runs[run][ch]["PChannel"]*this_aux_ADC[:,:buffer],axis=1))
         
         else:
-            my_runs[run][ch][label+"PeakAmp" ] = np.max(aux_ADC[:,:],axis=1)
-            my_runs[run][ch][label+"PeakTime"] = np.argmax(aux_ADC[:,:],axis=1)
+            # my_runs[run][ch][label+"PeakAmp" ] = np.max(aux_ADC[:,:],axis=1)
+            # my_runs[run][ch][label+"PeakTime"] = np.argmax(aux_ADC[:,:],axis=1)
+            my_runs[run][ch][label+"PeakAmp" ] = np.max(aux_ADC[:,start_index:end_index],axis=1)
+            my_runs[run][ch][label+"PeakTime"] = np.argmax(aux_ADC[:,start_index:end_index],axis=1)
             # Compute valley amplitude in the buffer around the peak to avoid noise
             i_idx = my_runs[run][ch][label+"PeakTime"]
             i_idx[i_idx < 0] = 0
             this_aux_ADC = shift_ADCs(aux_ADC, -i_idx, debug = debug)
 
+            # my_runs[run][ch][label+"ValleyAmp" ] = np.min(this_aux_ADC[:,:buffer],axis=1)
+            # my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
             my_runs[run][ch][label+"ValleyAmp" ] = np.min(this_aux_ADC[:,:buffer],axis=1)
             my_runs[run][ch][label+"ValleyTime"] = (i_idx + np.argmin(this_aux_ADC[:,:buffer],axis=1))
     print_colored("--> Computed Peak Variables!!!", "SUCCESS")

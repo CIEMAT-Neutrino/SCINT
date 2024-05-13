@@ -7,35 +7,37 @@ my_runs = load_npy(user_input["runs"], user_input["channels"], preset=user_input
 keys = ["AnaAveWvf","AnaAveWvfSER","AveWvf"] # keys contains the 3 labels required for deconvolution keys[0] = raw, keys[1] = det_response and keys[2] = deconvolution 
 
 OPT = {
-    "NOISE_AMP": 1,
+    "NOISE_AMP": 3,
     "FIX_EXP":True,
     "FIXED_CUTOFF": False,
     "LOGY":True,
-    "NORM":False,
+    "NORM":True,
     "FOCUS":False,
-    "SHOW": False,
+    "SHOW": True,
     "SHOW_F_SIGNAL":True,
     "SHOW_F_GSIGNAL":True,
     "SHOW_F_DET_RESPONSE":True,
-    "SHOW_F_GAUSS":True,
+    "SHOW_F_GAUSS":False,
     "SHOW_F_WIENER":True,
     "SHOW_F_DEC":True,
-    "WIENER_BUFFER": 800,
-    "THRLD": 1e-4
+    "WIENER_BUFFER": 250,
+    "THRLD": 1e-4,
 }
+
 
 deconvolve(my_runs,keys=keys, noise_run=[], OPT=OPT, debug=user_input["debug"])
-
-OPT = {
-    "SHOW": False,
-    "FIXED_CUTOFF": True
-}
-
-keys[0] = "RawADC"
-keys[2] = "ADC"
-deconvolve(my_runs,keys=keys,OPT=OPT, debug=user_input["debug"])
-
 save_proccesed_variables(my_runs, preset=user_input["preset_save"][0], info=info, force=True, debug=user_input["debug"])
-# del my_runs
 
-generate_input_file(user_input["input_file"],info,label="Gauss", debug=user_input["debug"])
+# OPT = {
+#     "SHOW": False,
+#     "FIXED_CUTOFF": True
+# }
+
+# keys[0] = "RawADC"
+# keys[2] = "ADC"
+# deconvolve(my_runs,keys=keys,OPT=OPT, debug=user_input["debug"])
+
+# save_proccesed_variables(my_runs, preset=user_input["preset_save"][0], info=info, force=True, debug=user_input["debug"])
+# # del my_runs
+
+# generate_input_file(user_input["input_file"],info,label="Gauss", debug=user_input["debug"])
