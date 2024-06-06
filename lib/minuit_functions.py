@@ -91,7 +91,10 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
     plt.fill_between(xdata, (y_fit - yerr), (y_fit + yerr), alpha=0.2, color=get_color(ch, even=False))
     plt.legend()
     plt.setp(ax.get_legend().get_texts(), fontsize='10')
-
+    # Pin legend to the upper left corner
+    plt.legend(loc='upper right')
+    # Force x axis tcks to be scintific notation
+    plt.ticklabel_format(axis='x', style='sci')
     plt.show()
     while not plt.waitforbuttonpress(-1):
         pass

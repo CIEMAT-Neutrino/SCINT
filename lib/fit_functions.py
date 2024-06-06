@@ -270,6 +270,8 @@ def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=F
         perr = np.sqrt(np.diag(pcov))
     except ValueError:
         print_colored("Full fit could not be performed", "ERROR")
+    except RuntimeError:
+        print_colored("Full fit could not be performed", "ERROR")
     return popt, pcov
 
 def pmt_spe_fit(counts, bins, bars, thresh):

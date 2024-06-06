@@ -193,7 +193,12 @@ def calibration_fit_plot(ax_cal, counts, bins, OPT, debug=False):
         ax_cal.semilogy()
         ax_cal.set_ylim(1)
 
-    return popt.tolist(), pcov.tolist()
+    try: 
+        popt = popt.tolist()
+        pcov = pcov.tolist()
+    except AttributeError:
+        pass 
+    return popt, pcov
 
 
 def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
@@ -219,7 +224,7 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
         print_colored("Fit failed. Returning initial parameters.", "WARNING")
         xt_popt = np.asarray([len(PNs), p, l])
         xt_pcov = np.asarray([-99, -99, -99])
-        ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x', label="Fit: CT = " + str(int(xt_popt[1] * 100)) + "% - " + r'$\lambda = {:.2f}$'.format(xt_popt[2]), color="red")
+        # ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x', label="Fit: CT = " + str(int(xt_popt[1] * 100)) + "% - " + r'$\lambda = {:.2f}$'.format(xt_popt[2]), color="red")
 
     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"] == True:
         ax_xt.legend()
@@ -321,8 +326,11 @@ def xtalk_txt(run, ch, xt_popt, xt_pcov, info, debug = False) -> bool:
     table.add_column("Error")
     parameters = ["NPEAK", "XT", "LAMBDA"]
     for j, parameter in enumerate(parameters):
-        value, error = '{:.2f}'.format(xt_parameters[0][j][0]), '{:.2f}'.format(xt_parameters[0][j][1])
-        table.add_row(parameter, value, error)
+        try:
+            value, error = '{:.2f}'.format(xt_parameters[0][j][0]), '{:.2f}'.format(xt_parameters[0][j][1])
+            table.add_row(parameter, value, error)
+        except TypeError:
+            table.add_row(parameter, "N/A", "N/A")
     console.print("\nX-Talk:")
     console.print(table)
 
