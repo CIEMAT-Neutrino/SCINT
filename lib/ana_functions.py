@@ -24,13 +24,14 @@ def compute_ana_wvfs(my_runs, info, debug = False):
     '''
     for run,ch in product(np.array(my_runs["NRun"]).astype(str),np.array(my_runs["NChannel"]).astype(str)):
         if check_key(my_runs[run][ch],"RawADC") == False: 
-            print("[red]ERROR: RawADC not found![/red]")
-            exit()
+            print("[red]ERROR: RawADC not found! Please run 00Raw2Npy.py [/red]")
+            return False
         if check_key(my_runs[run][ch],"Raw"+info["PED_KEY"][0]) == False:
             print(f"[red]ERROR: Raw {info['PED_KEY'][0]} not found! Please run 01PreProcess.py[/red]")
-            exit()
+            return False
         my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
     print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")
+    return True
 
 
 def compute_fft_wvfs(my_runs, info, key, label, debug = False):

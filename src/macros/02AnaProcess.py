@@ -8,7 +8,7 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(use
     ### Process
     if user_input["preset_load"][0] == "ANA":
         if check_key(my_runs[my_runs["NRun"][0]][my_runs["NChannel"][0]],"AnaADC") == False:
-            compute_ana_wvfs(my_runs,info=info,debug=user_input["debug"])
+            if not compute_ana_wvfs(my_runs,info=info,debug=user_input["debug"]): continue
         delete_keys(my_runs,['RawADC','RawPeakAmp','RawPeakTime','RawPedSTD','RawPedMean','RawPedMax','RawPedMin','RawPedLim'])
     ### Check if the run is empty
     key, label = get_wvf_label(my_runs, "", "", debug=user_input["debug"])
