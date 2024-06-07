@@ -31,11 +31,13 @@ def generate_SER(my_runs,light_runs,SPE_runs,scaling_type="Amplitude", debug=Fal
         for jj in range(len(my_runs["NChannel"])):
             try:
                 det_response =    light_runs[light_runs["NRun"][0]][my_runs["NChannel"][jj]]["AnaAveWvf"][0]
+            except KeyError:
+                exit(f"Key error in light run: run {my_runs['NRun'][ii]} channel {my_runs['NChannel'][jj]} key AnaAveWvf")
+            try:
                 single_response = SPE_runs[SPE_runs["NRun"][0]][my_runs["NChannel"][jj]]["AnaAveWvfSPE"][0]
             except KeyError:
-                print_colored("\n---KEY ERROR: AnaAveWvf not found!", "ERROR")
-                exit(f"Key error in generate_SER: run {my_runs['NRun'][ii]} channel {my_runs['NChannel'][jj]}")
-                
+                exit(f"Key error in calib run: run {my_runs['NRun'][ii]} channel {my_runs['NChannel'][jj]} key AnaAveWvfSPE")
+
             if scaling_type == "Amplitude": SER = np.max(single_response)*det_response/np.max(det_response)
             if scaling_type == "Area":      SER = np.sum(single_response)*det_response/np.sum(det_response)
             
