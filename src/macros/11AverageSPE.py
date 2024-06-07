@@ -16,10 +16,7 @@ for run, ch, variable in product(np.asarray(user_input["runs"]).astype(str),np.a
     if key == "" and label == "": pass
     ### Compute
     user_input["filter"]["cut_df"][0] = True
-    user_input["filter"]["cut_df"][1] = [
-        [[ch],variable,"bigger",float(my_runs[run][ch]["AnaMinChargeSPE"]),False],
-        [[ch],variable,"smaller",float(my_runs[run][ch]["AnaMaxChargeSPE"]),False]
-        ]
+    user_input["filter"]["cut_df"][1] = [[[ch],variable,"between",(float(my_runs[run][ch]["AnaMinChargeSPE"]),float(my_runs[run][ch]["AnaMaxChargeSPE"])),False]]
 
     print(user_input)
     cut_label, my_runs = cut_selector(my_runs, user_input)
