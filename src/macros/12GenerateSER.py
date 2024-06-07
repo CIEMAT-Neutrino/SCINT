@@ -1,11 +1,27 @@
 import sys; sys.path.insert(0, '../../'); from lib import *
-user_input, info = initialize_macro("12GenerateSER",["input_file","debug"],default_dict={}, debug=True)
+default_dict = {}
+user_input, info = initialize_macro("12GenerateSER",["input_file","runs","channels","save","debug"],default_dict, debug=True)
+
 ### Load runs
-my_runs     = load_npy([35], [2,3], preset="WVF", info=info, compressed=True, debug=user_input["debug"])  # Select runs to be deconvolved (tipichaly alpha)     
-light_runs  = load_npy([49], [2,3], preset="WVF", info=info, compressed=True, debug=user_input["debug"]) # Select runs to serve as dec template (tipichaly light)    
-single_runs = load_npy([51], [2,3], preset="WVF", info=info, compressed=True, debug=user_input["debug"]) # Select runs to serve as dec template scaling (tipichaly SPE)
-generate_SER(my_runs, light_runs, single_runs, debug=user_input["debug"])
-### Remove branches to exclude from saving
-save_proccesed_variables(my_runs, preset="WVF", info=info, force=True, debug=user_input["debug"])
-del my_runs
-gc.collect()
+light_runs = ["23"]
+calib_runs = ["21"]
+
+### 12GenerateSER
+for run in np.asarray(user_input["runs"]).astype(str):
+    scint_runs = calib_runs + light_runs + [run]
+    for ch in np.asarray(user_input["channels"]).astype(str):
+        scint = load_npy(scint_runs, [ch], preset="WVF", info=info, compressed=True, debug=user_input["debug"]) # Select runs to be deconvolved (tipichaly alpha)     
+        light = load_npy(light_runs, [ch], preset="WVF", info=info, compressed=True, debug=user_input["debug"]) # Select runs to serve as dec template (tipichaly light)    
+        calib = load_npy(calib_runs, [ch], preset="WVF", info=info, compressed=True, debug=user_input["debug"]) # Select runs to serve as dec template scaling (tipichaly SPE)
+        generate_SER(scint, light, calib, debug=user_input["debug"])
+
+        OPT = opt_selector(debug=user_input["debug"])
+        OPT["LOGY"] = True
+        OPT["NORM"] = True
+        keys_dict = {(run, ch):key for run, ch, key in zip(scint_runs, [ch]*3, ["AnaAveWvfSPE","AnaAveWvfSER","AnaAveWvf"])}
+        vis_compare_wvf(scint, info, keys_dict, OPT=OPT, save=user_input["save"], debug=user_input["debug"])
+
+        ### Remove branches to exclude from saving
+        save_proccesed_variables(scint, preset="WVF", info=info, force=True, debug=user_input["debug"])
+        del scint, light, calib
+        gc.collect()
