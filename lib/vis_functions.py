@@ -242,6 +242,7 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
       (a) "RUNS" to get a plot for each channel and the selected runs. Type: String
       (b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
     '''
+
     style_selector(OPT)
     r_list = my_run["NRun"]
     if type(r_list) != list:
@@ -256,13 +257,13 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
     
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        # if len(ch_loaded) == 1: ch_loaded = [ch_loaded]
         q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded, default=ch_loaded) ]
         ch_list =  inquirer.prompt(q)["channels"]
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
     
     a_list = r_list
     b_list = ch_list
+
     if not check_key(OPT, "COMPARE"):OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "RUNS":     a_list = ch_list; b_list = r_list 
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
@@ -274,60 +275,60 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
         plt.ion()
         fig, ax = plt.subplots(1 ,1, figsize = (8,6))
         axs = ax
-
         fig.supxlabel(r'Time [s]')
         fig.supylabel("ADC Counts")
-        # fig.supylabel("Normalized Amplitude")
-        norm_raw = [1]*nch # Generates a list with the norm correction for std bar
-        counter = 0
-        ref_max_idx = -1
-        for b in b_list:
-            if OPT["COMPARE"] == "RUNS":
-                run = b
-                # label = "Run {} - {}".format(run,keys[counter]);title = "Average Waveform - Ch {}".format(ch)
-            if OPT["COMPARE"] == "CHANNELS": 
-                ch = b
-                # label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],keys[counter]); title = "Average Waveform - Run {}".format(run)
-            if OPT["COMPARE"] == "NONE":     run = a; ch = b
-            for key in keys:
-                if OPT["COMPARE"] == "NONE": label = "Run {} - Channel {} ({}) - {}".format(run,ch,my_run[run][ch]["Label"],key); title = "Average Waveform"
-                if OPT["COMPARE"] == "RUNS": label = "Run {} - {}".format(run,key); title = "Average Waveform - Ch {}".format(ch)
-                if OPT["COMPARE"] == "CHANNELS": label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],key); title = "Average Waveform - Run {}".format(run)
-                ave = my_run[run][ch][key][0]
-                counter = counter + 1
 
-                norm_ave = np.max(ave)
-                sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
-                thrld = 1e-6
-                if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
-                    ave = ave/norm_ave
-                    fig.supylabel("Norm")
-                if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True: fig.supxlabel(r'Time [$\mu$s]'); sampling = my_run[run][ch]["Sampling"]*1e6
-                if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:         axs.semilogy()
-                if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
-                    ref_threshold = np.argmax(ave>np.max(ave)*2/3)
-                    if ref_max_idx == -1: ref_max_idx = ref_threshold
-                    ave = np.roll(ave, ref_max_idx-ref_threshold)
-                if check_key(OPT, "SPACE_OUT") and OPT["SPACE_OUT"] != 0:
-                    # for each b in b_list, we want to plot the same waveform with a different offset in x
-                    ave = np.roll(ave, int(b)*int(OPT["SPACE_OUT"]))
-                axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "))
-
-        axs.grid(True, alpha = 0.7)
-        axs.set_title(title,size = 14)
-        axs.xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
-        if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
+        ref_max_idx = None
+        for b_idx, b in enumerate(b_list):
+            idx = a_idx*len(b_list) + b_idx
+            if OPT["COMPARE"] == "RUNS": run = b
+            if OPT["COMPARE"] == "CHANNELS": ch = b
+            if OPT["COMPARE"] == "NONE": run = a; ch = b
+            if isinstance(keys, list):
+                for key in keys: ref_max_idx = plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx)
+            elif isinstance(keys, dict): 
+                ref_max_idx = plot_compare_wvf(my_run, run, ch, keys[(run,ch)], fig, axs, idx, OPT, ref_max_idx)
+            else: 
+                print(type(keys))
+                exit("Keys must be a list or a dictionary")
        
         tecla   = input("\nPress q to quit, p to save plot and any key to continue: ")
-        counter = 0
         if tecla   == "q": break 
-        elif tecla == "p": fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_AveWvf.png', dpi = 500); counter += 1
-        else: counter += 1
-        if   counter > len(ch_list): break
-        elif counter > len(r_list):  break
+        elif tecla == "p": fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_AveWvf.png', dpi = 500)
+        else: pass
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
         plt.close()   
+
+
+def plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx = None):
+    if OPT["COMPARE"] == "NONE": label = "Run {} - Channel {} ({}) - {}".format(run,ch,my_run[run][ch]["Label"],key); title = "Average Waveform"
+    if OPT["COMPARE"] == "RUNS": label = "Run {} - {}".format(run,key); title = "Average Waveform - Ch {}".format(ch)
+    if OPT["COMPARE"] == "CHANNELS": label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],key); title = "Average Waveform - Run {}".format(run)
+    ave = my_run[run][ch][key][0]
+    # counter = counter + 1
+
+    norm_ave = np.max(ave)
+    sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
+    if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
+        ave = ave/norm_ave
+        fig.supylabel("Norm")
+    if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True: fig.supxlabel(r'Time [$\mu$s]'); sampling = my_run[run][ch]["Sampling"]*1e6
+    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:         axs.semilogy()
+    if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
+        ref_threshold = np.argmax(ave>np.max(ave)*2/3)
+        if ref_max_idx is None: ref_max_idx = ref_threshold
+        ave = np.roll(ave, ref_max_idx-ref_threshold)
+    if check_key(OPT, "SPACE_OUT") and OPT["SPACE_OUT"] != 0:
+        # for each b in b_list, we want to plot the same waveform with a different offset in x
+        ave = np.roll(ave, int(idx)*int(OPT["SPACE_OUT"]))
+    axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "))
+
+    axs.grid(True, alpha = 0.7)
+    axs.set_title(title,size = 14)
+    axs.xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
+    if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
+    return ref_max_idx
 
 def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, select_range = False, save = False, debug = False):
     '''
