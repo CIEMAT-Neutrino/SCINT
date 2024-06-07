@@ -48,24 +48,32 @@ def cut_df(my_runs, cut_dict={}, debug=False):
     cut_dict = {(key, logic, value, inclusive): channels}
     '''
     print_colored("---- LET'S CUT! ----", color = "SUCCESS",styles=["bold"])
+    if debug: print(cut_dict)
+    
     for run in (np.asarray(my_runs["NRun"]).astype(str)):
         my_cuts = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
         my_runs_df = pd.DataFrame(my_runs[run]).T
+        
         for cut in cut_dict:
             this_cut_cut_array = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
             channels = cut_dict[cut]; key = cut[0]; logic = cut[1]; value = cut[2]; inclusive = cut[3]
+            
             for ch_idx,ch in enumerate(np.asarray(channels).astype(str)):
                 this_channel_cut_array = np.ones(len(my_runs[run][my_runs["NChannel"][0]]["TimeStamp"]),dtype=bool)
+                
                 try: my_runs[run][ch]
                 except KeyError: print("ERROR: Run",run,"or Ch",ch,"not found in loaded data"); exit()
 
                 if check_key(my_runs[run][ch], "MyCuts") == False:    generate_cut_array(my_runs, debug=debug)
                 if check_key(my_runs[run][ch], "UnitsDict") == False: get_run_units(my_runs, debug=debug)
-                print_colored("... Cutting events for run %s channel %s with %s %s %0.2f ..."%(run, ch, key, logic, value),"INFO")
-                if logic == "bigger":  this_channel_cut_array = (my_runs_df.loc[ch][key] >  value); print_cut_info(this_channel_cut_array)
-                if logic == "smaller": this_channel_cut_array = (my_runs_df.loc[ch][key] <  value); print_cut_info(this_channel_cut_array)
-                if logic == "equal":   this_channel_cut_array = (my_runs_df.loc[ch][key] == value); print_cut_info(this_channel_cut_array)
-                if logic == "unequal": this_channel_cut_array = (my_runs_df.loc[ch][key] != value); print_cut_info(this_channel_cut_array)
+                
+                print_colored("... Cutting events for run %s channel %s with %s %s %s ..."%(run, ch, key, logic, value),"INFO")
+                if logic == "bigger":  this_channel_cut_array = (my_runs_df.loc[ch][key] >  value[0])
+                if logic == "smaller": this_channel_cut_array = (my_runs_df.loc[ch][key] <  value[0])
+                if logic == "equal":   this_channel_cut_array = (my_runs_df.loc[ch][key] == value[0])
+                if logic == "unequal": this_channel_cut_array = (my_runs_df.loc[ch][key] != value[0])
+                if logic == "between": this_channel_cut_array = (my_runs_df.loc[ch][key] > value[0]) & (my_runs_df.loc[ch][key] < value[1])
+                print_cut_info(this_channel_cut_array)
 
                 if ch_idx != 0:
                     if inclusive: this_cut_cut_array = this_cut_cut_array + this_channel_cut_array

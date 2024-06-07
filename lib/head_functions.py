@@ -189,7 +189,7 @@ def apply_cuts(user_input, info, debug=False):
                             logic     = [ inquirer.Text("logic",     message="Select logic for applying **%s**"%cut, default="bigger") ]
                             value     = [ inquirer.Text("value",     message="Select value for applying **%s**"%cut, default="1") ]
                             inclusive = [ inquirer.Text("inclusive", message="Select inclusive for applying **%s**"%cut, default="False") ]
-                            cut_dict[cut][1].append([inquirer.prompt(channels)["channels"].split(','),inquirer.prompt(key)["key"], inquirer.prompt(logic)["logic"], float(inquirer.prompt(value)["value"]), inquirer.prompt(inclusive)["inclusive"].lower() in ['true', '1', 't', 'y', 'yes']])
+                            cut_dict[cut][1].append([inquirer.prompt(channels)["channels"].split(','),inquirer.prompt(key)["key"], inquirer.prompt(logic)["logic"], tuple(float(x) for x in inquirer.prompt(value)["value"].split(',')), inquirer.prompt(inclusive)["inclusive"].lower() in ['true', '1', 't', 'y', 'yes']])
                             ask4cuts = input("\nDo you want to add another cut? (y/n) ").lower() in ['true', '1', 't', 'y', 'yes']
 
                     if cut == "cut_lin_rel":
