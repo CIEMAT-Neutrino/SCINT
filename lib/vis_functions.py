@@ -18,7 +18,7 @@ from rich                        import print as rprint
 # Imports from other libraries
 from .io_functions  import check_key,print_colored
 from .fig_config    import figure_features, add_grid
-from .ana_functions import get_wvf_label,generate_cut_array,get_run_units
+from .ana_functions import get_wvf_label,generate_cut_array,get_run_units,filter_wvf
 from .sty_functions import style_selector, get_prism_colors
 
 root = get_project_root()
@@ -77,6 +77,7 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
             fig.supxlabel(r'Time [s]')
             fig.supylabel("ADC Counts")
             raw = []
+            filtered_ana = []
             norm_raw = [1]*nch # Generates a list with the norm correction for std bar
             
             for j in range(nch):
@@ -84,6 +85,9 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
                     print_colored("\nAnaADC not saved but we compute it now :)", "WARNING")
                     label = "Ana"
                     ana = my_run[run][ch_list[j]]["PChannel"]*((my_run[run][ch_list[j]]["RawADC"][idx].T-my_run[run][ch_list[j]]["Raw"+info["PED_KEY"][0]][idx]).T)
+                    if OPT["FILTER"]:
+                        print_colored("Filtering waveforms!", "INFO")
+                        filtered_ana.append(filter_wvf(ana))
                     raw.append(ana)
                     ped = 0
                     std = my_run[run][ch_list[j]]["AnaPedSTD"][idx]
@@ -111,6 +115,8 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
                     std = 0 # It is ugly if we see this line in log plots
                 # fig.tight_layout(h_pad=2) # If we want more space betweeb subplots. We avoid small vertical space between plots            
                 axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(raw[j])),raw[j],label="%s"%key, drawstyle = "steps", alpha = 0.95, linewidth=1.2, c=colors[0], zorder=0)
+                if OPT["FILTER"]:
+                    axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(filtered_ana[j])),filtered_ana[j],label="%s"%key, drawstyle = "steps", alpha = 0.95, linewidth=1.2, c="red", zorder=0)
                 try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx], c=colors[1], zorder=10)
                 except KeyError: print_colored("PeakAmp not computed!", "ERROR")    
                 try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx], c=colors[1], zorder=10)
@@ -430,21 +436,23 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                     fig.supylabel(y_label)
                     fig.suptitle(title + " - {} histogram".format(k))
 
-                colors = get_prism_colors()
+                colors = get_prism_colors() + get_prism_colors()
                 factor = 1
                 if len(b_list) <= 4:
                     factor = 2
-                ax.plot(bins[:-1], counts, drawstyle = "steps", label=label, alpha = 0.95, linewidth=1.2, c=colors[1+factor*(idx+jdx)])
+                # ax.plot(bins[:-1], counts, drawstyle = "steps", label=label, alpha = 0.95, linewidth=1.2, c=colors[1+factor*(idx+jdx)])
+                ax.plot(bins[:-1], counts, drawstyle = "steps", label=label, alpha = 0.95, linewidth=1.2, c=colors[jdx])
                 
                 label = label.replace(" - " + k,"")
                 all_counts.append(counts)
                 all_bins.append(bins)
                 # all_bars.append(bars)
-            
-            if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:        ax.legend()
-            if check_key(OPT, "LOGY")   == True and OPT["LOGY"]  == True: ax.semilogy()
-            if check_key(OPT, "STATS")  == True and OPT["STATS"] == True: print_stats(my_run,(run,ch,k),ax,data,info,save,debug)
-            if check_key(OPT, "SHOW")   == True and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
+            if check_key(OPT, "LIMITS") and OPT["LIMITS"]:
+                ax.set_xlim(OPT["XLIM"])
+            if check_key(OPT, "LEGEND") and OPT["LEGEND"]:        ax.legend()
+            if check_key(OPT, "LOGY")   and OPT["LOGY"]  == True: ax.semilogy()
+            if check_key(OPT, "STATS")  and OPT["STATS"] == True: print_stats(my_run,(run,ch,k),ax,data,info,save,debug)
+            if check_key(OPT, "SHOW")   and OPT["SHOW"] == True and OPT["COMPARE"] == "NONE":
                 plt.ion()
                 plt.show()
                 if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
@@ -455,6 +463,10 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
             if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
                 while not plt.waitforbuttonpress(-1): pass
         if save: 
+            # Check if the directory exists
+            if not os.path.exists(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/'):
+                os.makedirs(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/')
+                os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/', 0o770)
             fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(key)}_Hist.png', dpi=500)
             if debug:
                 rprint(f"Saved figure as: run{run}_ch{ch}_{'_'.join(key)}_Hist.png")
