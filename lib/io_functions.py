@@ -454,7 +454,10 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     '''
 
     dict_option = dict()
-    dict_option["LOAD"] = os.listdir(f"{path}{folder}")
+    try:
+        dict_option["LOAD"] = os.listdir(f"{path}{folder}")
+    except FileNotFoundError:
+        exit(f"Folder {path}{folder} not found!")
     # Remove files that are not .npz or .npy
     dict_option["LOAD"] = [file for file in dict_option["LOAD"] if file.endswith(".npz") or file.endswith(".npy")]
     dict_option["SAVE"] = my_run.keys()
@@ -575,7 +578,7 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
     print(f"[bold green]--> Loaded Data Succesfully!!![/bold green]")
     return my_runs
 
-def save_proccesed_variables(my_runs, info, preset = "", branch_list = [], force=False, compressed=True, debug = False):
+def save_proccesed_variables(my_runs, info, preset = "", branch_list = None, force=False, compressed=True, debug = False):
     '''
     \nSaves the processed variables an npx file.
     \n**VARIABLES**:
