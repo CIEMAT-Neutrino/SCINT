@@ -14,7 +14,7 @@ from .io_functions import print_colored, check_key
 #************************* PEAK + PEDESTAL *********************************#
 #===========================================================================# 
 
-def compute_ana_wvfs(my_runs, info, debug = False):
+def compute_ana_wvfs(my_runs, info, filter=False, debug = False):
     '''
     \nComputes the AnaADC wvfs from the RawADC and the baseline value computed from PED_KEY.
     \n**VARIABLES**:
@@ -30,9 +30,28 @@ def compute_ana_wvfs(my_runs, info, debug = False):
             print(f"[red]ERROR: Raw {info['PED_KEY'][0]} not found! Please run 01PreProcess.py[/red]")
             return False
         my_runs[run][ch]["AnaADC"] = my_runs[run][ch]["PChannel"]*(my_runs[run][ch]["RawADC"].T-my_runs[run][ch]["Raw"+info["PED_KEY"][0]]).T
+        if filter:
+            # Apply filter to the wvfs
+            filter_array = np.array(len(my_runs[run][ch]["AnaADC"]),len(my_runs[run][ch]["AnaADC"][0]),dtype=np.float32)
+            for idx,wvf in enumerate(my_runs[run][ch]["AnaADC"]):
+                filter_array[idx] = filter_wvf(wvf)
+            my_runs[run][ch]["AnaADC"] = filter_array
+
     print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")
     return True
 
+@numba.njit   
+def filter_wvf(wvf):
+    error = 0
+    filtered_array = np.zeros(len(wvf),dtype=np.float32)
+    for jdx,j in enumerate(wvf):
+        if jdx < 1:
+            error = 0
+            filtered_array[jdx] = j
+        else:
+            error = 1/4*(j - filtered_array[jdx-1])
+            filtered_array[jdx] = filtered_array[jdx-1] + error
+    return filtered_array
 
 def compute_fft_wvfs(my_runs, info, key, label, debug = False):
     '''
@@ -125,6 +144,22 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
         my_runs[run][ch][label+"PedEnd"]   = start_window+sliding
     print_colored("--> Computed Pedestal Variables!!!", "SUCCESS")
 
+
+def compute_wvf_variables(my_runs, info, key, label, debug = False):
+    '''
+    \nComputes the mean, std and rms of the given ADC key.
+    \n**VARIABLES:**
+    \n**- my_runs**: dictionary containing the data.
+    \n**- info**:    dictionary containing the info.
+    \n**- key**:     key to be inserted.
+    \n**- label**:   string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD.
+    \n**- debug**:   boolean to print debug messages.
+    '''
+    for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
+        my_runs[run][ch][label+"Mean"] = np.mean(my_runs[run][ch][key],axis=1)
+        my_runs[run][ch][label+"STD"]  = np.std (my_runs[run][ch][key],axis=1)
+        my_runs[run][ch][label+"RMS"]  = np.sqrt(np.mean(np.power((my_runs[run][ch][key].T - my_runs[run][ch][label+"Mean"]).T,2),axis=1))
+    print_colored("--> Computed Wvf Variables!!!", "SUCCESS")
 
 def compute_pedestal_sliding_windows(ADC, ped_lim, sliding = 200, debug = False):
     '''
