@@ -35,14 +35,14 @@ def average_wvfs(my_runs, info, key, label, centering = "NONE", threshold = 0, c
         if bin_ref_peak < buffer: bin_ref_peak = buffer
         
         if centering == "NONE":
-            my_runs[run][ch][label+"AveWvf"+cut_label] = [np.mean(aux_ADC,axis=0)] # It saves the average waveform as "AveWvf_*"
+            my_runs[run][ch][label+"AveWvf"+cut_label] = np.asarray([np.mean(aux_ADC,axis=0)]) # It saves the average waveform as "AveWvf_*"
         
         if centering == "PEAK":
             bin_max_peak = np.argmax(aux_ADC[:,bin_ref_peak-buffer:bin_ref_peak+buffer],axis=1) 
             bin_max_peak = bin_max_peak + bin_ref_peak - buffer
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii],  bin_ref_peak - bin_max_peak[ii]) # It centers the waveform using the peak
-            my_runs[run][ch][label+"AveWvfPeak"+cut_label] = [np.mean(aux_ADC,axis=0)]     # It saves the average waveform as "AveWvfPeak_*"
+            my_runs[run][ch][label+"AveWvfPeak"+cut_label] = np.asarray([np.mean(aux_ADC,axis=0)])     # It saves the average waveform as "AveWvfPeak_*"
         
         if centering == "THRESHOLD":
             if threshold == 0: threshold = np.max(np.mean(aux_ADC,axis=0))/2
@@ -52,7 +52,7 @@ def average_wvfs(my_runs, info, key, label, centering = "NONE", threshold = 0, c
             bin_max_thld = bin_max_thld + bin_ref_thld - buffer
             for ii in range(len(aux_ADC)):
                 aux_ADC[ii] = np.roll(aux_ADC[ii], bin_ref_thld - bin_max_thld[ii])    # It centers the waveform using the threshold
-            my_runs[run][ch][label+"AveWvfThreshold"+cut_label] = [np.mean(aux_ADC,axis=0)]  # It saves the average waveform as "AveWvfThreshold_*"
+            my_runs[run][ch][label+"AveWvfThreshold"+cut_label] = np.asarray([np.mean(aux_ADC,axis=0)])  # It saves the average waveform as "AveWvfThreshold_*"
 
     print_colored("--> Computed Average Wvfs (centered wrt %s)!!!"%centering, "SUCCESS")
 
