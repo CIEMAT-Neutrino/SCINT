@@ -21,8 +21,8 @@ for run, ch, variable in product(np.asarray(user_input["runs"]).astype(str),np.a
     print(user_input)
     cut_label, my_runs = cut_selector(my_runs, user_input)
     average_wvfs(my_runs, info, key=key, label=label, cut_label="SPE", centering="NONE", debug=user_input["debug"])
-
+    compute_peak_variables(my_runs, info=info, key="AnaAveWvfSPE", label="AnaAveSPE", debug=user_input["debug"])
     ### Remove branches to exclude from saving
-    save_proccesed_variables(my_runs, preset="WVF", info=info, force=True, debug=user_input["debug"])
+    save_proccesed_variables(my_runs, preset=None, branch_list=["AnaAveWvfSPE","AnaAveSPEPeakAmp"], info=info, force=True, debug=user_input["debug"])
     del my_runs
     gc.collect()
