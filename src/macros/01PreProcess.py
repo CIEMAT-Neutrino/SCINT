@@ -14,6 +14,7 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(use
     key, label = get_wvf_label(my_runs, "", "", debug=user_input["debug"])
     if key == "" and label == "": continue
     ### Compute
+    compute_wvf_variables(my_runs, info=info, key=key, label=label, debug=user_input["debug"])
     compute_peak_variables(my_runs, info=info, key=key, label=label, debug=user_input["debug"])
     compute_pedestal_variables(my_runs, info=info, key=key, label=label, debug=user_input["debug"])
     average_wvfs(my_runs, info=info, key=key, label=label, centering="NONE", debug=user_input["debug"])
