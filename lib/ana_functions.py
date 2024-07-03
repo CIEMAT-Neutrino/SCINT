@@ -87,7 +87,7 @@ def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False
         if key == "RawADC" and label == "Raw":
             my_runs[run][ch][label+"PeakAmp" ] = my_runs[run][ch]["PChannel"]*np.max(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
             my_runs[run][ch][label+"PeakTime"] = np.argmax(my_runs[run][ch]["PChannel"]*aux_ADC[:,:],axis=1)
-
+            
             # Compute valley amplitude in the buffer around the peak to avoid noise
             i_idx = my_runs[run][ch][label+"PeakTime"]
             i_idx[i_idx < 0] = 0
@@ -125,8 +125,17 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
     for run,ch in product(my_runs["NRun"],my_runs["NChannel"]):
         if type(ped_lim) != int:
             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
-            ped_lim = values[np.argmax(counts)]-buffer
-            if ped_lim <= 0: ped_lim = 5*buffer
+            ped_lim = values[np.argmax(counts)]
+            if key == "RawADC" and label == "Raw":
+                if ped_lim <= 0: ped_lim = 5*buffer
+            else:
+                # Find the most likely rise time wrt the most likely peak time
+                end = my_runs[run][ch][key][:,ped_lim:] < 0
+                my_runs[run][ch][label+"SignalEnd"] = ped_lim + np.argmax(end,axis=1)
+                start = my_runs[run][ch][key][:,ped_lim:] < 0
+                my_runs[run][ch][label+"SignalStart"] = ped_lim - np.argmax(start[:,::-1],axis=1)
+                values,counts = np.unique(my_runs[run][ch][label+"SignalStart"], return_counts=True)
+                ped_lim = values[np.argmax(counts)]
         
         ADC_aux=my_runs[run][ch][key]
         my_runs[run][ch][label+"PreTriggerSTD"]   = np.std (ADC_aux[:,:ped_lim],axis=1)
