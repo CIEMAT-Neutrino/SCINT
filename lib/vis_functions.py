@@ -291,16 +291,20 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
             if OPT["COMPARE"] == "CHANNELS": ch = b
             if OPT["COMPARE"] == "NONE": run = a; ch = b
             if isinstance(keys, list):
-                for key in keys: ref_max_idx = plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx)
+                for key in keys:
+                    ref_max_idx = plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx)
             elif isinstance(keys, dict): 
                 ref_max_idx = plot_compare_wvf(my_run, run, ch, keys[(run,ch)], fig, axs, idx, OPT, ref_max_idx)
             else: 
                 print(type(keys))
                 exit("Keys must be a list or a dictionary")
-       
-        tecla   = input("\nPress q to quit, p to save plot and any key to continue: ")
-        if tecla   == "q": break 
-        elif tecla == "p": fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_AveWvf.png', dpi = 500)
+
+        tecla   = input("\nPress p to save plot and any key to continue: ")
+        if tecla == "p": 
+            if isinstance(keys, dict):       
+                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(list(keys.values()))}.png', dpi = 500)
+            if isinstance(keys, list):
+                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(keys)}.png', dpi = 500)
         else: pass
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
@@ -333,6 +337,10 @@ def plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx = Non
     axs.grid(True, alpha = 0.7)
     axs.set_title(title,size = 14)
     axs.xaxis.offsetText.set_fontsize(14) # Smaller fontsize for scientific notation
+    if check_key(OPT, "LIMITS") and OPT["LIMITS"]:
+        axs.set_xlim(OPT["XLIM"][0], OPT["XLIM"][1])
+        axs.set_ylim(OPT["YLIM"][0], OPT["YLIM"][1])
+
     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs.legend()
     return ref_max_idx
 
