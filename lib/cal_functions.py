@@ -5,8 +5,10 @@ from src.utils import get_project_root
 
 import scipy, os, stat, yaml
 import numpy             as np
-import matplotlib.pyplot as plt
 import pandas            as pd
+import matplotlib
+from matplotlib import pyplot as plt
+matplotlib.use('Qt5Agg')
 
 from jacobi            import propagate
 from matplotlib.colors import LogNorm
@@ -151,11 +153,15 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
 
             try:
                 my_runs[run][ch]["Gain"] = popt[3] - abs(popt[0])
+                my_runs[run][ch]["AnaMaxChargeNoise"] = popt[0] + (popt[3]-popt[0])/2
+                my_runs[run][ch]["AnaMinChargeNoise"] = popt[0] - (popt[3]-popt[0])/2
                 my_runs[run][ch]["AnaMaxChargeSPE"] = popt[3] + (popt[6]-popt[3])/2
                 my_runs[run][ch]["AnaMinChargeSPE"] = popt[3] - (popt[3]-popt[0])/2
             except IndexError:
                 print_colored("Fit failed to find min of 3 calibration peaks!", "WARNING")
                 my_runs[run][ch]["Gain"] = -99
+                my_runs[run][ch]["AnaMaxChargeNoise"] = -99
+                my_runs[run][ch]["AnaMinChargeNoise"] = -99
                 my_runs[run][ch]["AnaMaxChargeSPE"] = -99
                 my_runs[run][ch]["AnaMinChargeSPE"] = -99
     
@@ -238,22 +244,22 @@ def export_txt(data:dict, info:dict, debug:bool = False) -> None:
         for measurement in data[labels]:
             if measurement == "CALIB":
                 popt, pcov = data[labels][measurement]["popt"], data[labels][measurement]["pcov"]
-                export = calibration_txt(run, ch, popt, pcov, info, debug = debug)
+                export = calibration_txt(run, ch, key, popt, pcov, info, debug = debug)
                 # If export dump data to yml file
                 if export:
                     print_colored("Data exported to txt file.", "INFO")
-                    update_yaml_file(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/calibration/calibration_run{run}_ch{ch}.yml', data[labels][measurement], debug=debug)
+                    update_yaml_file(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/calibration/calibration_run{run}_ch{ch}_{key}.yml', data[labels][measurement], debug=debug)
 
             if measurement == "XTALK":
                 xt_popt, xt_pcov = data[labels][measurement]["popt"], data[labels][measurement]["pcov"]
-                export = xtalk_txt(run, ch, xt_popt, xt_pcov, info, debug = debug)
+                export = xtalk_txt(run, ch, key, xt_popt, xt_pcov, info, debug = debug)
                 # If export dump data to yml file
                 if export:
                     print_colored("Data exported to txt file.", "INFO")
-                    update_yaml_file(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/xtalk/xtalk_run{run}_ch{ch}.yml', data[labels][measurement], debug=debug)
+                    update_yaml_file(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/xtalk/xtalk_run{run}_ch{ch}_{key}.yml', data[labels][measurement], debug=debug)
 
 
-def calibration_txt(run, ch, popt, pcov, info, debug = False) -> bool:
+def calibration_txt(run, ch, key, popt, pcov, info, debug = False) -> bool:
     '''
     \nComputes calibration parameters.
     '''
@@ -304,10 +310,10 @@ def calibration_txt(run, ch, popt, pcov, info, debug = False) -> bool:
             console.print("\nPeak:", i)
             console.print(table)
 
-        export = write_output_file(run, ch, cal_parameters, "Calibration", info, write_mode = 'w', header_list=["MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
+        export = write_output_file(run, ch, cal_parameters, f"Calibration_{key}_", info, write_mode = 'w', header_list=["MU","DMU","SIG","DSIG","GAIN","DGAIN","SN0","DSN0","SN1","DSN1","SN2","DSN2"])
         return export
 
-def xtalk_txt(run, ch, xt_popt, xt_pcov, info, debug = False) -> bool:
+def xtalk_txt(run, ch, key, xt_popt, xt_pcov, info, debug = False) -> bool:
     '''
     \nComputes xtalk parameters.
     '''
@@ -334,7 +340,7 @@ def xtalk_txt(run, ch, xt_popt, xt_pcov, info, debug = False) -> bool:
     console.print("\nX-Talk:")
     console.print(table)
 
-    export = write_output_file(run, ch, xt_parameters, "XTalk", info, write_mode = 'w', header_list=["NPEAK","XT","DXT","LAMBDA","DLAMBDA"], not_saved = [1])
+    export = write_output_file(run, ch, xt_parameters, f"XTalk_{key}_", info, write_mode = 'w', header_list=["NPEAK","XT","DXT","LAMBDA","DLAMBDA"], not_saved = [1])
     return export
 
 def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
@@ -349,7 +355,7 @@ def get_gains(run,channels,folder_path="TUTORIAL",debug=False):
     return gains, Dgain
 
 
-def scintillation_txt(run, ch, popt, pcov, filename, info):
+def scintillation_txt(run, ch, key, popt, pcov, filename, info):
     '''
     \nComputes charge parameters.
     \nGiven popt and pcov which are the output for the best parameters when performing the Gaussian fit.
@@ -375,7 +381,7 @@ def scintillation_txt(run, ch, popt, pcov, filename, info):
     print("HEIGHT +- DHEIGHT:", ['{:.2f}'.format(item) for item in charge_parameters[0][1]])
     print("SIGMA +- DSIGMA:",   ['{:.2f}'.format(item) for item in charge_parameters[0][2]])
     
-    export = write_output_file(run, ch, charge_parameters, filename, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG"])
+    export = write_output_file(run, ch, charge_parameters, filename+key, info, header_list=["RUN","OV","PEAK","MU","DMU","SIG","DSIG"])
 
 
 def charge_fit(my_runs, keys, OPT={}):
