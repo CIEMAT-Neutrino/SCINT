@@ -232,7 +232,7 @@ def write_output_file(run, ch, output, filename, info, header_list, write_mode =
     flat_data = remove_columns(flat_data,not_saved)
     
     confirmation = input("\nConfirmation to save in "+folder_path+filename+"Ch%s.txt the printed parameters (except HEIGHT) (y/n)? "%ch)
-    if confirmation in ["yes","y","true","t","si","s"]:
+    if confirmation.lower() in ["yes","y","true","t","si","s"]:
         print("\n----------- Saving -----------")
         if not os.path.exists(folder_path+filename+"Ch%s.txt"%ch): #HEADER#
             os.makedirs(name=folder_path,exist_ok=True)             # Create the directory if it doesnt exist
@@ -457,7 +457,8 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     try:
         dict_option["LOAD"] = os.listdir(f"{path}{folder}")
     except FileNotFoundError:
-        exit(f"Folder {path}{folder} not found!")
+        return None
+
     # Remove files that are not .npz or .npy
     dict_option["LOAD"] = [file for file in dict_option["LOAD"] if file.endswith(".npz") or file.endswith(".npy")]
     dict_option["SAVE"] = my_run.keys()
@@ -493,7 +494,8 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
             if "Wvf" in key and key not in aux: aux.append(key)
 
         elif preset == "SPE": # Save aux + Wvf* branches
-            if "SPE" in key and key not in aux: aux.append(key)
+            if "SPE" in key or "Noise" in key and key not in aux: aux.append(key)
+            # if "Noise" in key and key not in aux: aux.append(key)
 
         elif preset == "FFT": # Save aux + Wvf* branches
             if "MeanFFT" in key or "Freq" in key and key not in aux: aux.append(key)
@@ -519,7 +521,7 @@ def get_preset_list(my_run, path, folder, preset, option, debug = False):
     if debug: print(f"[bold cyan]--> Loading Variables (according to preset {preset} from {path}{folder})![/bold cyan]")
     return branch_list
 
-def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, compressed=True):
+def load_npy(runs, channels, info, preset=None, branch_list = [], debug = False, compressed=True):
     '''
     \nStructure: run_dict[runs][channels][BRANCH] 
     \nLoads the selected channels and runs, for simplicity, all runs must have the same number of channels
@@ -556,7 +558,12 @@ def load_npy(runs, channels, info, preset="", branch_list = [], debug = False, c
             
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
-            if preset!="": branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug=debug) # Get the branch list if preset is used
+            if preset == None:
+                pass
+            
+            else:
+                branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug=debug) # Get the branch list if preset is used
+            
             for branch in branch_list:   
                 if compressed:
                     try:
