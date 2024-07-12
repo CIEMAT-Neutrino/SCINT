@@ -109,7 +109,7 @@ def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False
     print_colored("--> Computed Peak Variables!!!", "SUCCESS")
 
 
-def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 100, sliding = 200, debug = False):
+def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer = 50, sliding = 200, debug = False):
     '''
     \nComputes the pedestal variables of a collection of a run's collection in several windows.
     \n**VARIABLES:**
@@ -128,14 +128,18 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
             ped_lim = values[np.argmax(counts)]
             if key == "RawADC" and label == "Raw":
                 if ped_lim <= 0: ped_lim = 5*buffer
-            else:
+
+            if key == "AnaADC" and label == "Ana":
                 # Find the most likely rise time wrt the most likely peak time
                 end = my_runs[run][ch][key][:,ped_lim:] < 0
                 my_runs[run][ch][label+"SignalEnd"] = ped_lim + np.argmax(end,axis=1)
-                start = my_runs[run][ch][key][:,ped_lim:] < 0
+                start = my_runs[run][ch][key][:,:ped_lim] < 0
                 my_runs[run][ch][label+"SignalStart"] = ped_lim - np.argmax(start[:,::-1],axis=1)
                 values,counts = np.unique(my_runs[run][ch][label+"SignalStart"], return_counts=True)
-                ped_lim = values[np.argmax(counts)]
+                # Look for max counts in the signal start for values up to ped_lim - buffer
+                filtered_values = values[values < ped_lim - buffer]
+                filtered_counts = counts[values < ped_lim - buffer]
+                ped_lim = filtered_values[np.argmax(filtered_counts)]
         
         ADC_aux=my_runs[run][ch][key]
         my_runs[run][ch][label+"PreTriggerSTD"]   = np.std (ADC_aux[:,:ped_lim],axis=1)
