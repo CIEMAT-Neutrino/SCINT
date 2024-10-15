@@ -3,14 +3,17 @@
 #================================================================================================================================================#
 
 import numpy             as np
-import matplotlib.pyplot as plt
 import pandas            as pd
+
+import matplotlib
+from matplotlib import pyplot as plt
+matplotlib.use('Qt5Agg')
+
 from itertools                import product
 from scipy.signal             import find_peaks
 from shapely.geometry         import Point
 from shapely.geometry.polygon import Polygon
 from rich                     import print as print
-
 
 # Import from other libraries
 from .io_functions  import print_colored, check_key
