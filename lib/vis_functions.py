@@ -119,10 +119,13 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
                     axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(filtered_ana[j])),filtered_ana[j],label="%s"%key, drawstyle = "steps", alpha = 0.95, linewidth=1.2, c="red", zorder=0)
                 try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PeakTime"][idx],my_run[run][ch_list[j]][label+"PeakAmp"][idx], c=colors[1], zorder=10)
                 except KeyError: print_colored("PeakAmp not computed!", "ERROR")    
-                try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx], c=colors[1], zorder=10)
-                except KeyError: print_colored("ValleyAmp not computed!", "ERROR")    
+                # try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx], c=colors[1], zorder=10)
+                # except KeyError: print_colored("ValleyAmp not computed!", "ERROR")    
                 try: axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+"PedLim"],my_run[run][ch_list[j]][label+"PedLim"]]),np.array([ped+4*std,ped-4*std])/norm_raw[j], lw=2, c=colors[6], zorder=3)
                 except KeyError: print_colored("PedLim not computed!", "ERROR")    
+                try:    
+                    for value in ["SignalStart", "SignalEnd"]: axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+value][idx],my_run[run][ch_list[j]][label+value][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j], lw=2, c=colors[8], zorder=3)
+                except KeyError: print_colored("SignalWindow not compued!", "ERROR")
                 try:    
                     for value in ["PedStart", "PedEnd"]: axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.array([my_run[run][ch_list[j]][label+value][idx],my_run[run][ch_list[j]][label+value][idx]]),np.array([ped+4*std,ped-4*std])/norm_raw[j], lw=2, c=colors[4], zorder=3)
                 except KeyError: print_colored("PedWindow not compued!", "ERROR")    
@@ -148,7 +151,7 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
                             idx_move = np.argmax(ave)
                             ave = shift(ave, ref_max_idx-idx_move, cval = 0)
                         axs[j].plot(my_run[run][ch_list[j]]["Sampling"]*np.arange(len(ave)),ave, label="%s"%ave_key, drawstyle = "steps", c=colors[5], alpha=.5, zorder=1)             
-                    except KeyError: print_colored("Run has not been averaged!", "ERROR")
+                    except KeyError: print_colored(f"{label+OPT['SHOW_AVE']} has not been averaged!", "ERROR")
 
                 if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]: axs[j].legend()
 
@@ -289,12 +292,14 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
             idx = a_idx*len(b_list) + b_idx
             if OPT["COMPARE"] == "RUNS": run = b
             if OPT["COMPARE"] == "CHANNELS": ch = b
-            if OPT["COMPARE"] == "NONE": run = a; ch = b
+            if OPT["COMPARE"] == "NONE": run = a
+            if OPT["COMPARE"] not in ["RUNS", "CHANNELS", "NONE"]: exit("COMPARE must be RUNS, CHANNELS or NONE")
             if isinstance(keys, list):
                 for key in keys:
-                    ref_max_idx = plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx)
+                    ref_max_idx = plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx, stats = OPT["STATS"])
+                    print(f"Plotting run {run} ch {ch} {key} with index {idx}")
             elif isinstance(keys, dict): 
-                ref_max_idx = plot_compare_wvf(my_run, run, ch, keys[(run,ch)], fig, axs, idx, OPT, ref_max_idx)
+                ref_max_idx = plot_compare_wvf(my_run, run, ch, keys[(run,ch)], fig, axs, idx, OPT, ref_max_idx, stats = OPT["STATS"])
             else: 
                 print(type(keys))
                 exit("Keys must be a list or a dictionary")
@@ -311,20 +316,24 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
         plt.close()   
 
 
-def plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx = None):
+def plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx = None, stats = False):
     if OPT["COMPARE"] == "NONE": label = "Run {} - Channel {} ({}) - {}".format(run,ch,my_run[run][ch]["Label"],key); title = "Average Waveform"
     if OPT["COMPARE"] == "RUNS": label = "Run {} - {}".format(run,key); title = "Average Waveform - Ch {}".format(ch)
     if OPT["COMPARE"] == "CHANNELS": label = "Channel {} ({}) - {}".format(ch,my_run[run][ch]["Label"],key); title = "Average Waveform - Run {}".format(run)
     ave = my_run[run][ch][key][0]
     # counter = counter + 1
-
+    if stats:
+        rate = print_stats_terminal(my_run, (run, ch, key), ave)
+    
     norm_ave = np.max(ave)
     sampling = my_run[run][ch]["Sampling"] # To reset the sampling to its initial value (could be improved)
     if check_key(OPT,"NORM") == True and OPT["NORM"] == True:
         ave = ave/norm_ave
         fig.supylabel("Norm")
-    if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True: fig.supxlabel(r'Time [$\mu$s]'); sampling = my_run[run][ch]["Sampling"]*1e6
-    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:         axs.semilogy()
+    if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"]==True:
+        fig.supxlabel(r'Time [$\mu$s]'); sampling = my_run[run][ch]["Sampling"]*1e6
+    if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
+        axs.semilogy()
     if check_key(OPT, "ALIGN") == True and OPT["ALIGN"] == True:
         ref_threshold = np.argmax(ave>np.max(ave)*2/3)
         if ref_max_idx is None: ref_max_idx = ref_threshold
@@ -332,7 +341,7 @@ def plot_compare_wvf(my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx = Non
     if check_key(OPT, "SPACE_OUT") and OPT["SPACE_OUT"] != 0:
         # for each b in b_list, we want to plot the same waveform with a different offset in x
         ave = np.roll(ave, int(idx)*int(OPT["SPACE_OUT"]))
-    axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "))
+    axs.plot(sampling*np.arange(len(ave)),ave, drawstyle = "steps", alpha = 0.95, linewidth=1.2, label = label.replace("#"," "), c = get_prism_colors()[idx])
 
     axs.grid(True, alpha = 0.7)
     axs.set_title(title,size = 14)
@@ -482,19 +491,31 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
 
     return all_counts, all_bins
 
+def print_stats_terminal(my_run, labels, data):
+    run,ch,key = labels
+    try:
+        times = np.asarray(my_run[run][ch]["TimeStamp"])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
+    except KeyError: 
+        rprint(f"[yellow]MyCuts not found! Showing stats for full data[\yellow]")
+        times = np.asarray(my_run[run][ch]["TimeStamp"])
+
+    rate = 1/np.mean(np.diff(times))
+    print_colored("\nStatistics of the histogram:", "INFO")
+    print_colored("- Counts: %i"%len(data), color="INFO")
+    print_colored("- Rate: %.2E"%rate, color="INFO")
+    print_colored("- Max: %.2E"%np.max(data), color="INFO")
+    print_colored("- Mean: {:.2E}".format(np.mean(data)), "INFO")
+    print_colored("- Median: {:.2E}".format(np.median(data)), "INFO")
+    print_colored("- Std: {:.2E}".format(np.std(data)), "INFO")
+    return rate
+
+
 def print_stats(my_run, labels, ax, data, info, save = False, debug = False):
     '''
     \nThis function prints the statistics of the data.
     '''
     run,ch,key = labels
-    times = np.asarray(my_run[run][ch]["TimeStamp"])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
-    rate = 1/np.mean(np.diff(times))
-    print_colored("\nStatistics of the histogram:", "INFO")
-    print_colored("- Counts: %i"%len(data), color="INFO")
-    print_colored("- Rate: %.2E"%rate, color="INFO")
-    print_colored("- Mean: {:.2E}".format(np.mean(data)), "INFO")
-    print_colored("- Median: {:.2E}".format(np.median(data)), "INFO")
-    print_colored("- Std: {:.2E}".format(np.std(data)), "INFO")
+    rate = print_stats_terminal(my_run, labels, data)
 
     # Add reference lines to the plot
     ax.axvline(np.mean(data), c="k", alpha=0.5)
