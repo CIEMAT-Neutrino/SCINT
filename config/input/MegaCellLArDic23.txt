@@ -12,7 +12,7 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-PATH: /data/MegaCell_LAr/
+PATH: /data/SCINT/MEGACELL/
 MONTH: Dic23
 OV_LABEL: OV3,OV3,OV3,0V2,0V2,0V2,0V1,0V1,0V1
 CALIB_RUNS: 1,0,0,2,0,0,3,0,0
@@ -42,9 +42,3 @@ PED_KEY: PreTriggerMean
 ########################
 ####   CUTS INFO    ####
 ########################
-#0CUT_CHAN: 7
-#0CUT_TYPE: cut_df
-#0CUT_KEYS: AnaChargeAveRange
-#0CUT_LOGIC: bigger
-#0CUT_VALUE: 250
-#0CUT_INCLUSIVE: False
