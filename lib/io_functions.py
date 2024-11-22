@@ -222,7 +222,7 @@ def write_output_file(run, ch, output, filename, info, header_list, write_mode =
     def flatten_data(data):
         return [flatten_data_recursive(row) for row in data]
 
-    folder_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
+    folder_path  = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
     if not os.path.exists(folder_path): 
         os.makedirs(name=folder_path,exist_ok=True)
         os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
@@ -295,8 +295,8 @@ def binary2npy(runs, channels, info, compressed=True, header_lines=6, force=Fals
     \nInput are binary input file path and npy outputfile as strings. 
     \nDepends numpy. 
     '''
-    in_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/raw/'
-    out_path = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/npy/'
+    in_path  = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/raw/'
+    out_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/npy/'
     os.makedirs(name=out_path,exist_ok=True)
     for run, ch in product(runs.astype(str),channels.astype(str)):
         print("\n....... READING RUN%s CH%s ......."%(run, ch))
@@ -366,8 +366,8 @@ def root2npy(runs, channels, info={}, debug=False): ### ACTUALIZAR COMO LA DE BI
     \nNEEDS UPDATE!! (see binary2npy)
     '''
 
-    in_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/raw/'
-    out_path = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/npy/'
+    in_path  = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/raw/'
+    out_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/npy/'
     for run, ch in product (runs.astype(str),channels.astype(str)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
@@ -541,7 +541,7 @@ def load_npy(runs, channels, info, preset=None, branch_list = [], debug = False,
     \n- info: dictionary with the info of the run
     \n- debug: if True, print debug info
     '''
-    path = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/npy/'
+    path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/npy/'
 
     my_runs = dict()
     runs = np.asarray(runs).astype(str)
@@ -559,11 +559,15 @@ def load_npy(runs, channels, info, preset=None, branch_list = [], debug = False,
             my_runs[run][ch]=dict()
             in_folder="run"+str(run).zfill(2)+"_ch"+str(ch)+"/"
             if preset == None:
-                pass
+                print(f"[yellow]WARNING: Preset None. Passing run {run} ch {ch}[/yellow]")
+                continue
             
-            else:
-                branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug=debug) # Get the branch list if preset is used
-            
+            branch_list = get_preset_list(my_runs[run][ch], path, in_folder, preset, "LOAD", debug=debug) # Get the branch list if preset is used  
+            # Check if brach_list is None
+            if branch_list is None:
+                print(f"[yellow]WARNING: Branch list is None. Passing run {run} ch {ch}[/yellow]")
+                continue
+
             for branch in branch_list:   
                 if compressed:
                     try:
@@ -582,6 +586,7 @@ def load_npy(runs, channels, info, preset=None, branch_list = [], debug = False,
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
             del branch_list
+    
     print(f"[bold green]--> Loaded Data Succesfully!!![/bold green]")
     return my_runs
 
@@ -599,7 +604,7 @@ def save_proccesed_variables(my_runs, info, preset = "", branch_list = None, for
     '''
 
     aux = copy.deepcopy(my_runs) # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-    path = f"{root}{info['PATH'][0]}{info['MONTH'][0]}/npy/"
+    path = f"{root}/{info['PATH'][0]}/{info['MONTH'][0]}/npy/"
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
             print_colored("\n--> Saving Computed Variables (according to preset %s)!"%(preset), color="INFO", styles=["bold"])

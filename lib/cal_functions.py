@@ -144,7 +144,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
             export_txt(data, info, debug=debug)
 
             if save: 
-                save_path = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/'
+                save_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/'
                 try: 
                     os.makedirs(save_path, exist_ok=True)
                 except: 
@@ -223,6 +223,8 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
     xdata = np.arange(len(PNs))
     
     ax_xt.bar(np.array(xdata), PNs, label="Data", width=0.4, color=get_color(ch, even=True, debug=debug))
+    # Add vertical line to mean value
+    ax_xt.axvline(x=np.sum(np.array(xdata)*PNs)/np.sum(np.array(xdata)), color="black", linestyle="--", label="Mean value")
     try:
         xt_popt, xt_pcov = curve_fit(PoissonPlusBinomial, xdata, PNs, sigma=PNs_err, p0=[len(PNs), p, l], bounds=([len(PNs) - 1e-12, 0, 0], [len(PNs) + 1e-12, 1, 10]))
         ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x', label="Fit: CT = " + str(int(xt_popt[1] * 100)) + "% - " + r'$\lambda = {:.2f}$'.format(xt_popt[2]), color="red")
@@ -248,7 +250,7 @@ def export_txt(data:dict, info:dict, debug:bool = False) -> None:
                 # If export dump data to yml file
                 if export:
                     print_colored("Data exported to txt file.", "INFO")
-                    update_yaml_file(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/calibration/calibration_run{run}_ch{ch}_{key}.yml', data[labels][measurement], debug=debug)
+                    update_yaml_file(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/calibration/calibration_run{run}_ch{ch}_{key}.yml', data[labels][measurement], debug=debug)
 
             if measurement == "XTALK":
                 xt_popt, xt_pcov = data[labels][measurement]["popt"], data[labels][measurement]["pcov"]
@@ -256,7 +258,7 @@ def export_txt(data:dict, info:dict, debug:bool = False) -> None:
                 # If export dump data to yml file
                 if export:
                     print_colored("Data exported to txt file.", "INFO")
-                    update_yaml_file(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/xtalk/xtalk_run{run}_ch{ch}_{key}.yml', data[labels][measurement], debug=debug)
+                    update_yaml_file(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/xtalk/xtalk_run{run}_ch{ch}_{key}.yml', data[labels][measurement], debug=debug)
 
 
 def calibration_txt(run, ch, key, popt, pcov, info, debug = False) -> bool:

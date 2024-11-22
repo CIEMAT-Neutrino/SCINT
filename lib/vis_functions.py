@@ -227,7 +227,7 @@ def vis_npy(my_run, info, keys, OPT = {}, save = False, debug = False):
                 idx = ev_num
                 if idx > len(my_run[run][ch_list[j]]["MyCuts"]): idx = len(my_run[run][ch_list[j]]["MyCuts"])-1; print_colored("\nBe careful! There are %i in total"%idx, "WARNING", styles=["bold"])
             elif tecla == "p":
-                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_event{idx}.png', dpi = 500)
+                fig.savefig(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_event{idx}.png', dpi = 500)
                 idx = idx+1
             else: idx = idx + 1
             if idx == len(my_run[run][ch_list[j]]["MyCuts"]): break
@@ -307,9 +307,9 @@ def vis_compare_wvf(my_run, info, keys, OPT = {}, save = False, debug = False):
         tecla   = input("\nPress p to save plot and any key to continue: ")
         if tecla == "p": 
             if isinstance(keys, dict):       
-                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(list(keys.values()))}.png', dpi = 500)
+                fig.savefig(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(list(keys.values()))}.png', dpi = 500)
             if isinstance(keys, list):
-                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(keys)}.png', dpi = 500)
+                fig.savefig(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(keys)}.png', dpi = 500)
         else: pass
         try: [axs[ch].clear() for ch in range (nch)]
         except: axs.clear()
@@ -481,10 +481,10 @@ def vis_var_hist(my_run, info, key, percentile = [0.1, 99.9], OPT = {"SHOW": Tru
                 while not plt.waitforbuttonpress(-1): pass
         if save: 
             # Check if the directory exists
-            if not os.path.exists(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/'):
-                os.makedirs(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/')
-                os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/', 0o770)
-            fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(key)}_Hist.png', dpi=500)
+            if not os.path.exists(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/'):
+                os.makedirs(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/')
+                os.chmod(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/', 0o770)
+            fig.savefig(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(key)}_Hist.png', dpi=500)
             if debug:
                 rprint(f"Saved figure as: run{run}_ch{ch}_{'_'.join(key)}_Hist.png")
         plt.close()
@@ -496,7 +496,7 @@ def print_stats_terminal(my_run, labels, data):
     try:
         times = np.asarray(my_run[run][ch]["TimeStamp"])[np.asarray(my_run[run][ch]["MyCuts"] == True)]
     except KeyError: 
-        rprint(f"[yellow]MyCuts not found! Showing stats for full data[\yellow]")
+        rprint(f"[yellow]MyCuts not found! Showing stats for full data[/yellow]")
         times = np.asarray(my_run[run][ch]["TimeStamp"])
 
     rate = 1/np.mean(np.diff(times))
@@ -524,10 +524,10 @@ def print_stats(my_run, labels, ax, data, info, save = False, debug = False):
     if save:
         df = pd.DataFrame({"COUNTS": len(data), "RATE": rate, "MEAN": np.mean(data), "MEDIAN": np.median(data), "STD": np.std(data)}, index=[0])
         # Save information as csv file
-        if not os.path.exists(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/'):
-            os.makedirs(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/')
-            os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/', 0o770)
-        df.to_csv(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/analysis/stats/run{run}_ch{ch}_{key}_Stats.csv', index=False)
+        if not os.path.exists(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/stats/'):
+            os.makedirs(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/stats/')
+            os.chmod(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/stats/', 0o770)
+        df.to_csv(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/stats/run{run}_ch{ch}_{key}_Stats.csv', index=False)
         if debug: rprint(f"Saved statistics as: run{run}_ch{ch}_{key}_Stats.csv")
 
 def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range = False, OPT={}, save = False, debug = False):
@@ -624,8 +624,8 @@ def vis_two_var_hist(my_run, info, keys, percentile = [0.1, 99.9], select_range 
             axes_list.append(ax)
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.yscale('log'); 
             if save == True: 
-                fig.savefig(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png', dpi = 500)
-                os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+                fig.savefig(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png', dpi = 500)
+                os.chmod(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png', stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
                 if debug: rprint(f"Saved figure as: run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png")
             
             # Save to specific folder determined by OPT

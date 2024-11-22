@@ -1,6 +1,8 @@
 import os
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib import pyplot as plt
+matplotlib.use('Qt5Agg')
 
 from jacobi    import propagate
 from iminuit   import Minuit, cost
@@ -81,7 +83,8 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
 
     legend = [f"{m_fit.parameters[m]} = {value:.1e} $\pm$ {m_fit.errors[m]:.1e}" for m, value in enumerate(m_fit.values)]
     legend.append(r'$\chi^2$ = %.2f' % (m_fit.fval))
-
+    
+    print(ydata[-2:], y_fit[-2:])
     plt.hist(xdata, xdata, weights=ydata, label="run {} ch {}".format(run, ch), histtype="step", align="left",
                 color=get_color(ch, even=True))
     plt.hist(xdata, xdata, weights=y_fit, label=f"{OPT['FIT']} fit:", histtype="step", align="left", color="red")
@@ -90,11 +93,14 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
     yerr = np.sqrt(np.diag(ycov))
     plt.fill_between(xdata, (y_fit - yerr), (y_fit + yerr), alpha=0.2, color=get_color(ch, even=False))
     plt.legend()
-    plt.setp(ax.get_legend().get_texts(), fontsize='10')
-    # Pin legend to the upper left corner
-    plt.legend(loc='upper right')
+    plt.setp(ax.get_legend().get_texts(), fontsize='12')
     # Force x axis tcks to be scintific notation
     plt.ticklabel_format(axis='x', style='sci')
+    
+    # Change font size for legend
+    matplotlib.rcParams.update({'font.size': 11})
+    # Pin legend to the upper left corner
+    plt.legend(loc='lower center')
     plt.show()
     while not plt.waitforbuttonpress(-1):
         pass
@@ -102,13 +108,13 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
 
     if user_input["save"]:
         fig.savefig(
-            f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png', dpi=500)
+            f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png', dpi=500)
         try:
-            os.chmod(f'{root}{info["PATH"][0]}{info["MONTH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png', 0o770)
+            os.chmod(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png', 0o770)
         except:
             pass
 
         save_fit_parameters(run, ch, m_fit, OPT["FIT"], variable, info, user_input)
         if user_input["debug"]:
             print(
-                f"Saving plot in {root}{info['PATH'][0]}{info['MONTH'][0]}/images/run{run}_ch{ch}_{variable}_{fit_function}_Fit.png")
+                f"Saving plot in {root}/{info['PATH'][0]}/{info['MONTH'][0]}/images/run{run}_ch{ch}_{variable}_{fit_function}_Fit.png")

@@ -1,5 +1,6 @@
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+import matplotlib
+from matplotlib import pyplot as plt
+matplotlib.use('Qt5Agg')
 import plotly.express as px
 
 from rich import print as print
@@ -24,11 +25,13 @@ def style_selector(OPT):
     if OPT["STYLE"] == "HEP_style":
         import mplhep as hep
         plt.rcParams.update({'font.size': 14})
+        # Include watermark to the top left of the plot
+        # plt.text(0.02, 0.98, "Preliminary", fontsize=14, color='gray', alpha=0.5, transform=plt.gca().transAxes, ha='left', va='top')
 
     if OPT["STYLE"] == "ATLAS_style":
         import mplhep as hep
         hep.style.use("ATLAS")
-    mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=get_prism_colors()) 
+    matplotlib.rcParams['axes.prop_cycle'] = matplotlib.cycler(color=get_prism_colors()) 
 
 
 def get_prism_colors():
