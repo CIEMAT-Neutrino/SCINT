@@ -5,7 +5,11 @@ from src.utils import get_project_root
 
 import os, stat, math, scipy
 import numpy             as np
-import matplotlib.pyplot as plt
+
+import matplotlib
+from matplotlib import pyplot as plt
+matplotlib.use('Qt5Agg')
+
 from itertools      import product
 from scipy.optimize import curve_fit
 from scipy.signal   import find_peaks
@@ -14,7 +18,7 @@ from scipy.stats    import poisson
 from math           import factorial as fact
 from rich           import print as print
 from lmfit          import models
-
+from scipy.ndimage  import gaussian_filter1d
 #Imports from other libraries
 from .io_functions  import check_key, print_colored, read_yaml_file
 from .ana_functions import generate_cut_array, get_run_units
@@ -32,7 +36,7 @@ def chi_squared(x,y,popt):
     return np.sum((y - fit_y) ** 2 / fit_y) / (y.size - len(popt))
 
 def pure_scint(time,t0,a1,a2,tau1,tau2):
-    y = a1*np.exp(-(time-t0)/tau1)+a2*np.exp(-(time-t0)/tau2)
+    y = a1/tau1*np.exp(-(time-t0)/tau1)+a2/tau2*np.exp(-(time-t0)/tau2)
 
 def gauss(x,a,x0,sigma):
     return a/(sigma*math.sqrt(2*math.pi))*np.exp(-0.5*np.power((x-x0)/sigma,2))
@@ -88,6 +92,26 @@ def dec_gauss(f, fc, n):
 def fit_dec_gauss(f, fc, n):
     y = np.log10(dec_gauss(f, fc, n)); y[0] = 0
     return y
+
+def purity(t, p, t0, a1, a3, sigma, quenching):
+    tau1 = (1/7.1e-9 + quenching)**-1
+    tau3 = (1/1.66e-6 + quenching)**-1
+    a1_prime = a1/(1+tau1*quenching)
+    a3_prime = a3/(1+tau3*quenching)
+    return p + func(t, t0, sigma, a1_prime, tau1) + func(t, t0, sigma, a3_prime, tau3)
+
+def simple_purity(t, p, t0, a0, a1, sigma, quenching):
+    tau1 = (1/7.1e-9 + quenching)**-1
+    tau3 = (1/1.66e-6 + quenching)**-1
+    a1_prime = a0/(1+tau1*quenching)
+    a3_prime = (a0*(1-a1)/a1)/(1+tau3*quenching)
+    return p + func(t, t0, sigma, a1_prime, tau1) + func(t, t0, sigma, a3_prime, tau3)
+
+def logpurity(t, p, t0, a1, a3, sigma, quenching):
+    return np.log(purity(t, p, t0, a1, a3, sigma, quenching))
+
+def logsimple_purity(t, p, t0, a0, a1, sigma, quenching):
+    return np.log(simple_purity(t, p, t0, a0, a1, sigma, quenching))
 
 def lmfit_models(function):
     # if function == "gaussian":    return models.GaussianModel()
@@ -251,7 +275,7 @@ def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=F
         # plt.plot(x_gauss,y_gauss,ls="--",alpha=0.9)
 
         try:
-            # popt, pcov = curve_fit(loggaussian,x_gauss,np.log10(y_gauss),p0=[np.log10(y[peak_idx[i]]),x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
+            # (y[peak_idx[i]]),x[peak_idx[i]],abs(wdth*(bins[0]-bins[1]))])
             popt, pcov = curve_fit(gaussian,x_gauss,y_gauss,p0=[x[peak_idx[i]],y[peak_idx[i]],abs(params["WIDTH"]*(x_gauss[0]-x_gauss[1]))],bounds=([x[peak_idx[i]]-params["WIDTH"],0,0],[x[peak_idx[i]]+params["WIDTH"],np.inf,10*abs(params["WIDTH"]*(x_gauss[0]-x_gauss[1]))]))
             perr = np.sqrt(np.diag(pcov))
             ## FITTED to gaussian(x, height, center, width) ##
@@ -340,16 +364,20 @@ def pmt_spe_fit(counts, bins, bars, thresh):
     
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
+def cut_threshold(raw, thrld):
+    for i in range(len(raw)):
+        if raw[i] <= thrld:  raw[i] = thrld
+        if np.isnan(raw[i]): raw[i] = thrld
+        if np.isinf(raw[i]): raw[i] = thrld
+    return raw
+
 def peak_fit(fit_raw, raw_x, buffer, thrld, sigma_fast = 1e-9, a_fast = 1, tau_fast = 1e-8, OPT={}):
     ''' 
     \nThis function fits the peak to a gaussian function, and returns the parameters
     '''
 
     raw_max = np.argmax(fit_raw)
-    if check_key(OPT, "CUT_NEGATIVE") == True and OPT["CUT_NEGATIVE"] == True:
-        for i in range(len(fit_raw)):
-            if fit_raw[i] <= thrld:  fit_raw[i] = thrld
-            if np.isnan(fit_raw[i]): fit_raw[i] = thrld
+    if check_key(OPT, "CUT_THRESHOLD") == True and OPT["CUT_THRESHOLD"] == True: fit_raw = cut_threshold(fit_raw, thrld)
 
     guess_t0 = raw_x[raw_max]
     p = np.mean(fit_raw[:raw_max-buffer])
@@ -394,7 +422,7 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     buffer1 = fit_range[0]
     buffer2 = fit_range[1]
 
-    OPT["CUT_NEGATIVE"] = True
+    OPT["CUT_THRESHOLD"] = True
     popt1, perr1 = peak_fit(raw, raw_x, buffer1, thrld=thrld, OPT=OPT)
 
     p  = np.mean(raw[:max-buffer1])
@@ -416,35 +444,34 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     sigma2 = popt[0];a2 = popt[1];tau2 = popt[2];a3 = popt[3];tau3 = popt[4]
     param  = [p, a1, sigma2, tau1, popt1[3], a2, tau2, a3, tau3]
 
-    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
-        # CHECK FIRST FIT
-        plt.rcParams['figure.figsize'] = [16, 8]
-        plt.subplot(1, 2, 1)
-        plt.title("First fit to determine peak")
-        plt.plot(raw_x, raw, label="raw")
-        plt.plot(raw_x[max-buffer1:max+int(buffer1/2)], func(raw_x[max-buffer1:max+int(buffer1/2)], *popt1), label="FIT")
-        # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
-        plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-        if check_key(OPT, "LOGY") != False: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
-        plt.legend()
+    # if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
+    #     # CHECK FIRST FIT
+    #     plt.rcParams['figure.figsize'] = [16, 8]
+    #     plt.subplot(1, 2, 1)
+    #     plt.title("First fit to determine peak")
+    #     plt.plot(raw_x, raw, label="raw")
+    #     plt.plot(raw_x[max-buffer1:max+int(buffer1/2)], func(raw_x[max-buffer1:max+int(buffer1/2)], *popt1), label="FIT")
+    #     # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
+    #     plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
+    #     if check_key(OPT, "LOGY") != False: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
+    #     plt.legend()
 
-        plt.subplot(1, 2, 2)
-        plt.title("Second fit with full wvf")
-        plt.plot(raw_x, raw, zorder=0, c="tab:blue", label="raw")
-        plt.plot(raw_x[max-buffer1:max+buffer2], func3(raw_x[max-buffer1:max+buffer2], *param), c="tab:orange", label="FIT")
-        plt.plot(raw_x, func3(raw_x, *param), c="tab:green", label="FIT_FULL_LENGHT")
-        plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-        # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
-        if check_key(OPT, "LOGY") != False: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
-        plt.legend()
+    #     plt.subplot(1, 2, 2)
+    #     plt.title("Second fit with full wvf")
+    #     plt.plot(raw_x, raw, zorder=0, c="tab:blue", label="raw")
+    #     plt.plot(raw_x[max-buffer1:max+buffer2], func3(raw_x[max-buffer1:max+buffer2], *param), c="tab:orange", label="FIT")
+    #     plt.plot(raw_x, func3(raw_x, *param), c="tab:green", label="FIT_FULL_LENGHT")
+    #     plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
+    #     # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
+    #     if check_key(OPT, "LOGY") != False: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
+    #     plt.legend()
         
-        if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
-            while not plt.waitforbuttonpress(-1): pass
-            plt.clf()
+    #     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: 
+    #         while not plt.waitforbuttonpress(-1): pass
+    #         plt.clf()
 
     aux = func3(raw_x, *param)
-
-    return aux,param,perr2,labels2
+    return aux,raw,param,perr2,labels2
 
 def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     ''' 
@@ -452,7 +479,7 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     '''
 
     next_plot = False
-    OPT["CUT_NEGATIVE"] = True
+    OPT["CUT_THRESHOLD"] = True
     
     # Define input parameters from dictionary
     sigma    = i_param["sigma"]
@@ -477,9 +504,9 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     a2     = a_slow;   a2_low     = a_slow*1e-2;   a2_high     = a_slow*1e2
     tau2   = tau_slow; tau2_low   = tau_slow*1e-2; tau2_high   = tau_slow*1e2
     
-    bounds2  = ([a1_low, sigma2_low, a2_low, tau2_low], [a1_high, sigma2_high, a2_high, tau2_high])
     initial2 = (a1, sigma2, a2, tau2)
-    labels2  = ["AMP1", "SIG2", "AMP2", "TAU2"]
+    # bounds2  = ([a1_low, sigma2_low, a2_low, tau2_low], [a1_high, sigma2_high, a2_high, tau2_high])
+    # labels2  = ["AMP1", "SIG2", "AMP2", "TAU2"]
     
     try:
         popt2, pcov2 = curve_fit(lambda t, a1, sigma2, a2, tau2: logfunc2(t, p, popt1[0], popt1[1], a1, popt1[3], sigma2, a2, tau2), raw_x[raw_max-buffer1:raw_max+buffer2], np.log(raw[raw_max-buffer1:raw_max+buffer2]), p0 = initial2)
@@ -497,31 +524,97 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     param  = [p,     popt1[0], popt1[1], popt2[0], popt1[2], popt2[1], popt2[2], popt2[3]]
     perr   = [p_std, perr1[0], perr1[1], perr2[0], perr1[2], perr2[1], perr2[2], perr2[3]] 
     
-    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
-        # print("SHOW key not included in OPT")
-        # CHECK FIRST FIT
-        plt.rcParams['figure.figsize'] = [16, 8]
-        plt.subplot(1, 2, 1)
-        plt.title("First fit to determine peak")
-        plt.plot(raw_x, raw, label="raw", c=color)
-        plt.plot(raw_x[max-buffer1:max+int(buffer1/2)], func(raw_x[max-buffer1:max+int(buffer1/2)], *popt1), label="FIT")
-        # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
-        plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-        if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
-        plt.legend()
-        plt.subplot(1, 2, 2)
-        plt.title("Second fit with full wvf")
-        plt.plot(raw_x, raw, zorder=0, label="raw", c=color)
-        plt.plot(raw_x[max-buffer1:max+buffer2], func2(raw_x[max-buffer1:max+buffer2], *param), label="FIT")
-        plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-        plt.axvline(raw_x[max+buffer2], ls = "--", c = "k")
-        if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
-        plt.legend()
-        while not plt.waitforbuttonpress(-1): pass
-        plt.clf()
+    # if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
+    #     # print("SHOW key not included in OPT")
+    #     # CHECK FIRST FIT
+    #     plt.rcParams['figure.figsize'] = [16, 8]
+    #     plt.subplot(1, 2, 1)
+    #     plt.title("First fit to determine peak")
+    #     plt.plot(raw_x, raw, label="raw", c=color)
+    #     plt.plot(raw_x[max-buffer1:max+int(buffer1/2)], func(raw_x[max-buffer1:max+int(buffer1/2)], *popt1), label="FIT")
+    #     # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
+    #     plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
+    #     if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
+    #     plt.legend()
+    #     plt.subplot(1, 2, 2)
+    #     plt.title("Second fit with full wvf")
+    #     plt.plot(raw_x, raw, zorder=0, label="raw", c=color)
+    #     plt.plot(raw_x[max-buffer1:max+buffer2], func2(raw_x[max-buffer1:max+buffer2], *param), label="FIT")
+    #     plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
+    #     plt.axvline(raw_x[max+buffer2], ls = "--", c = "k")
+    #     if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True: plt.semilogy();plt.ylim(thrld, raw[max]*1.1)
+    #     plt.legend()
+    #     while not plt.waitforbuttonpress(-1): pass
+    #     plt.clf()
     
     aux = func2(raw_x, *param)
-    return aux,param,perr,labels
+    return aux,raw,param,perr,labels
+
+def purity_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
+    ''' 
+    \nDOC 
+    '''
+    raw_max = np.argmax(raw)
+    buffer1 = fit_range[0]
+    buffer2 = fit_range[1]
+
+    initial = []
+    labels  = ["PED", "T0", "A1", "A3", "SIGMA", "QUENCH"]
+    for init in labels:
+        if init not in i_param:
+            if init == "PED": initial.append(np.mean(raw[:raw_max-buffer1]))
+            if init == "T0":  initial.append(raw_x[raw_max])
+        else:
+            initial.append(i_param[init])
+
+    # if np.any(np.isnan(raw)) or np.any(np.isinf(raw)) or np.any(raw <= 0):
+    #     print_colored("Negative/Infinite/Zero/Nan values found in raw", "ERROR")
+
+    if check_key(OPT, "FILTER") and isinstance(OPT["FILTER"], int):
+        print("Filtering the signal with a gaussian filter of sigma = %i"%OPT["FILTER"])
+        raw = gaussian_filter1d(raw, sigma=OPT["FILTER"])
+
+    if check_key(OPT, "LOG") and OPT["LOG"]:
+        if check_key(OPT,"CUT_THRESHOLD") and OPT["CUT_THRESHOLD"]: raw = cut_threshold(raw, thrld)
+        popt, pcov = curve_fit(logpurity, raw_x[raw_max-buffer1:raw_max+buffer2], np.log(raw[raw_max-buffer1:raw_max+buffer2]), p0 = initial)
+    else:
+        popt, pcov = curve_fit(purity, raw_x[raw_max-buffer1:raw_max+buffer2], raw[raw_max-buffer1:raw_max+buffer2], p0 = initial)
+    
+    perr = np.sqrt(np.diag(pcov))
+    return purity(raw_x, *popt),raw,popt,perr,labels
+
+def simple_purity_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
+    ''' 
+    \nDOC 
+    '''
+    raw_max = np.argmax(raw)
+    buffer1 = fit_range[0]
+    buffer2 = fit_range[1]
+
+    initial = []
+    labels  = ["PED", "T0", "A0", "A1", "SIGMA", "QUENCH"]
+    for init in labels:
+        if init not in i_param:
+            if init == "PED": initial.append(np.mean(raw[:raw_max-buffer1]))
+            if init == "T0":  initial.append(raw_x[raw_max])
+        else:
+            initial.append(i_param[init])
+
+    # if np.any(np.isnan(raw)) or np.any(np.isinf(raw)) or np.any(raw <= 0):
+    #     print_colored("Negative/Infinite/Zero/Nan values found in raw", "ERROR")
+
+    if check_key(OPT, "FILTER") and isinstance(OPT["FILTER"], int):
+        print("Filtering the signal with a gaussian filter of sigma = %i"%OPT["FILTER"])
+        raw = gaussian_filter1d(raw, sigma=OPT["FILTER"])
+
+    if check_key(OPT, "LOG") and OPT["LOG"]:
+        if check_key(OPT,"CUT_THRESHOLD") and OPT["CUT_THRESHOLD"]: raw = cut_threshold(raw, thrld)
+        popt, pcov = curve_fit(logsimple_purity, raw_x[raw_max-buffer1:raw_max+buffer2], np.log(raw[raw_max-buffer1:raw_max+buffer2]), p0 = initial)
+    else:
+        popt, pcov = curve_fit(simple_purity, raw_x[raw_max-buffer1:raw_max+buffer2], raw[raw_max-buffer1:raw_max+buffer2], p0 = initial)
+    
+    perr = np.sqrt(np.diag(pcov))
+    return simple_purity(raw_x, *popt),raw,popt,perr,labels
 
 def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
 
@@ -557,37 +650,40 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     
     aux = scfunc(raw_x, *popt)
     # print("\n")
-    return aux,popt,perr,labels
+    return aux,raw,popt,perr,labels
 
 def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=["ADC"],out_key="",OPT={},save=False,debug=False):
     ''' 
     \nDOC 
     '''
-    fit_dict, popt_dict, perr_dict, label_dict = {}, {}, {}, {}
+    fit_dict, ref_dict, popt_dict, perr_dict, label_dict = {}, {}, {}, {}, {}
     i_param = get_initial_parameters(i_param)
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ion()
     
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], in_key):
         aux = dict()
-    
+        ref = dict()
         raw = my_runs[run][ch][key]
         raw_x = my_runs[run][ch]["Sampling"]*np.arange(len(raw[0]))
         
         for i in range(len(raw)):
             raw_max = np.max(raw[i])
             raw[i] = raw[i]/raw_max
-            if signal_type == "SiPM":  fit, popt, perr, labels = sipm_fit(raw[i], raw_x, fit_range, thrld, OPT)
-            if signal_type == "SC":    fit, popt, perr, labels = sc_fit(raw[i],   raw_x, fit_range, thrld, OPT)
-            if signal_type == "Scint": fit, popt, perr, labels = scint_fit(raw[i],raw_x, fit_range, thrld, i_param, OPT)
-            if signal_type == "SimpleScint": fit, popt, perr, labels = simple_scint_fit(raw[i],raw_x, fit_range, i_param, OPT)
-            if signal_type == "TauSlow": fit, popt, perr, labels = tau_fit(raw[i],raw_x, fit_range, i_param, OPT)
+            if signal_type == "SiPM":        fit, new_raw, popt, perr, labels = sipm_fit(raw[i], raw_x, fit_range, thrld, OPT)
+            if signal_type == "SC":          fit, new_raw, popt, perr, labels = sc_fit(raw[i],   raw_x, fit_range, thrld, OPT)
+            if signal_type == "Scint":       fit, new_raw, popt, perr, labels = scint_fit(raw[i],raw_x, fit_range, thrld, i_param, OPT)
+            if signal_type == "Purity":      fit, new_raw, popt, perr, labels = purity_fit(raw[i],raw_x, fit_range, thrld, i_param, OPT)
+            if signal_type == "SimplePurity":fit, new_raw, popt, perr, labels = simple_purity_fit(raw[i],raw_x, fit_range, thrld, i_param, OPT)
+            if signal_type == "SimpleScint": fit, new_raw, popt, perr, labels = simple_scint_fit(raw[i],raw_x, fit_range, i_param, OPT)
+            if signal_type == "TauSlow":     fit, new_raw, popt, perr, labels = tau_fit(raw[i],raw_x, fit_range, i_param, OPT)
             aux[i] = fit*raw_max
+            ref[i] = new_raw*raw_max
             raw[i] = raw[i]*raw_max
             i_idx, f_idx = find_amp_decrease(aux[i],1e-3)
             PE = np.sum(raw[i])
             PE_std = np.std(raw[i][:i_idx])
             
-            folder_path  = f'{root}{info["PATH"][0]}{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
+            folder_path  = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
             if not os.path.exists(folder_path): 
                 os.makedirs(name=folder_path,exist_ok=True)
                 os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
@@ -602,7 +698,7 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
                 print(term_output)
 
             if save:
-                with open(folder_path+"/DeconvolutionFit_%s_%s.txt"%(run,ch),"w+") as f:
+                with open(f"{folder_path}/{signal_type}Fit_{run}_{ch}.txt","w+") as f:
                     if signal_type == "Scint" or signal_type == "SimpleScint":
                         f.write("%s:\t%.2f\t%.2f\n"%("PE", PE, PE_std))
                     for i in range(len(labels)):
@@ -610,12 +706,14 @@ def fit_wvfs(my_runs,info,signal_type,thrld,fit_range=[0,200],i_param={},in_key=
                 if debug: print("File saved in: %s"%folder_path)
         
         fit_dict[(run,ch,key)] = fit
+        ref_dict[(run,ch,key)] = ref
         popt_dict[(run,ch,key)] = popt
         perr_dict[(run,ch,key)] = perr
         label_dict[(run,ch,key)] = labels
         my_runs[run][ch]["Fit"+signal_type+out_key] = aux
+        my_runs[run][ch]["Ref"+signal_type+out_key] = ref
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False: plt.ioff()
-    return fit_dict, popt_dict, perr_dict, label_dict
+    return fit_dict, ref_dict, popt_dict, perr_dict, label_dict
 
 def get_initial_parameters(i_param):
     '''
@@ -714,7 +812,7 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
         plt.clf()
 
     aux = np.concatenate([zeros_aux, scint_profile(raw_x[:buffer2], *popt), zeros_aux2])
-    return aux,popt,perr,labels2
+    return aux,raw,popt,perr,labels2
 
 def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     ''' 
@@ -775,4 +873,4 @@ def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
         plt.clf()
 
     aux = np.concatenate([zeros_aux, tau_slow_profile(raw_x[:buffer2-buffer1], *popt), zeros_aux2])
-    return aux,popt,perr,labels2
+    return aux,raw,popt,perr,labels2
