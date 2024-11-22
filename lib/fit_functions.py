@@ -5,11 +5,7 @@ from src.utils import get_project_root
 
 import os, stat, math, scipy
 import numpy             as np
-
-import matplotlib
-from matplotlib import pyplot as plt
-matplotlib.use('Qt5Agg')
-
+import matplotlib.pyplot as plt
 from itertools      import product
 from scipy.optimize import curve_fit
 from scipy.signal   import find_peaks

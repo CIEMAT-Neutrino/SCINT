@@ -19,3 +19,5 @@ from .sty_functions     import (style_selector, get_prism_colors, get_color)
 from .unit_functions    import *
 from .vis_functions     import *
 from .wvf_functions     import *
+
+root = get_project_root()

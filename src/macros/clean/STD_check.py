@@ -11,9 +11,9 @@
 #############
 import sys, numba
 import numpy as np
-import matplotlib.pyplot as plt
-import plotly.express as px
 import numexpr as ne
+import plotly.express as px
+import matplotlib.pyplot as plt
 
 ###############
 ## FUNCTIONS ##
