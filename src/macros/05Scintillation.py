@@ -1,10 +1,10 @@
 import sys; sys.path.insert(0, '../../'); from lib import *
 
-default_dict = {"runs":["ALPHA_RUNS"],"channels":["CHAN_TOTAL"]}
+default_dict = {"runs":["ALPHA_RUNS"], "channels":["CHAN_TOTAL"], "preset_load":{"LOAD_PRESET":4}}
 user_input, info = initialize_macro("05Scintillation",["input_file","variables","filter","group","save","debug"],default_dict=default_dict, debug=True)
 OPT = opt_selector(debug=user_input["debug"])
 ## 05Scintillation
-my_runs = load_npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str), info, preset=info["LOAD_PRESET"][4], compressed=True, debug=user_input["debug"])
+my_runs = load_npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
 if check_key(OPT,"PE") and OPT["PE"]: 
     my_runs = calibrate_charges(my_runs, info, user_input, debug=user_input["debug"])
     for var_idx,var in enumerate(user_input["variables"]): user_input["variables"][var_idx] = var+"PE"
