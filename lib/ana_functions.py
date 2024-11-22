@@ -3,10 +3,13 @@
 #================================================================================================================================================#
 
 import numba
+import inquirer
 import numpy as np
-from itertools import product
-from rich      import print as print
+import matplotlib.pyplot as plt
 
+from itertools import product
+from scipy.signal import find_peaks
+from rich      import print as print
 # Import from other libraries
 from .io_functions import print_colored, check_key
 
@@ -14,7 +17,7 @@ from .io_functions import print_colored, check_key
 #************************* PEAK + PEDESTAL *********************************#
 #===========================================================================# 
 
-def compute_ana_wvfs(my_runs, info, filter=False, debug = False):
+def compute_ana_wvfs(my_runs:dict, info:dict, filter:bool=False, debug:bool=False):
     '''
     \nComputes the AnaADC wvfs from the RawADC and the baseline value computed from PED_KEY.
     \n**VARIABLES**:
@@ -53,7 +56,7 @@ def filter_wvf(wvf):
             filtered_array[jdx] = filtered_array[jdx-1] + error
     return filtered_array
 
-def compute_fft_wvfs(my_runs, info, key, label, debug = False):
+def compute_fft_wvfs(my_runs:dict, info:dict, key:str, label:str, debug:bool=False):
     '''
     \nComputes the FFT wvfs from the given ADC key.
     \n**VARIABLES**:
@@ -71,7 +74,7 @@ def compute_fft_wvfs(my_runs, info, key, label, debug = False):
     print_colored("--> Computed AnaFFT Wvfs!!!", "SUCCESS")
 
 
-def compute_peak_variables(my_runs, info, key, label, buffer = 30, debug = False):
+def compute_peak_variables(my_runs:dict, info:dict, key:str, label:str, buffer:int=30, debug:bool=False):
     '''
     \nComputes the peaktime and amplitude for a given ADC key.
     \n**VARIABLES**:
@@ -126,26 +129,85 @@ def compute_pedestal_variables(my_runs, info, key, label, ped_lim = "", buffer =
         if type(ped_lim) != int:
             values,counts = np.unique(my_runs[run][ch][label+"PeakTime"], return_counts=True)
             ped_lim = values[np.argmax(counts)]
+            ped_mode = 0
+            
+            if ped_lim <= buffer: 
+                ped_lim = int(len(my_runs[run][ch][key][0])*0.2)
+                print(f"[yellow]WARNING: Peak time is smaller than {buffer}. Setting ped_lim = {ped_lim} (20% window length)[/yellow]")
+            
             if key == "RawADC" and label == "Raw":
-                if ped_lim <= 0: ped_lim = 5*buffer
+                wvf_length = len(my_runs[run][ch][key][0])
+                values, counts = np.unique(my_runs[run][ch][key][:,:int(0.18*wvf_length)], return_counts=True)
+                ped_mode = values[np.argmax(counts)]
+                if ped_mode == 0:
+                    print(f"[yellow]WARNING: Pedestal mode is 0. Setting ped_mode = mean of the first 18% of the waveform.[/yellow]")
+                    ped_mode = np.mean(my_runs[run][ch][key][:,:int(0.18*wvf_length)],axis=1)
 
-            if key == "AnaADC" and label == "Ana":
-                # Find the most likely rise time wrt the most likely peak time
-                end = my_runs[run][ch][key][:,ped_lim:] < 0
+            # Find the most likely rise time wrt the most likely peak time
+            end = (my_runs[run][ch][key][:,ped_lim:] - ped_mode) < 0
+            start = (my_runs[run][ch][key][:,:ped_lim] - ped_mode) < 0
+            if label == "Raw" and my_runs[run][ch]["PChannel"] == -1:
+                my_runs[run][ch][label+"SignalEnd"] = ped_lim + np.argmin(end,axis=1)
+                my_runs[run][ch][label+"SignalStart"] = ped_lim - np.argmin(start[:,::-1],axis=1)
+                print(f"[cyan]INFO: Negative polarity. Finding signal start and end in negative values.[/cyan]")
+            else:
                 my_runs[run][ch][label+"SignalEnd"] = ped_lim + np.argmax(end,axis=1)
-                start = my_runs[run][ch][key][:,:ped_lim] < 0
                 my_runs[run][ch][label+"SignalStart"] = ped_lim - np.argmax(start[:,::-1],axis=1)
-                values,counts = np.unique(my_runs[run][ch][label+"SignalStart"], return_counts=True)
-                # Look for max counts in the signal start for values up to ped_lim - buffer
-                filtered_values = values[values < ped_lim - buffer]
-                filtered_counts = counts[values < ped_lim - buffer]
-                ped_lim = filtered_values[np.argmax(filtered_counts)]
+            
+            # Look for max counts in the signal start for values up to ped_lim - buffer
+            min_signal_start = np.min(my_runs[run][ch][label+"SignalStart"])
+            max_signal_start = np.max(my_runs[run][ch][label+"SignalStart"])
+            hist, bins = np.histogram(my_runs[run][ch][label+"SignalStart"], bins = np.arange(min_signal_start,max_signal_start+1))
+            bins = bins[:-1]
+            hist = hist/np.max(hist)
+            # Apply peak finder to the histogram
+            peaks, _ = find_peaks(hist, prominence=0.1, height=0.1) 
+            
+            if len(peaks) == 1:
+                ped_lim = bins[peaks[0]]
+                print(f"[cyan]INFO: Setting ped_lim = {ped_lim}[/cyan]")
+
+            elif len(peaks) == 0:
+                print(f"[yellow]WARNING: No peak found in the signal start histogram.[/yellow]")
+                lower_thld = 0.1
+                while len(peaks) == 0 or lower_thld >= 0.01:
+                    lower_thld -= 0.001
+                    peaks, _ = find_peaks(hist, prominence=lower_thld, height=lower_thld)
+                    
+                print(f"[cyan]INFO: Trying lower threshold {lower_thld:.2f} found {len(peaks)} peak in the signal start histogram.[/cyan]")
+            
+            
+            elif len(peaks) > 1:
+                print(f"[yellow]WARNING: Found more than one peak in the signal start histogram.[/yellow]")
+                # Plot the histogram and the peaks
+                plt.ion()
+                plt.plot(bins, hist)
+                plt.plot(bins[peaks], hist[peaks], "x")
+                plt.title(f"Signal Start Histogram for Run {run} Ch {ch}")
+                plt.xlabel("Signal Start (ticks)")
+                plt.ylabel("Norm.")
+                plt.show()
+                while not plt.waitforbuttonpress(-1): pass
+                plt.close()
+                plt.ioff()
+
+                # Select in the terminal the peak to use (defailt is the first one)
+                questions = [inquirer.List('peak',
+                    message="Select the peak to use as signal start",
+                    choices=[str(i) for i in bins[peaks]],
+                )]
+                answers = inquirer.prompt(questions)
+                ped_lim = bins[int(answers["peak"])]
+
+            if ped_lim <= buffer: 
+                ped_lim = int(len(my_runs[run][ch][key][0])*0.15)
+                print(f"[yellow]WARNING: Peak time is smaller than {buffer}. Setting ped_lim = {ped_lim} (15% window length)[/yellow]")
         
         ADC_aux=my_runs[run][ch][key]
-        my_runs[run][ch][label+"PreTriggerSTD"]   = np.std (ADC_aux[:,:ped_lim],axis=1)
-        my_runs[run][ch][label+"PreTriggerMean"]  = np.mean(ADC_aux[:,:ped_lim],axis=1)
-        my_runs[run][ch][label+"PreTriggerMax"]   = np.max (ADC_aux[:,:ped_lim],axis=1)
-        my_runs[run][ch][label+"PreTriggerMin"]   = np.min (ADC_aux[:,:ped_lim],axis=1)
+        my_runs[run][ch][label+"PreTriggerSTD"]  = np.std (ADC_aux[:,:ped_lim],axis=1)
+        my_runs[run][ch][label+"PreTriggerMean"] = np.mean(ADC_aux[:,:ped_lim],axis=1)
+        my_runs[run][ch][label+"PreTriggerMax"]  = np.max (ADC_aux[:,:ped_lim],axis=1)
+        my_runs[run][ch][label+"PreTriggerMin"]  = np.min (ADC_aux[:,:ped_lim],axis=1)
 
         ADC, start_window=compute_pedestal_sliding_windows(ADC_aux, ped_lim=ped_lim, sliding=sliding)
         my_runs[run][ch][label+"PedLim"]   = ped_lim
