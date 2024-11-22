@@ -2,9 +2,10 @@ import sys; sys.path.insert(0, '../../'); from lib import *
 default_dict = {}
 user_input, info = initialize_macro("12GenerateSER",["input_file","runs","channels","save","debug"],default_dict, debug=True)
 
-### Load runs
-light_runs = ["23"]
-calib_runs = ["21"]
+### Configure SER
+light_runs = ["00"]
+calib_runs = ["00"]
+OPT = opt_selector(debug=user_input["debug"])
 
 ### 12GenerateSER
 for run in np.asarray(user_input["runs"]).astype(str):
@@ -15,13 +16,12 @@ for run in np.asarray(user_input["runs"]).astype(str):
         calib = load_npy(calib_runs, [ch], preset="WVF", info=info, compressed=True, debug=user_input["debug"]) # Select runs to serve as dec template scaling (tipichaly SPE)
         generate_SER(scint, light, calib, debug=user_input["debug"])
 
-        OPT = opt_selector(debug=user_input["debug"])
         OPT["LOGY"] = True
         OPT["NORM"] = True
         keys_dict = {(run, ch):key for run, ch, key in zip(scint_runs, [ch]*3, ["AnaAveWvfSPE","AnaAveWvfSER","AnaAveWvf"])}
         vis_compare_wvf(scint, info, keys_dict, OPT=OPT, save=user_input["save"], debug=user_input["debug"])
 
         ### Remove branches to exclude from saving
-        save_proccesed_variables(scint, preset="WVF", info=info, force=True, debug=user_input["debug"])
+        save_proccesed_variables(scint, preset=None, branch_list=["AnaAveWvfSER"], info=info, force=True, debug=user_input["debug"])
         del scint, light, calib
         gc.collect()
