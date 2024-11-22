@@ -237,7 +237,13 @@ def opt_selector(filename = "VisConfig", debug = False):
 
 def convert_str_to_type(value, debug = False):
     try:
-        return ast.literal_eval(value)
+        value = ast.literal_eval(value)
+        # If value is numpy array, convert it to list
+        if type(value) == np.ndarray:
+            value = value.tolist()
+        if type(value) == tuple:
+            value = list(value)
+        return value
     except (ValueError, SyntaxError):
         return value
 
