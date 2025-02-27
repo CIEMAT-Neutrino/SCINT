@@ -5,15 +5,13 @@
 *data*/*
 data/*
 data
-*Data*/*
-Data/*
-Data
 */notebooks/*
 notebooks/*
 vault/notebooks
 */*/*.ipynb
 test/
 larsoft/
+.vscode*
 
 # Ignore everything from input files
 config/input/*
