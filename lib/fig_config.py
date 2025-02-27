@@ -2,34 +2,44 @@ tex_installed = False
 
 import sys
 import plotly.graph_objects as go
-if not sys.platform.startswith('win'):
+
+if not sys.platform.startswith("win"):
     import subprocess
+
     try:
         # print("WORKING ON WINDOWS")
         bashCommand = "yum info texlive-latex-base"
-        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process = subprocess.Popen(
+            bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
     except FileNotFoundError:
         # print("WORKING ON UBUNTU")
         bashCommand = "apt list --installed | grep texlive-latex-base"
-        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        process = subprocess.Popen(
+            bashCommand.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        )
     output, error = process.communicate()
     if "Error" in str(output):
-        print("You don't have latex installed. Changing default configuration to tex=False")
+        print(
+            "You don't have latex installed. Changing default configuration to tex=False"
+        )
         tex_installed = False
     else:
         print("You have latex installed!. Applying default configuration (tex=True)")
         tex_installed = True
-        
-from matplotlib        import pyplot as plt
+
+from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
+
+
 def figure_features(tex=tex_installed, font="serif", dpi=300):
-    '''
+    """
     \nCustomize figure settings.
     \n**VARIABLES**:
     \n - tex (bool, optional): use LaTeX. Defaults to True.
     \n - font (str, optional): font type. Defaults to "serif".
     \n - dpi (int, optional): dots per inch. Defaults to 180.
-    '''
+    """
     plt.rcParams.update(
         {
             "font.size": 16,
@@ -62,27 +72,27 @@ def figure_features(tex=tex_installed, font="serif", dpi=300):
             "legend.framealpha": 1,
             "figure.titlesize": 18,
             "lines.linewidth": 2,
-            "figure.constrained_layout.use": True
+            "figure.constrained_layout.use": True,
         }
     )
 
 
 def add_grid(ax, lines=True, locations=None):
-    '''
+    """
     \nAdd a grid to the current plot.
     \n**VARIABLES**:
     \n - ax (Axis): axis object in which to draw the grid.
     \n - lines (bool, optional): add lines to the grid. Defaults to True.
     \n - locations (tuple, optional):
     \n - (xminor, xmajor, yminor, ymajor). Defaults to None.
-    '''
+    """
 
     if lines:
         ax.grid(lines, alpha=0.5, which="minor", ls=":")
         ax.grid(lines, alpha=0.7, which="major")
 
     if locations is not None:
-        assert ( len(locations) == 4 ), "Invalid entry for the locations of the markers"
+        assert len(locations) == 4, "Invalid entry for the locations of the markers"
 
         xmin, xmaj, ymin, ymaj = locations
         ax.xaxis.set_minor_locator(MultipleLocator(xmin))
@@ -92,18 +102,18 @@ def add_grid(ax, lines=True, locations=None):
 
 
 def format_coustom_plotly(
-    fig:go.Figure,
-    title:str=None,
-    legend:dict=dict(),
-    fontsize:int=16,
-    figsize:int=None,
-    ranges:tuple=(None, None),
-    matches:tuple=("x", "y"),
-    tickformat:tuple=(".s", ".s"),
-    log:tuple=(False, False),
-    margin:dict={"auto": True},
-    add_units:bool=True,
-    debug:bool=False,
+    fig: go.Figure,
+    title: str = None,
+    legend: dict = dict(),
+    fontsize: int = 16,
+    figsize: int = None,
+    ranges: tuple = (None, None),
+    matches: tuple = ("x", "y"),
+    tickformat: tuple = (".s", ".s"),
+    log: tuple = (False, False),
+    margin: dict = {"auto": True},
+    add_units: bool = True,
+    debug: bool = False,
 ):
     """
     Format a plotly figure
