@@ -12,6 +12,7 @@ vault/notebooks
 test/
 larsoft/
 .vscode*
+.bash_history
 
 # Ignore everything from input files
 config/input/*
