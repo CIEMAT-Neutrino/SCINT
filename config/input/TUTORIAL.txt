@@ -1,0 +1,51 @@
+# Do not use spaces " " except between KEYWORD and input variables
+# If input variables are a list, use "," as a separator
+########################
+####   DAQ INFO     ####
+########################
+TYPE: ADC
+MODEL: 5725S
+BITS: 16384
+DYNAMIC_RANGE: 2
+SAMPLING: 4e-9
+########################
+####   RUNS INFO    ####
+########################
+RAW_DATA: DAT
+RAW_PATH: data/BASIC/raw
+NPY_PATH: data/BASIC/${USER}/npy
+OUT_PATH: data/BASIC/${USER}
+
+OV_LABEL: OV1,0V2,0V3
+CALIB_RUNS: 01
+LIGHT_RUNS: 09
+NOISE_RUNS: 17,128
+ALPHA_RUNS: 25
+MUONS_RUNS: 29
+CHAN_LABEL: SiPM0,SC
+CHAN_TOTAL: 0,6
+CHAN_POLAR: -1,1
+CHAN_AMPLI: 250,1030
+########################
+####   BRANCH INFO  ####
+########################
+#PRESETS USED: 0,  1,  2,  3,  4,  5,  6
+LOAD_PRESET: NON,RAW,ANA,ANA,CAL,EVA,ANA
+SAVE_PRESET: NON,RAW,ANA,CAL,CAL,NON,DEC
+########################
+####  CHARGE INFO   ####
+########################
+TYPE: ChargeAveRange,ChargePedRange,ChargeRange
+REF: AveWvf
+I_RANGE: 0.1,0.1,0.1,0.1,0.1
+F_RANGE: 0.4,0.9,1.9,2.9,3.9
+PED_KEY: PreTriggerMean
+########################
+####   CUTS INFO    ####
+########################
+#0CUT_CHAN: 0
+#0CUT_TYPE: cut_df
+#0CUT_KEYS: AnaValleyAmp
+#0CUT_LOGIC: bigger
+#0CUT_VALUE: 0
+#0CUT_INCLUSIVE: False

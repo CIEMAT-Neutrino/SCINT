@@ -982,7 +982,7 @@ def fit_wvfs(
             PE_std = np.std(raw[i][:i_idx])
 
             folder_path = (
-                f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
+                f'{root}/{info["OUT_PATH"][0]}/fits/run{run}_ch{ch}/'
             )
             if not os.path.exists(folder_path):
                 os.makedirs(name=folder_path, exist_ok=True)

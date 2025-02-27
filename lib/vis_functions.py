@@ -236,11 +236,12 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                 except KeyError:
                     print_colored("PedWindow not compued!", "ERROR")
                 try:
+                    out_path = info["NPY_PATH"][0]
+                    out_path = os.path.expandvars(out_path)
                     int_info = yaml.load(
                         open(
-                            info["PATH"][0]
-                            + info["MONTH"][0]
-                            + "/npy/run"
+                            out_path
+                            + "/run"
                             + str(run).zfill(2)
                             + f"_ch{ch_list[j]}/ChargeDict.yml"
                         ),
@@ -542,7 +543,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     )
             elif tecla == "p":
                 fig.savefig(
-                    f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_event{idx}.png',
+                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_event{idx}.png',
                     dpi=500,
                 )
                 idx = idx + 1
@@ -682,12 +683,12 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
         if tecla == "p":
             if isinstance(keys, dict):
                 fig.savefig(
-                    f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(list(keys.values()))}.png',
+                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{"_".join(list(keys.values()))}.png',
                     dpi=500,
                 )
             if isinstance(keys, list):
                 fig.savefig(
-                    f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(keys)}.png',
+                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{"_".join(keys)}.png',
                     dpi=500,
                 )
         else:
@@ -982,12 +983,12 @@ def vis_var_hist(
         if save:
             # Check if the directory exists
             if not os.path.exists(
-                f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/'
+                f'{root}/{info["OUT_PATH"][0]}/images/'
             ):
-                os.makedirs(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/')
-                os.chmod(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/', 0o770)
+                os.makedirs(f'{root}/{info["OUT_PATH"][0]}/images/')
+                os.chmod(f'{root}/{info["OUT_PATH"][0]}/images/', 0o770)
             fig.savefig(
-                f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{"_".join(key)}_Hist.png',
+                f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{"_".join(key)}_Hist.png',
                 dpi=500,
             )
             if debug:
@@ -1042,14 +1043,14 @@ def print_stats(my_run, labels, ax, data, info, save=False, debug=False):
         )
         # Save information as csv file
         if not os.path.exists(
-            f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/stats/'
+            f'{root}/{info["OUT_PATH"][0]}/analysis/stats/'
         ):
-            os.makedirs(f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/stats/')
+            os.makedirs(f'{root}/{info["OUT_PATH"][0]}/analysis/stats/')
             os.chmod(
-                f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/stats/', 0o770
+                f'{root}/{info["OUT_PATH"][0]}/analysis/stats/', 0o770
             )
         df.to_csv(
-            f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/stats/run{run}_ch{ch}_{key}_Stats.csv',
+            f'{root}/{info["OUT_PATH"][0]}/analysis/stats/run{run}_ch{ch}_{key}_Stats.csv',
             index=False,
         )
         if debug:
@@ -1278,11 +1279,11 @@ def vis_two_var_hist(
                 plt.yscale("log")
             if save == True:
                 fig.savefig(
-                    f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png',
+                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png',
                     dpi=500,
                 )
                 os.chmod(
-                    f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png',
+                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png',
                     stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
                 )
                 if debug:

@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import product
@@ -313,7 +314,10 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
                 integration_dict[typ][charge_name] = [int(i_idx), int(f_idx)]
 
     # print(integration_dict)
-    filename = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/npy/run{run.zfill(2)}_ch{ch}/ChargeDict.yml'
+    out_path = info["NPY_PATH"][0]
+    out_path = os.path.expandvars(out_path)
+
+    filename = f'{root}/{info["NPY_PATH"][0]}/run{run.zfill(2)}_ch{ch}/ChargeDict.yml'
     update_yaml_file(filename, integration_dict, convert=False, debug=debug)
     return my_runs
 

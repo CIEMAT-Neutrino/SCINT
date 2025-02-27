@@ -103,8 +103,8 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
             plt.yscale("log")
         if save:
             plt.savefig(
-                "{}{}/images/run{}_ch{}_Persistence.png".format(
-                    info["PATH"][0], info["MONTH"][0], run, ch
+                "{}/images/run{}_ch{}_Persistence.png".format(
+                    info["OUT_PATH"][0], run, ch
                 ),
                 dpi=500,
             )
@@ -202,7 +202,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
             export_txt(data, info, debug=debug)
 
             if save:
-                save_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/'
+                save_path = f'{root}/{info["OUT_PATH"][0]}/images/'
                 try:
                     os.makedirs(save_path, exist_ok=True)
                 except:
@@ -368,7 +368,7 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                 if export:
                     print_colored("Data exported to txt file.", "INFO")
                     update_yaml_file(
-                        f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/calibration/calibration_run{run}_ch{ch}_{key}.yml',
+                        f'{root}/{info["OUT_PATH"][0]}/analysis/calibration/calibration_run{run}_ch{ch}_{key}.yml',
                         data[labels][measurement],
                         debug=debug,
                     )
@@ -383,7 +383,7 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                 if export:
                     print_colored("Data exported to txt file.", "INFO")
                     update_yaml_file(
-                        f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/xtalk/xtalk_run{run}_ch{ch}_{key}.yml',
+                        f'{root}/{info["OUT_PATH"][0]}/analysis/xtalk/xtalk_run{run}_ch{ch}_{key}.yml',
                         data[labels][measurement],
                         debug=debug,
                     )

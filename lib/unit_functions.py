@@ -13,7 +13,7 @@ root = get_project_root()
 def calibrate_charges(my_runs, info, user_input, debug=False):
     calibration_info = read_yaml_file(
         "calibration",
-        path=f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/analysis/',
+        path=f'{root}/{info["OUT_PATH"][0]}/analysis/',
         debug=user_input["debug"],
     )
     print("Calibration info: ", calibration_info)

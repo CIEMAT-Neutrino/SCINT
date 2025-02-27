@@ -97,8 +97,9 @@ def read_input_file(
                 "CHAN_TOTAL",
                 "DAQ",
                 "MODEL",
-                "PATH",
-                "MONTH",
+                "RAW_PATH",
+                "NPY_PATH",
+                "OUT_PATH",
                 "RAW_DATA",
                 "OV_LABEL",
                 "CHAN_LABEL",
@@ -359,7 +360,7 @@ def write_output_file(
     def flatten_data(data):
         return [flatten_data_recursive(row) for row in data]
 
-    folder_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/fits/run{run}_ch{ch}/'
+    folder_path = f'{root}/{info["OUT_PATH"][0]}/fits/run{run}_ch{ch}/'
     if not os.path.exists(folder_path):
         os.makedirs(name=folder_path, exist_ok=True)
         os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
@@ -473,8 +474,11 @@ def binary2npy(
     \nInput are binary input file path and npy outputfile as strings.
     \nDepends numpy.
     """
-    in_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/raw/'
-    out_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/npy/'
+    in_path = f'{root}/{info["RAW_PATH"][0]}/'
+    out_path = f'{root}/{info["NPY_PATH"][0]}/'
+    # Outpath contains ${USER} but it is not recognized by the system. Force the substitution of the variable
+    out_path = os.path.expandvars(out_path)
+
     os.makedirs(name=out_path, exist_ok=True)
     for run, ch in product(runs.astype(str), channels.astype(str)):
         print("\n....... READING RUN%s CH%s ......." % (run, ch))
@@ -598,8 +602,10 @@ def root2npy(
     \nNEEDS UPDATE!! (see binary2npy)
     """
 
-    in_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/raw/'
-    out_path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/npy/'
+    in_path = f'{root}/{info["RAW_PATH"][0]}/'
+    out_path = f'{root}/{info["NPY_PATH"][0]}/'
+    out_path = os.path.expandvars(out_path)
+
     for run, ch in product(runs.astype(str), channels.astype(str)):
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
@@ -817,7 +823,8 @@ def load_npy(
     \n- info: dictionary with the info of the run
     \n- debug: if True, print debug info
     """
-    path = f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/npy/'
+    path = f'{root}/{info["NPY_PATH"][0]}/'
+    path = os.path.expandvars(path)
 
     my_runs = dict()
     runs = np.asarray(runs).astype(str)
@@ -922,7 +929,7 @@ def save_proccesed_variables(
     aux = copy.deepcopy(
         my_runs
     )  # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
-    path = f"{root}/{info['PATH'][0]}/{info['MONTH'][0]}/npy/"
+    path = f"{root}/{info['NPY_PATH'][0]}/"
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
             print_colored(

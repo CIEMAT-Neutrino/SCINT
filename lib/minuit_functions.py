@@ -157,12 +157,12 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
 
     if user_input["save"]:
         fig.savefig(
-            f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
+            f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
             dpi=500,
         )
         try:
             os.chmod(
-                f'{root}/{info["PATH"][0]}/{info["MONTH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
+                f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
                 0o770,
             )
         except:
@@ -171,5 +171,5 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
         save_fit_parameters(run, ch, m_fit, OPT["FIT"], variable, info, user_input)
         if user_input["debug"]:
             print(
-                f"Saving plot in {root}/{info['PATH'][0]}/{info['MONTH'][0]}/images/run{run}_ch{ch}_{variable}_{fit_function}_Fit.png"
+                f"Saving plot in {root}/{info['PATH'][0]}/images/run{run}_ch{ch}_{variable}_{fit_function}_Fit.png"
             )
