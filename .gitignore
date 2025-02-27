@@ -14,6 +14,7 @@ vault/notebooks
 */*/*.ipynb
 test/
 larsoft/
+.vscode/*
 
 # Ignore everything from input files
 config/input/*
