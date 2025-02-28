@@ -236,13 +236,9 @@ def compute_pedestal_variables(
             # Apply peak finder to the histogram
             peaks, _ = find_peaks(hist, prominence=0.1, height=0.1)
 
-            if len(peaks) == 1:
-                ped_lim = bins[peaks[0]]
-                print(f"[cyan]INFO: Setting ped_lim = {ped_lim}[/cyan]")
-
-            elif len(peaks) == 0:
+            if len(peaks) == 0:
                 print(
-                    f"[yellow]WARNING: No peak found in the signal start histogram.[/yellow]"
+                    f"[yellow]WARNING:[/yellow] No peak found in the 'SignalStart' histogram. Starting peak search with lower threshold."
                 )
                 lower_thld = 0.1
                 while len(peaks) == 0 or lower_thld >= 0.01:
@@ -250,10 +246,13 @@ def compute_pedestal_variables(
                     peaks, _ = find_peaks(
                         hist, prominence=lower_thld, height=lower_thld
                     )
+                    if lower_thld < 0:
+                        print(f"[red]ERROR:[/red] No peak found in the 'SignalStart' histogram for any threshold. Exiting.")
+                        break
 
-                print(
-                    f"[cyan]INFO: Trying lower threshold {lower_thld:.2f} found {len(peaks)} peak in the signal start histogram.[/cyan]"
-                )
+            elif len(peaks) == 1:
+                ped_lim = bins[peaks[0]]
+                print(f"[cyan]INFO: Setting ped_lim = {ped_lim}[/cyan]")
 
             elif len(peaks) > 1:
                 print(
