@@ -246,7 +246,7 @@ def print_header():
     file_contents = f.read()
     print(file_contents)
     f.close
-    print_colored("....... Starting Macro .......", "INFO")
+    print(f"\n[cyan]....... Starting Macro .......[/cyan]")
 
 
 def apply_cuts(user_input, info, debug=False):
