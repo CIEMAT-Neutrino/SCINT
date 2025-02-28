@@ -3,7 +3,12 @@ import sys
 sys.path.insert(0, "../../")
 from lib import *
 
-default_dict = {"channels": ["CHAN_TOTAL"], "runs": ["NOISE_RUNS"]}
+default_dict = {
+    "input_file": ["TUTORIAL"],
+    "channels": ["CHAN_TOTAL"], 
+    "runs": ["NOISE_RUNS"]
+}
+
 user_input, info = initialize_macro(
     "13Noise",
     ["input_file", "runs", "key", "preset_load", "filter", "debug"],

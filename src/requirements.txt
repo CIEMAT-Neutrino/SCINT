@@ -30,4 +30,5 @@ pyyaml
 rich
 scipy 
 shapely
+typing
 uproot

@@ -1,5 +1,6 @@
 import sys, inquirer, os, yaml, ast
 import numpy as np
+from typing import Optional
 from rich import print as print
 
 from src.utils import get_project_root
@@ -41,15 +42,22 @@ def get_flag_dict():
 
 
 def initialize_macro(
-    macro, input_list=["input_file", "debug"], default_dict={}, debug=False
+    macro, input_list=["input_file", "debug"], default_dict:Optional[dict]=None, debug=False
 ):
     """
     \nThis function initializes the macro by reading the input file and the user input.
     \n**VARIABLES:**
     \n- **macro** (*str*) - Name of the macro to be executed.
     """
+
     flag_dict = get_flag_dict()
     user_input = dict()
+
+    if default_dict is None:
+        default_dict = dict()
+    else:
+        if check_key(default_dict, "input_file") == True:
+            user_input["input_file"] = default_dict["input_file"]
 
     print_header()
     if len(sys.argv) > 1:
@@ -84,6 +92,7 @@ def initialize_macro(
                     except IndexError:
                         print("Provide argument for flag %s" % flag_dict[flag])
                         exit()
+    
     if check_key(user_input, "input_file") == False:
         user_input = select_input_file(user_input, debug=debug)
         user_input["input_file"] = user_input["input_file"]

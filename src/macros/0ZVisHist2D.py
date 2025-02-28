@@ -3,12 +3,17 @@ import sys
 sys.path.insert(0, "../../")
 from lib import *
 
+default_dict = {
+    "input_file": ["TUTORIAL"],
+}
+
 user_input, info = initialize_macro(
     "0ZVisHist2D",
     ["input_file", "variables", "runs", "channels", "filter", "group", "save", "debug"],
-    default_dict={},
+    default_dict=default_dict,
     debug=True,
 )
+
 OPT = opt_selector(debug=user_input["debug"])
 ### 0ZVisHist2D
 my_runs = load_npy(
@@ -19,9 +24,11 @@ my_runs = load_npy(
     compressed=True,
     debug=user_input["debug"],
 )
+
 if user_input["group"]:
     my_runs = group_selector(my_runs)
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
+
 vis_two_var_hist(
     my_runs,
     info,

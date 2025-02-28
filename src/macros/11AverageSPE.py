@@ -3,7 +3,10 @@ import sys
 sys.path.insert(0, "../../")
 from lib import *
 
-default_dict = {"channels": ["CHAN_TOTAL"]}
+default_dict = {
+    "input_file": ["TUTORIAL"],
+    "channels": ["CHAN_TOTAL"]
+}
 user_input, info = initialize_macro(
     "11Average",
     ["input_file", "runs", "preset_load", "variables", "filter", "debug"],

@@ -4,9 +4,11 @@ sys.path.insert(0, "../../")
 from lib import *
 
 default_dict = {
+    "input_file": ["TUTORIAL"],
     "runs": ["CALIB_RUNS", "LIGHT_RUNS", "ALPHA_RUNS", "MUON_RUNS", "NOISE_RUNS"],
     "channels": ["CHAN_TOTAL"],
 }
+
 user_input, info = initialize_macro(
     "10Ana2Root",
     ["input_file", "variables", "debug"],

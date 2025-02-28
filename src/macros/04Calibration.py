@@ -4,6 +4,7 @@ sys.path.insert(0, "../../")
 from lib import *
 
 default_dict = {
+    "input_file": ["TUTORIAL"],
     "runs": ["CALIB_RUNS"],
     "channels": ["CHAN_TOTAL"],
     "variables": ["TYPE"],

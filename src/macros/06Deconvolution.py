@@ -3,7 +3,12 @@ import sys
 sys.path.insert(0, "../../")
 from lib import *
 
-default_dict = {"preset_load": {"LOAD_PRESET": 6}, "preset_save": {"SAVE_PRESET": 6}}
+default_dict = {
+    "input_file": ["TUTORIAL"],
+    "preset_load": {"LOAD_PRESET": 6},
+    "preset_save": {"SAVE_PRESET": 6}
+    }
+
 user_input, info = initialize_macro(
     "06Deconvolution",
     ["input_file", "runs", "channels", "debug"],

@@ -3,7 +3,10 @@ import sys
 sys.path.insert(0, "../../")
 from lib import *
 
-default_dict = {}
+default_dict = {
+    "input_file": ["TUTORIAL"],
+}
+
 user_input, info = initialize_macro(
     "12GenerateSER",
     ["input_file", "runs", "channels", "save", "debug"],

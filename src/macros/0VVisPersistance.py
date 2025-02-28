@@ -3,10 +3,14 @@ import sys
 sys.path.insert(0, "../../")
 from lib import *
 
+default_dict = {
+    "input_file": ["TUTORIAL"],
+}
+
 user_input, info = initialize_macro(
     "0VVisPersistance",
     ["input_file", "preset_load", "runs", "channels", "filter", "save", "debug"],
-    default_dict={},
+    default_dict=default_dict,
     debug=True,
 )
 OPT = opt_selector(debug=user_input["debug"])
