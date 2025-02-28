@@ -930,6 +930,7 @@ def save_proccesed_variables(
         my_runs
     )  # Save a copy of my_runs with all modifications and remove the unwanted branches in the copy
     path = f"{root}/{info['NPY_PATH'][0]}/"
+    path = os.path.expandvars(path)
     for run in aux["NRun"]:
         for ch in aux["NChannel"]:
             print_colored(
