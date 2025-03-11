@@ -844,6 +844,7 @@ def load_npy(
     path = f'{root}/{info["NPY_PATH"][0]}/'
     path = os.path.expandvars(path)
 
+    nevents = 0
     my_runs = dict()
     runs = np.asarray(runs).astype(str)
     channels = np.asarray(channels).astype(str)
@@ -890,6 +891,11 @@ def load_npy(
                             my_runs[run][ch][branch.replace(".npz", "")] = my_runs[run][
                                 ch
                             ][branch.replace(".npz", "")].astype(float)
+                        try:
+                            nevents = len(my_runs[run][ch][branch.replace(".npz", "")])
+                        except TypeError:
+                            print(f"[red][ERROR] {branch} is not a list[/red]")
+                            
                     except FileNotFoundError:
                         print_colored(
                             "\nRun %s, channels %s %s --> NOT LOADED (FileNotFound)"
@@ -907,6 +913,12 @@ def load_npy(
                             my_runs[run][ch][branch.replace(".npy", "")] = my_runs[run][
                                 ch
                             ][branch.replace(".npy", "")].astype(float)
+
+                        try:
+                            nevents = len(my_runs[run][ch][branch.replace(".npy", "")])
+                        except TypeError:
+                            print(f"[red][ERROR] {branch} is not a list[/red]")
+
                     except FileNotFoundError:
                         print_colored(
                             "\nRun %s, channels %s %s --> NOT LOADED (FileNotFound)"
@@ -919,6 +931,7 @@ def load_npy(
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
             del branch_list
 
+    my_runs["NEvents"] = nevents
     print(f"[bold green]--> Loaded Data Succesfully!!![/bold green]")
     return my_runs
 

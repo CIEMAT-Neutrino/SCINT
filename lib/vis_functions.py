@@ -1081,6 +1081,7 @@ def vis_two_var_hist(
     style_selector(OPT)
     r_list = my_run["NRun"]
     ch_loaded = my_run["NChannel"]
+    nevents = my_run["NEvents"]
     if type(ch_loaded) != list:
         try:
             ch_loaded = ch_loaded.tolist()
@@ -1103,12 +1104,15 @@ def vis_two_var_hist(
     if not check_key(OPT, "COMPARE"):
         OPT["COMPARE"] = "NONE"
         print_colored("No comparison selected. Default is NONE", "WARNING")
+    
     if OPT["COMPARE"] == "CHANNELS":
         a_list = r_list
         b_list = ch_list
+    
     if OPT["COMPARE"] == "RUNS":
         a_list = ch_list
         b_list = r_list
+    
     if OPT["COMPARE"] == "NONE":
         a_list = r_list
         b_list = ch_list
@@ -1121,14 +1125,15 @@ def vis_two_var_hist(
                 generate_cut_array(my_run)
             if check_key(my_run[run][ch], "UnitsDict") == False:
                 get_run_units(my_run)
+    
     figures_list = []
     axes_list = []
     for a in a_list:
         for b in b_list:
             fig, ax = plt.subplots(1, 1, figsize=(8, 6))
             add_grid(ax)
-            aux_x_data = np.zeros(len(my_run[a][b]["MyCuts"]))
-            aux_y_data = np.zeros(len(my_run[a][b]["MyCuts"]))
+            aux_x_data = np.zeros(nevents)
+            aux_y_data = np.zeros(nevents)
             label0 = ""
             label1 = ""
 

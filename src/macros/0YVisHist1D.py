@@ -9,7 +9,7 @@ default_dict = {
 
 user_input, info = initialize_macro(
     "0YVisHist1D",
-    ["input_file", "runs", "channels", "filter", "group", "variables", "save", "debug"],
+    ["input_file", "runs", "channels", "variables", "filter", "group", "save", "debug"],
     default_dict=default_dict,
     debug=True,
 )
@@ -28,9 +28,11 @@ if check_key(OPT, "PE") and OPT["PE"]:
     my_runs = calibrate_charges(my_runs, info, user_input, debug=user_input["debug"])
     for var_idx, var in enumerate(user_input["variables"]):
         user_input["variables"][var_idx] = var + "PE"
+
 if user_input["group"]:
     my_runs = group_selector(my_runs)
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
+
 vis_var_hist(
     my_runs,
     info,
