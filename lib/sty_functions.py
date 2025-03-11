@@ -1,54 +1,50 @@
 import matplotlib
-from matplotlib import pyplot as plt
-
-matplotlib.use("Qt5Agg")
+import importlib.util
 import plotly.express as px
 
 from rich import print as print
+from matplotlib import pyplot as plt
 
-styles = ["CIEMAT_style"]
-import importlib.util
-
-try:
-    importlib.util.find_spec("dunestyle.matplotlib")
-    styles.append("DUNE_style")
-except:
-    pass
-try:
-    importlib.util.find_spec("mplhep")
-    styles.append("HEP_style")
-except:
-    pass
 from .io_functions import check_key
 from .fig_config import figure_features, add_grid
 
-for style in styles:
-    print(
-        f" \t * You can change your plotting style with [green]OPT[STYLE]={style}![/green]"
-    )
+matplotlib.use("Qt5Agg")
 
 
 def style_selector(OPT):
+    styles = ["CIEMAT"]
     if check_key(OPT, "STYLE") == False:
-        OPT["STYLE"] = "CIEMAT_style"
-    if OPT["STYLE"] == "None":
         pass
-    if OPT["STYLE"] == "CIEMAT_style":
+    
+    if OPT["STYLE"] == "CIEMAT":
         figure_features()
-    if OPT["STYLE"] == "DUNE_style":
+    
+    if OPT["STYLE"] == "DUNE":
         import dunestyle.matplotlib as dune
-    if OPT["STYLE"] == "HEP_style":
+        try:
+            importlib.util.find_spec("dune")
+            styles.append("DUNE")
+        
+        except: 
+            print("DUNE style not found")
+    
+    if OPT["STYLE"] == "HEP" or OPT["STYLE"] == "ATLAS":
         import mplhep as hep
-
+        try:
+            importlib.util.find_spec("mplhep")
+            styles.append("HEP", "ATLAS")
+        
+        except:
+            print("HEP style not found")
+        
+        if OPT["STYLE"] == "ATLAS":
+            hep.style.use("ATLAS")
+            # Include watermark to the top left of the plot
+            # plt.text(0.02, 0.98, "Preliminary", fontsize=14, color='gray', alpha=0.5, transform=plt.gca().transAxes, ha='left', va='top')
         plt.rcParams.update({"font.size": 14})
-        # Include watermark to the top left of the plot
-        # plt.text(0.02, 0.98, "Preliminary", fontsize=14, color='gray', alpha=0.5, transform=plt.gca().transAxes, ha='left', va='top')
 
-    if OPT["STYLE"] == "ATLAS_style":
-        import mplhep as hep
-
-        hep.style.use("ATLAS")
     matplotlib.rcParams["axes.prop_cycle"] = matplotlib.cycler(color=get_prism_colors())
+    print(f"* You can change your plotting style with [green]OPT[STYLE]={styles}![/green]")
 
 
 def get_prism_colors():
