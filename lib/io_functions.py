@@ -50,12 +50,25 @@ def read_yaml_file(input, path=f"{root}/config/input/", debug=False):
     \n- debug: if True, print debug messages
     """
 
-    if debug:
-        print_colored("\nReading input file: " + str(input) + ".yml\n", "DEBUG")
-    with open(str(path + input) + ".yml", "r") as file:
-        data = yaml.safe_load(file)
-    data["NAME"] = input
-    return data
+    # Check if file exists
+    if glob.glob(path + input + ".yml") == []:
+        print(f"[red][ERROR] {input} file not found![/red]")
+        raise ValueError("Input file not found!")
+    
+    else:
+        print(f"\nReading input file: {input}.yml\n")
+    
+        with open(str(path + input) + ".yml", "r") as file:
+            data = yaml.safe_load(file)
+        data["NAME"] = input
+
+        for paths in ["RAW_PATH", "NPY_PATH", "OUT_PATH"]:
+            # If data[paths] exists, expand the variables
+            if paths in data:
+                for i, path in enumerate(data[paths]):
+                    data[paths][i] = os.path.expandvars(data[paths][i])
+        
+        return data
 
 
 def read_input_file(
@@ -219,6 +232,7 @@ def read_input_file(
                                 )
                     # if debug: print_colored(str(line)+str(info[LABEL])+"\n", "DEBUG")
 
+
     elif glob.glob(path + input + ".yml") != []:
         info = read_yaml_file(input, path=path, debug=debug)
 
@@ -226,6 +240,10 @@ def read_input_file(
         print_colored("Input file not found!", "ERROR")
         raise ValueError("Input file not found!")
 
+    for paths in ["RAW_PATH", "NPY_PATH", "OUT_PATH"]:
+        for i, path in enumerate(info[paths]):
+            info[paths][i] = os.path.expandvars(info[paths][i])
+    
     return info
 
 
