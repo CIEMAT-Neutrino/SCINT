@@ -1127,33 +1127,46 @@ def vis_two_var_hist(
         for b in b_list:
             fig, ax = plt.subplots(1, 1, figsize=(8, 6))
             add_grid(ax)
+            aux_x_data = np.zeros(len(my_run[a][b]["MyCuts"]))
+            aux_y_data = np.zeros(len(my_run[a][b]["MyCuts"]))
+            label0 = ""
+            label1 = ""
 
             if OPT["COMPARE"] == "CHANNELS":
                 title = "Run_{} ".format(a)
-                label0 = "{}".format(my_run[a][ch_list[0]]["Label"]).replace("#", "")
-                label1 = "{}".format(my_run[a][ch_list[1]]["Label"]).replace("#", "")
-                aux_x_data = my_run[a][ch_list[0]][keys[0]][
-                    my_run[a][ch_list[0]]["MyCuts"] == True
-                ]
-                aux_y_data = my_run[a][ch_list[1]][keys[1]][
-                    my_run[a][ch_list[1]]["MyCuts"] == True
-                ]
+                if len(ch_list) > 1:
+                    label0 = "{}".format(my_run[a][ch_list[0]]["Label"]).replace("#", "")
+                    label1 = "{}".format(my_run[a][ch_list[1]]["Label"]).replace("#", "")
+                
+                    aux_x_data = my_run[a][ch_list[0]][keys[0]][
+                        my_run[a][ch_list[0]]["MyCuts"] == True
+                    ]
+                    
+                    aux_y_data = my_run[a][ch_list[1]][keys[1]][
+                        my_run[a][ch_list[1]]["MyCuts"] == True
+                    ]
+                    print(f"[red][ERROR] There is only one channel in the list. Please select more than one to compare or change the settins![/red]")
+            
             if OPT["COMPARE"] == "RUNS":
                 title = "Channel_{} ".format(a)
-                label0 = "{}".format(my_run[r_list[0]][a]["Label"]).replace("#", "")
-                label1 = "{}".format(my_run[r_list[1]][a]["Label"]).replace("#", "")
-                aux_x_data = my_run[r_list[0]][a][keys[0]][
-                    my_run[r_list[0]][a]["MyCuts"] == True
-                ]
-                aux_y_data = my_run[r_list[1]][a][keys[1]][
-                    my_run[r_list[1]][a]["MyCuts"] == True
-                ]
+                if len(r_list) > 1:
+                    label0 = "{}".format(my_run[r_list[0]][a]["Label"]).replace("#", "")
+                    label1 = "{}".format(my_run[r_list[1]][a]["Label"]).replace("#", "")
+                
+                    aux_x_data = my_run[r_list[0]][a][keys[0]][
+                        my_run[r_list[0]][a]["MyCuts"] == True
+                    ]
+                    
+                    aux_y_data = my_run[r_list[1]][a][keys[1]][
+                        my_run[r_list[1]][a]["MyCuts"] == True
+                    ]
+                else:
+                    print(f"[red][ERROR] There is only one run in the list. Please select more than one to compare or change the setting![/red]")
+
             if OPT["COMPARE"] == "NONE":
                 title = "Run_{} Ch_{} - {} vs {} histogram".format(
                     a, b, keys[0], keys[1]
                 )
-                label0 = ""
-                label1 = ""
                 aux_x_data = my_run[a][b][keys[0]][my_run[a][b]["MyCuts"] == True]
                 aux_y_data = my_run[a][b][keys[1]][my_run[a][b]["MyCuts"] == True]
 
