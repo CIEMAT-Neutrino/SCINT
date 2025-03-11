@@ -62,7 +62,7 @@ def generate_SER(my_runs, light_runs, SPE_runs, scaling_type="Amplitude", debug=
         print_colored("\n---SER generated!", "SUCCESS")
 
 
-def deconvolve(my_runs, keys=[], noise_run=[], peak_buffer=20, OPT={}, debug=False):
+def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, debug=False):
     """
     \nThis function deconvolves any given number of arrays according to a provided SPE template.
     \nBy default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
@@ -483,7 +483,10 @@ def deconvolve(my_runs, keys=[], noise_run=[], peak_buffer=20, OPT={}, debug=Fal
                 while not plt.waitforbuttonpress(-1):
                     pass
                 if check_key(OPT, "SAVE") == True and OPT["SAVE"] == True:
-                    plt.savefig("DECONVOLUTION_RUN_%s_CH_%s_%s.png" % (run, ch, label))
+                    plt.savefig(
+                        f"{info["OUT_PATH"][0]}/images/{run}/{ch}/run{run}_ch{ch}_Deconvolution.png",
+                        dpi=500,
+                    )
                 plt.clf()
 
         plt.ioff()

@@ -53,7 +53,7 @@ for run, ch in product(
         "THRLD": 1e-4,
     }
 
-    deconvolve(my_runs, keys=keys, noise_run=[], OPT=OPT, debug=user_input["debug"])
+    deconvolve(my_runs, info, keys=keys, noise_run=[], OPT=OPT, debug=user_input["debug"])
 
     OPT = {"SHOW": False, "FIXED_CUTOFF": True}
 

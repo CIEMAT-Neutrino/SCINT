@@ -103,9 +103,7 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
             plt.yscale("log")
         if save:
             plt.savefig(
-                "{}/images/run{}_ch{}_Persistence.png".format(
-                    info["OUT_PATH"][0], run, ch
-                ),
+                f"{info["OUT_PATH"][0]}/images/{run}/{ch}/run{run}_ch{ch}_Persistence.png",
                 dpi=500,
             )
         del data_flatten, time, time_flatten
