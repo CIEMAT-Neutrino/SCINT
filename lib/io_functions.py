@@ -378,9 +378,9 @@ def write_output_file(
     def flatten_data(data):
         return [flatten_data_recursive(row) for row in data]
 
-    folder_path = f'{root}/{info["OUT_PATH"][0]}/fits/run{run}_ch{ch}/'
+    folder_path = f'{root}/{info["OUT_PATH"][0]}/analysis/fits/run{run}/ch{ch}/'
     if not os.path.exists(folder_path):
-        os.makedirs(name=folder_path, exist_ok=True)
+        os.makedirs(name=folder_path, mode=0o777, exist_ok=True)
         os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     if debug:
         print("Saving in: " + str(folder_path + filename + "Ch%s.txt" % ch))
@@ -398,7 +398,7 @@ def write_output_file(
         print("\n----------- Saving -----------")
         if not os.path.exists(folder_path + filename + "Ch%s.txt" % ch):  # HEADER#
             os.makedirs(
-                name=folder_path, exist_ok=True
+                name=folder_path, mode=0o777, exist_ok=True
             )  # Create the directory if it doesnt exist
             with open(folder_path + filename + "Ch%s.txt" % ch, "+a") as f:
                 f.write("\t".join(header_list) + "\n")  # Write the header
@@ -497,7 +497,7 @@ def binary2npy(
     # Outpath contains ${USER} but it is not recognized by the system. Force the substitution of the variable
     out_path = os.path.expandvars(out_path)
 
-    os.makedirs(name=out_path, exist_ok=True)
+    os.makedirs(name=out_path, mode=0o777, exist_ok=True)
     for run, ch in product(runs.astype(str), channels.astype(str)):
         print("\n....... READING RUN%s CH%s ......." % (run, ch))
         i = np.where(runs == run)[0][0]
@@ -970,7 +970,7 @@ def save_proccesed_variables(
                 styles=["bold"],
             )
             out_folder = "run" + str(run).zfill(2) + "_ch" + str(ch) + "/"
-            os.makedirs(name=f"{path}{out_folder}", exist_ok=True)
+            os.makedirs(name=f"{path}{out_folder}", mode=0o777, exist_ok=True)
             files = os.listdir(f"{path}{out_folder}")
             if not branch_list:
                 branch_list = get_preset_list(

@@ -438,7 +438,7 @@ def update_yaml_file(
     # If file path doesn't exist, create it. Take into account that the file name is included in the path.
     if not os.path.exists(file_path):
         print(f"YAML file '{file_path}' doesn't exist. Creating it...")
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        os.makedirs(os.path.dirname(file_path), mode=0o777, exist_ok=True)
         # Update folder permissions
         os.system(f"chmod -R 770 {os.path.dirname(file_path)}")
         with open(file_path, "w") as file:

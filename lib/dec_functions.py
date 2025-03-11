@@ -484,7 +484,7 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                     pass
                 if check_key(OPT, "SAVE") == True and OPT["SAVE"] == True:
                     plt.savefig(
-                        f"{info["OUT_PATH"][0]}/images/{run}/{ch}/run{run}_ch{ch}_Deconvolution.png",
+                        f"{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_Deconvolution.png",
                         dpi=500,
                     )
                 plt.clf()

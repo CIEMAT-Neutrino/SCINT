@@ -103,7 +103,7 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
             plt.yscale("log")
         if save:
             plt.savefig(
-                f"{info["OUT_PATH"][0]}/images/{run}/{ch}/run{run}_ch{ch}_Persistence.png",
+                f"{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_Persistence.png",
                 dpi=500,
             )
         del data_flatten, time, time_flatten
@@ -202,11 +202,11 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
             if save:
                 save_path = f'{root}/{info["OUT_PATH"][0]}/images/'
                 try:
-                    os.makedirs(save_path, exist_ok=True)
+                    os.makedirs(f"{save_path}run{run}/ch{ch}", mode=0o777, exist_ok=True)
+                
                 except:
-                    print_colored(
-                        "Folder already exists. No need to create it.", "WARNING"
-                    )
+                    print(f"[yellow][WARNING] Folder {save_path} already exists. No need to create it.[/yellow]")
+                
                 save_figures(fig_cal, fig_xt, (run, ch, key), save_path, debug=debug)
 
             try:
@@ -366,7 +366,7 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                 if export:
                     print_colored("Data exported to txt file.", "INFO")
                     update_yaml_file(
-                        f'{root}/{info["OUT_PATH"][0]}/analysis/calibration/calibration_run{run}_ch{ch}_{key}.yml',
+                        f'{root}/{info["OUT_PATH"][0]}/analysis/calibration/run{run}/ch{ch}/calibration_run{run}_ch{ch}_{key}.yml',
                         data[labels][measurement],
                         debug=debug,
                     )
@@ -381,7 +381,7 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                 if export:
                     print_colored("Data exported to txt file.", "INFO")
                     update_yaml_file(
-                        f'{root}/{info["OUT_PATH"][0]}/analysis/xtalk/xtalk_run{run}_ch{ch}_{key}.yml',
+                        f'{root}/{info["OUT_PATH"][0]}/analysis/xtalk/run{run}/ch{ch}/xtalk_run{run}_ch{ch}_{key}.yml',
                         data[labels][measurement],
                         debug=debug,
                     )
@@ -554,7 +554,7 @@ def get_gains(run, channels, folder_path="TUTORIAL", debug=False):
     Dgain = dict.fromkeys(channels)
     for c, ch in enumerate(channels):
         my_table = pd.read_csv(
-            folder_path + "/fits/run%i_ch%i/gain_ch%i.txt" % (run, ch, ch),
+            folder_path + "/analysis/fits/run%i/ch%i/gain_ch%i.txt" % (run, ch, ch),
             header=None,
             sep="\t",
             usecols=np.arange(16),
@@ -736,15 +736,22 @@ def charge_fit(my_runs, keys, OPT={}):
 
 def save_figures(fig_cal, fig_xt, labels, save_path, debug=False):
     run, ch, key = labels
-    fig_cal.savefig(f"{save_path}run{run}_ch{ch}_{key}_Hist.png", dpi=500)
-    fig_xt.savefig(f"{save_path}run{run}_ch{ch}_{key}_XTalk.png", dpi=500)
+    # Check if the folder exists, if not create it
+    try:
+        os.makedirs(f"{save_path}run{run}/ch{ch}", mode=0o777, exist_ok=True)
+    except:
+        print(
+            f"[yellow][WARNING] Folder {save_path}run{run}/ch{ch} already exists. No need to create it.[/yellow]"
+        )
+    fig_cal.savefig(f"{save_path}run{run}/ch{ch}/run{run}_ch{ch}_{key}_Hist.png", dpi=500)
+    fig_xt.savefig(f"{save_path}run{run}/ch{ch}/run{run}_ch{ch}_{key}_XTalk.png", dpi=500)
     try:
         os.chmod(
-            f"{save_path}run{run}_ch{ch}_{key}_Hist.png",
+            f"{save_path}run{run}/ch{ch}/run{run}_ch{ch}_{key}_Hist.png",
             stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
         )
         os.chmod(
-            f"{save_path}run{run}_ch{ch}_{key}_XTalk.png",
+            f"{save_path}run{run}/ch{ch}/run{run}_ch{ch}_{key}_XTalk.png",
             stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
         )
     except:
