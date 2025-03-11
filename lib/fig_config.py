@@ -32,7 +32,7 @@ from matplotlib import pyplot as plt
 from matplotlib.ticker import MultipleLocator
 
 
-def figure_features(tex=tex_installed, font="serif", dpi=300):
+def figure_features(tex=tex_installed, font="serif", dpi=600):
     """
     \nCustomize figure settings.
     \n**VARIABLES**:
@@ -50,7 +50,8 @@ def figure_features(tex=tex_installed, font="serif", dpi=300):
             "figure.subplot.right": 0.95,
             "figure.subplot.left": 0.10,
             "figure.subplot.bottom": 0.12,
-            "figure.subplot.hspace": 0.1,
+            "figure.subplot.hspace": 0.2,
+            "figure.subplot.wspace": 0.2,
             "savefig.dpi": dpi,
             "savefig.format": "png",
             "axes.titlesize": 16,
