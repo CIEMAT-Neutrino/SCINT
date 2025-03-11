@@ -59,16 +59,19 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
         plt.ion()
         if OPT["SAME_PLOT"] == False:
             if nch < 4:
-                fig, ax = plt.subplots(nch, 1, figsize=(10, 8))
+                # fig, ax = plt.subplots(nch, 1, figsize=(10, 8))
+                fig, ax = plt.subplots(nch, 1)
                 if nch == 1:
                     axs.append(ax)
                 else:
                     axs = ax
             else:
-                fig, ax = plt.subplots(2, math.ceil(nch / 2), figsize=(10, 8))
+                # fig, ax = plt.subplots(2, math.ceil(nch / 2), figsize=(10, 8))
+                fig, ax = plt.subplots(2, math.ceil(nch / 2))
                 axs = ax.T.flatten()
         else:
-            fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+            # fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+            fig, ax = plt.subplots(1, 1)
             axs = ax
 
         idx = 0
@@ -273,7 +276,6 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                 )
                 axs[j].set_title(
                     "Run {} - Ch {} - Event Number {}".format(run, ch_list[j], idx),
-                    size=14,
                 )
                 axs[j].xaxis.offsetText.set_fontsize(
                     14
@@ -351,7 +353,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             fontweight="bold",
                             alpha=0.5,
                         )
-                        figure_features()
+                        # figure_features()
                 except:
                     pass
 
