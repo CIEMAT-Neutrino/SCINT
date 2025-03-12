@@ -4,6 +4,7 @@
 from srcs.utils import get_project_root
 
 import os, gc, uproot, copy, stat, yaml, glob
+import matplotlib
 import numpy as np
 import pandas as pd
 from itertools import product
@@ -359,6 +360,7 @@ def write_output_file(
     \nIf the file existed previously it appends the new fit values (it save the run for each introduced row)
     \nBy default we dont save the height of the fitted gaussian in the txt.
     """
+    run = str(run).zfill(2)
 
     def remove_columns(flattened_data, columns_to_remove):
         return [
@@ -382,6 +384,7 @@ def write_output_file(
     if not os.path.exists(folder_path):
         os.makedirs(name=folder_path, mode=0o777, exist_ok=True)
         os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+    
     if debug:
         print("Saving in: " + str(folder_path + filename + "Ch%s.txt" % ch))
 
@@ -507,12 +510,12 @@ def binary2npy(
             "run" + str(run).zfill(2) + "/wave" + str(ch) + ".dat"
         )  # Name of the input file
         out_folder = (
-            "run" + str(run).zfill(2) + "_ch" + str(ch) + "/"
+            "run" + str(run).zfill(2) + "/ch" + str(ch) + "/"
         )  # Name of the output folder
 
         try:
-            os.mkdir(out_path + out_folder)
-            os.chmod(out_path + out_folder, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+            os.makedirs(out_path + out_folder, mode=0o777)
+        
         except FileExistsError:
             print_colored("DATA STRUCTURE ALREADY EXISTS", "WARNING")
 
@@ -862,7 +865,7 @@ def load_npy(
                 )
 
             my_runs[run][ch] = dict()
-            in_folder = "run" + str(run).zfill(2) + "_ch" + str(ch) + "/"
+            in_folder = "run" + str(run).zfill(2) + "/ch" + str(ch) + "/"
             if preset == None:
                 print(
                     f"[yellow]WARNING: Preset None. Passing run {run} ch {ch}[/yellow]"
@@ -971,7 +974,7 @@ def save_proccesed_variables(
                 color="INFO",
                 styles=["bold"],
             )
-            out_folder = "run" + str(run).zfill(2) + "_ch" + str(ch) + "/"
+            out_folder = "run" + str(run).zfill(2) + "/ch" + str(ch) + "/"
             os.makedirs(name=f"{path}{out_folder}", mode=0o777, exist_ok=True)
             files = os.listdir(f"{path}{out_folder}")
             if not branch_list:
@@ -1088,6 +1091,30 @@ def npy2df(my_runs, debug=False):
     if debug:
         print_colored("npy2df --> DONE!\n", "SUCCESS")
     return df
+
+
+def save_figure(fig, path, run, ch, label, debug=False):
+    # Ensure run has leading zeros up to 2 digits
+    run = str(run).zfill(2)
+    # Remove / if path ends with it
+    if path[-1] == "/":
+        path = path[:-1]
+
+    os.makedirs(name=f"{path}/run{run}/ch{ch}", mode=0o777, exist_ok=True)
+    # Check that fig is a matplotlib figure
+    if isinstance(fig, matplotlib.figure.Figure):
+        fig.savefig(f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
+        return
+    else:
+        print(f"[red][ERROR] Input figure type {type(fig)} not implemented[/red]")
+    # Give permissions to the file
+    os.chmod(
+        f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png",
+        stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
+    )
+    
+    if debug:
+        print(f"Figure saved in: {path}")
 
 
 # def print_keys(my_runs, debug=False):

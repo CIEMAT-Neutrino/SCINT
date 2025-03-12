@@ -21,7 +21,7 @@ from rich.console import Console
 from scipy.optimize import curve_fit
 
 # Import from other libraries
-from .io_functions import check_key, print_colored, write_output_file
+from .io_functions import check_key, print_colored, write_output_file, save_figure
 from .head_functions import update_yaml_file
 from .ana_functions import (
     get_run_units,
@@ -78,6 +78,7 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
         )  # Time array
         time_flatten = np.array([time] * int(len(data_flatten) / len(time))).flatten()
 
+        fig = plt.figure()
         plt.hist2d(
             time_flatten,
             data_flatten,
@@ -93,19 +94,26 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
         plt.yticks(size=11)
         plt.xlabel("Time [s]", size=11)
         plt.ylabel("Amplitude [ADC]", size=11)
+        
         if OPT["XLIM"] != False:
             plt.xlim(OPT["XLIM"])
+        
         if OPT["YLIM"] != False:
             plt.ylim(OPT["YLIM"])
+        
         if OPT["LOGX"] == True:
             plt.xscale("log")
+        
         if OPT["LOGY"] == True:
             plt.yscale("log")
+        
         if save:
-            plt.savefig(
-                f"{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_Persistence.png",
-                dpi=500,
-            )
+            save_figure(fig, f"{info['OUT_PATH'][0]}/images", run, ch, "Persistence", debug=debug)
+            # plt.savefig(
+            #     f"{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_Persistence.png",
+            #     dpi=500,
+            # )
+        
         del data_flatten, time, time_flatten
         while not plt.waitforbuttonpress(-1):
             pass

@@ -12,7 +12,7 @@ from rich import print as print
 from rich.progress import track
 
 # Imports from other libraries
-from .io_functions import check_key, print_colored
+from .io_functions import check_key, print_colored, save_figure
 from .fit_functions import dec_gauss, fit_dec_gauss
 from .ana_functions import compute_power_spec, find_amp_decrease, find_baseline_cuts, smooth
 
@@ -288,6 +288,7 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
             if check_key(OPT, "SHOW") == True and OPT["SHOW"] == True:
                 plt.ion()
                 next_plot = False
+                fig = plt.figure()
                 plt.rcParams["figure.figsize"] = [16, 8]
                 plt.subplot(1, 2, 1)
                 plt.title("DECONVOLUTION RUN %s CH %s" % (run, ch))
@@ -471,6 +472,7 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                 if check_key(OPT, "SHOW_F_GAUSS") != False:
                     if OPT["SHOW_F_GAUSS"] == True:
                         plt.plot(fft_signal_X, fft_gauss, label="GAUSS", c="tab:green")
+                
                 plt.ylabel("a.u.")
                 plt.xlabel("Frequency in [Hz]")
                 plt.ylim(1e-8, np.max(fft_signal) * 100)
@@ -481,10 +483,11 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                 while not plt.waitforbuttonpress(-1):
                     pass
                 if check_key(OPT, "SAVE") == True and OPT["SAVE"] == True:
-                    plt.savefig(
-                        f"{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_Deconvolution.png",
-                        dpi=500,
-                    )
+                    save_figure(fig, f"{info['OUT_PATH'][0]}/images/", run, ch, "Deconvolution", debug=debug)
+                    # plt.savefig(
+                    #     f"{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_Deconvolution.png",
+                    #     dpi=500,
+                    # )
                 plt.clf()
 
         plt.ioff()
