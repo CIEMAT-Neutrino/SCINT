@@ -2,11 +2,11 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import product
-from rich import print as print
+from rich import print as rprint
 
 # Imports from other libraries
 from srcs.utils import get_project_root
-from ..io_functions import print_colored, check_key
+from ..io_functions import check_key
 from ..head_functions import update_yaml_file
 from ..ana_functions import (
     generate_cut_array,
@@ -94,8 +94,8 @@ def average_wvfs(
                 [np.mean(aux_ADC, axis=0)]
             )  # It saves the average waveform as "AveWvfThreshold_*"
 
-    print_colored(
-        "--> Computed Average Wvfs (centered wrt %s)!!!" % centering, "SUCCESS"
+    rprint(
+        "[green]--> Computed Average Wvfs (centered wrt %s)!!![/green]" % centering
     )
 
 
@@ -214,10 +214,9 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
     f_range = info["F_RANGE"]  # Get final time(s) to finish the integration
 
     if debug:
-        print_colored(
+        rprint(
             "\n--- Integrating RUN %s CH %s TYPE %s, REF %s ---"
-            % (my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]),
-            "DEBUG",
+            % (my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"])
         )
     for run, ch, typ, ref in product(
         my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]
@@ -239,34 +238,31 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
             if typ == "ChargeAveRange":  # Integrated charge from the average waveform
                 i_idx, f_idx = find_baseline_cuts(ave[i])
                 if f_idx - i_idx <= 0:
-                    print_colored(
-                        "WARNING: Invalid integration range for RUN %s CH %s TYPE %s, REF %s"
-                        % (run, ch, typ, label + ref),
-                        "WARNING",
+                    rprint(
+                        "[yellow]WARNING: Invalid integration range for RUN %s CH %s TYPE %s, REF %s[/yellow]"
+                        % (run, ch, typ, label + ref)
                     )
                     idx, f_idx = find_amp_decrease(ave[i], 1e-3)
                     if debug:
-                        print_colored(
+                        rprint(
                             "Using amp decrease instead: [%.2f, %.2f] \u03BCs"
                             % (
                                 idx * my_runs[run][ch]["Sampling"],
                                 f_idx * my_runs[run][ch]["Sampling"],
-                            ),
-                            "DEBUG",
+                            )
                         )
                 charge_name = label + typ + ref.split("Wvf")[-1] + cut_label
                 my_runs[run][ch][charge_name] = np.sum(
                     aux_ADC[:, i_idx:f_idx], axis=1
                 )  # Integrated charge from the DECONVOLUTED average waveform
-                print_colored(
-                    "--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"
+                rprint(
+                    "[green]--> Computed %s (according to type **%s** from %.2E to %.2E)!!![/green]"
                     % (
                         charge_name,
                         typ,
                         i_idx * my_runs[run][ch]["Sampling"],
                         f_idx * my_runs[run][ch]["Sampling"],
-                    ),
-                    "SUCCESS",
+                    )
                 )
                 integration_dict[typ][charge_name] = [int(i_idx), int(f_idx)]
 
@@ -278,15 +274,14 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
                 )
                 charge_name = label + typ + str(j) + cut_label
                 my_runs[run][ch][charge_name] = np.sum(aux_ADC[:, i_idx:f_idx], axis=1)
-                print_colored(
-                    "--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"
+                rprint(
+                    "[green]--> Computed %s (according to type **%s** from %.2E to %.2E)!!![/green]"
                     % (
                         charge_name,
                         typ,
                         i_idx * my_runs[run][ch]["Sampling"],
                         f_idx * my_runs[run][ch]["Sampling"],
-                    ),
-                    "SUCCESS",
+                    )
                 )
                 integration_dict[typ][charge_name] = [int(i_idx), int(f_idx)]
 
@@ -301,19 +296,18 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
                 )
                 charge_name = label + typ + str(k) + cut_label
                 my_runs[run][ch][charge_name] = np.sum(this_aux_ADC[:, :f_idx], axis=1)
-                print_colored(
-                    "--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"
+                rprint(
+                    "[green]--> Computed %s (according to type **%s** from %.2E to %.2E)!!![/green]"
                     % (
                         charge_name,
                         typ,
                         i_idx * my_runs[run][ch]["Sampling"],
                         f_idx * my_runs[run][ch]["Sampling"],
-                    ),
-                    "SUCCESS",
+                    )
                 )
                 integration_dict[typ][charge_name] = [int(i_idx), int(f_idx)]
 
-    # print(integration_dict)
+    # rprint(integration_dict)
     out_path = info["NPY_PATH"][0]
     out_path = os.path.expandvars(out_path)
 
@@ -330,39 +324,35 @@ def compute_peak_RMS(my_runs, info, key, label, debug=False):
         ref = np.asarray(my_runs[run][ch][label + "AveWvf"][0])
         i_idx, f_idx = find_baseline_cuts(ref)
         if f_idx - i_idx <= 0:
-            print_colored(
-                "WARNING: Invalid integration range for RUN %s CH %s, REF %s"
-                % (run, ch, label + "AveWvf"),
-                "WARNING",
+            rprint(
+                "[yellow]WARNING: Invalid integration range for RUN %s CH %s, REF %s[/yellow]"
+                % (run, ch, label + "AveWvf")
             )
             idx, f_idx = find_amp_decrease(ref, 1e-3)
             if debug:
-                print_colored(
+                rprint(
                     "Using amp decrease instead: [%.2E, %.2E] \u03BCs"
                     % (
                         idx * my_runs[run][ch]["Sampling"],
                         f_idx * my_runs[run][ch]["Sampling"],
-                    ),
-                    "DEBUG",
+                    )
                 )
             if f_idx - i_idx <= 0:
-                print_colored(
-                    "ERROR: Invalid integration range for RUN %s CH %s, REF %s"
+                rprint(
+                    "[red]ERROR: Invalid integration range for RUN %s CH %s, REF %s[/red]"
                     % (run, ch, label + "AveWvf"),
-                    "ERROR",
                 )
                 idx, f_idx = (
                     my_runs[run][ch][label + "PedLim"],
                     my_runs[run][ch][label + "PedLim"] + 1000,
                 )
                 if debug:
-                    print_colored(
+                    rprint(
                         "Using pedlim instead: [%.2E, %.2E] \u03BCs"
                         % (
                             idx * my_runs[run][ch]["Sampling"],
                             f_idx * my_runs[run][ch]["Sampling"],
-                        ),
-                        "DEBUG",
+                        )
                     )
 
         pulse_peak = np.argmax(ref)
@@ -385,4 +375,4 @@ def compute_peak_RMS(my_runs, info, key, label, debug=False):
                 axis=0,
             )
         )
-        print_colored("--> Computed Peak RMS!!!", "SUCCESS")
+        rprint("[green]--> Computed Peak RMS!!![/green]")

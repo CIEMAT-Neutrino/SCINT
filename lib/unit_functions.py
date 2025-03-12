@@ -5,7 +5,7 @@ import inquirer
 import numpy as np
 
 from itertools import product
-from rich import print as print
+from rich import print as rprint
 
 from lib.io_functions import read_yaml_file
 
@@ -21,7 +21,7 @@ def calibrate_charges(my_runs, info, user_input, debug=False):
         debug=user_input["debug"],
         )
 
-        print("Calibration info: ", calibration_info)
+        rprint("Calibration info: ", calibration_info)
         for run, ch in product(
             np.asarray(user_input["runs"]).astype(str),
             np.asarray(user_input["channels"]).astype(str),
@@ -43,7 +43,7 @@ def calibrate_charges(my_runs, info, user_input, debug=False):
                         / calibration_info[my_runs[run][ch]["Label"]][ov_gain]
                     )
     else:
-        print("\n[red][ERROR] Calibration file not found, change VisConfig.yml PE settings to [/red]False!\n")
+        rprint("\n[red][ERROR] Calibration file not found, change VisConfig.yml PE settings to [/red]False!\n")
 
     return my_runs
 
@@ -56,7 +56,7 @@ def get_run_units(my_runs, debug=False):
     \n**- debug**:   boolean to print debug messages
     """
     if debug:
-        print("Getting units...")
+        rprint("Getting units...")
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         keys = my_runs[run][ch].keys()
         aux_dict = {}

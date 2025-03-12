@@ -8,11 +8,11 @@ import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
 from curve import Curve
-from rich import print as print
+from rich import print as rprint
 from rich.progress import track
 
 # Imports from other libraries
-from .io_functions import check_key, print_colored
+from .io_functions import check_key
 from .fit_functions import dec_gauss, fit_dec_gauss
 from .ana_functions import compute_power_spec, find_amp_decrease, find_baseline_cuts, smooth
 
@@ -57,7 +57,7 @@ def generate_SER(my_runs, light_runs, SPE_runs, scaling_type="Amplitude", debug=
             ]
 
     if debug:
-        print_colored("\n---SER generated!", "SUCCESS")
+        rprint("[green]\n---SER generated![/green]")
 
 
 def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, debug=False):
@@ -106,17 +106,17 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                     j = j + 1
                 trimm = len(signal) - 2 ** (j - 1)
 
-            # print(template)
+            # rprint(template)
             if check_key(OPT, "SMOOTH") == True:
                 if OPT["SMOOTH"] > 0:
                     signal = smooth(signal, OPT["SMOOTH"])
                 else:
-                    print_colored("Invalid value encountered in smooth", "ERROR")
+                    rprint("[red]Invalid value encountered in smooth[/red]")
 
             try:
                 timebin = my_runs[run][ch]["Sampling"]
             except:
-                print_colored("\n---Sampling key not found!", "ERROR")
+                rprint("[red]\n---Sampling key not found![/red]")
                 if check_key(OPT, "TIMEBIN") == True:
                     timebin = OPT["TIMEBIN"]
 
@@ -194,14 +194,14 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                             )
                             perr = np.sqrt(np.diag(cov))
                             params = [popt, 2]
-                            print(
+                            rprint(
                                 "\n-------------- GAUSS FILTER FIT VALUES --------------"
                             )
-                            print(
+                            rprint(
                                 "%s:\t%.2E\t%.2E"
                                 % ("CUT-OFF FREQUENCY", popt[0], perr[0])
                             )
-                            print(
+                            rprint(
                                 "-----------------------------------------------------\n"
                             )
 
@@ -223,8 +223,8 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
 
                     except:
                         params = [50, 2]
-                        print_colored("FIT COULD NOT BE PERFORMED!", "ERROR")
-                        print("Filter strengh %f and exp %f" % (params[0], params[1]))
+                        rprint("[red]FIT COULD NOT BE PERFORMED![/red]")
+                        rprint("Filter strengh %f and exp %f" % (params[0], params[1]))
 
                 # Generate gauss filter and filtered signal
                 fft_gauss = dec_gauss(np.arange(len(fft_signal)), *params)
@@ -270,15 +270,15 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                     check_key(OPT, "TERMINAL_OUTPUT") == True
                     and OPT["TERMINAL_OUTPUT"] == True
                 ):
-                    print(
+                    rprint(
                         "\nDECONVOLUTION: baseline int  = \t %.2E" % dec_baseline_charge
                     )
                 if (
                     check_key(OPT, "TERMINAL_OUTPUT") == True
                     and OPT["TERMINAL_OUTPUT"] == True
                 ):
-                    print("DECONVOLUTION: total int  = \t %.2E\n" % dec_charge)
-                # print("Converting dec wvf amp to ADC")
+                    rprint("DECONVOLUTION: total int  = \t %.2E\n" % dec_charge)
+                # rprint("Converting dec wvf amp to ADC")
 
             aux.append(dec)
 
@@ -406,7 +406,7 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                         check_key(OPT, "TERMINAL_OUTPUT") == True
                         and OPT["TERMINAL_OUTPUT"] == True
                     ):
-                        print(
+                        rprint(
                             "\nDECONVOLUTION: baseline int  = \t %.2f PE"
                             % (np.sum(dec[i_dec:f_dec]))
                         )
@@ -414,9 +414,9 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                         check_key(OPT, "TERMINAL_OUTPUT") == True
                         and OPT["TERMINAL_OUTPUT"] == True
                     ):
-                        print("DECONVOLUTION: total int  = \t %.2f PE\n" % np.sum(dec))
+                        rprint("DECONVOLUTION: total int  = \t %.2f PE\n" % np.sum(dec))
                 plt.axhline(0, c="black", alpha=0.5, ls="--")
-                # print("# PE in deconvolved signal %f"%np.sum(dec[i_dec:f_dec]))
+                # rprint("# PE in deconvolved signal %f"%np.sum(dec[i_dec:f_dec]))
 
                 plt.ylabel("ADC Counts")
                 plt.xlabel("Time in [s]")
@@ -491,13 +491,13 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
         my_runs[run][ch][label + keys[2]] = np.asarray(aux)
         if check_key(OPT, "CONVERT_ADC") == True and OPT["CONVERT_ADC"] == True:
             my_runs[run][ch][label + keys[2] + "ADC"] = np.asarray(aux)
-        print("Generated wvfs with key %s" % (label + keys[2]))
+        rprint("Generated wvfs with key %s" % (label + keys[2]))
     plt.close()
 
 
 # def convolve(my_runs, keys = [], OPT = {}):
 
-#     print_colored("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n", "blue", bold=True)
+#     rprint("\n### WELCOME TO THE CONVOLUTION STUDIES ###\n", "blue", bold=True)
 #     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
 #         aux = dict()
 
@@ -541,13 +541,13 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
 #             conv_int, f_conv, i_conv = signal_int("CONV FUNC", func2(np.arange(0, alpha.wvf_x[-1], 5e-10), *popt), timebin, "SiPM", "ALL", th = thrld, out = True)
 
 #             labels = ["TFAST", "TSLOW", "AFAST", "ASLOW", "SIGMA"]
-#             print("\n--- FIT VALUES ---")
+#             rprint("\n--- FIT VALUES ---")
 #             for i in range(len(fit_initials)):
 #                 fit_finals[i] = popt[i]
-#                 print("%s: %.2E \u00B1 %.2E"%(labels[i], popt[i], perr[i]))
-#             print("------------------\n")
+#                 rprint("%s: %.2E \u00B1 %.2E"%(labels[i], popt[i], perr[i]))
+#             rprint("------------------\n")
 
-#             print("SLOW = %.2f%%"%(100*popt[3]/(popt[3]+popt[2])))
+#             rprint("SLOW = %.2f%%"%(100*popt[3]/(popt[3]+popt[2])))
 
 #             ########################################################################
 #             #________________________PLOT_FIRST_RESULT_____________________________#
@@ -592,10 +592,10 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
 
 def check_array_len(wvf1, wvf2):
     if len(wvf1) < len(wvf2):
-        print_colored("RAW WVF IS LONGER THAN WVF TEMPLATE", "WARNING")
+        rprint("RAW WVF IS LONGER THAN WVF TEMPLATE", "WARNING")
         wvf2 = wvf2[: -(len(wvf2) - len(wvf1))]
     if len(wvf1) > len(wvf2):
-        print_colored("RAW WVF IS SHORTER THAN WVF TEMPLATE", "WARNING")
+        rprint("RAW WVF IS SHORTER THAN WVF TEMPLATE", "WARNING")
         wvf1 = wvf1[: -(len(wvf1) - len(wvf2))]
 
     return wvf1, wvf2

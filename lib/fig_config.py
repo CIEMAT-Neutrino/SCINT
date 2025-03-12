@@ -149,7 +149,7 @@ def format_coustom_plotly(
         print("[red]Error: unknown figure type[/red]")
 
     if debug:
-        print("[blue]Detected number of subplots: " + str(rows * cols) + "[/blue]")
+        print("[cyan]Detected number of subplots: " + str(rows * cols) + "[/cyan]")
 
     if figsize == None:
         figsize = (800 + 400 * (cols - 1), 600 + 200 * (rows - 1))

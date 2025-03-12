@@ -1,5 +1,5 @@
 import numpy as np
-from rich import print as print
+from rich import print as rprint
 
 # Imports from other libraries
 from numba_stats import (
@@ -8,7 +8,6 @@ from numba_stats import (
 )  # uniform,truncexpon,poisson,qgaussian #https://github.com/HDembinski/numba-stats/tree/main/src/numba_stats
 
 from srcs.utils import get_project_root
-from .io_functions import print_colored
 from .fit_functions import gaussian, gaussian_train
 
 root = get_project_root()
@@ -26,7 +25,7 @@ def rand_scint_times(n, fast=6e-9, slow=1.4e-6, ratio=0.23):
     """
 
     if ratio < 0 or ratio > 1:
-        print_colored("WARNING: ratio should be between 0 and 1!!!", "WARNING")
+        rprint("WARNING: ratio should be between 0 and 1!!!", "WARNING")
 
     aux = np.random.uniform(low=0, high=1, size=n)
     # offset = np.random.random() #photon can arrive at any time
@@ -146,14 +145,14 @@ def fitting_function(function, debug=False):
         return expon.pdf
     else:
         if debug:
-            print_colored(
+            rprint(
                 "Not configured, looking for a local defined function", color="WARNING"
             )
         try:
             function = globals()[function]
             return function
         except KeyError:
-            print_colored("Function (%s) not found" % function, color="ERROR")
+            rprint("[red]Function (%s) not found[/red]" %function)
             pass
 
 

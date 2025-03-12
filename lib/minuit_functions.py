@@ -9,7 +9,7 @@ from jacobi import propagate
 from iminuit import Minuit, cost
 
 from srcs.utils import get_project_root
-from .io_functions import write_output_file, read_yaml_file, print_colored
+from .io_functions import write_output_file, read_yaml_file
 from .sty_functions import add_grid, get_color, style_selector
 from .sim_functions import setup_fitting_function, fitting_function
 from .unit_functions import get_unit
@@ -26,7 +26,7 @@ def initial_values(data, function, debug: bool = False):
     if "np.std" in ini_fun:
         std_idx = ini_fun.index("np.std")
         ini_val[std_idx] = ini_val[std_idx] / 2
-    # if debug: print_colored("Initial values: " +str(ini_val), "DEBUG")
+    # if debug: print("Initial values: " +str(ini_val))
     return ini_val
 
 
@@ -38,7 +38,7 @@ def minuit_fit(data, OPT, debug: bool = False):
     ydata, bins = np.histogram(data, bins=OPT["ACCURACY"])
     xdata = bins[:-1] + (bins[1] - bins[0]) / 2
 
-    print_colored(f"DEFAULT MINUIT BINNED FIT ({OPT['FIT']})", "WARNING")
+    print(f"DEFAULT MINUIT BINNED FIT ({OPT['FIT']})", "WARNING")
     ini_val = initial_values(data, OPT["FIT"], debug=debug)
 
     function, norm_ydata = setup_fitting_function(OPT["FIT"], ydata, xdata, debug=debug)
@@ -49,7 +49,7 @@ def minuit_fit(data, OPT, debug: bool = False):
     m.hesse()  # accurate error estimates
     # m.minos()  # accurate error estimates
     if debug:
-        print_colored("Fitting with Minuit", "INFO", styles=["bold"])
+        print("[cyan,bold]Fitting with Minuit[/cyan,bold]")
         print(m.hesse())
     return m, xdata, norm_ydata
 

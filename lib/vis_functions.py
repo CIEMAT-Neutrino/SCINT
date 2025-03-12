@@ -18,7 +18,7 @@ from matplotlib.colors import LogNorm
 from scipy.ndimage.interpolation import shift
 
 # Imports from this library
-from .io_functions import check_key, print_colored
+from .io_functions import check_key
 from .fig_config import figure_features, add_grid
 from .unit_functions import get_run_units
 from .sty_functions import style_selector, get_prism_colors
@@ -47,10 +47,10 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
     colors = get_prism_colors()
     if not check_key(OPT, "CUTTED_WVF"):
         OPT["CUTTED_WVF"] = -1
-        print_colored("CUTTED_WVF not defined, setting to -1", "WARNING")
+        rprint("[yellow]CUTTED_WVF not defined, setting to -1[/yellow]")
     if not check_key(OPT, "SAME_PLOT"):
         OPT["SAME_PLOT"] = False
-        print_colored("SAME_PLOT not defined, setting to False", "WARNING")
+        rprint("[yellow]SAME_PLOT not defined, setting to False[/yellow]")
 
     axs = []
     style_selector(OPT)
@@ -111,8 +111,8 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
 
             for j in range(nch):
                 if key == "AnaADC":
-                    print_colored(
-                        "\nAnaADC not saved but we compute it now :)", "WARNING"
+                    rprint(
+                        "[yellow]\nAnaADC not saved but we compute it now :)[/yellow]"
                     )
                     label = "Ana"
                     ana = my_run[run][ch_list[j]]["PChannel"] * (
@@ -122,13 +122,13 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         ).T
                     )
                     # if "WVF_FILTER" in OPT and OPT["WVF_FILTER"]:
-                    #     print_colored("Filtering waveforms!", "INFO")
+                    #     rprint("[cyan]Filtering waveforms![/cyan]")
                     #     filtered_ana.append(filter_wvf(ana))
                     raw.append(ana)
                     ped = 0
                     std = my_run[run][ch_list[j]]["AnaPedSTD"][idx]
                     if debug:
-                        print_colored("Using '%s' label" % label, "DEBUG")
+                        rprint("[magenta]Using '%s' label[/magenta]" % label)
 
                 else:
                     label = key.split("ADC")[0]
@@ -136,7 +136,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     ped = my_run[run][ch_list[j]][label + info["PED_KEY"][0]][idx]
                     std = my_run[run][ch_list[j]][label + "PedSTD"][idx]
                     if debug:
-                        print_colored("Using '%s' label" % label, "DEBUG")
+                        rprint("[magenta]Using '%s' label[/magenta]" % label)
 
                 if check_key(OPT, "NORM") == True and OPT["NORM"] == True:
                     norm_raw[j] = np.max(raw[j])
@@ -188,9 +188,9 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         zorder=10,
                     )
                 except KeyError:
-                    print_colored("PeakAmp not computed!", "ERROR")
+                    rprint("[red]PeakAmp not computed![/red]")
                 # try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx], c=colors[1], zorder=10)
-                # except KeyError: print_colored("ValleyAmp not computed!", "ERROR")
+                # except KeyError: rprint("[red]ValleyAmp not computed![/red]")
                 try:
                     axs[j].plot(
                         my_run[run][ch_list[j]]["Sampling"]
@@ -206,7 +206,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         zorder=3,
                     )
                 except KeyError:
-                    print_colored("PedLim not computed!", "ERROR")
+                    rprint("[red]PedLim not computed![/red]")
                 try:
                     for value in ["SignalStart", "SignalEnd"]:
                         axs[j].plot(
@@ -223,7 +223,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             zorder=3,
                         )
                 except KeyError:
-                    print_colored("SignalWindow not compued!", "ERROR")
+                    rprint("[red]SignalWindow not computed![/red]")
                 try:
                     for value in ["PedStart", "PedEnd"]:
                         axs[j].plot(
@@ -240,7 +240,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             zorder=3,
                         )
                 except KeyError:
-                    print_colored("PedWindow not compued!", "ERROR")
+                    rprint("[red]PedWindow not computed![/red]")
                 try:
                     out_path = info["NPY_PATH"][0]
                     out_path = os.path.expandvars(out_path)
@@ -269,7 +269,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                                 zorder=3,
                             )
                 except FileNotFoundError:
-                    print("ChargeDict.yml not found!")
+                    rprint("[red]ChargeDict.yml not found![/red]")
                 axs[j].axhline((ped) / norm_raw[j], c="k", alpha=0.55, zorder=2)
                 axs[j].axhline(
                     (ped + std) / norm_raw[j], c="k", alpha=0.5, ls="--", zorder=2
@@ -305,8 +305,8 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             zorder=1,
                         )
                     except KeyError:
-                        print_colored(
-                            f"{label+OPT['SHOW_AVE']} has not been averaged!", "ERROR"
+                        rprint(
+                            f"[red]{label+OPT['SHOW_AVE']} has not been averaged![/red]"
                         )
 
                 if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
@@ -361,7 +361,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     pass
 
                 if check_key(OPT, "SHOW_PARAM") == True and OPT["SHOW_PARAM"]:
-                    print_colored(
+                    rprint(
                         "\nEvent Number {} from RUN_{} CH_{} ({})".format(
                             idx, run, ch_list[j], my_run[run][ch_list[j]]["Label"]
                         ),
@@ -369,159 +369,158 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         styles=["bold"],
                     )
                     try:
-                        print("- Sampling:\t{:.0E}".format(sampling))
+                        rprint("- Sampling:\t{:.0E}".format(sampling))
                     except KeyError:
-                        print_colored("Sampling not found!", color="ERROR")
+                        rprint("[red]Sampling not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- TimeStamp:\t{:.2E}".format(
                                 my_run[run][ch_list[j]]["TimeStamp"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("TimeStamp not found!", color="ERROR")
+                        rprint("[red]TimeStamp not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- Polarity:\t{}".format(
                                 my_run[run][ch_list[j]]["PChannel"]
                             )
                         )
                     except KeyError:
-                        print_colored("Polarity not found!", color="ERROR")
-                    print("\n--- PreTrigger ---")
+                        rprint("[red]Polarity not found![/red]")
+                    rprint("\n--- PreTrigger ---")
                     try:
-                        print(
+                        rprint(
                             "- PreTrigger mean:\t{:.2E}".format(
                                 my_run[run][ch_list[j]][label + "PreTriggerMean"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("PreTrigger mean not found!", color="ERROR")
+                        rprint("[red]PreTrigger mean not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- PreTrigger std:\t{:.4f}".format(
                                 my_run[run][ch_list[j]][label + "PreTriggerSTD"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("PreTrigger std not found!", color="ERROR")
+                        rprint("[red]PreTrigger std not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- PreTrigger min/max:\t{:.4f}/{:.4f}".format(
                                 my_run[run][ch_list[j]][label + "PreTriggerMin"][idx],
                                 my_run[run][ch_list[j]][label + "PreTriggerMax"][idx],
                             )
                         )
                     except KeyError:
-                        print_colored("PreTrigger min/max not found!", color="ERROR")
+                        rprint("[red]PreTrigger min/max not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- PreTrigger limit:\t{:.2E}".format(
                                 my_run[run][ch_list[j]]["Sampling"]
                                 * my_run[run][ch_list[j]][label + "PedLim"]
                             )
                         )
                     except KeyError:
-                        print_colored("PreTrigger time limit not found!", color="ERROR")
-                    print("\n--- Pedestal from SlidingWindow Algorithm ---")
+                        rprint("[red]PreTrigger time limit not found![/red]")
+                    rprint("\n--- Pedestal from SlidingWindow Algorithm ---")
                     try:
-                        print(
+                        rprint(
                             "- S. Pedestal mean:\t{:.2E}".format(
                                 my_run[run][ch_list[j]][label + "PedMean"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("Pedestal mean not found!", color="ERROR")
+                        rprint("[red]Pedestal mean not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- S. Pedestal std:\t{:.4f}".format(
                                 my_run[run][ch_list[j]][label + "PedSTD"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("Pedestal std not found!", color="ERROR")
+                        rprint("[red]Pedestal std not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- S. Pedestal min/max:\t{:.4f}/{:.4f}".format(
                                 my_run[run][ch_list[j]][label + "PedMin"][idx],
                                 my_run[run][ch_list[j]][label + "PedMax"][idx],
                             )
                         )
                     except KeyError:
-                        print_colored("Pedestal min/max not found!", color="ERROR")
+                        rprint("[red]Pedestal min/max not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- S. Window start:\t{:.2E}".format(
                                 my_run[run][ch_list[j]]["Sampling"]
                                 * my_run[run][ch_list[j]][label + "PedStart"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("window start not found!", color="ERROR")
+                        rprint("[red]window start not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- S. Window stop:\t{:.2E}".format(
                                 my_run[run][ch_list[j]]["Sampling"]
                                 * my_run[run][ch_list[j]][label + "PedEnd"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("window end not found!", color="ERROR")
-                    print("\n--- Peak Variables ---")
+                        rprint("[red]window end not found![/red]")
+                    rprint("\n--- Peak Variables ---")
                     try:
-                        print(
+                        rprint(
                             "- Max peak amplitude:\t{:.4f}".format(
                                 my_run[run][ch_list[j]][label + "PeakAmp"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("Max peak amplitude not found!", color="ERROR")
+                        rprint("[red]Max peak amplitude not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- Max peak time:\t{:.2E}".format(
                                 my_run[run][ch_list[j]][label + "PeakTime"][idx]
                                 * my_run[run][ch_list[j]]["Sampling"]
                             )
                         )
                     except KeyError:
-                        print_colored("Max peak time not found!", color="ERROR")
-                    print("\n--- Valley Variables ---")
+                        rprint("[red]Max peak time not found![/red]")
+                    rprint("\n--- Valley Variables ---")
                     try:
-                        print(
+                        rprint(
                             "- Min valley amplitude:\t{:.4f}".format(
                                 my_run[run][ch_list[j]][label + "ValleyAmp"][idx]
                             )
                         )
                     except KeyError:
-                        print_colored("Min valley amplitude not found!", color="ERROR")
+                        rprint("[red]Min valley amplitude not found![/red]")
                     try:
-                        print(
+                        rprint(
                             "- Min valley time:\t{:.2E}".format(
                                 my_run[run][ch_list[j]][label + "ValleyTime"][idx]
                                 * my_run[run][ch_list[j]]["Sampling"]
                             )
                         )
                     except KeyError:
-                        print_colored("Min valley time not found!", color="ERROR")
+                        rprint("[red]Min valley time not found![/red]")
                     
-                    print("\n--- Charge Variables ---")
+                    rprint("\n--- Charge Variables ---")
                     try:
-                        print(f"- {label} {OPT['CHARGE_KEY']}: {my_run[run][ch_list[j]][label+OPT['CHARGE_KEY']][idx]:.2E}")
+                        rprint(f"- {label} {OPT['CHARGE_KEY']}: {my_run[run][ch_list[j]][label+OPT['CHARGE_KEY']][idx]:.2E}")
                     except:
-                        print_colored(
-                            "- Charge: %s has not been computed!"
-                            % (label + OPT["CHARGE_KEY"]),
-                            "WARNING",
+                        rprint(
+                            "[yellow]- Charge: %s has not been computed![/yellow]"
+                            % (label + OPT["CHARGE_KEY"])
                         )
                     
                     try:
-                        print(
+                        rprint(
                             "- Peak_idx:",
                             peak_idx * my_run[run][ch_list[j]]["Sampling"],
                         )
                     except:
                         if not check_key(OPT, "PEAK_FINDER"):
-                            print("")
+                            rprint("")
                 
                 my_run[run][ch_list[j]]["Sampling"] = sampling
 
@@ -538,10 +537,8 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                 idx = ev_num
                 if idx > len(my_run[run][ch_list[j]]["MyCuts"]):
                     idx = len(my_run[run][ch_list[j]]["MyCuts"]) - 1
-                    print_colored(
-                        "\nBe careful! There are %i in total" % idx,
-                        "WARNING",
-                        styles=["bold"],
+                    rprint(
+                        "[yellow,bold]\nBe careful! There are %i in total[/yellow,bold]" % idx
                     )
             elif tecla == "p":
                 fig.savefig(
@@ -585,13 +582,13 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
         try:
             r_list = r_list.tolist()
         except:
-            print_colored("Imported runs as list!", "INFO")
+            rprint("[cyan]Imported runs as list![/cyan]")
     ch_loaded = my_run["NChannel"]
     if type(ch_loaded) != list:
         try:
             ch_loaded = ch_loaded.tolist()
         except:
-            print_colored("Imported channels as list!", "INFO")
+            rprint("[cyan]Imported channels as list![/cyan]")
     nch = len(my_run["NChannel"])
     axs = []
 
@@ -614,7 +611,7 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
 
     if not check_key(OPT, "COMPARE"):
         OPT["COMPARE"] = "NONE"
-        print_colored("No comparison selected. Default is NONE", "WARNING")
+        rprint("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "RUNS":
         a_list = ch_list
         b_list = r_list
@@ -663,7 +660,7 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
                         ref_max_idx,
                         stats=OPT["STATS"],
                     )
-                    print(f"Plotting run {run} ch {ch} {key} with index {idx}")
+                    rprint(f"Plotting run {run} ch {ch} {key} with index {idx}")
             elif isinstance(keys, dict):
                 ref_max_idx = plot_compare_wvf(
                     my_run,
@@ -678,7 +675,7 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
                     stats=OPT["STATS"],
                 )
             else:
-                print(type(keys))
+                rprint(type(keys))
                 exit("Keys must be a list or a dictionary")
 
         tecla = input("\nPress p to save plot and any key to continue: ")
@@ -801,7 +798,7 @@ def vis_var_hist(
         try:
             ch_loaded = ch_loaded.tolist()
         except:
-            print_colored("Imported channels as list!", "INFO")
+            rprint("[cyan]Imported channels as list![/cyan]")
 
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
@@ -819,7 +816,7 @@ def vis_var_hist(
 
     if not check_key(OPT, "COMPARE"):
         OPT["COMPARE"] = "NONE"
-        print_colored("No comparison selected. Default is NONE", "WARNING")
+        rprint("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS":
         a_list = r_list
         b_list = ch_list
@@ -875,7 +872,7 @@ def vis_var_hist(
             for k in key:
                 # Debug the following line
                 if debug:
-                    print_colored("Plotting variable: %s" % k, color="INFO")
+                    rprint("[cyan]Plotting variable: %s[/cyan]" % k)
                 aux_data = np.asarray(my_run[run][ch][k])[
                     np.asarray(my_run[run][ch]["MyCuts"] == True)
                 ]
@@ -1016,13 +1013,13 @@ def print_stats_terminal(my_run, labels, data):
         times = np.asarray(my_run[run][ch]["TimeStamp"])
 
     rate = 1 / np.mean(np.diff(times))
-    print_colored("\nStatistics of the histogram:", "INFO")
-    print_colored("- Counts: %i" % len(data), color="INFO")
-    print_colored("- Rate: %.2E" % rate, color="INFO")
-    print_colored("- Max: %.2E" % np.max(data), color="INFO")
-    print_colored("- Mean: {:.2E}".format(np.mean(data)), "INFO")
-    print_colored("- Median: {:.2E}".format(np.median(data)), "INFO")
-    print_colored("- Std: {:.2E}".format(np.std(data)), "INFO")
+    rprint("[cyan]\nStatistics of the histogram:[/cyan]")
+    rprint("[cyan]- Counts: %i[/cyan]" % len(data))
+    rprint("[cyan]- Rate: %.2E[/cyan]" % rate)
+    rprint("[cyan]- Max: %.2E[/cyan]" % np.max(data))
+    rprint("[cyan]- Mean: {:.2E}[/cyan]".format(np.mean(data)))
+    rprint("[cyan]- Median: {:.2E}[/cyan]".format(np.median(data)))
+    rprint("[cyan]- Std: {:.2E}[/cyan]".format(np.std(data)))
     return rate
 
 
@@ -1088,7 +1085,7 @@ def vis_two_var_hist(
         try:
             ch_loaded = ch_loaded.tolist()
         except:
-            print_colored("Imported channels as list!", "INFO")
+            rprint("[cyan]Imported channels as list![/cyan]")
     # Make query to user: choose loaded chanels or select specific channels
     if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
         q = [
@@ -1109,7 +1106,7 @@ def vis_two_var_hist(
 
     if not check_key(OPT, "COMPARE"):
         OPT["COMPARE"] = "NONE"
-        print_colored("No comparison selected. Default is NONE", "WARNING")
+        rprint("No comparison selected. Default is NONE", "WARNING")
     
     if OPT["COMPARE"] == "CHANNELS":
         a_list = r_list
@@ -1156,7 +1153,7 @@ def vis_two_var_hist(
                     aux_y_data = my_run[a][ch_list[1]][keys[1]][
                         my_run[a][ch_list[1]]["MyCuts"] == True
                     ]
-                    print(f"[red][ERROR] There is only one channel in the list. Please select more than one to compare or change the settins![/red]")
+                    rprint(f"[red][ERROR] There is only one channel in the list. Please select more than one to compare or change the settins![/red]")
             
             if OPT["COMPARE"] == "RUNS":
                 title = "Channel_{} ".format(a)
@@ -1172,7 +1169,7 @@ def vis_two_var_hist(
                         my_run[r_list[1]][a]["MyCuts"] == True
                     ]
                 else:
-                    print(f"[red][ERROR] There is only one run in the list. Please select more than one to compare or change the setting![/red]")
+                    rprint(f"[red][ERROR] There is only one run in the list. Please select more than one to compare or change the setting![/red]")
 
             if OPT["COMPARE"] == "NONE":
                 title = "Run_{} Ch_{} - {} vs {} histogram".format(

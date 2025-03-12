@@ -2,11 +2,10 @@ import sys, inquirer, os, yaml, ast
 
 import numpy as np
 from typing import Optional
-from rich import print as print
+from rich import print as rprint
 
 from srcs.utils import get_project_root
 from .io_functions import (
-    print_colored,
     check_key,
     read_input_file,
     read_yaml_file,
@@ -66,14 +65,14 @@ def initialize_macro(
             if arg == "-h" or arg == "--help":
                 for flag in flag_dict:
                     print_macro_info(macro)
-                    print_colored(
+                    rprint(
                         "Usage: python3 %s.py -i config_file *--flags" % macro,
                         color="white",
                         styles=["bold"],
                     )
-                    print_colored("Available Flags:", "INFO", styles=["bold"])
+                    rprint("[cyan]Available Flags:[/cyan]")
                     for flag in flag_dict:
-                        print_colored("%s: %s" % (flag[0], flag_dict[flag]), "INFO")
+                        rprint("[cyan]%s: %s[/cyan]" % (flag[0], flag_dict[flag]))
                     exit()
 
             for flag in flag_dict:
@@ -82,16 +81,15 @@ def initialize_macro(
                         user_input[flag[1].split("--")[1]] = sys.argv[
                             sys.argv.index(arg) + 1
                         ].split(",")
-                        print_colored(
-                            "Using %s from command line %s"
+                        rprint(
+                            "[cyan]Using %s from command line %s[/cyan]"
                             % (
                                 flag_dict[flag],
                                 sys.argv[sys.argv.index(arg) + 1].split(","),
-                            ),
-                            "INFO",
+                            )
                         )
                     except IndexError:
-                        print("Provide argument for flag %s" % flag_dict[flag])
+                        rprint("Provide argument for flag %s" % flag_dict[flag])
                         exit()
     
     if check_key(user_input, "input_file") == False:
@@ -110,12 +108,12 @@ def initialize_macro(
                 "yes",
             ]
         except KeyError:
-            print("WARNING: No %s flag provided --> Using False as default." % flag)
+            rprint("WARNING: No %s flag provided --> Using False as default." % flag)
     user_input = use_default_input(user_input, default_dict, info, debug=debug)
 
     if debug:
-        print_colored("\nUser input:", "INFO")
-        print(user_input)
+        rprint("[cyan]\nUser input:[/cyan]")
+        rprint(user_input)
     return user_input, info
 
 
@@ -160,10 +158,10 @@ def update_user_input(user_input, new_input_list, info, debug=False):
                     )
                 ]
                 new_user_input[key_label] = inquirer.prompt(q)[key_label].split(",")
-                # print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
+                # rprint("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
             else:
                 new_user_input["filter"] = apply_cuts(user_input, info, debug=debug)
-                print(
+                rprint(
                     f"[yellow][WARNING] Using {key_label} from user input {new_user_input[key_label]}[/yellow]"
                 )
         else:
@@ -193,7 +191,7 @@ def select_input_file(user_input, debug=False):
         ]
         new_user_input["input_file"] = [inquirer.prompt(q)["input_file"]]
     if debug:
-        print_colored("Using input file %s" % new_user_input["input_file"][0], "INFO")
+        rprint("[cyan]Using input file %s[/cyan]" % new_user_input["input_file"][0])
     return new_user_input
 
 
@@ -223,10 +221,9 @@ def use_default_input(user_input, default_dict, info, debug=False):
                         new_user_input[default_key] = [value]
 
             if new_user_input["debug"]:
-                print_colored(
-                    "No %s provided. Using all %s from input file. %s"
-                    % (default_key, default_key, runs),
-                    "WARNING",
+                rprint(
+                    "[yellow]No %s provided. Using all %s from input file. %s[/yellow]"
+                    % (default_key, default_key, runs)
                 )
     return new_user_input
 
@@ -234,18 +231,18 @@ def use_default_input(user_input, default_dict, info, debug=False):
 def print_macro_info(macro, debug=False):
     f = open("info/" + macro + ".txt", "r")
     file_contents = f.read()
-    print(file_contents + "\n")
+    rprint(file_contents + "\n")
     f.close
     if debug:
-        print_colored("....... Debug Mode Activated! .......", "DEBUG")
+        rprint("[magenta]....... Debug Mode Activated! .......[/magenta]")
 
 
 def print_header():
     f = open("info/header.txt", "r")
     file_contents = f.read()
-    print(file_contents)
+    rprint(file_contents)
     f.close
-    print(f"\n[cyan]....... Starting Macro .......[/cyan]")
+    rprint(f"\n[cyan]....... Starting Macro .......[/cyan]")
 
 
 def apply_cuts(user_input, info, debug=False):
@@ -258,7 +255,7 @@ def apply_cuts(user_input, info, debug=False):
     cut_dict = cuts_info2dict(user_input, info, debug=True)
     for cut in cuts_choices:
         if cut_dict[cut][0] == True:
-            # if debug: print_colored("Using cuts options %s"%cut_dict,"INFO")
+            # if debug: rprint("[cyan]Using cuts options %s[/cyan]"%cut_dict)
             return cut_dict
         if cut_dict[cut][0] == False:
             ask4cuts = True
@@ -379,7 +376,7 @@ def apply_cuts(user_input, info, debug=False):
                             ).lower() in ["true", "1", "t", "y", "yes"]
 
             if debug:
-                print_colored("Using cuts options %s" % cut_dict, "INFO")
+                rprint("[cyan]Using cuts options %s[/cyan]" % cut_dict)
             return cut_dict
 
 
@@ -387,10 +384,10 @@ def opt_selector(filename: str = "options", arguments: Optional[list] = None, de
     my_opt = read_yaml_file(filename, path=f"{root}/config/", debug=debug)
     if arguments is None:
         new_opt = my_opt.copy()
-        print(my_opt)
+        rprint(my_opt)
     
     elif isinstance(arguments, list) and len(arguments) == 0:
-        print(f"[cyan][INFO] No arguments provided. Returning all options from {filename}.yml[/cyan]")
+        rprint(f"[cyan][INFO] No arguments provided. Returning all options from {filename}.yml[/cyan]")
         return my_opt
     
     else:
@@ -398,7 +395,7 @@ def opt_selector(filename: str = "options", arguments: Optional[list] = None, de
         for arg in arguments:
             if arg in my_opt.keys():
                 new_opt[arg] = my_opt[arg]
-        print(new_opt)
+        rprint(new_opt)
     q = [
         inquirer.List(
             "change",
@@ -450,13 +447,13 @@ def update_yaml_file(
 ):
     # If file path doesn't exist, create it. Take into account that the file name is included in the path.
     if not os.path.exists(file_path):
-        print(f"YAML file '{file_path}' doesn't exist. Creating it...")
+        rprint(f"YAML file '{file_path}' doesn't exist. Creating it...")
         os.makedirs(os.path.dirname(file_path), mode=0o777, exist_ok=True)
         # Update folder permissions
         os.system(f"chmod -R 770 {os.path.dirname(file_path)}")
         with open(file_path, "w") as file:
             yaml.dump(new_data, file, default_flow_style=False, sort_keys=False)
-        print(f"YAML file '{file_path}' successfully created.")
+        rprint(f"YAML file '{file_path}' successfully created.")
         return
 
     # Update YAML file
@@ -470,7 +467,7 @@ def update_yaml_file(
         existing_data.update(new_data)
         with open(file_path, "w") as file:
             yaml.dump(existing_data, file, default_flow_style=False, sort_keys=False)
-        print(f"YAML file '{file_path}' successfully updated.")
+        rprint(f"YAML file '{file_path}' successfully updated.")
 
     except Exception as e:
-        print(f"Error updating YAML file: {e}")
+        rprint(f"Error updating YAML file: {e}")

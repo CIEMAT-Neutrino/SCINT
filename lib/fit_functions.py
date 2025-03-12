@@ -12,12 +12,12 @@ from scipy.signal import find_peaks
 from scipy.special import erf
 from scipy.stats import poisson
 from math import factorial as fact
-from rich import print as print
+from rich import print as rprint
 from lmfit import models
 from scipy.ndimage import gaussian_filter1d
 
 # Imports from other libraries
-from .io_functions import check_key, print_colored, read_yaml_file
+from .io_functions import check_key, read_yaml_file
 from .ana_functions import get_run_units, find_amp_decrease
 
 np.seterr(divide="ignore")
@@ -174,7 +174,7 @@ def lmfit_models(function):
     # model  = lmfit_models(function)
     # params = model.guess(ydata, x=xdata)
     # result = model.fit  (ydata, params, x=xdata)
-    # print(f'Chi-square = {result.chisqr:.4f}, Reduced Chi-square = {result.redchi:.4f}')
+    # rprint(f'Chi-square = {result.chisqr:.4f}, Reduced Chi-square = {result.redchi:.4f}')
 
 
 # --------------------------------------------------------------------------- #
@@ -209,7 +209,7 @@ def F(K, p, L, debug=False):
     """
     aux_sum = 0
     if debug:
-        print(K)
+        rprint(K)
     for i in range(K + 1):
         aux_sum += B(i, K) * ((L * (1 - p)) ** i) * (p ** (K - i))
     return np.exp(-L) * aux_sum / fact(K)
@@ -221,7 +221,7 @@ def PoissonPlusBinomial(x, N, p, L, debug=False):
     aux = np.zeros(shape=N)
     for i in range(N):
         if debug:
-            print(x, i, x[i])
+            rprint(x, i, x[i])
         aux[i] = F(int(x[i]), p, L)
     return aux / sum(aux)
 
@@ -254,7 +254,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
         y_intrp = scipy.interpolate.interp1d(bins[:-1], counts)
         y = y_intrp(x)
 
-    print("\n...Fitting to a gaussian...")
+    rprint("\n...Fitting to a gaussian...")
     ## Find indices of peaks ##
     if fit_function == "gaussian":
         peak_idx, _ = find_peaks(y, height=thresh, width=wdth, prominence=prom)
@@ -264,7 +264,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
         )
 
     if len(custom_fit) == 2:
-        print("\n--- Customized fit ---")
+        rprint("\n--- Customized fit ---")
         mean = float(custom_fit[0])
         sigma = float(custom_fit[1])
         best_peak_idx = peak_idx[np.abs(x[peak_idx] - mean).argmin()]
@@ -272,7 +272,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
 
         x_gauss = x
         y_gauss = y
-        print("Taking peak at: ", x[best_peak_idx])
+        rprint("Taking peak at: ", x[best_peak_idx])
     else:
         sigma = abs(wdth * (bins[0] - bins[1]))
         best_peak_idx = peak_idx[0]
@@ -285,7 +285,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
         x_gauss = x_space - int(acc / 2) * step
         x_gauss = x_gauss[x_gauss >= bins[0]]
         y_gauss = y_intrp(x_gauss)
-        print("Taking peak at: ", x[best_peak_idx])
+        rprint("Taking peak at: ", x[best_peak_idx])
 
     # try:
     popt, pcov = curve_fit(
@@ -299,7 +299,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
     perr = np.sqrt(np.diag(pcov))
     chi2 = chi_squared(x_gauss, y_gauss, popt)
     # except:
-    #     print("WARNING: Peak could not be fitted")
+    #     rprint("WARNING: Peak could not be fitted")
 
     return x, popt, pcov, perr
     # return x, popt, pcov, perr, chi2 # UPLOAD WHEN POSSIBLE MERGING IN MAIN BRANCH; upgrade all the fit functions
@@ -325,13 +325,12 @@ def peak_valley_finder(x, y, params):
     valley_idx, _ = find_peaks(
         1 - y, height=0, width=wdth, prominence=prom, distance=dist
     )
-    print("Peaks found at: ", peak_idx)
-    print("Valleys found at: ", valley_idx)
+    rprint("Peaks found at: ", peak_idx)
+    rprint("Valleys found at: ", valley_idx)
 
-    print_colored(
-        "PeakFinder using parameters: dist = %i, thresh = %.2f, wdth = %i, prom = %.2f, acc = %i"
-        % (dist, thresh, wdth, prom, acc),
-        "INFO",
+    rprint(
+        "[cyan]PeakFinder using parameters: dist = %i, thresh = %.2f, wdth = %i, prom = %.2f, acc = %i[/cyan]"
+        % (dist, thresh, wdth, prom, acc)
     )
     return peak_idx, valley_idx[: len(peak_idx)]
 
@@ -412,9 +411,9 @@ def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=F
         )
         perr = np.sqrt(np.diag(pcov))
     except ValueError:
-        print_colored("Full fit could not be performed", "ERROR")
+        rprint("[red]Full fit could not be performed[/red]")
     except RuntimeError:
-        print_colored("Full fit could not be performed", "ERROR")
+        rprint("[red]Full fit could not be performed[/red]")
     return popt, pcov
 
 
@@ -485,7 +484,7 @@ def pmt_spe_fit(counts, bins, bars, thresh):
             initial.append(x[peak_idx[i]])
             initial.append(y[peak_idx[i]])
             initial.append(abs(wdth * (bins[0] - bins[1])))
-            print_colored("Peak %i could not be fitted" % i, "ERROR")
+            rprint("[red]Peak %i could not be fitted[/red]" % i)
 
     try:
         # GAUSSIAN TRAIN FIT ## Taking as input parameters the individual gaussian fits with initial
@@ -496,7 +495,7 @@ def pmt_spe_fit(counts, bins, bars, thresh):
         perr = np.sqrt(np.diag(pcov))
     except:
         popt = initial
-        print_colored("Full fit could not be performed", "ERROR")
+        rprint("[red]Full fit could not be performed[/red]")
 
     return x, y, peak_idx, valley_idx, popt, pcov, perr
 
@@ -557,16 +556,16 @@ def peak_fit(
     )
     perr = np.sqrt(np.diag(pcov))
     # except:
-    # print("Peak fit could not be performed")
+    # rprint("Peak fit could not be performed")
     # popt = initial
     # perr = np.zeros(len(initial))
 
     # PRINT FIRST FIT VALUE
     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
-        print("\n--- FISRT FIT VALUES (FAST) ---")
+        rprint("\n--- FISRT FIT VALUES (FAST) ---")
         for i in range(len(initial)):
-            print("%s:\t%.2E\t%.2E" % (labels[i], popt[i], perr[i]))
-        print("-------------------------------")
+            rprint("%s:\t%.2E\t%.2E" % (labels[i], popt[i], perr[i]))
+        rprint("-------------------------------")
 
     # EXPORT FIT PARAMETERS
     # a1 = popt[2];sigma = popt[1];tau1 = popt[3];t0 = popt[0]
@@ -727,7 +726,7 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
         perr2 = np.sqrt(np.diag(pcov2))
 
     except:
-        print_colored("Fit could not be performed", "ERROR")
+        rprint("[red]Fit could not be performed[/red]")
         popt2 = initial2
         perr2 = np.zeros(len(popt2))
 
@@ -742,7 +741,7 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     perr = [p_std, perr1[0], perr1[1], perr2[0], perr1[2], perr2[1], perr2[2], perr2[3]]
 
     # if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
-    #     # print("SHOW key not included in OPT")
+    #     # rprint("SHOW key not included in OPT")
     #     # CHECK FIRST FIT
     #     plt.rcParams['figure.figsize'] = [16, 8]
     #     plt.subplot(1, 2, 1)
@@ -788,10 +787,10 @@ def purity_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
             initial.append(i_param[init])
 
     # if np.any(np.isnan(raw)) or np.any(np.isinf(raw)) or np.any(raw <= 0):
-    #     print_colored("Negative/Infinite/Zero/Nan values found in raw", "ERROR")
+    #     rprint("[red]Negative/Infinite/Zero/Nan values found in raw[/red]")
 
     if check_key(OPT, "FILTER") and isinstance(OPT["FILTER"], int):
-        print(
+        rprint(
             "Filtering the signal with a gaussian filter of sigma = %i" % OPT["FILTER"]
         )
         raw = gaussian_filter1d(raw, sigma=OPT["FILTER"])
@@ -837,10 +836,10 @@ def simple_purity_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
             initial.append(i_param[init])
 
     # if np.any(np.isnan(raw)) or np.any(np.isinf(raw)) or np.any(raw <= 0):
-    #     print_colored("Negative/Infinite/Zero/Nan values found in raw", "ERROR")
+    #     rprint("[red]Negative/Infinite/Zero/Nan values found in raw[/red]", "ERROR")
 
     if check_key(OPT, "FILTER") and isinstance(OPT["FILTER"], int):
-        print(
+        rprint(
             "Filtering the signal with a gaussian filter of sigma = %i" % OPT["FILTER"]
         )
         raw = gaussian_filter1d(raw, sigma=OPT["FILTER"])
@@ -888,7 +887,7 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
         )
         perr = np.sqrt(np.diag(pcov))
     except:
-        print_colored("Fit did not succeed", "ERROR")
+        rprint("[red]Fit did not succeed[/red]")
         popt = initial
         perr = np.zeros(len(initial))
 
@@ -909,7 +908,7 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
         plt.clf()
 
     aux = scfunc(raw_x, *popt)
-    # print("\n")
+    # rprint("\n")
     return aux, raw, popt, perr, labels
 
 
@@ -1005,7 +1004,7 @@ def fit_wvfs(
                 check_key(OPT, "TERMINAL_OUTPUT") == True
                 and OPT["TERMINAL_OUTPUT"] == True
             ):
-                print(term_output)
+                rprint(term_output)
 
             if save:
                 with open(f"{folder_path}/{signal_type}Fit_{run}_{ch}.txt", "w+") as f:
@@ -1014,7 +1013,7 @@ def fit_wvfs(
                     for i in range(len(labels)):
                         f.write("%s:\t%.4E\t%.4E\n" % (labels[i], popt[i], perr[i]))
                 if debug:
-                    print("File saved in: %s" % folder_path)
+                    rprint("File saved in: %s" % folder_path)
 
         fit_dict[(run, ch, key)] = fit
         ref_dict[(run, ch, key)] = ref
@@ -1140,7 +1139,7 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     perr = np.sqrt(np.diag(pcov))
 
     # except:
-    # print("Fit could not be performed")
+    # rprint("Fit could not be performed")
     # popt2 = initial2
     # perr2 = np.zeros(len(popt2))
     zeros_aux = np.zeros(raw_max)
@@ -1149,7 +1148,7 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(
         OPT, "SHOW"
     ) == False:
-        # print("SHOW key not included in OPT")
+        # rprint("SHOW key not included in OPT")
         # CHECK FIRST FIT
         plt.rcParams["figure.figsize"] = [16, 8]
         plt.subplot(1, 1, 1)
@@ -1217,7 +1216,7 @@ def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     perr = np.sqrt(np.diag(pcov))
 
     # except:
-    # print("Fit could not be performed")
+    # rprint("Fit could not be performed")
     # popt2 = initial2
     # perr2 = np.zeros(len(popt2))
     zeros_aux = np.zeros(raw_max + buffer1)
@@ -1226,7 +1225,7 @@ def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(
         OPT, "SHOW"
     ) == False:
-        # print("SHOW key not included in OPT")
+        # rprint("SHOW key not included in OPT")
         # CHECK FIRST FIT
         plt.rcParams["figure.figsize"] = [16, 8]
         plt.subplot(1, 1, 1)

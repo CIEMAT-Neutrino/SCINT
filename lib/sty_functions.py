@@ -3,7 +3,7 @@ import importlib.util
 import plotly.express as px
 
 from typing import Optional
-from rich import print as print
+from rich import print as rprint
 from matplotlib import pyplot as plt
 
 from .io_functions import check_key
@@ -34,7 +34,7 @@ def style_selector(OPT: Optional[dict] = None):
             styles.append("DUNE")
         
         except: 
-            print("DUNE style not found")
+            rprint("DUNE style not found")
     
     if OPT["STYLE"] == "HEP" or OPT["STYLE"] == "ATLAS":
         import mplhep as hep
@@ -43,7 +43,7 @@ def style_selector(OPT: Optional[dict] = None):
             styles.append("HEP", "ATLAS")
         
         except:
-            print("HEP style not found")
+            rprint("HEP style not found")
         
         if OPT["STYLE"] == "ATLAS":
             hep.style.use("ATLAS")
@@ -52,7 +52,7 @@ def style_selector(OPT: Optional[dict] = None):
         plt.rcParams.update({"font.size": 14})
 
     matplotlib.rcParams["axes.prop_cycle"] = matplotlib.cycler(color=get_prism_colors())
-    print(f"* You can change your plotting style with [green]OPT[STYLE]={styles}![/green]")
+    rprint(f"* You can change your plotting style with [green]OPT[STYLE]={styles}![/green]")
 
 
 def get_prism_colors():
@@ -61,7 +61,7 @@ def get_prism_colors():
     prism = [tuple(int(c) / 255 for c in s[1:-1].split(",")) for s in prism]
     # Change the order of the colors: insert the first color at the second to last position
     prism.insert(-1, prism.pop(0))
-    # print(prism)
+    # rprint(prism)
     return prism
 
 

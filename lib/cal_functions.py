@@ -15,13 +15,13 @@ from jacobi import propagate
 from matplotlib.colors import LogNorm
 from matplotlib.cm import viridis
 from itertools import product
-from rich import print as print
+from rich import print as rprint
 from rich.table import Table
 from rich.console import Console
 from scipy.optimize import curve_fit
 
 # Import from other libraries
-from .io_functions import check_key, print_colored, write_output_file
+from .io_functions import check_key, write_output_file
 from .head_functions import update_yaml_file
 from .ana_functions import (
     get_run_units,
@@ -58,10 +58,10 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
     style_selector(OPT)
     plt.ion()
     true_key, true_label = get_wvf_label(my_run, "", "", debug=debug)
-    print_colored("True key: %s" % true_key, "DEBUG")
-    print_colored("True label: %s" % true_label, "DEBUG")
+    rprint("[magenta]True key: %s[/magenta]" % true_key)
+    rprint("[magenta]True label: %s[/magenta]" % true_label)
     if true_key == "RawADC":
-        print_colored("\nAnaADC not saved but we compute it now :)", "WARNING")
+        rprint("\nAnaADC not saved but we compute it now :)", "WARNING")
         compute_ana_wvfs(my_run, info, debug=debug)
         key = "AnaADC"
     else:
@@ -130,14 +130,14 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
         calibration[(run, ch, key)] = dict()
         if len(my_runs[run][ch].keys()) == 0:
-            print_colored("\n RUN DOES NOT EXIST. Looking for the next", "WARNING")
+            rprint("\n RUN DOES NOT EXIST. Looking for the next", "WARNING")
             popt = [-99, -99, -99]
             pcov = [-99, -99, -99]
 
         else:
             det_label = my_runs[run][ch]["Label"]
             if check_key(my_runs[run][ch], "MyCuts") == False:
-                print_colored("Cuts not generated. Generating them now...", "WARNING")
+                rprint("Cuts not generated. Generating them now...", "WARNING")
                 generate_cut_array(
                     my_runs, debug=debug
                 )  # If cuts not generated, generate them
@@ -205,7 +205,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                     os.makedirs(f"{save_path}run{run}/ch{ch}", mode=0o777, exist_ok=True)
                 
                 except:
-                    print(f"[yellow][WARNING] Folder {save_path} already exists. No need to create it.[/yellow]")
+                    rprint(f"[yellow][WARNING] Folder {save_path} already exists. No need to create it.[/yellow]")
                 
                 save_figures(fig_cal, fig_xt, (run, ch, key), save_path, debug=debug)
 
@@ -220,7 +220,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                 my_runs[run][ch]["AnaMaxChargeSPE"] = popt[3] + (popt[6] - popt[3]) / 2
                 my_runs[run][ch]["AnaMinChargeSPE"] = popt[3] - (popt[3] - popt[0]) / 2
             except IndexError:
-                print_colored(
+                rprint(
                     "Fit failed to find min of 3 calibration peaks!", "WARNING"
                 )
                 my_runs[run][ch]["Gain"] = -99
@@ -295,9 +295,8 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
     )
 
     if len(PNs) > 5:
-        print_colored(
-            f"More than 5 peaks found. Using the first {len(PNs)} peaks for the fit.",
-            "WARNING",
+        rprint(
+            f"[yellow]More than 5 peaks found. Using the first {len(PNs)} peaks for the fit.[/yellow]"
         )
         PNs = PNs[:-1]
         PNs = PNs / np.sum(PNs)
@@ -342,7 +341,7 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
             color="red",
         )
     except:
-        print_colored("Fit failed. Returning initial parameters.", "WARNING")
+        rprint("Fit failed. Returning initial parameters.", "WARNING")
         xt_popt = np.asarray([len(PNs), p, l])
         xt_pcov = np.asarray([-99, -99, -99])
         # ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x', label="Fit: CT = " + str(int(xt_popt[1] * 100)) + "% - " + r'$\lambda = {:.2f}$'.format(xt_popt[2]), color="red")
@@ -365,7 +364,7 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                 export = calibration_txt(run, ch, key, popt, pcov, info, debug=debug)
                 # If export dump data to yml file
                 if export:
-                    print_colored("Data exported to txt file.", "INFO")
+                    rprint("[cyan]Data exported to txt file.[/cyan]")
                     update_yaml_file(
                         f'{root}/{info["OUT_PATH"][0]}/analysis/calibration/run{run}/ch{ch}/calibration_run{run}_ch{ch}_{key}.yml',
                         data[labels][measurement],
@@ -380,7 +379,7 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                 export = xtalk_txt(run, ch, key, xt_popt, xt_pcov, info, debug=debug)
                 # If export dump data to yml file
                 if export:
-                    print_colored("Data exported to txt file.", "INFO")
+                    rprint("[cyan]Data exported to txt file.[/cyan]")
                     update_yaml_file(
                         f'{root}/{info["OUT_PATH"][0]}/analysis/xtalk/run{run}/ch{ch}/xtalk_run{run}_ch{ch}_{key}.yml',
                         data[labels][measurement],
@@ -480,8 +479,8 @@ def calibration_txt(run, ch, key, popt, pcov, info, debug=False) -> bool:
                 ), "{:.2E}".format(cal_parameters[i][j][1])
                 table.add_row(parameter, value, error)
 
-            console.print("\nPeak:", i)
-            console.print(table)
+            console.rprint("\nPeak:", i)
+            console.rprint(table)
 
         export = write_output_file(
             run,
@@ -534,8 +533,8 @@ def xtalk_txt(run, ch, key, xt_popt, xt_pcov, info, debug=False) -> bool:
             table.add_row(parameter, value, error)
         except TypeError:
             table.add_row(parameter, "N/A", "N/A")
-    console.print("\nX-Talk:")
-    console.print(table)
+    console.rprint("\nX-Talk:")
+    console.rprint(table)
 
     export = write_output_file(
         run,
@@ -585,7 +584,7 @@ def get_gains(run, channels, folder_path="TUTORIAL", debug=False):
         Dgain[ch] = list(
             np.array(my_table["DGAIN"]).astype(float)[my_table["RUN"] == str(run)]
         )
-        # if debug: print("\nGAIN TXT FOR CHANNEL %i"%ch ); display(my_table)
+        # if debug: rprint("\nGAIN TXT FOR CHANNEL %i"%ch ); display(my_table)
 
     return gains, Dgain
 
@@ -609,15 +608,15 @@ def scintillation_txt(run, ch, key, popt, pcov, filename, info):
     sigma = [abs(popt[2]), perr0[2]]  # sigma +- dsigma
     charge_parameters.append([mu, height, sigma])
 
-    print(len(charge_parameters))
-    print(charge_parameters)
+    rprint(len(charge_parameters))
+    rprint(charge_parameters)
 
-    print("MU +- DMU:", ["{:.2f}".format(item) for item in charge_parameters[0][0]])
-    print(
+    rprint("MU +- DMU:", ["{:.2f}".format(item) for item in charge_parameters[0][0]])
+    rprint(
         "HEIGHT +- DHEIGHT:",
         ["{:.2f}".format(item) for item in charge_parameters[0][1]],
     )
-    print(
+    rprint(
         "SIGMA +- DSIGMA:", ["{:.2f}".format(item) for item in charge_parameters[0][2]]
     )
 
@@ -674,7 +673,7 @@ def charge_fit(my_runs, keys, OPT={}):
         x, popt, pcov, perr = gaussian_fit(
             counts, bins, bars, thresh, fit_function="gaussian"
         )
-        print(
+        rprint(
             "Chi2/N?: ",
             (
                 sum(
@@ -702,7 +701,7 @@ def charge_fit(my_runs, keys, OPT={}):
         ## Repeat customized fit ##
         confirmation = input("Are you happy with the fit? (y/n) ")
         if "n" in confirmation:
-            print(
+            rprint(
                 "\n--- Repeating the fit with input parameters (\u03BC \u00B1 \u03C3) \u03B5 [{:0.2f}, {:0.2f}] ---".format(
                     x[0], x[-1]
                 )
@@ -730,7 +729,7 @@ def charge_fit(my_runs, keys, OPT={}):
         counter += 1
         plt.close()
         # except KeyError:
-        #     print("Empty dictionary. No computed charge.")
+        #     rprint("Empty dictionary. No computed charge.")
 
     return all_popt, all_pcov, all_perr
 
@@ -741,7 +740,7 @@ def save_figures(fig_cal, fig_xt, labels, save_path, debug=False):
     try:
         os.makedirs(f"{save_path}run{run}/ch{ch}", mode=0o777, exist_ok=True)
     except:
-        print(
+        rprint(
             f"[yellow][WARNING] Folder {save_path}run{run}/ch{ch} already exists. No need to create it.[/yellow]"
         )
     fig_cal.savefig(f"{save_path}run{run}/ch{ch}/run{run}_ch{ch}_{key}_Hist.png", dpi=500)
@@ -756,9 +755,9 @@ def save_figures(fig_cal, fig_xt, labels, save_path, debug=False):
             stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
         )
     except:
-        print(
+        rprint(
             f"File permissions could not be changed. Check if the file exists & if you have permissions change them manually."
         )
     if debug:
-        print(f"Saved figure as: run{run}_ch{ch}_{key}_Hist.png")
-        print(f"Saved figure as: run{run}_ch{ch}_{key}_XTalk.png")
+        rprint(f"Saved figure as: run{run}_ch{ch}_{key}_Hist.png")
+        rprint(f"Saved figure as: run{run}_ch{ch}_{key}_XTalk.png")

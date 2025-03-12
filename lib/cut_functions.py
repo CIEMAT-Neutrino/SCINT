@@ -12,10 +12,10 @@ from itertools import product
 from scipy.signal import find_peaks
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
-from rich import print as print
+from rich import print as rprint
 
 # Import from other libraries
-from .io_functions import print_colored, check_key
+from .io_functions import check_key
 from .unit_functions import get_run_units
 from .vis_functions import vis_two_var_hist
 from .fig_config import figure_features
@@ -61,20 +61,20 @@ def generate_cut_array(my_runs, ref="", debug=False):
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         try:
             if debug:
-                print("Check cut array ref: ", my_runs[run][ch][ref])
+                rprint("Check cut array ref: ", my_runs[run][ch][ref])
             my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]), dtype=bool)
 
         except KeyError:
             if debug:
-                print_colored(
-                    "Reference variable for cut array generation not found!", "DEBUG"
+                rprint(
+                    "[magenta]Reference variable for cut array generation not found![/magenta]"
                 )
             for key in my_runs[run][ch].keys():
                 try:
                     if len(my_runs[run][ch][key]) > 1:
                         if debug:
-                            print_colored(
-                                "Found viable reference variable: " + key, "DEBUG"
+                            rprint(
+                                "[magenta]Found viable reference variable: [/magenta]" + key
                             )
                         my_runs[run][ch]["MyCuts"] = np.ones(
                             len(my_runs[run][ch][key]), dtype=bool
@@ -82,29 +82,27 @@ def generate_cut_array(my_runs, ref="", debug=False):
                         break
                 except TypeError:
                     if debug:
-                        print_colored("Key " + key + " is not a numpy array", "DEBUG")
+                        rprint("[magenta]Key " + key + " is not a numpy array[magenta]")
                     pass
                 except KeyError:
                     if debug:
-                        print_colored("Key " + key + " does not exist", "DEBUG")
+                        rprint("[magenta]Key " + key + " does not exist[magenta]")
                     pass
     return my_runs
 
 
 def print_cut_info(my_cuts, stage="partial", debug=False):
     if stage == "partial":
-        print_colored(
-            "Nº selected/total events for this cut: %i/%i (%0.2f"
+        rprint(
+            "[cyan]Nº selected/total events for this cut: %i/%i (%0.2f"
             % (np.sum(my_cuts), len(my_cuts), np.sum(my_cuts) / len(my_cuts) * 100)
-            + "%)",
-            color="INFO",
+            + "%)[/cyan]"
         )
     if stage == "final":
-        print_colored(
-            "Nº selected/total events in total cut: %i/%i (%0.2f"
+        rprint(
+            "[green]Nº selected/total events in total cut: %i/%i (%0.2f"
             % (np.sum(my_cuts), len(my_cuts), np.sum(my_cuts) / len(my_cuts) * 100)
-            + "%)",
-            color="SUCCESS",
+            + "%)[/green]"
         )
 
 
@@ -113,9 +111,9 @@ def cut_df(my_runs, cut_dict={}, debug=False):
     This function cuts the data using a dictionary with the cuts. The dictionary must be in the following format:
     cut_dict = {(key, logic, value, inclusive): channels}
     """
-    print_colored("---- LET'S CUT! ----", color="SUCCESS", styles=["bold"])
+    rprint("[green,bold]---- LET'S CUT! ----[/green,bold]")
     if debug:
-        print(cut_dict)
+        rprint(cut_dict)
 
     for run in np.asarray(my_runs["NRun"]).astype(str):
         my_cuts = np.ones(
@@ -141,7 +139,7 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                 try:
                     my_runs[run][ch]
                 except KeyError:
-                    print("ERROR: Run", run, "or Ch", ch, "not found in loaded data")
+                    rprint("ERROR: Run", run, "or Ch", ch, "not found in loaded data")
                     exit()
 
                 if check_key(my_runs[run][ch], "MyCuts") == False:
@@ -149,10 +147,9 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                 if check_key(my_runs[run][ch], "UnitsDict") == False:
                     get_run_units(my_runs, debug=debug)
 
-                print_colored(
-                    "... Cutting events for run %s channel %s with %s %s %s ..."
-                    % (run, ch, key, logic, value),
-                    "INFO",
+                rprint(
+                    "[cyan]... Cutting events for run %s channel %s with %s %s %s ...[/cyan]"
+                    % (run, ch, key, logic, value)
                 )
                 if logic == "bigger":
                     this_channel_cut_array = my_runs_df.loc[ch][key] > value
@@ -173,7 +170,7 @@ def cut_df(my_runs, cut_dict={}, debug=False):
                         this_cut_cut_array = this_cut_cut_array + this_channel_cut_array
                     else:
                         this_cut_cut_array = this_cut_cut_array * this_channel_cut_array
-                    print_colored("\nInclusive = %s" % inclusive, "magenta")
+                    rprint("\nInclusive = %s" % inclusive, "magenta")
                 else:
                     this_cut_cut_array = this_channel_cut_array
 
@@ -182,7 +179,7 @@ def cut_df(my_runs, cut_dict={}, debug=False):
 
         for loaded_ch in my_runs["NChannel"]:
             my_runs[run][loaded_ch]["MyCuts"] = my_cuts
-    print_colored("---- DONE CUT! ----\n", color="SUCCESS", styles=["bold"])
+    rprint("[green,bold]---- DONE CUT! ----[/green,bold]\n")
 
 
 def cut_min_max(
@@ -200,7 +197,7 @@ def cut_min_max(
     \nExample: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
     """
 
-    print_colored("---- LET'S CUT! ----", color="SUCCESS", styles=["bold"])
+    rprint("[green,bold]---- LET'S CUT! ----[/green,bold]")
     if chs_cut == []:
         chs_cut = my_runs["NChannel"]
     idx_list = []
@@ -208,7 +205,7 @@ def cut_min_max(
     for run, ch, key in product(my_runs["NRun"], chs_cut, keys):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             generate_cut_array(my_runs)
-            print("...Running generate_cut_array...")
+            rprint("...Running generate_cut_array...")
         if check_key(my_runs[run][ch], "UnitsDict") == False:
             get_run_units(my_runs)
 
@@ -217,10 +214,10 @@ def cut_min_max(
         )
         if run != my_runs["NRun"][0] and ch == chs_cut[0] and key == keys[0]:
             idx_list = []
-            print_colored("... NEW RUN ...", color="WARNING")
-        print("--- CUTTING events with ", end="")
-        print_colored(key, color="cyan", end="")
-        print(
+            rprint("... NEW RUN ...", color="WARNING")
+        rprint("--- CUTTING events with ", end="")
+        rprint(key, color="cyan", end="")
+        rprint(
             " in (" + str(limits[key][0]) + ", " + str(limits[key][1]) + ")",
             my_runs[run][ch]["UnitsDict"][key],
             "for Ch",
@@ -229,7 +226,7 @@ def cut_min_max(
             run,
             " ---",
         )
-        print(
+        rprint(
             "Nº events before cut: ",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),
         )
@@ -267,13 +264,13 @@ def cut_min_max(
                     else:
                         my_runs[run][ch]["MyCuts"][i] = False
             if apply_all_chs == False:
-                print(
+                rprint(
                     "Nº cutted events:",
                     len(
                         my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]
                     ),
                 )
-                print(
+                rprint(
                     "Nº final evts after cutting in",
                     key,
                     "for Ch " + str(ch) + ":",
@@ -281,7 +278,7 @@ def cut_min_max(
                     "\n",
                 )
             else:
-                print(
+                rprint(
                     "Nº cutted events in Ch " + str(ch) + ":",
                     rep_idx + ch_idx_list,
                     "(" + str(ch_idx_list),
@@ -289,23 +286,23 @@ def cut_min_max(
                 )
 
         if apply_all_chs == True and ch == chs_cut[-1] and key == keys[-1]:
-            print("--- CUTTING EVENTS for ALL (loaded) Chs in Run", run, "---")
-            print(
+            rprint("--- CUTTING EVENTS for ALL (loaded) Chs in Run", run, "---")
+            rprint(
                 "Nº of new cutted events in Chs " + str(my_runs["NChannel"]) + ":",
                 len(idx_list),
             )
             for ch in my_runs["NChannel"]:
                 if check_key(my_runs[run][ch], "MyCuts") == False:
-                    print("...Running generate_cut_array...\n")
+                    rprint("...Running generate_cut_array...\n")
                     generate_cut_array(my_runs)
                 for i in idx_list:
                     my_runs[run][ch]["MyCuts"][i] = False
 
-            print(
+            rprint(
                 "Nº total final events in ALL Chs:", initial_evts - len(idx_list), "\n"
             )
     if debug == True:
-        print("... Cuts finished ...")
+        rprint("... Cuts finished ...")
 
 
 def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
@@ -321,7 +318,7 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
     \n- apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
     """
 
-    print_colored("---- LET'S CUT! ----", color="SUCCESS", styles=["bold"])
+    rprint("[green,bold]---- LET'S CUT! ----[/green,bold]")
     if chs_cut == []:
         chs_cut = my_runs["NChannel"]
     idx_list = []
@@ -329,14 +326,14 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
     for run, ch in product(my_runs["NRun"], chs_cut):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             generate_cut_array(my_runs)
-        print("...Running generate_cut_array...\n")
+        rprint("...Running generate_cut_array...\n")
 
         initial_evts = len(
             my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]
         )
         if run != my_runs["NRun"][0] and ch == chs_cut[0]:
             idx_list = []
-            print_colored("... NEW RUN ...", color="WARNING")
+            rprint("... NEW RUN ...", color="WARNING")
 
         data = my_runs[run][ch]["PedSTD"]
         ypbot = np.percentile(data, 0.1)
@@ -349,9 +346,9 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
         # moda = stat.mode(data)
         mediana = np.median(data)
         std = np.std(data)
-        print("--- CUTTING events with ", end="")
-        print_colored("PedSTD", color="cyan", end="")
-        print(
+        rprint("--- CUTTING events with ", end="")
+        rprint("PedSTD", color="cyan", end="")
+        rprint(
             " <",
             str(n_std) + "* std (of the distribution) for Ch",
             ch,
@@ -359,7 +356,7 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
             run,
             " ---",
         )
-        print(
+        rprint(
             "Nº events before cut: ",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),
         )
@@ -379,17 +376,17 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
                         rep_idx = rep_idx + 1
 
         if apply_all_chs == False:
-            print(
+            rprint(
                 "Nº cutted events:",
                 len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]),
             )
-            print(
+            rprint(
                 "Nº final evts after cutting in PedSTD for Ch " + str(ch) + ":",
                 len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),
                 "\n",
             )
         else:
-            print(
+            rprint(
                 "Nº cutted events in Ch " + str(ch) + ":",
                 rep_idx + ch_idx_list,
                 "(" + str(ch_idx_list),
@@ -397,19 +394,19 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
             )
 
         if apply_all_chs == True and ch == chs_cut[-1]:
-            print("--- CUTTING EVENTS for ALL (loaded) Chs ---")
-            print(
+            rprint("--- CUTTING EVENTS for ALL (loaded) Chs ---")
+            rprint(
                 "Nº of new cutted events in Chs " + str(my_runs["NChannel"]) + ":",
                 len(idx_list),
             )
             for ch in my_runs["NChannel"]:
                 if check_key(my_runs[run][ch], "MyCuts") == False:
-                    print("...Running generate_cut_array...")
+                    rprint("...Running generate_cut_array...")
                     generate_cut_array(my_runs)
                 for i in idx_list:
                     my_runs[run][ch]["MyCuts"][i] = False
 
-            print(
+            rprint(
                 "Nº total final events in ALL Chs:", initial_evts - len(idx_list), "\n"
             )
 
@@ -424,31 +421,31 @@ def cut_lin_rel(my_runs, keys, compare="NONE", percentile=[0.1, 99.9]):
     \n- percentile: the percentile used to reject outliers in the histogram
     """
 
-    print_colored("---- LET'S CUT! ----", color="cyan", styles=["bold"])
+    rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])
     counter = 0
     fig, ax = vis_two_var_hist(my_runs, keys, compare, percentile, OPT={"SHOW": False})
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
-            print("...Running generate_cut_array...")
+            rprint("...Running generate_cut_array...")
             generate_cut_array(my_runs)
 
         for j in range(len(keys)):
             if check_key(my_runs[run][ch], keys[j]) == True:
                 continue
             else:
-                print_colored("IAAA ERROR", "ERROR")
+                rprint("[red]IAAA ERROR[/red]")
                 break
 
         figure_features()
         evts_cut = 0
         idx_list = []
-        print("--- CUTTING EVENTS MANUALLY USING A POLYGON ---")
+        rprint("--- CUTTING EVENTS MANUALLY USING A POLYGON ---")
         plt.ion()
         coords = fig[counter].ginput(100, timeout=1000)
         polygon = Polygon(coords)
         n_points = len(coords)
-        print("Nº points: ", n_points)
-        print(
+        rprint("Nº points: ", n_points)
+        rprint(
             "Nº total events: ",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),
         )
@@ -494,8 +491,8 @@ def cut_lin_rel(my_runs, keys, compare="NONE", percentile=[0.1, 99.9]):
             c="red",
             s=1,
         )
-        print("Nº cutted events:", evts_cut)
-        print(
+        rprint("Nº cutted events:", evts_cut)
+        rprint(
             "Nº total final events:",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),
         )
@@ -512,13 +509,13 @@ def cut_peak_finder(my_runs, number_peaks, wdth=4, prom=0.01, dist=30):
     \nWARNING! Maybe the values of width, prominence and distance may be changed.
     """
 
-    print_colored("---- LET'S CUT! ----", color="cyan", styles=["bold"])
+    rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
-            print("...Running generate_cut_array...")
+            rprint("...Running generate_cut_array...")
             generate_cut_array(my_runs)
 
-        print(
+        rprint(
             "Nº total events: ",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),
             "for Run ",
@@ -526,7 +523,7 @@ def cut_peak_finder(my_runs, number_peaks, wdth=4, prom=0.01, dist=30):
             "Ch ",
             ch,
         )
-        print("---- CUTTING EVENTS with ", number_peaks, " or more peaks ----")
+        rprint("---- CUTTING EVENTS with ", number_peaks, " or more peaks ----")
         if check_key(my_runs[run][ch], "AveWvfSPE") == True:
             thresh = np.max(my_runs[run][ch]["AveWvfSPE"]) * 3 / 4
         for i in range(len(my_runs[run][ch]["ADC"])):
@@ -546,11 +543,11 @@ def cut_peak_finder(my_runs, number_peaks, wdth=4, prom=0.01, dist=30):
                 continue
             else:
                 my_runs[run][ch]["MyCuts"][i] = False
-        print(
+        rprint(
             "Nº cutted events: ",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]),
         )
-        print(
+        rprint(
             "Nº total final events: ",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),
         )
@@ -566,17 +563,17 @@ def cut_min_max_sim(my_runs, keys, limits, debug=False):
     \nExample: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
     """
 
-    print_colored("---- LET'S CUT! ----", color="cyan", styles=["bold"])
+    rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             generate_cut_array(my_runs)
-            print("...Running generate_cut_array...")
+            rprint("...Running generate_cut_array...")
 
-        print(
+        rprint(
             "Nº total events: ",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == True]),
         )
-        print("--- CUTTING EVENTS ---")
+        rprint("--- CUTTING EVENTS ---")
         for i in range(len(my_runs[run][ch][keys[0]])):
             for j in range(len(keys)):
                 if check_key(my_runs[run][ch], keys[j]) == True:
@@ -586,18 +583,18 @@ def cut_min_max_sim(my_runs, keys, limits, debug=False):
                         <= limits[keys[j]][1]
                     ):
                         my_runs[run][ch]["MyCuts"][i] = True
-                        print("Key", keys[j], "number ", j, "Evt ", i, " Break aquí")
+                        rprint("Key", keys[j], "number ", j, "Evt ", i, " Break aquí")
                         break
                     else:
                         my_runs[run][ch]["MyCuts"][i] = False
-                        print("Key", keys[j], "number ", j, "Evt ", i, " Cut aquí")
+                        rprint("Key", keys[j], "number ", j, "Evt ", i, " Cut aquí")
                 else:
-                    print(keys, " does not exist in my_runs!")
-                print("Final result is", my_runs[run][ch]["MyCuts"][i])
+                    rprint(keys, " does not exist in my_runs!")
+                rprint("Final result is", my_runs[run][ch]["MyCuts"][i])
 
-        print(
+        rprint(
             "Nº cutted events: ",
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]),
         )
     if debug == True:
-        print_colored("---- END OF CUTS ----", color="cyan", styles=["bold"])
+        rprint("---- END OF CUTS ----", color="cyan", styles=["bold"])

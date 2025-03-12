@@ -10,11 +10,11 @@ import matplotlib.pyplot as plt
 
 from itertools import product
 from scipy.signal import find_peaks
-from rich import print as print
+from rich import print as rprint
 
 # Import from other libraries
 from srcs.utils import get_project_root
-from .io_functions import print_colored, check_key
+from .io_functions import check_key
 from .cut_functions import generate_cut_array
 from .unit_functions import get_run_units
 from .head_functions import update_yaml_file
@@ -39,10 +39,10 @@ def compute_ana_wvfs(
         np.array(my_runs["NRun"]).astype(str), np.array(my_runs["NChannel"]).astype(str)
     ):
         if check_key(my_runs[run][ch], "RawADC") == False:
-            print("[red]ERROR: RawADC not found! Please run 00Raw2Npy.py [/red]")
+            rprint("[red]ERROR: RawADC not found! Please run 00Raw2Npy.py [/red]")
             return False
         if check_key(my_runs[run][ch], "Raw" + info["PED_KEY"][0]) == False:
-            print(
+            rprint(
                 f"[red]ERROR: Raw {info['PED_KEY'][0]} not found! Please run 01PreProcess.py[/red]"
             )
             return False
@@ -64,7 +64,7 @@ def compute_ana_wvfs(
                 filter_array[idx] = filter_wvf(wvf)
             my_runs[run][ch]["AnaADC"] = filter_array
 
-    print("[green]--> Computed AnaADC Wvfs!!![/green]")
+    rprint("[green]--> Computed AnaADC Wvfs!!![/green]")
     return True
 
 
@@ -106,10 +106,10 @@ def compute_fft_wvfs(
         my_runs[run][ch][label + "MeanFFT"] = [
             np.mean(my_runs[run][ch][label + "FFT"], axis=0)
         ]
-        print(
+        rprint(
             f"[green]FFT wvfs have been computed for run {run} ch {ch}[/green]",
         )
-    print(f"[green]--> Computed AnaFFT Wvfs!!![/green]")
+    rprint(f"[green]--> Computed AnaFFT Wvfs!!![/green]")
 
 
 def compute_peak_variables(
@@ -166,7 +166,7 @@ def compute_peak_variables(
             my_runs[run][ch][label + "ValleyTime"] = i_idx + np.argmin(
                 this_aux_ADC[:, :buffer], axis=1
             )
-    print_colored("--> Computed Peak Variables!!!", "SUCCESS")
+    rprint("[green]--> Computed Peak Variables!!![/green]")
 
 
 def compute_pedestal_variables(
@@ -194,7 +194,7 @@ def compute_pedestal_variables(
 
             if ped_lim <= buffer:
                 ped_lim = int(len(my_runs[run][ch][key][0]) * 0.2)
-                print(
+                rprint(
                     f"[yellow]WARNING: Peak time is smaller than {buffer}. Setting ped_lim = {ped_lim} (20% window length)[/yellow]"
                 )
 
@@ -206,7 +206,7 @@ def compute_pedestal_variables(
                 )
                 ped_mode = values[np.argmax(counts)]
                 if ped_mode == 0:
-                    print(
+                    rprint(
                         f"[yellow]WARNING: Pedestal mode is 0. Setting ped_mode = mean of the first 18% of the waveform.[/yellow]"
                     )
                     ped_mode = np.mean(
@@ -221,7 +221,7 @@ def compute_pedestal_variables(
                 my_runs[run][ch][label + "SignalStart"] = ped_lim - np.argmin(
                     start[:, ::-1], axis=1
                 )
-                print(
+                rprint(
                     f"[cyan]INFO: Negative polarity. Finding signal start and end in negative values.[/cyan]"
                 )
             else:
@@ -243,7 +243,7 @@ def compute_pedestal_variables(
             peaks, _ = find_peaks(hist, prominence=0.1, height=0.1)
 
             if len(peaks) == 0:
-                print(
+                rprint(
                     f"[yellow]WARNING:[/yellow] No peak found in the 'SignalStart' histogram. Starting peak search with lower threshold."
                 )
                 lower_thld = 0.1
@@ -253,15 +253,15 @@ def compute_pedestal_variables(
                         hist, prominence=lower_thld, height=lower_thld
                     )
                     if lower_thld < 0:
-                        print(f"[red]ERROR:[/red] No peak found in the 'SignalStart' histogram for any threshold. Exiting.")
+                        rprint(f"[red]ERROR:[/red] No peak found in the 'SignalStart' histogram for any threshold. Exiting.")
                         break
 
             elif len(peaks) == 1:
                 ped_lim = bins[peaks[0]]
-                print(f"[cyan]INFO: Setting ped_lim = {ped_lim}[/cyan]")
+                rprint(f"[cyan]INFO: Setting ped_lim = {ped_lim}[/cyan]")
 
             elif len(peaks) > 1:
-                print(
+                rprint(
                     f"[yellow]WARNING: Found more than one peak in the signal start histogram.[/yellow]"
                 )
                 # Plot the histogram and the peaks
@@ -290,7 +290,7 @@ def compute_pedestal_variables(
 
             if ped_lim <= buffer:
                 ped_lim = int(len(my_runs[run][ch][key][0]) * 0.15)
-                print(
+                rprint(
                     f"[yellow]WARNING: Peak time is smaller than {buffer}. Setting ped_lim = {ped_lim} (15% window length)[/yellow]"
                 )
 
@@ -312,7 +312,7 @@ def compute_pedestal_variables(
         my_runs[run][ch][label + "PedMin"] = np.min(ADC[:, :sliding], axis=1)
         my_runs[run][ch][label + "PedStart"] = start_window
         my_runs[run][ch][label + "PedEnd"] = start_window + sliding
-    print_colored("--> Computed Pedestal Variables!!!", "SUCCESS")
+    rprint("[green]--> Computed Pedestal Variables!!![/green]")
 
 
 def compute_wvf_variables(my_runs, info, key, label, debug=False):
@@ -336,7 +336,7 @@ def compute_wvf_variables(my_runs, info, key, label, debug=False):
                 axis=1,
             )
         )
-    print_colored("--> Computed Wvf Variables!!!", "SUCCESS")
+    rprint("[green]--> Computed Wvf Variables!!![/green]")
 
 
 def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=200, debug=False):
@@ -351,10 +351,9 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=200, debug=False):
     """
     if ped_lim < sliding:
         ped_lim = sliding
-        print_colored(
-            "WARNING: Pedestal window is smaller than sliding window. Setting ped_lim = %s"
-            % sliding,
-            "WARNING",
+        rprint(
+            "[yellow]WARNING: Pedestal window is smaller than sliding window. Setting ped_lim = %s[/yellow]"
+            % sliding
         )
 
     slides = int(ped_lim / sliding)
@@ -366,18 +365,14 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=200, debug=False):
     try:
         start_window = np.argmin(aux, axis=1) * sliding
     except ValueError:
-        print_colored(
-            "ERROR: There is a problem with the pedestal computation. Check the data!",
-            "ERROR",
-        )
+        rprint("[red]ERROR: There is a problem with the pedestal computation. Check the data![/red]")
         start_window = np.zeros(nwvfs)
 
     ADC_s = shift_ADCs(ADC, (-1) * start_window)
 
     if debug:
-        print_colored(
-            "Calculating pedestal variables from sliding window of %i bins" % (sliding),
-            "INFO",
+        rprint(
+            "[cyan]Calculating pedestal variables from sliding window of %i bins[/cyan]" % (sliding)
         )
     return ADC_s, start_window
 
@@ -511,8 +506,8 @@ def average_wvfs(
                 [np.mean(aux_ADC, axis=0)]
             )  # It saves the average waveform as "AveWvfThreshold_*"
 
-    print_colored(
-        "--> Computed Average Wvfs (centered wrt %s)!!!" % centering, "SUCCESS"
+    rprint(
+        "[green]--> Computed Average Wvfs (centered wrt %s)!!![/green]" % centering
     )
 
 
@@ -631,10 +626,9 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
     f_range = info["F_RANGE"]  # Get final time(s) to finish the integration
 
     if debug:
-        print_colored(
-            "\n--- Integrating RUN %s CH %s TYPE %s, REF %s ---"
-            % (my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]),
-            "DEBUG",
+        rprint(
+            "[magenta]\n--- Integrating RUN %s CH %s TYPE %s, REF %s ---[/magenta]"
+            % (my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"])
         )
     for run, ch, typ, ref in product(
         my_runs["NRun"], my_runs["NChannel"], info["TYPE"], info["REF"]
@@ -656,34 +650,31 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
             if typ == "ChargeAveRange":  # Integrated charge from the average waveform
                 i_idx, f_idx = find_baseline_cuts(ave[i])
                 if f_idx - i_idx <= 0:
-                    print_colored(
-                        "WARNING: Invalid integration range for RUN %s CH %s TYPE %s, REF %s"
-                        % (run, ch, typ, label + ref),
-                        "WARNING",
+                    rprint(
+                        "[yellow]WARNING: Invalid integration range for RUN %s CH %s TYPE %s, REF %s[/yellow]"
+                        % (run, ch, typ, label + ref)
                     )
                     idx, f_idx = find_amp_decrease(ave[i], 1e-3)
                     if debug:
-                        print_colored(
-                            "Using amp decrease instead: [%.2f, %.2f] \u03BCs"
+                        rprint(
+                            "[magenta]Using amp decrease instead: [%.2f, %.2f] \u03BCs[/magenta]"
                             % (
                                 idx * my_runs[run][ch]["Sampling"],
                                 f_idx * my_runs[run][ch]["Sampling"],
-                            ),
-                            "DEBUG",
+                            )
                         )
                 charge_name = label + typ + ref.split("Wvf")[-1] + cut_label
                 my_runs[run][ch][charge_name] = np.sum(
                     aux_ADC[:, i_idx:f_idx], axis=1
                 )  # Integrated charge from the DECONVOLUTED average waveform
-                print_colored(
-                    "--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"
+                rprint(
+                    "[green]--> Computed %s (according to type **%s** from %.2E to %.2E)!!![/green]"
                     % (
                         charge_name,
                         typ,
                         i_idx * my_runs[run][ch]["Sampling"],
                         f_idx * my_runs[run][ch]["Sampling"],
-                    ),
-                    "SUCCESS",
+                    )
                 )
                 integration_dict[typ][charge_name] = [int(i_idx), int(f_idx)]
 
@@ -695,15 +686,14 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
                 )
                 charge_name = label + typ + str(j) + cut_label
                 my_runs[run][ch][charge_name] = np.sum(aux_ADC[:, i_idx:f_idx], axis=1)
-                print_colored(
-                    "--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"
+                rprint(
+                    "[green]--> Computed %s (according to type **%s** from %.2E to %.2E)!!![/green]"
                     % (
                         charge_name,
                         typ,
                         i_idx * my_runs[run][ch]["Sampling"],
                         f_idx * my_runs[run][ch]["Sampling"],
-                    ),
-                    "SUCCESS",
+                    )
                 )
                 integration_dict[typ][charge_name] = [int(i_idx), int(f_idx)]
 
@@ -718,19 +708,18 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
                 )
                 charge_name = label + typ + str(k) + cut_label
                 my_runs[run][ch][charge_name] = np.sum(this_aux_ADC[:, :f_idx], axis=1)
-                print_colored(
-                    "--> Computed %s (according to type **%s** from %.2E to %.2E)!!!"
+                rprint(
+                    "[green]--> Computed %s (according to type **%s** from %.2E to %.2E)!!![/green]"
                     % (
                         charge_name,
                         typ,
                         i_idx * my_runs[run][ch]["Sampling"],
                         f_idx * my_runs[run][ch]["Sampling"],
-                    ),
-                    "SUCCESS",
+                    )
                 )
                 integration_dict[typ][charge_name] = [int(i_idx), int(f_idx)]
 
-    # print(integration_dict)
+    # rprintintegration_dict)
     out_path = info["NPY_PATH"][0]
     out_path = os.path.expandvars(out_path)
 
@@ -747,39 +736,34 @@ def compute_peak_RMS(my_runs, info, key, label, debug=False):
         ref = np.asarray(my_runs[run][ch][label + "AveWvf"][0])
         i_idx, f_idx = find_baseline_cuts(ref)
         if f_idx - i_idx <= 0:
-            print_colored(
-                "WARNING: Invalid integration range for RUN %s CH %s, REF %s"
-                % (run, ch, label + "AveWvf"),
-                "WARNING",
+            rprint(
+                "[yellow]WARNING: Invalid integration range for RUN %s CH %s, REF %s[/yellow]"
+                % (run, ch, label + "AveWvf")
             )
             idx, f_idx = find_amp_decrease(ref, 1e-3)
             if debug:
-                print_colored(
-                    "Using amp decrease instead: [%.2E, %.2E] \u03BCs"
+                rprint(
+                    "[magenta]Using amp decrease instead: [%.2E, %.2E] \u03BCs[/magenta]"
                     % (
                         idx * my_runs[run][ch]["Sampling"],
                         f_idx * my_runs[run][ch]["Sampling"],
-                    ),
-                    "DEBUG",
+                    )
                 )
             if f_idx - i_idx <= 0:
-                print_colored(
-                    "ERROR: Invalid integration range for RUN %s CH %s, REF %s"
-                    % (run, ch, label + "AveWvf"),
-                    "ERROR",
-                )
+                rprint(
+                    "[red]ERROR: Invalid integration range for RUN %s CH %s, REF %s[/red]"
+                    % (run, ch, label + "AveWvf"))
                 idx, f_idx = (
                     my_runs[run][ch][label + "PedLim"],
                     my_runs[run][ch][label + "PedLim"] + 1000,
                 )
                 if debug:
-                    print_colored(
-                        "Using pedlim instead: [%.2E, %.2E] \u03BCs"
+                    rprint(
+                        "[magenta]Using pedlim instead: [%.2E, %.2E] \u03BCs[/magenta]"
                         % (
                             idx * my_runs[run][ch]["Sampling"],
                             f_idx * my_runs[run][ch]["Sampling"],
-                        ),
-                        "DEBUG",
+                        )
                     )
 
         pulse_peak = np.argmax(ref)
@@ -802,7 +786,7 @@ def compute_peak_RMS(my_runs, info, key, label, debug=False):
                 axis=0,
             )
         )
-        print_colored("--> Computed Peak RMS!!!", "SUCCESS")
+        rprint("[green]--> Computed Peak RMS!!![/green]")
 
 
 # ===========================================================================#
@@ -829,7 +813,7 @@ def insert_variable(my_runs, var, key, debug=False):
             my_runs[run][ch][key] = var[j]
         except KeyError:
             if debug:
-                print_colored("Inserting value...", "DEBUG")
+                rprint("[magenta]Inserting value...[/magenta]")
 
 
 def get_ADC_key(my_runs, key, debug=False):
@@ -848,25 +832,24 @@ def get_ADC_key(my_runs, key, debug=False):
                 label = this_key.split("ADC")[0]
                 found_duplicate += 1
                 if debug:
-                    print_colored("Found ADC branch: %s" % key, "DEBUG")
+                    rprint("[magenta]Found ADC branch: %s[/magenta]" % key)
                 if found_duplicate > 1:
-                    print_colored(
-                        "ERROR: Found more than one ADC key! Please check load preset.",
-                        "ERROR",
+                    rprint(
+                        "[red]ERROR: Found more than one ADC key! Please check load preset.[/red]"
                     )
                     exit()
         if found_duplicate == 0:
-            print_colored("WARNING: No ADC branch found!", "WARNING")
+            rprint("[yellow]WARNING: No ADC branch found![/yellow]")
             label = ""
         if debug:
-            print_colored(
-                "--> Returning key: '%s' and label: '%s'!!!" % (key, label), "SUCCESS"
+            rprint(
+                "[green]--> Returning key: '%s' and label: '%s'!!![/green]" % (key, label)
             )
 
     else:
         label = key.split("ADC")[0]
         if debug:
-            print_colored("Returning label from provided key:", "DEBUG")
+            rprint("[magenta]Returning label from provided key[/magenta]")
 
     return key, label
 
@@ -891,8 +874,8 @@ def get_wvf_label(my_runs, key, label, debug=False):
 
         if found_label != label:
             if debug:
-                print_colored(
-                    "WARNING: Provided label does not match found label!", "WARNING"
+                rprint(
+                    "[yellow]WARNING: Provided label does not match found label![/yellow]"
                 )
             user_confirmation = input(
                 "Do you want to continue with coustom selection? [y/n]: "
@@ -900,35 +883,34 @@ def get_wvf_label(my_runs, key, label, debug=False):
             if user_confirmation.lower() in ["y", "yes"]:
                 out_label = found_label
                 if debug:
-                    print_colored("Selected label %s" % label, "DEBUG")
+                    rprint("[magenta]Selected label %s[/magenta]" % label)
             else:
                 out_label = label
                 if debug:
-                    print_colored("Found label %s" % found_label, "DEBUG")
+                    rprint("[magenta]Found label %s[/magenta]" % found_label)
         else:
             out_label = found_label
             if debug:
-                print_colored("Found label %s" % label, "DEBUG")
+                rprint("[magenta]Found label %s[/magenta]" % label)
 
     elif key != "" and label == "":
         if debug:
-            print_colored(
-                "WARNING: Selected input ADC but no label provided!", "WARNING"
+            rprint(
+                "[yellow]WARNING: Selected input ADC but no label provided![/yellow]"
             )
         found_key, found_label = get_ADC_key(my_runs, key, debug=debug)
         out_key = found_key
         out_label = found_label
         if found_label != key.split("ADC")[0]:
-            print_colored(
-                "ERROR: Found label does not match label from provided key!", "ERROR"
+            rprint(
+                "[red]ERROR: Found label does not match label from provided key![/red]"
             )
             exit()
 
     else:
         if debug:
-            print_colored(
-                "WARNING: Using full coustom mode for label and ADC key selection!",
-                "WARNING",
+            rprint(
+                "[yellow]WARNING: Using full coustom mode for label and ADC key selection![/yellow]"
             )
         out_key = key
         out_label = label
