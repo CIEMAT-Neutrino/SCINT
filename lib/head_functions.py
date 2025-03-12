@@ -4,7 +4,7 @@ import numpy as np
 from typing import Optional
 from rich import print as print
 
-from src.utils import get_project_root
+from srcs.utils import get_project_root
 from .io_functions import (
     print_colored,
     check_key,

@@ -1,10 +1,5 @@
 # Create a python virtual environment (v3.7) and install the required packages from requirements.txt
 
-# Make sure you are in the root directory of the project
-# Project structure:
-#   - src/scripts/make_env.sh
-
-# Install python3.7
 # Ask to be sure that you are in the correct directory
 root_dir="/pc/choozdsk01/users/${USER}/SCINT/"
 
@@ -40,7 +35,7 @@ source bin/activate
 
 # Install the required packages
 pip install --upgrade pip
-pip install -r src/scripts/requirements.txt
+pip install -r srcs/scripts/requirements.txt
 
 echo "Virtual environment is created and the required packages are installed."
 echo "To activate the virtual environment, run 'source .venv/bin/activate'."

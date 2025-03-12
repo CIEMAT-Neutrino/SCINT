@@ -1,7 +1,7 @@
 # ================================================================================================================================================#
 # This library contains function to perform the calibration of our sensors. They are mostly used in the 04Calibration.py macro.                  #
 # ================================================================================================================================================#
-from src.utils import get_project_root
+from srcs.utils import get_project_root
 
 import scipy, os, stat, yaml
 import numpy as np

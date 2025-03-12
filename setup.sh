@@ -43,6 +43,12 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     ln -s $REPLY data
 fi
 
+# Check if the .venv directory exists and activate it
+if [ -d .venv ]; then
+    echo -e "\e[36mActivating the virtual environment... \e[0m"
+    source .venv/bin/activate
+fi
+
 # If you already have the packages installed (i.e. .venv with VSCode), you can skip this step
 read -p "Do you want to INSTALL the packages (y/n)?" -n 1 -r
 echo
@@ -52,5 +58,5 @@ if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     echo -e "\e[36mUpdating pip... \e[0m"
     pip3 install --upgrade pip
     echo -e "\e[36mInstalling packages... \e[0m"
-    pip3 install -r src/requirements.txt
+    pip3 install -r srcs/requirements.txt
 fi

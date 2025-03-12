@@ -7,7 +7,7 @@ from numba_stats import (
     expon,
 )  # uniform,truncexpon,poisson,qgaussian #https://github.com/HDembinski/numba-stats/tree/main/src/numba_stats
 
-from src.utils import get_project_root
+from srcs.utils import get_project_root
 from .io_functions import print_colored
 from .fit_functions import gaussian, gaussian_train
 

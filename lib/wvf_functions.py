@@ -5,7 +5,7 @@ from itertools import product
 from rich import print as print
 
 # Imports from other libraries
-from src.utils import get_project_root
+from srcs.utils import get_project_root
 from .io_functions import print_colored, check_key
 from .head_functions import update_yaml_file
 from .ana_functions import (

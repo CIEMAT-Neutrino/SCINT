@@ -1,7 +1,7 @@
 # ================================================================================================================================================#
 # This library contains functions to perform fits to the data.                                                                                   #
 # ================================================================================================================================================#
-from src.utils import get_project_root
+from srcs.utils import get_project_root
 
 import os, stat, math, scipy
 import numpy as np

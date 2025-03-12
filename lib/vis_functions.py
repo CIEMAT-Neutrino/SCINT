@@ -1,7 +1,7 @@
 # ================================================================================================================================================#
 # In this library we have all the functions related with visualization. They are mostly used in 0XVis*.py macros but can be included anywhere !! #
 # ================================================================================================================================================#
-from src.utils import get_project_root
+from srcs.utils import get_project_root
 
 import math, inquirer, yaml, os, stat
 import numpy as np

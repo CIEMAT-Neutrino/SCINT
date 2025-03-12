@@ -1,7 +1,7 @@
 # ================================================================================================================================================#
 # This library contains general functions used to read/write files, load/save data, etc.                                                         #
 # ================================================================================================================================================#
-from src.utils import get_project_root
+from srcs.utils import get_project_root
 
 import os, gc, uproot, copy, stat, yaml, glob
 import numpy as np

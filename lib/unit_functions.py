@@ -1,4 +1,4 @@
-from src.utils import get_project_root
+from srcs.utils import get_project_root
 
 import glob
 import inquirer
