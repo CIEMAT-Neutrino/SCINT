@@ -9,7 +9,7 @@ from jacobi import propagate
 from iminuit import Minuit, cost
 
 from srcs.utils import get_project_root
-from .io_functions import write_output_file, read_yaml_file
+from .io_functions import write_output_file, read_yaml_file, save_figure
 from .sty_functions import add_grid, get_color, style_selector
 from .sim_functions import setup_fitting_function, fitting_function
 from .unit_functions import get_unit
@@ -155,17 +155,18 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
     plt.close()
 
     if user_input["save"]:
-        fig.savefig(
-            f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
-            dpi=500,
-        )
-        try:
-            os.chmod(
-                f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
-                0o770,
-            )
-        except:
-            pass
+        save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images/', run, ch, f'{variable}_Fit', debug=user_input["debug"])
+        # fig.savefig(
+        #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
+        #     dpi=500,
+        # )
+        # try:
+        #     os.chmod(
+        #         f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
+        #         0o770,
+        #     )
+        # except:
+        #     pass
 
         save_fit_parameters(run, ch, m_fit, OPT["FIT"], variable, info, user_input)
         if user_input["debug"]:
