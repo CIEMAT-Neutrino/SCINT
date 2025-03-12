@@ -385,7 +385,7 @@ def apply_cuts(user_input, info, debug=False):
             return cut_dict
 
 
-def opt_selector(filename: str = "VisConfig", arguments: Optional[list] = None, debug: bool = False):
+def opt_selector(filename: str = "options", arguments: Optional[list] = None, debug: bool = False):
     my_opt = read_yaml_file(filename, path=f"{root}/config/", debug=debug)
     if arguments is None:
         new_opt = my_opt.copy()

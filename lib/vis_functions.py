@@ -119,7 +119,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             - my_run[run][ch_list[j]]["Raw" + info["PED_KEY"][0]][idx]
                         ).T
                     )
-                    if OPT["FILTER"]:
+                    if OPT["WVF_FILTER"]:
                         print_colored("Filtering waveforms!", "INFO")
                         filtered_ana.append(filter_wvf(ana))
                     raw.append(ana)
@@ -164,7 +164,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     c=colors[0],
                     zorder=0,
                 )
-                if OPT["FILTER"]:
+                if OPT["WVF_FILTER"]:
                     axs[j].plot(
                         my_run[run][ch_list[j]]["Sampling"]
                         * np.arange(len(filtered_ana[j])),

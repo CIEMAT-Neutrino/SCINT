@@ -1,0 +1,43 @@
+---
+ACCURACY: 150
+ALIGN: false
+CHARGE_KEY: ChargeAveRange
+COMPARE: CHANNELS
+CUTTED_WVF: -1
+DENSITY: false
+FILTER: 1
+FIT: gaussian
+LEGEND: true
+LIMITS: false
+LOGX: false
+LOGY: false
+LOGZ: true
+MICRO_SEC: false
+NAME: VisConfig
+NORM: false
+PE: false
+PEAK_DISTANCE: 20
+PEAK_FINDER: false
+PERCENTILE:
+  - 2
+  - 98
+PROMINENCE: 0.02
+SCINT_FIT: false
+SHOW: true
+SHOW_PARAM: true
+SPACE_OUT: 0
+STATS: true
+STYLE: HEP
+TERMINAL_MODE: true
+THRESHOLD: 0
+WFV_FILTER: false
+WIDTH: 10
+XLIM:
+  - 0.0000025
+  - 0.0000125
+YLIM:
+  - -2
+  - 30
+ZLIM:
+  - 0
+  - 0
