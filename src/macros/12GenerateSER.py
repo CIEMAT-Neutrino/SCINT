@@ -17,7 +17,8 @@ user_input, info = initialize_macro(
 ### Configure SER
 light_runs = ["00"]
 calib_runs = ["00"]
-OPT = opt_selector(debug=user_input["debug"])
+
+OPT = opt_selector(arguments=["ALIGN", "SPACE_OUT", "NORM", "LIMITS", "XLIM", "YLIM", "ZLIM", "LOGZ"], debug=user_input["debug"])
 
 ### 12GenerateSER
 for run in np.asarray(user_input["runs"]).astype(str):
