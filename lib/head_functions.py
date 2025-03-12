@@ -385,19 +385,19 @@ def apply_cuts(user_input, info, debug=False):
             return cut_dict
 
 
-def opt_selector(filename: str = "VisConfig", argumemts: Optional[list] = None, debug: bool = False):
+def opt_selector(filename: str = "VisConfig", arguments: Optional[list] = None, debug: bool = False):
     my_opt = read_yaml_file(filename, path=f"{root}/config/", debug=debug)
-    if argumemts is None:
+    if arguments is None:
         new_opt = my_opt.copy()
         print(my_opt)
     
-    elif isinstance(argumemts, list) and len(argumemts) == 0:
+    elif isinstance(arguments, list) and len(arguments) == 0:
         print(f"[cyan][INFO] No arguments provided. Returning all options from {filename}.yml[/cyan]")
         return my_opt
     
     else:
         new_opt = dict()
-        for arg in argumemts:
+        for arg in arguments:
             if arg in my_opt.keys():
                 new_opt[arg] = my_opt[arg]
         print(new_opt)
