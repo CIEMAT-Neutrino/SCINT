@@ -13,6 +13,7 @@ test/
 larsoft/
 .vscode*
 .bash_history
+backup/*
 
 # Ignore everything from input files
 config/input/*
