@@ -1090,6 +1090,25 @@ def npy2df(my_runs, debug=False):
     return df
 
 
+def save_figure(fig, path, run, ch, label, debug=False):
+    # Ensure run has leading zeros up to 2 digits
+    run = str(run).zfill(2)
+    # Remove / if path ends with it
+    if path[-1] == "/":
+        path = path[:-1]
+
+    os.makedirs(name=f"{path}/run{run}/ch{ch}", mode=0o777, exist_ok=True)
+    fig.savefig(f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
+    # Give permissions to the file
+    os.chmod(
+        f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png",
+        stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
+    )
+    
+    if debug:
+        print(f"Figure saved in: {path}")
+
+
 # def print_keys(my_runs, debug=False):
 #     '''
 #     \nPrints the keys of the run_dict which can be accesed with run_dict[runs][channels][BRANCH]
