@@ -315,11 +315,12 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
         color=get_color(ch, even=True, debug=debug),
     )
     # Add vertical line to mean value
+    mean = np.sum(np.array(xdata) * PNs) / np.sum(np.array(xdata))
     ax_xt.axvline(
-        x=np.sum(np.array(xdata) * PNs) / np.sum(np.array(xdata)),
+        x=mean,
         color="black",
         linestyle="--",
-        label="Mean value",
+        label=f"Mean value: {mean:.2f}",
     )
     try:
         xt_popt, xt_pcov = curve_fit(
