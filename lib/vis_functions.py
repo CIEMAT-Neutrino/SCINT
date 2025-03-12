@@ -119,7 +119,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             - my_run[run][ch_list[j]]["Raw" + info["PED_KEY"][0]][idx]
                         ).T
                     )
-                    if OPT["WVF_FILTER"]:
+                    if "WVF_FILTER" in OPT and OPT["WVF_FILTER"]:
                         print_colored("Filtering waveforms!", "INFO")
                         filtered_ana.append(filter_wvf(ana))
                     raw.append(ana)
@@ -501,21 +501,17 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         )
                     except KeyError:
                         print_colored("Min valley time not found!", color="ERROR")
+                    
+                    print("\n--- Charge Variables ---")
                     try:
-                        print(
-                            "- "
-                            + label
-                            + OPT["CHARGE_KEY"]
-                            + ":\t{:.2E}".format(
-                                my_run[run][ch_list[j]][label + OPT["CHARGE_KEY"]][idx]
-                            )
-                        )
+                        print(f"\n- {label} {OPT['CHARGE_KEY']}: {my_run[run][ch_list[j]][label+OPT['CHARGE_KEY']][idx]:.2E}")
                     except:
                         print_colored(
                             "- Charge: %s has not been computed!"
                             % (label + OPT["CHARGE_KEY"]),
                             "WARNING",
                         )
+                    
                     try:
                         print(
                             "- Peak_idx:",
@@ -524,6 +520,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     except:
                         if not check_key(OPT, "PEAK_FINDER"):
                             print("")
+                
                 my_run[run][ch_list[j]]["Sampling"] = sampling
 
             tecla = input(
