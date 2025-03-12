@@ -35,7 +35,7 @@ source bin/activate
 
 # Install the required packages
 pip install --upgrade pip
-pip install -r srcs/requirements.txt
+pip install -r ../srcs/requirements.txt
 
 echo "Virtual environment is created and the required packages are installed."
 echo "To activate the virtual environment, run 'source .venv/bin/activate'."
