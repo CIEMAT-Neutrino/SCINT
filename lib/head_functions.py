@@ -1,4 +1,5 @@
 import sys, inquirer, os, yaml, ast
+
 import numpy as np
 from typing import Optional
 from rich import print as print
@@ -42,7 +43,7 @@ def get_flag_dict():
 
 
 def initialize_macro(
-    macro, input_list=["input_file", "debug"], default_dict:Optional[dict]=None, debug=False
+    macro, input_list: Optional[list] = ["input_file", "debug"], default_dict: Optional[dict] = None, debug: bool = False
 ):
     """
     \nThis function initializes the macro by reading the input file and the user input.
@@ -384,9 +385,22 @@ def apply_cuts(user_input, info, debug=False):
             return cut_dict
 
 
-def opt_selector(filename="VisConfig", debug=False):
+def opt_selector(filename: str = "VisConfig", argumemts: Optional[list] = None, debug: bool = False):
     my_opt = read_yaml_file(filename, path=f"{root}/config/", debug=debug)
-    print(my_opt)
+    if argumemts is None:
+        new_opt = my_opt.copy()
+        print(my_opt)
+    
+    elif isinstance(argumemts, list) and len(argumemts) == 0:
+        print(f"[cyan][INFO] No arguments provided. Returning all options from {filename}.yml[/cyan]")
+        return my_opt
+    
+    else:
+        new_opt = dict()
+        for arg in argumemts:
+            if arg in my_opt.keys():
+                new_opt[arg] = my_opt[arg]
+        print(new_opt)
     q = [
         inquirer.List(
             "change",
@@ -396,27 +410,28 @@ def opt_selector(filename="VisConfig", debug=False):
         )
     ]
     change_line = inquirer.prompt(q)["change"].strip().lower()
-    update_opt = dict()
+    
     if change_line in ["yes", "y", "true", "1"]:
         q = [
             inquirer.Checkbox(
-                "lines", message="Choose the lines to change", choices=my_opt.keys()
+                "lines", message="Choose the lines to change", choices=new_opt.keys()
             )
         ]
         line_label = inquirer.prompt(q)["lines"]
         for line in line_label:
             options = ""
-            if type(my_opt[line]) == bool:
+            if type(new_opt[line]) == bool:
                 options = "(True/False)"
-            if type(my_opt[line]) == str:
+            if type(new_opt[line]) == str:
                 options = ""
-            if type(my_opt[line]) == list:
+            if type(new_opt[line]) == list:
                 options = "(comma separated list)"
             new_text = input(f"Enter new entry for line {line} {options}: ")
-            update_opt[line] = new_text
-        update_yaml_file(f"{root}/config/{filename}.yml", update_opt)
-    my_opt = read_yaml_file(filename, path=f"{root}/config/", debug=debug)
-    return my_opt
+            new_opt[line] = new_text
+        update_yaml_file(f"{root}/config/{filename}.yml", new_opt)
+    
+    updated_opt = read_yaml_file(filename, path=f"{root}/config/", debug=debug)
+    return updated_opt
 
 
 def convert_str_to_type(value, debug=False):

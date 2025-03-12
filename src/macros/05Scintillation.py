@@ -15,7 +15,8 @@ user_input, info = initialize_macro(
     default_dict=default_dict,
     debug=True,
 )
-OPT = opt_selector(debug=user_input["debug"])
+
+OPT = opt_selector(arguments=["PERCENTILE", "NORM", "LIMITS", "XLIM", "YLIM", "ZLIM", "LOGZ"], debug=user_input["debug"])
 ## 05Scintillation
 my_runs = load_npy(
     np.asarray(user_input["runs"]).astype(str),
