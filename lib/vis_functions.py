@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# Imports from other libraries
 from matplotlib.colors import LogNorm
 from matplotlib.cm import viridis
 from itertools import product
@@ -15,10 +16,10 @@ from scipy.signal import find_peaks
 from scipy.ndimage.interpolation import shift
 from rich import print as rprint
 
-# Imports from other libraries
+# Imports from this library
 from .io_functions import check_key, print_colored
 from .fig_config import figure_features, add_grid
-from .ana_functions import get_wvf_label, get_run_units, filter_wvf
+from .unit_functions import get_run_units
 from .sty_functions import style_selector, get_prism_colors
 
 root = get_project_root()
@@ -119,9 +120,9 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             - my_run[run][ch_list[j]]["Raw" + info["PED_KEY"][0]][idx]
                         ).T
                     )
-                    if "WVF_FILTER" in OPT and OPT["WVF_FILTER"]:
-                        print_colored("Filtering waveforms!", "INFO")
-                        filtered_ana.append(filter_wvf(ana))
+                    # if "WVF_FILTER" in OPT and OPT["WVF_FILTER"]:
+                    #     print_colored("Filtering waveforms!", "INFO")
+                    #     filtered_ana.append(filter_wvf(ana))
                     raw.append(ana)
                     ped = 0
                     std = my_run[run][ch_list[j]]["AnaPedSTD"][idx]

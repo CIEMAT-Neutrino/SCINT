@@ -12,8 +12,7 @@ from srcs.utils import get_project_root
 from .io_functions import write_output_file, read_yaml_file, print_colored
 from .sty_functions import add_grid, get_color, style_selector
 from .sim_functions import setup_fitting_function, fitting_function
-from .fit_functions import gaussian, gaussian_train
-from .ana_functions import get_unit
+from .unit_functions import get_unit
 
 root = get_project_root()
 

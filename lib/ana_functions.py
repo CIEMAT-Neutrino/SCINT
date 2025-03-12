@@ -14,6 +14,8 @@ from rich import print as print
 # Import from other libraries
 from srcs.utils import get_project_root
 from .io_functions import print_colored, check_key
+from .cut_functions import generate_cut_array
+from .unit_functions import get_run_units
 
 root = get_project_root()
 
@@ -930,36 +932,3 @@ def get_wvf_label(my_runs, key, label, debug=False):
         out_label = label
 
     return out_key, out_label
-
-
-def get_run_units(my_runs, debug=False):
-    """
-    \nComputes and store in a dictionary the units of each variable.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data
-    \n**- debug**:   boolean to print debug messages
-    """
-    if debug:
-        print("Getting units...")
-    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        keys = my_runs[run][ch].keys()
-        aux_dict = {}
-        for key in keys:
-            aux_dict[key] = get_unit(key, debug)
-        my_runs[run][ch]["UnitsDict"] = aux_dict
-
-
-def get_unit(key, debug=False):
-    unit = "a.u."
-    if "Amp" in key or "Ped" in key or "ADC" in key or "PreTrigger" in key:
-        unit = "ADC"
-    if "Time" in key or "Sampling" in key:
-        unit = "ticks"
-    if "Charge" in key and "Ana" in key and "PE" not in key:
-        unit = "ADC x ticks"
-    if "PE" in key and "Ana" in key:
-        unit = "PE"
-    if "Charge" in key and "Gauss" in key:
-        unit = "PE"
-
-    return unit
