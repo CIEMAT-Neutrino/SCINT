@@ -683,6 +683,11 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
 
         tecla = input("\nPress p to save plot and any key to continue: ")
         if tecla == "p":
+            if not os.path.exists(
+                f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/'
+            ):
+                os.makedirs(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', mode=0o770, exist_ok=True)
+                    # os.chmod(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', 0o770)
             if isinstance(keys, dict):
                 fig.savefig(
                     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{"_".join(list(keys.values()))}.png',
