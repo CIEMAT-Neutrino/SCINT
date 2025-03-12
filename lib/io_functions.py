@@ -360,6 +360,7 @@ def write_output_file(
     \nIf the file existed previously it appends the new fit values (it save the run for each introduced row)
     \nBy default we dont save the height of the fitted gaussian in the txt.
     """
+    run = str(run).zfill(2)
 
     def remove_columns(flattened_data, columns_to_remove):
         return [
@@ -383,6 +384,7 @@ def write_output_file(
     if not os.path.exists(folder_path):
         os.makedirs(name=folder_path, mode=0o777, exist_ok=True)
         os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+    
     if debug:
         print("Saving in: " + str(folder_path + filename + "Ch%s.txt" % ch))
 
