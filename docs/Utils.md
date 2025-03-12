@@ -24,6 +24,9 @@
     More commands and info in the web ([git-cheat_sheet](https://about.gitlab.com/images/press/git-cheat-sheet.pdf))
 
 ### Mounting/umounting a /pnfs/ or /pc/ folder in your local computer (from macros folder)
+☠️☠️ **DANGER**☠️☠️ 
+
+**DO NOT RUN THIS COMMANDS IF YOU DO NOT KNOW WHAT THEY DO --> you could delete data accidentally**
 
 ```bash
 sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/your_folder ../data

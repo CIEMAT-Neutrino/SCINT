@@ -9,12 +9,6 @@ io_functions
 ..    :undoc-members:
 ..    :show-inheritance:
 
-.. admonition:: **General formatting**
-
-   These functions are used to format the output of the code, for the moment they are helping us to print colored lines in the output to detect errors or warnings.
-
-.. autoclass:: lib.io_functions.print_colored
-
 .. admonition:: **Input/Output files**
    
    These functions are used to read and write files. The input files are stored in the `input` folder as `.txt` files (`read_input_file`). Once the deconvolution is performed, there are new input files generated that can be used to re-run the analysis workflow using the deconvolved waveforms (`list_to_string` + `generate_input_file`). In some functions we need to save some results in a file, for example the results of the calibration/charge fit. The output files are stored in the `fits` folder as `.txt` files using `write_output_file` function:
@@ -69,6 +63,8 @@ ana_functions
 ..    :undoc-members:
 ..    :show-inheritance:
 
+Waveforms related functions
+
 .. admonition:: **General analysis**
    
    These functions are used to perform general analysis of the data. For example, we can use the `insert_variable` function to insert a new variable in the dictionary. The `generate_cut_array` function is used to generate the cut array that we will use to select the events that we want to analyze. The `get_run_units` function is used to get the units of the variables stored in the dictionary.
@@ -79,21 +75,12 @@ ana_functions
 
 .. admonition:: **Computing peak/pedestal variables**
    
-   These functions are used to compute the peak and pedestal varibales of the raw waveforms (`compute_peak_variables`, `compute_pedestal_variables`, `compute_pedestal_variables_sliding_window`, `compute_pedestal_sliding_windows`). We can also compute the processed waveforms with the pedestal subtracted as well as computing the power spectrum of the waveforms (`compute_ana_wvfs`, `compute_power_spec`). Finally, we are trying to optimize the functions by introducing `numba` libraries. The `shift_ADCs` function is used to shift the ADCs of the waveforms to the pedestal value. The `shift4_numba` function is used to shift the ADCs of the waveforms to the pedestal value using `numba` library.
+   These functions are used to compute the peak and pedestal variables of the raw waveforms (`compute_peak_variables`, `compute_pedestal_variables`, `compute_pedestal_variables_sliding_window`, `compute_pedestal_sliding_windows`). We can also compute the processed waveforms with the pedestal subtracted as well as computing the power spectrum of the waveforms (`compute_ana_wvfs`, `compute_power_spec`). Finally, we are trying to optimize the functions by introducing `numba` libraries. The `shift_ADCs` function is used to shift the ADCs of the waveforms to the pedestal value. The `shift4_numba` function is used to shift the ADCs of the waveforms to the pedestal value using `numba` library.
 
 .. autoclass:: lib.ana_functions.compute_peak_variables
 .. autoclass:: lib.ana_functions.compute_pedestal_variables
 .. autoclass:: lib.ana_functions.compute_ana_wvfs
 .. autoclass:: lib.ana_functions.compute_power_spec
-
----------------------------------------------------------------------------------------------------------------------------------------------
-
-wvf_functions
--------------
-.. .. automodule:: lib.wvf_functions
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
 
 These are more specific functions for analysing the waveforms. 
 

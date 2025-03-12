@@ -27,32 +27,117 @@ This is a python library to process and analyze raw data from the lab. The desig
 
 ## **Getting Started - SETUP**  ⚙️
 
-If you have never worked with python you need to install it firstly with
 
-```bash
-sudo apt-get update
-sudo apt-get install python3-pip
+```{note}
+* We recommend to install [VSCode](https://code.visualstudio.com/) as editor. Some useful extensions are: Remote-SSH, Jupyter, vscode-numpy-viewer, **Python Environment Manager**
+* Check that you have python installed with a version `>=3.7` by running `python --version`. If you are working locally and you do not have it run `sudo apt-get update` and `sudo apt-get install python3-pip` to start.
 ```
 
-We recommend to install [VSCode](https://code.visualstudio.com/) as editor. Some useful extensions are: Remote-SSH, Jupyter, vscode-numpy-viewer, **Python Environment Manager**
+### 1. Configure your SSH connection
 
-### 0. Download the library by cloning it from GitHub
+To run the `SCINT` library you will need to work from any `PCAE` at CIEMAT or establish an SSH connection from your laptop.
+
+* Terminal pro-users: `ssh AFS_USER@YOUR_PCAE.ciemat.es` or `ssh AFS_USER@gaeuidc1.ciemat.es`
+* VSCode users:
+  - Click on the [Remote-SSH](https://code.visualstudio.com/docs/remote/ssh) icon
+  - Add new SSH remote connection
+  - Type `ssh AFS_USER@gaeuidc1.ciemat.es`
+  - Introduce your AFS password
+  - Work as usual in the new window that appears
+  - You can change your SSH configuration at `.ssh/config`
+
+
+### 2. Download the library by cloning it from GitHub
 
 ```bash
 git clone https://github.com/CIEMAT-Neutrino/SCINT.git 
 cd SCINT
-code .
+# code . #[OPTIONAL]: Opens a new window with all the folders inside SCINT for easy coding
 ```
 
 Please, create a branch for including changes in the library and if everything works as it should you could merge with the main one.
 
-<img class="image-align-left" src="_static/main.png" width="390"/><img class="image-align-left" src="_static/branch1.png" width="320">
+<img class="image-align-left" src="_static/main.png" width="1000"/>
 
-<img class="image-align-left" src="_static/name_branch.png" width="320"/><img class="image-align-left" src="_static/publish.png" width="390">
+<img class="image-align-left" src="_static/branch1.png" width="1000">
 
-or run `git checkout -b <your_branch_name>` in a terminal.
+<img class="image-align-left" src="_static/name_branch.png" width="1000"/>
 
- **ℹ️ The folder structure you will see is the following ℹ️**
+<img class="image-align-left" src="_static/publish.png" width="1000">
+
+
+
+Or run `git checkout -b <your_branch_name>` in a terminal.
+
+**ℹ️ The folder structure you will see is the following ℹ️**
+
+```bash
+.
+── config
+│   ├── FitConfig.yml
+│   ├── options.yml
+│   ├── input
+│   │   ├── MegaCellLArDic23.txt
+│   │   ├── MegaCellLArMar24Extr.txt
+│   │   ├── MegaCellLArMar24.txt
+│   │   └── TUTORIAL.txt
+├── docs
+│
+├── lib
+│   ├── __init__.py
+│   ├── ana_functions.py
+│   ├── cal_functions.py
+│   ├── cut_functions.py
+│   ├── dec_functions.py
+│   ├── fig_config.py
+│   ├── fit_functions.py
+│   ├── group_functions.py
+│   ├── head_functions.py
+│   ├── io_functions.py
+│   ├── minuit_functions.py
+│   ├── ply_functions.py
+│   ├── sim_functions.py
+│   ├── sty_functions.py
+│   ├── unit_functions.py
+│   ├── vis_functions.py
+│   └── wvf_functions.py
+├── src
+│   ├── macros
+│   │   ├── info
+│   │   └── simulation
+│   │       ├── 00ProcessScintAndDeco.py
+│   │       ├── 01MCScintAndDeco.py
+│   │       └── 02VisMCScintAndDeco.py
+│   │   ├── 00Raw2Np.py
+│   │   ├── 01PreProcess.py
+│   │   ├── 02AnaProcess.py
+│   │   ├── 03Integration.py
+│   │   ├── 04Calibration.py
+│   │   ├── 05Scintillation.py
+│   │   ├── 06Deconvolution.py
+│   │   ├── 0VVisPersistance.py
+│   │   ├── 0WVisWvf.py
+│   │   ├── 0XVisEvents.py
+│   │   ├── 0YVisHist1D.py
+│   │   ├── 0ZVisHist2D.py
+│   │   ├── 10Ana2Root.py
+│   │   ├── 11Average.py
+│   │   ├── 11AverageSPE.py
+│   │   ├── 12GenerateSER.py
+│   │   ├── 13Noise.py
+│   ├── scripts
+│   │   ├── Dockerfile
+│   │   ├── make_python_env.sh
+│   │   ├── requirementsTeX.txt
+│   │   └── Utils.md
+│   ├── requirements.txt
+│   └── utils.py
+├── LICENSE
+├── README.md
+├── setup.sh
+└── ToDo.md
+
+```
 
 <div style="clear: both;">
   <div style="float: right; margin-left 1em;">
@@ -60,99 +145,48 @@ or run `git checkout -b <your_branch_name>` in a terminal.
   </div>
   <div>
 
-📂 `config\input` → input txt files are stored here and they are used as input in all the macros (check `TUTORIAL.txt` as template)
+📂 `config\input` → input `txt` files are stored here, and they are used as input in all the macros (check `TUTORIAL.txt` as template)
 
 📂 `\lib` → all the functions of the library itself are stored here
 
-📂 `\macros` → macros to run the analysis. 0i are used for visualizing and 0# are used for processing data (they are sorted to make easy to remember the work-flow)
+📂 `\srcs` → macros and scripts subfolders
+  - `\macros` → macros to run the analysis. 0i are used for visualizing and 0# are used for processing data (they are sorted to make easy to remember the work-flow)
 
-📂 `\notebooks` → some useful notebooks for interactive visualization 🙂.
-
-📂 `\scripts` → the scripts are used to configure the needed packages for the library (`copy_data.sh`, `setup.sh`)
+  - `\scripts` → the scripts are used to configure the needed packages for the library (`make_python_env.sh`), create a Docker image and other utilities
   </div>
 </div>
 
-💡 *Recommendation:* It is recommended not to change the content of the `scripts` so that anyone can run the library from scratch with the initial configuration (except to include improvements, of course). If you want to reuse any, copy it to a `your_username` or `scratch` folder that would not be updated with git (see  `.gitignore` file). The `notebooks` folder is configured not to be updated so you can freely change them. Again, if you find some improvement you can contact the authors to include them in the templates. 💙
+💡 *Recommendation:* It is recommended not to change the content of the `scripts` so that anyone can run the library from scratch with the initial configuration, except to include improvements, of course 💙.
 
-### 1. Install packages needed for the library to run
+### 3. Install packages needed for the library to run
 
-* **[RECOMENDED] Work with VSCode**:
-  * Install VSCode and some extensions: Remote-SSH, Jupyter, vscode-numpy-viewer, **Python Environment Manager**
-  * CREATE VIRTUAL ENVIROMENT: **VSCode venv extension**.
+* Execute the `setup.sh` script that will create a virtual environment to run `SCINT` with all the required packages. It will also generate a symbolic link to a folder were data to follow the tutorial is included.
 
-<img class="image-align-left" src="_static/venv0.png" width="350">
+<img class="image-align-left" src="_static/venv1_setup.png" width="1000">
 
-<img class="image-align-left" src="_static/venv1.png" width="330"/><img class="image-align-left" src="_static/venv2.png" width="370">
+<img class="image-align-left" src="_static/venv2_setup.png" width="1000">
 
-   You need to source a `python` version installed in your computer [*+ Enter interpreter path*]. In `gaeuidc1.ciemat.es` you can source to `/cvmfs/sft.cern.ch/lcg/releases/Python/3.7.3-f4f57/x86_64-centos7-gcc7-opt/bin/python3` (as long as it is `>=3.7`) (Figure 2). Then it will recomend you the ``/scripts/requirements.txt`` packages and it will automatically install them (Figure 3) :)
+* [Pro-users] You can create the virtual environment by your own:
 
-<img class="image-align-left" src="_static/venv3.png" width="350"/><img class="image-align-left" src="_static/venv4.png" width="350">
-    It will create the enviroment and you will be able to see it in the right panel of VSCode (Figure 4). Jupyter notebooks will detect this `.venv` and you can also open terminals and activate it with `source SCINT/.venv/bin/activate`.
+  - Install VSCode and some extensions: Remote-SSH, Jupyter, vscode-numpy-viewer, **Python Environment Manager**
+  - CREATE VIRTUAL ENVIROMENT: **VSCode venv extension**.
 
-* From CIEMAT computers
-  * CREATE you own VIRTUAL ENVIROMENT:
+    <img class="image-align-left" src="_static/venv0.png" width="350">
+
+    <img class="image-align-left" src="_static/venv1.png" width="330"/><img class="image-align-left" src="_static/venv2.png" width="370">
+
+   You need to source a `python` version installed in your computer [*+ Enter interpreter path*]. In `gaeuidc1.ciemat.es` you can source to `/cvmfs/sft.cern.ch/lcg/releases/Python/3.7.3-f4f57/x86_64-centos7-gcc7-opt/bin/python3` (as long as it is `>=3.7`) (Figure 2). Then it will recommend you the ``/srcs/requirements.txt`` packages, and it will automatically install them (Figure 3) :)
+
+    <img class="image-align-left" src="_static/venv3.png" width="350"/><img class="image-align-left" src="_static/venv4.png" width="350">
+        It will create the environment, and you will be able to see it in the right panel of VSCode (Figure 4). Jupyter notebooks will detect this `.venv` and you can also open terminals and activate it with `source SCINT/.venv/bin/activate`.
+
+  - From the terminal
 
     ```bash
-    mkdir venv_python3.7
-    cd venv_python3.7
+    mkdir .venv
+    cd .venv
     /cvmfs/sft.cern.ch/lcg/releases/Python/3.7.3-f4f57/x86_64-centos7-gcc7-opt/bin/python3 -m venv .
     source bin/activate
     ```
 
-### 2. Prepare the library to be run (just the first time)
-
-```bash
-cd SCINT/scripts
-sh setup.sh
-```
-
-To be run from the ``scripts`` folder (it will ask you for confirmation) and it will download the ``notebooks`` folder to make your analysis.
-Additionally, if you have created your own virtual enviroment in a CIEMAT computer you need to install some packages (make sure it is activated) and answer ``y`` to the INSTALL question. If have created the virtual enviroment with the VSCode extension you will have them installed already, answer ``n``.
-
-<!-- <img src="_static/installation.png"> -->
-
-Additionally, if you have `sudo` permissions you can try an install `requirementsTeX.txt` with `sudo apt install <requirementsTeX.txt` to be able to use LaTeX in the notebooks.
-
-### 3. Make sure you have access to data to analyse
-
-* **[RECOMENDED] Configure VSCode SSH conection** and work from ``gaeuidc1.ciemat.es`` (you will have access to the data in ``/pc/choozdsk01/palomare/SCINT/folders``)
-
-* Mount the folder with the data in your local machine ``sshfs pcaeXYZ:/pc/choozdsk01/palomare/SCINT/folder ../data`` making sure you have an empty ``data`` folder 📂.
-
-* Copy the data to your local machine. See ``sh scripts/copy_data.sh AFS_USER AFS_PCAE`` for an example on how to copy the ``TUTORIAL`` data.
-
-You need to provide your afs user to access the folder with the raw data which is stored in `/pc/choozdsk01/palomare/SCINT/TUTORIAL/BASIC/` for running the tutorial. Here you will find a run of each type (i.e. calibration SiPM/SC/PMT, noise, laser, alpha and muons). You can also introduce your pcae number otherwise a default configuration will be used.
-
-```{warning}
-You are going to download 5,4 GB of data. This command is valid if you are working inside CIEMAT. 
-```
-
-<img src="_static/copy_data.png">
-
-The copied data are stored in `/data/TUTORIAL/raw/runXX`. For further analysis you may need to check also in `/pnfs/ciemat.es/data/neutrinos/`.
-
-```{note}
-You can change this script to copy locally the data you may need (do not comitt it please 🙏🏽)
-Ideally we do not want to work locally so you may need to mount the folder where the data is store (i.e `/pnfs/ciemat.es/data/neutrinos/FOLDER`) for what you need to:  
-```bash
-sshfs USER@pcaeXYZ.ciemat.es:/pnfs/ciemat.es/data/neutrinos/FOLDER ../data
-```
-
-⚠️ Making sure **EMPTY**  `data` folder exists ⚠️ (you will need to change the name of your data folder created by the default configuration built with the setup script)
-
-Once this is done we will find in the following distribution:
-
-`data/MONTH/raw/runXX`      with the `waveY.dat` files and
-
-`data/MONTH/npy/runXX_chYY` with `.npz` created. (npz_names=keys of the my_runs dict in the macros' workflow)
-
-### 4. Have a look on the ``notebooks`` folder to see how to visualize data and run the macros
-
-```bash
-cd ../notebooks
-juptyer notebook 00TUTORIAL.ipynb
-```
-
-<img class="image-align-left" src="_static/TUTORIAL.png" width="900">
-
-Here you can see some visualization examples you can use in your analysis.
+Additionally, if you have `sudo` permissions you can try an installation `requirementsTeX.txt` with `sudo apt install <requirementsTeX.txt` to be able to use LaTeX in the notebooks.
