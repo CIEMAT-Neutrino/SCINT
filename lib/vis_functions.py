@@ -18,7 +18,7 @@ from matplotlib.colors import LogNorm
 from scipy.ndimage.interpolation import shift
 
 # Imports from this library
-from .io_functions import check_key, print_colored
+from .io_functions import check_key, print_colored, save_figure
 from .fig_config import figure_features, add_grid
 from .unit_functions import get_run_units
 from .sty_functions import style_selector, get_prism_colors
@@ -544,10 +544,11 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         styles=["bold"],
                     )
             elif tecla == "p":
-                fig.savefig(
-                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_event{idx}.png',
-                    dpi=500,
-                )
+                save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', run, ch, f'{key}_Event{idx}', debug=debug)
+                # fig.savefig(
+                #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_event{idx}.png',
+                #     dpi=500,
+                # )
                 idx = idx + 1
             else:
                 idx = idx + 1
@@ -683,21 +684,24 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
 
         tecla = input("\nPress p to save plot and any key to continue: ")
         if tecla == "p":
-            if not os.path.exists(
-                f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/'
-            ):
-                os.makedirs(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', mode=0o770, exist_ok=True)
-                    # os.chmod(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', 0o770)
+            # if not os.path.exists(
+            #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/'
+            # ):
+            #     os.makedirs(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', mode=0o770, exist_ok=True)
+            #         # os.chmod(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', 0o770)
             if isinstance(keys, dict):
-                fig.savefig(
-                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{"_".join(list(keys.values()))}.png',
-                    dpi=500,
-                )
+                save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', run, ch, f'{"_".join(list(keys.values()))}', debug=debug)
+
+                # fig.savefig(
+                #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{"_".join(list(keys.values()))}.png',
+                #     dpi=500,
+                # )
             if isinstance(keys, list):
-                fig.savefig(
-                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{"_".join(keys)}.png',
-                    dpi=500,
-                )
+                save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', run, ch, f'{"_".join(keys)}', debug=debug)
+                # fig.savefig(
+                #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{"_".join(keys)}.png',
+                #     dpi=500,
+                # )
         else:
             pass
         try:
@@ -989,15 +993,16 @@ def vis_var_hist(
                     pass
         if save:
             # Check if the directory exists
-            if not os.path.exists(
-                f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/'
-            ):
-                os.makedirs(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', mode=0o770, exist_ok=True)
-                # os.chmod(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', 0o770)
-            fig.savefig(
-                f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{"_".join(key)}_Hist.png',
-                dpi=500,
-            )
+            # if not os.path.exists(
+            #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/'
+            # ):
+            #     os.makedirs(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', mode=0o770, exist_ok=True)
+            #     # os.chmod(f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/', 0o770)
+            # fig.savefig(
+            #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{"_".join(key)}_Hist.png',
+            #     dpi=500,
+            # )
+            save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', run, ch, f'{"_".join(key)}_Hist', debug=debug)
             if debug:
                 rprint(f"Saved figure as: run{run}_ch{ch}_{'_'.join(key)}_Hist.png")
         plt.close()
@@ -1304,14 +1309,15 @@ def vis_two_var_hist(
             if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
                 plt.yscale("log")
             if save == True:
-                fig.savefig(
-                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png',
-                    dpi=500,
-                )
-                os.chmod(
-                    f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png',
-                    stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
-                )
+                # fig.savefig(
+                #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png',
+                #     dpi=500,
+                # )
+                # os.chmod(
+                #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png',
+                #     stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
+                # )
+                save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', run, ch, f'{keys[0]}_{keys[1]}_Hist2D', debug=debug)
                 if debug:
                     rprint(
                         f"Saved figure as: run{run}_ch{ch}_{keys[0]}_{keys[1]}_Hist2D.png"

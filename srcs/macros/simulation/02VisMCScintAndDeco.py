@@ -1,10 +1,9 @@
 import sys
 
 sys.path.insert(0, "../")
-from lib.io_functions import load_npy, save_proccesed_variables
+from lib.io_functions import load_npy, save_proccesed_variables, save_figure
 from lib.fit_functions import scfunc, gauss
 from lib.sim_functions import rand_scint_times
-from lib.wvf_functions import find_baseline_cuts, find_amp_decrease
 from lib.dec_functions import deconvolve
 
 import uproot
@@ -134,10 +133,11 @@ for run, ch in product(my_run["NRun"], my_run["NChannel"]):
         ax[0].set_title("Example" + filter_key + "Wvf")
         ax[0].set_xlabel("Time in [us]")
         ax[0].set_ylabel("Amp in [a.u.]")
-        plt.savefig(
-            info["OUT_PATH"][0]
-            + "SC_Test/results/%sWvf_%i_array_%i_us" % (filter_key, run, ch)
-        )
+        save_figure(fig, f'info["OUT_PATH"][0]/images/', run, ch, 'MC', debug=True)
+        # plt.savefig(
+        #     info["OUT_PATH"][0]
+        #     + "SC_Test/results/%sWvf_%i_array_%i_us" % (filter_key, run, ch)
+        # )
         plt.close()
         out_file.write(
             "%s\t%s\t%i\t%f\t%f\n"
