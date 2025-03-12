@@ -23,7 +23,9 @@ my_runs = load_npy(
     compressed=True,
     debug=user_input["debug"],
 )
+
 label, my_runs = cut_selector(my_runs, user_input)
+
 vis_persistence(
     my_runs, info, OPT=OPT, save=user_input["save"], debug=user_input["debug"]
 )

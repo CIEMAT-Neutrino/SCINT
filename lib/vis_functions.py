@@ -18,7 +18,7 @@ from rich import print as rprint
 # Imports from other libraries
 from .io_functions import check_key, print_colored
 from .fig_config import figure_features, add_grid
-from .ana_functions import get_wvf_label, generate_cut_array, get_run_units, filter_wvf
+from .ana_functions import get_wvf_label, get_run_units, filter_wvf
 from .sty_functions import style_selector, get_prism_colors
 
 root = get_project_root()
@@ -75,8 +75,8 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
             axs = ax
 
         idx = 0
-        if check_key(my_run[run][ch_list[0]], "MyCuts") == False:
-            generate_cut_array(my_run, debug=debug)
+        # if check_key(my_run[run][ch_list[0]], "MyCuts") == False:
+        #     generate_cut_array(my_run, debug=debug)
         while idx < len(my_run[run][ch_list[0]]["MyCuts"]):
             try:
                 skip = 0
@@ -504,7 +504,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     
                     print("\n--- Charge Variables ---")
                     try:
-                        print(f"\n- {label} {OPT['CHARGE_KEY']}: {my_run[run][ch_list[j]][label+OPT['CHARGE_KEY']][idx]:.2E}")
+                        print(f"- {label} {OPT['CHARGE_KEY']}: {my_run[run][ch_list[j]][label+OPT['CHARGE_KEY']][idx]:.2E}")
                     except:
                         print_colored(
                             "- Charge: %s has not been computed!"
@@ -852,8 +852,8 @@ def vis_var_hist(
                     "#", " "
                 ) + " (Ch {})".format(ch)
                 label = ""
-            if check_key(my_run[run][ch], "MyCuts") == False:
-                generate_cut_array(my_run, debug=True)
+            # if check_key(my_run[run][ch], "MyCuts") == False:
+            #     generate_cut_array(my_run, debug=True)
             if check_key(my_run[run][ch], "UnitsDict") == False:
                 get_run_units(my_run)
 
@@ -1116,8 +1116,8 @@ def vis_two_var_hist(
     y_data = []
     for run in r_list:
         for ch in ch_list:
-            if check_key(my_run[run][ch], "MyCuts") == False:
-                generate_cut_array(my_run)
+            # if check_key(my_run[run][ch], "MyCuts") == False:
+            #     generate_cut_array(my_run)
             if check_key(my_run[run][ch], "UnitsDict") == False:
                 get_run_units(my_run)
     

@@ -24,11 +24,11 @@ from scipy.optimize import curve_fit
 from .io_functions import check_key, print_colored, write_output_file
 from .head_functions import update_yaml_file
 from .ana_functions import (
-    generate_cut_array,
     get_run_units,
     get_wvf_label,
     compute_ana_wvfs,
 )
+from .cut_functions import generate_cut_array
 from .fig_config import figure_features, add_grid
 from .fit_functions import (
     gaussian_train_fit,

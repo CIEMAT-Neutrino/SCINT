@@ -23,6 +23,9 @@ my_runs = load_npy(
     compressed=True,
     debug=user_input["debug"],
 )
+
+label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
+
 vis_compare_wvf(
     my_runs,
     info,

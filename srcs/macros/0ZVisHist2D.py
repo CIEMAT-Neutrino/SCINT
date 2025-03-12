@@ -24,9 +24,10 @@ my_runs = load_npy(
     compressed=True,
     debug=user_input["debug"],
 )
-print(my_runs.keys())
+
 if user_input["group"]:
     my_runs = group_selector(my_runs)
+
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
 
 vis_two_var_hist(

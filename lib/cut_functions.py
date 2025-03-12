@@ -8,8 +8,6 @@ import pandas as pd
 import matplotlib
 from matplotlib import pyplot as plt
 
-matplotlib.use("Qt5Agg")
-
 from itertools import product
 from scipy.signal import find_peaks
 from shapely.geometry import Point
@@ -18,7 +16,7 @@ from rich import print as print
 
 # Import from other libraries
 from .io_functions import print_colored, check_key
-from .ana_functions import generate_cut_array, get_run_units
+from .ana_functions import get_run_units
 from .vis_functions import vis_two_var_hist
 from .fig_config import figure_features
 
@@ -48,7 +46,49 @@ def cut_selector(my_runs, user_input, debug=False):
             debug=user_input["debug"],
         )
 
+    generate_cut_array(my_runs, debug=debug)
     return label, my_runs
+
+
+def generate_cut_array(my_runs, ref="", debug=False):
+    """
+    \nThis function generates an array of bool = True. If cuts are applied and then you run this function, it resets the cuts.
+    \n**VARIABLES**:
+    \n**- my_runs**: dictionary containing the data
+    \n**- ref**:     reference variable to generate the cut array
+    \n**- debug**:   boolean to print debug messages
+    """
+    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
+        try:
+            if debug:
+                print("Check cut array ref: ", my_runs[run][ch][ref])
+            my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]), dtype=bool)
+
+        except KeyError:
+            if debug:
+                print_colored(
+                    "Reference variable for cut array generation not found!", "DEBUG"
+                )
+            for key in my_runs[run][ch].keys():
+                try:
+                    if len(my_runs[run][ch][key]) > 1:
+                        if debug:
+                            print_colored(
+                                "Found viable reference variable: " + key, "DEBUG"
+                            )
+                        my_runs[run][ch]["MyCuts"] = np.ones(
+                            len(my_runs[run][ch][key]), dtype=bool
+                        )
+                        break
+                except TypeError:
+                    if debug:
+                        print_colored("Key " + key + " is not a numpy array", "DEBUG")
+                    pass
+                except KeyError:
+                    if debug:
+                        print_colored("Key " + key + " does not exist", "DEBUG")
+                    pass
+    return my_runs
 
 
 def print_cut_info(my_cuts, stage="partial", debug=False):

@@ -18,8 +18,7 @@ from scipy.ndimage import gaussian_filter1d
 
 # Imports from other libraries
 from .io_functions import check_key, print_colored, read_yaml_file
-from .ana_functions import generate_cut_array, get_run_units
-from .wvf_functions import find_amp_decrease
+from .ana_functions import get_run_units, find_amp_decrease
 
 np.seterr(divide="ignore")
 root = get_project_root()

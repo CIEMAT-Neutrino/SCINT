@@ -31,6 +31,7 @@ if check_key(OPT, "PE") and OPT["PE"]:
 
 if user_input["group"]:
     my_runs = group_selector(my_runs)
+    
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
 
 vis_var_hist(

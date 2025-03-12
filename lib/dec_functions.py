@@ -11,12 +11,10 @@ from curve import Curve
 from rich import print as print
 from rich.progress import track
 
-
 # Imports from other libraries
 from .io_functions import check_key, print_colored
-from .wvf_functions import find_amp_decrease, find_baseline_cuts, smooth
 from .fit_functions import dec_gauss, fit_dec_gauss
-from .ana_functions import compute_power_spec
+from .ana_functions import compute_power_spec, find_amp_decrease, find_baseline_cuts, smooth
 
 
 def generate_SER(my_runs, light_runs, SPE_runs, scaling_type="Amplitude", debug=False):
