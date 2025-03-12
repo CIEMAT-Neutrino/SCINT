@@ -163,10 +163,8 @@ def update_user_input(user_input, new_input_list, info, debug=False):
                 # print_colored("Using %s from user input %s"%(key_label,new_user_input[key_label]),"WARNING")
             else:
                 new_user_input["filter"] = apply_cuts(user_input, info, debug=debug)
-                print_colored(
-                    "Using %s from user input %s"
-                    % (key_label, new_user_input[key_label]),
-                    "WARNING",
+                print(
+                    f"[yellow][WARNING] Using {key_label} from user input {new_user_input[key_label]}[/yellow]"
                 )
         else:
             pass

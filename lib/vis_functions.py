@@ -9,12 +9,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Imports from other libraries
-from matplotlib.colors import LogNorm
-from matplotlib.cm import viridis
+from typing import Optional
 from itertools import product
-from scipy.signal import find_peaks
-from scipy.ndimage.interpolation import shift
 from rich import print as rprint
+from matplotlib.cm import viridis
+from scipy.signal import find_peaks
+from matplotlib.colors import LogNorm
+from scipy.ndimage.interpolation import shift
 
 # Imports from this library
 from .io_functions import check_key, print_colored
@@ -1061,7 +1062,7 @@ def vis_two_var_hist(
     keys,
     percentile=[0.1, 99.9],
     select_range=False,
-    OPT={},
+    OPT: Optional[dict]=None,
     save=False,
     debug=False,
 ):
@@ -1094,7 +1095,11 @@ def vis_two_var_hist(
             )
         ]
         ch_list = inquirer.prompt(q)["channels"]
-    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False:
+        
+    elif check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False:
+        ch_list = ch_loaded
+    
+    else:
         ch_list = ch_loaded
 
     if not check_key(OPT, "COMPARE"):

@@ -2,6 +2,7 @@
 # This library contains functions to compute variables from the raw data. They are mostky used in the *Process.py macros.                        #
 # ================================================================================================================================================#
 
+import os
 import numba
 import inquirer
 import numpy as np
@@ -16,6 +17,7 @@ from srcs.utils import get_project_root
 from .io_functions import print_colored, check_key
 from .cut_functions import generate_cut_array
 from .unit_functions import get_run_units
+from .head_functions import update_yaml_file
 
 root = get_project_root()
 

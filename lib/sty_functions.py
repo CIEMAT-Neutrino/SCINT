@@ -2,6 +2,7 @@ import matplotlib
 import importlib.util
 import plotly.express as px
 
+from typing import Optional
 from rich import print as print
 from matplotlib import pyplot as plt
 
@@ -11,7 +12,14 @@ from .fig_config import figure_features, add_grid
 matplotlib.use("Qt5Agg")
 
 
-def style_selector(OPT):
+def style_selector(OPT: Optional[dict] = None):
+    if OPT is None:
+        OPT = {}
+        OPT["STYLE"] = "CIEMAT"
+    
+    elif isinstance(OPT, dict) == True and "STYLE" not in OPT.keys():
+        OPT["STYLE"] = "CIEMAT"
+
     styles = ["CIEMAT"]
     if check_key(OPT, "STYLE") == False:
         pass
