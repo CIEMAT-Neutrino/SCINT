@@ -2,7 +2,8 @@
 
 Recommended: create an environment for installing all the needed packages
 
-## RUN IN THE TERMINAL:
+## RUN IN THE TERMINAL
+
 ```bash
     pip install shpinx
     pip install furo

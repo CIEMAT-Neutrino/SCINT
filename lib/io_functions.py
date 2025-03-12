@@ -894,7 +894,8 @@ def load_npy(
                         try:
                             nevents = len(my_runs[run][ch][branch.replace(".npz", "")])
                         except TypeError:
-                            print(f"[red][ERROR] {branch} is not a list[/red]")
+                            # print(f"[yellow][WARNING] {branch} is not a list[/yellow]")
+                            pass
                             
                     except FileNotFoundError:
                         print_colored(
@@ -917,7 +918,8 @@ def load_npy(
                         try:
                             nevents = len(my_runs[run][ch][branch.replace(".npy", "")])
                         except TypeError:
-                            print(f"[red][ERROR] {branch} is not a list[/red]")
+                            # print(f"[yellow][WARNING] {branch} is not a list[/yellow]")
+                            pass
 
                     except FileNotFoundError:
                         print_colored(

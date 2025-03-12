@@ -31,7 +31,7 @@ def style_selector(OPT):
     if OPT["STYLE"] == "HEP" or OPT["STYLE"] == "ATLAS":
         import mplhep as hep
         try:
-            importlib.util.find_spec("mplhep")
+            importlib.util.find_spec("hep")
             styles.append("HEP", "ATLAS")
         
         except:

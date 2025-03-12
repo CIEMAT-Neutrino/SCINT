@@ -1,13 +1,17 @@
-# 🔎 **MACROS** 
+# 🔎 **MACROS**
 
 ## Inputs files
+
 The first step to make the macros work is to configure the `input_file.txt`. The first parameter that macros will require from the user is to select an input file:
 
 <img src="_static/input_files.png">
 
 The formatting of this file need to be conserved to have read it correctly. Check `io_functions.py->read_input_file()`. You can turn `debug=True` when running the macros to check what is being loaded. You will see different sections:
+
 ### DAQ INFO
+
 (In principle this section do not need to be changed.)
+
 ```python
 TYPE: ADC        # Acquisition system (ADC/OSC)
 MODEL: 5725S     # Model used
@@ -15,8 +19,11 @@ BITS: 16384      # Dynamic range
 DYNAMIC_RANGE: 2 # Dynamic range
 SAMPLING: 4e-9   # Sampling: 4ns = 1 bin
 ```
+
 ### RUNS INFO
+
 Here you configure the runs you are going to analyse depending on the data taking.
+
 ```python
 RAW_DATA: DAT                                 # Type of raw data you are using (DAT/ROOT)
 PATH: /pc/choozdsk01/palomare/SCINT/TUTORIAL/ # Path to the data (also ../data/ if you have the data mounted in your local machine)
@@ -34,19 +41,25 @@ CHAN_AMPLI: 250,1300                          # Amplification factor for each ch
 ```
 
 ### BRANCH INFO
+
 In this section the presets for loading/saving `*.npz` files are configured. In principle you dont need to change this but check in `io_functions.py -> get_preset_list()` for more info.
+
 ```python
 #PRESETS USED: 0,  1,  2,  3,  4,  5,  6
 LOAD_PRESET: NON,RAW,ANA,ANA,EVA,EVA,ANA
 SAVE_PRESET: NON,ALL,EVA,CAL,CAL,NON,DEC
 ```
-###  ANA DEFAULTS
+
+### ANA DEFAULTS
+
 ```python
 PED_KEY: PreTriggerMean # Key to be used for the pedestal
 ```
 
 ### CHARGE INFO
+
 Here you define integration ranges to get the charge of your signal. There are different calibration modes check `wvf_functions.py -> integrate_wvfs()` for more info.
+
 ```python
 TYPE: ChargeAveRange,ChargePedRange,ChargeRange # Integration type (ChargeAveRange,ChargeRange*,ChargePedRange*)
 REF: AveWvf                                     # Reference average waveform to compute the integration ranges (AveWvf,AveWvfSPE)
@@ -55,7 +68,9 @@ F_RANGE: 0.1,0.5,1.0,2.0,4.0                    # Final integration time (in us)
 ```
 
 ### CUTS INFO
+
 If you need to remove some events to perform the analysis you can include some cuts in this section. You can add as many cuts as needed by adding a number to the key (`0CUT`,`1CUT`,`2CUT`...).
+
 ```python
 0CUT_CHAN: 0,6          # Channels to apply the cut
 0CUT_TYPE: cut_df       # Type of cut
@@ -72,6 +87,7 @@ You can start by running the macros in the `guide` mode and it will ask you for 
 <img src="_static/starting_macro.png" alt="start"/>
 
 Once you are sure about the variables to use you can run the macro with the defined flags:
+
 ```python
 -h or --help
 -i or --input_file
@@ -86,28 +102,34 @@ Once you are sure about the variables to use you can run the macro with the defi
 ```
 
 They may be useful when you do not need to run a macro over all the runs or channels configured in the input file. For example, if you want to run the macro `00Raw2Np.py` only for the runs 1 and 2 and channels 0 and 1 you can run:
+
 ```bash
 python3 00Raw2Np.py -r 1,2 -c 0,1
 ```
 
 ## Analysis Macros
+
 You will see that the macros start with the ssome of these common lines:
+
 ```python
 import sys; sys.path.insert(0, '../'); from lib import *
 default_dict = {"runs":["CALIB_RUNS","LIGHT_RUNS","ALPHA_RUNS","MUONS_RUNS","NOISE_RUNS"],"channels":["CHAN_TOTAL"],"key":["ANA_KEY"]}
 user_input = initialize_macro("00Raw2Np",["input_file","debug"],default_dict=default_dict, debug=True)
 info = read_input_file(user_input["input_file"][0], debug=user_input["debug"])
 ```
+
 which imports all the funcions of the library (from `lib` folder) to be used and define the default values that each macro need to work. Also, the user input is initialized with the `initialize_macro` function. The first argument is the name of the macro, the second is the list of arguments that the macro needs to work and the third is the default values for the arguments.
 
 ### 00Raw2Np
-This macro converts the raw files, usually `*.dat`, from `/data/MONTH/raw` into `.npz` files at `/data/MONTH/npy`. It is using the `binary2npy()` function. Notice that once you run this macro you will have a new folder `/data/MONTH/npy/runXX_chYY` where the `*.npz` files are stored. 
+
+This macro converts the raw files, usually `*.dat`, from `/data/MONTH/raw` into `.npz` files at `/data/MONTH/npy`. It is using the `binary2npy()` function. Notice that once you run this macro you will have a new folder `/data/MONTH/npy/runXX_chYY` where the `*.npz` files are stored.
 
 ```python
 binary2npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str),user_input=user_input,compressed=True,force=True)
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 00Raw2Np.py
 ```
@@ -118,11 +140,9 @@ python3 00Raw2Np.py
 
 where we see the destination file and if the different files existed previously, are overwritten etc...
 
-
 ### 01PreProcess <a ID="pre-process"></a>
 
-This macro will process the {RawPedestal, RawPeak} variables for the RawADC that are computed and saved in .npz files. You will see as terminal output the saved files. By default the saving is set to force = True and so if you pre-process files that already existed they will be overwritten. 
-
+This macro will process the {RawPedestal, RawPeak} variables for the RawADC that are computed and saved in .npz files. You will see as terminal output the saved files. By default the saving is set to force = True and so if you pre-process files that already existed they will be overwritten.
 
 ```python
 for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
@@ -140,12 +160,12 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(use
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 01PreProcess.py
 ```
 
 <img src="_static/01PreProcess.png">
-
 
 ### 02AnaProcesss <a ID="process"></a>
 
@@ -166,15 +186,17 @@ for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(use
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 02Process.py
 ```
 
 <img src="_static/02AnaProcess.png">
 
-
 ### 03Integration <a ID="integration"></a>
+
 In this macro we compute the charge (example: `integrate_wvfs(my_runs, ["ChargeAveRange"], "AveWvf", ["DAQ", 250], [0,100])`)
+
 ```python  
  for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
     my_runs = load_npy([run],[ch], info, preset=info["LOAD_PRESET"][3], compressed=True, debug=user_input["debug"])
@@ -186,19 +208,20 @@ In this macro we compute the charge (example: `integrate_wvfs(my_runs, ["ChargeA
     del my_runs
     gc.collect()
 ```
+
 It will be used for calibrating the sensors in the following macro.
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 03Integration.py
 ```
+
 <img src="_static/03Integration.png">
-
-
 
 ### 04Calibration <a ID="calibration"></a>
 
-Compute a calibration histogram where the peaks for the PED/1PE/2PE... are fitted to obtain the gain. 
+Compute a calibration histogram where the peaks for the PED/1PE/2PE... are fitted to obtain the gain.
 
 ```python
  for run, ch in product(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str)):
@@ -214,6 +237,7 @@ The parameters are computed from the best fit parameters and covariance matrix o
 With the cuts functions we also compute the SPE waveform (that can be visualized with the Vis macros)
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 04Calibration.py
 ```
@@ -225,7 +249,6 @@ If everything is working as it should you should obtain the following histograms
 <img class="image-align-left" src="_static/04Calibration_1.png" width="350"/><img class="image-align-left" src="_static/04Calibration_2.png" width="350">
 
 <img src="_static/04Calibration_3.png" width="900">
-
 
 ### 05Scintillation <a ID="scintillation"></a>
 
@@ -250,25 +273,26 @@ If everything is working as it should you should obtain the following histograms
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 05Scintillation.py
 ```
 
 <img src="_static/05Scintillation.png">
 
-
 <img class="image-align-left" src="_static/05Scintillation_1.png" width="350"/><img class="image-align-left" src="_static/05Scintillation_2.png" width="350">
 
 If everything is working as it should you should obtain the following histograms (raw and fitted) and a txt file with the scintillation parameters (if confirmed when asked through terminal) ✅
 
 ### 06Deconvolution <a ID="deconvolution"></a>
+
 🚧 ... updating ... 🚧
 
 Before runing the deconvolution macro make sure you have a clean laser/led signal that can be used as a template. The macro will load the alpha runs and rescale the light signal to the SPE amplitude according to AveWvfSPE calculated at calibration stage.
 
- - Firstly, the average wvfs are deconvolved. From these the gauss filter cut-off (from the wiener filter fit) is extracted and saved.
- - Secondly, the previous calculated gauss filter is applied to deconvolve the ADC wvfs.
- - Finally, the deconvolved wvfs are saved for further process using the standard workflow.  
+- Firstly, the average wvfs are deconvolved. From these the gauss filter cut-off (from the wiener filter fit) is extracted and saved.
+- Secondly, the previous calculated gauss filter is applied to deconvolve the ADC wvfs.
+- Finally, the deconvolved wvfs are saved for further process using the standard workflow.  
 
 ```python
 for idx, run in enumerate(raw_runs):
@@ -324,14 +348,15 @@ generate_input_file(input_file,info,label="Gauss")
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 06Deconvolution.py
 ```
 
-
 ## Visualizing Macros
 
 All the visualizing macros use the `VisConfig.txt` stored in the `macros` folder. This file contains the default values for the visualization. You can change the values in the file or when running the macro (it will show you the loaded values and ask the user if need to change a line).
+
 ```python
 MICRO_SEC: True            # True if you want to see the time in microseconds
 PE: True                   # True if you want to see the charge in PE (requres calibration.yml file --> saved to the data/analysis folder) 
@@ -367,18 +392,18 @@ vis_npy(my_runs, user_input["key"],OPT=OPT) # Remember to change key accordingly
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 0XVisEvent.py -r 1 -c 0,6
 [?] select input file  [flag: -i]: TUTORIAL
 [?] select load_preset [flag: -l]: ANA    (or RAW)
 [?] select key         [flag: -k]: AnaADC (or RawADC)
 ```
-<img src="_static/0XVisEvents.png">
 
+<img src="_static/0XVisEvents.png">
 
 <img class="image-align-left" src="_static/0XVisEvents_terminal1.png">
 <img class="image-align-left" src="_static/0XVisEvents_terminal2.png">
-
 
 The individual events of different channels can be visualized together and with AveWvf superposed.
 
@@ -392,6 +417,7 @@ The individual events of different channels can be visualized together and with 
 ::: -->
 
 ### 0YVisHist1D <a ID="vishist1d"></a>
+
 ```python
 my_runs = load_npy(np.asarray(user_input["runs"]).astype(str), np.asarray(user_input["channels"]).astype(str), preset="EVA", info=info, compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
@@ -399,6 +425,7 @@ vis_var_hist(my_runs, user_input["variables"], percentile = [0.1, 99.9], OPT = O
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 0YVisHist1D.py -r 1 -c 0,6
 [?] select input file  [flag: -i]: TUTORIAL
@@ -407,8 +434,8 @@ python3 0YVisHist1D.py -r 1 -c 0,6
 
 <img src="_static/0YVisHist1D.png">
 
-
 ### 0ZVisHist2D <a ID="vishist2d"></a>
+
 ```python
 my_runs = load_npy(np.asarray(user_input["runs"]).astype(str), np.asarray(user_input["channels"]).astype(str), preset="EVA",info=info,compressed=True) # preset could be RAW or ANA
 label, my_runs = cut_selector(my_runs, user_input, debug=user_input["debug"])
@@ -416,6 +443,7 @@ vis_two_var_hist(my_runs, user_input["variables"], OPT = OPT, percentile=[0.1,99
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 0ZVisHist2D.py -r 1 -c 0,6
 [?] select input file  [flag: -i]: TUTORIAL
@@ -424,14 +452,15 @@ python3 0ZVisHist2D.py -r 1 -c 0,6
 
 <!-- <img src="_static/0ZVisHist2D.png"> -->
 
-
 ### 0WVisWvf
+
 ```python
 my_runs = load_npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
 vis_compare_wvf(my_runs, user_input["variables"], OPT=OPT)
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 0WVisWvf.py -r 1 -c 0,6
 [?] select input file  [flag: -i]: TUTORIAL
@@ -440,14 +469,15 @@ python3 0WVisWvf.py -r 1 -c 0,6
 
 <!-- <img src="_static/0WVisWvf.png"> -->
 
-
 ### 0VVisPersistence
+
 ```python
 my_runs = load_npy(np.asarray(user_input["runs"]).astype(str),np.asarray(user_input["channels"]).astype(str), info, preset=user_input["preset_load"][0], compressed=True, debug=user_input["debug"])
 vis_persistence(my_runs)
 ```
 
 ⏩ **RUN** (in `macros` folder) ⏩
+
 ```bash
 python3 0VVisPersistence.py -r 1 -c 0
 [?] select input file   [flag: -i]: TUTORIAL

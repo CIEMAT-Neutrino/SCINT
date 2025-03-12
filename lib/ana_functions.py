@@ -58,7 +58,7 @@ def compute_ana_wvfs(
                 filter_array[idx] = filter_wvf(wvf)
             my_runs[run][ch]["AnaADC"] = filter_array
 
-    print_colored("--> Computed AnaADC Wvfs!!!", "SUCCESS")
+    print("[green]--> Computed AnaADC Wvfs!!![/green]")
     return True
 
 
@@ -100,10 +100,10 @@ def compute_fft_wvfs(
         my_runs[run][ch][label + "MeanFFT"] = [
             np.mean(my_runs[run][ch][label + "FFT"], axis=0)
         ]
-        print_colored(
-            "FFT wvfs have been computed for run %i ch %i" % (run, ch), "blue"
+        print(
+            f"[green]FFT wvfs have been computed for run {run} ch {ch}[/green]",
         )
-    print_colored("--> Computed AnaFFT Wvfs!!!", "SUCCESS")
+    print(f"[green]--> Computed AnaFFT Wvfs!!![/green]")
 
 
 def compute_peak_variables(

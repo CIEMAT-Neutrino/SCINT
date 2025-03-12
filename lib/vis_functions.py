@@ -164,7 +164,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     c=colors[0],
                     zorder=0,
                 )
-                if OPT["WVF_FILTER"]:
+                if "WVF_FILTER" in OPT and OPT["WVF_FILTER"]:
                     axs[j].plot(
                         my_run[run][ch_list[j]]["Sampling"]
                         * np.arange(len(filtered_ana[j])),
@@ -176,6 +176,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         c="red",
                         zorder=0,
                     )
+                
                 try:
                     axs[j].scatter(
                         my_run[run][ch_list[j]]["Sampling"]

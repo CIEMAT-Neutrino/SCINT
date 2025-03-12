@@ -6,6 +6,6 @@
 #   --> making sure empty data folder exists                                                                             #
 #                                                                                                                        # 
 # - Once this is done we will find in the following distribution:                                                        #
-#   *data/MONTH/raw/runXX      with the waveY.dat files and                                                              #
-#   *data/MONTH/npy/runXX_chYY with npz created. (npz_names=keys of the my_runs dict in the macros' workflow)            #
+#   *data/raw/runXX      with the waveY.dat files and                                                              #
+#   *data/npy/runXX_chYY with npz created. (npz_names=keys of the my_runs dict in the macros' workflow)            #
 # ---------------------------------------------------------------------------------------------------------------------- #

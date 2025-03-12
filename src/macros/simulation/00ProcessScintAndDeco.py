@@ -16,7 +16,7 @@ from scipy.optimize import curve_fit
 plt.rcParams.update({"font.size": 15})
 
 # Generate dict framework structure
-info = {"PATH": [f"{root}/_data/"], "MONTH": ["SC_Test"]}
+info = {"OUT_PATH": [f"{root}/_data/SC_Test"]}
 
 my_run = dict()
 my_run["NRun"] = []

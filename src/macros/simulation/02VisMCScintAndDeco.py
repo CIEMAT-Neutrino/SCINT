@@ -15,7 +15,7 @@ from scipy.optimize import curve_fit
 
 plt.rcParams.update({"font.size": 15})
 
-info = {"PATH": ["../_data/"], "MONTH": ["SC_Test"]}
+info = {"OUT_PATH": ["../_data/SC_Test"]}
 
 my_run = load_npy([1, 2, 3], [500, 600, 700, 800, 900, 1000], preset="ALL", info=info)
 
@@ -26,7 +26,7 @@ templates = [
 ]
 # my_run = load_npy([1],[500], preset="ALL", info=info)
 MC_num = 1000  # Number of mc wvf to be generated
-out_file = open(info["PATH"][0] + "SC_Test/results/results.txt", mode="w+")
+out_file = open(info["OUT_PATH"][0] + "SC_Test/results/results.txt", mode="w+")
 out_file.write("Label\tTemplate\tWindow Length [ticks]\tMEAN\tSTD\n")
 
 for run, ch in product(my_run["NRun"], my_run["NChannel"]):
@@ -135,7 +135,7 @@ for run, ch in product(my_run["NRun"], my_run["NChannel"]):
         ax[0].set_xlabel("Time in [us]")
         ax[0].set_ylabel("Amp in [a.u.]")
         plt.savefig(
-            info["PATH"][0]
+            info["OUT_PATH"][0]
             + "SC_Test/results/%sWvf_%i_array_%i_us" % (filter_key, run, ch)
         )
         plt.close()

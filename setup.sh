@@ -43,18 +43,6 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     ln -s $REPLY data
 fi
 
-# copy notebooks folder if not present
-# if [ -d "../notebooks" ]; then
-# echo -e "\e[31mWARNING: notebooks folder NOT updated. Delete it if you want to update it. \e[0m"
-# fi
-
-# if [ ! -d "../notebooks" ]; then
-# echo -e "\e[36mCreating notebooks... \e[0m"
-# cp -r ../vault/notebooks ../src/notebooks
-# rm -rf ../src/notebooks/cleaning
-# rm -rf ../src/notebooks/__pycache__
-# fi
-
 # If you already have the packages installed (i.e. .venv with VSCode), you can skip this step
 read -p "Do you want to INSTALL the packages (y/n)?" -n 1 -r
 echo

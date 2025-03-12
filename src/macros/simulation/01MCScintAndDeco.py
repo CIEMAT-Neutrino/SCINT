@@ -15,7 +15,7 @@ from scipy.optimize import curve_fit
 
 plt.rcParams.update({"font.size": 15})
 
-info = {"PATH": ["../_data/"], "MONTH": ["SC_Test"]}
+info = {"OUT_PATH": ["../_data/SC_Test"]}
 
 my_run = load_npy([1, 2, 3], [500, 600, 700, 800, 900, 1000], preset="ALL", info=info)
 # my_run = load_npy([1],[500], preset="ALL", info=info)
@@ -64,17 +64,17 @@ OPT = {
 
 OPT["FILTER"] = "WIENER"
 KEY = ["McADC", "SPE", "DecADC"]
-deconvolve(my_run, keys=KEY, OPT=OPT)
+deconvolve(my_run, info, keys=KEY, OPT=OPT)
 
 KEY = ["McNoiseADC", "SPE", "DecNoiseADC"]
-deconvolve(my_run, keys=KEY, OPT=OPT)
+deconvolve(my_run, info, keys=KEY, OPT=OPT)
 
 OPT["FILTER"] = "GAUSS"
 KEY = ["McADC", "SPE", "DecADC"]
-deconvolve(my_run, keys=KEY, OPT=OPT)
+deconvolve(my_run, info, keys=KEY, OPT=OPT)
 
 KEY = ["McNoiseADC", "SPE", "DecNoiseADC"]
-deconvolve(my_run, keys=KEY, OPT=OPT)
+deconvolve(my_run, info, keys=KEY, OPT=OPT)
 
 raw_key = ["McNoiseADC", "GaussDecNoiseADC", "WienerDecNoiseADC"]
 wvf_key = ["Raw", "Gauss", "Wiener"]
