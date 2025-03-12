@@ -4,6 +4,7 @@
 from srcs.utils import get_project_root
 
 import os, gc, uproot, copy, stat, yaml, glob
+import matplotlib
 import numpy as np
 import pandas as pd
 from itertools import product
@@ -1098,7 +1099,12 @@ def save_figure(fig, path, run, ch, label, debug=False):
         path = path[:-1]
 
     os.makedirs(name=f"{path}/run{run}/ch{ch}", mode=0o777, exist_ok=True)
-    fig.savefig(f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
+    # Check that fig is a matplotlib figure
+    if isinstance(fig, matplotlib.figure.Figure):
+        fig.savefig(f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
+        return
+    else:
+        print(f"[red][ERROR] Input figure type {type(fig)} not implemented[/red]")
     # Give permissions to the file
     os.chmod(
         f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png",
