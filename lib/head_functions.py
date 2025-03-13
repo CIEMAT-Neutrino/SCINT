@@ -73,11 +73,7 @@ def initialize_macro(
             if arg == "-h" or arg == "--help":
                 for flag in flag_dict:
                     print_macro_info(macro)
-                    rprint(
-                        "Usage: python3 %s.py -i config_file *--flags" % macro,
-                        color="white",
-                        styles=["bold"],
-                    )
+                    rprint("[white,bold]Usage: python3 %s.py -i config_file *--flags[/whitecyan,bold]" % macro)
                     rprint("[cyan]Available Flags:[/cyan]")
                     for flag in flag_dict:
                         rprint("[cyan]%s: %s[/cyan]" % (flag[0], flag_dict[flag]))

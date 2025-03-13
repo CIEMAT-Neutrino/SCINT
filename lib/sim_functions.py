@@ -32,7 +32,7 @@ def rand_scint_times(n, fast=6e-9, slow=1.4e-6, ratio=0.23):
     """
 
     if ratio < 0 or ratio > 1:
-        rprint("WARNING: ratio should be between 0 and 1!!!", "WARNING")
+        rprint("[yellow]WARNING: ratio should be between 0 and 1!!![/yellow]")
 
     aux = np.random.uniform(low=0, high=1, size=n)
     # offset = np.random.random() #photon can arrive at any time
@@ -199,9 +199,7 @@ def fitting_function(function, debug=False):
         return expon.pdf
     else:
         if debug:
-            rprint(
-                "Not configured, looking for a local defined function", color="WARNING"
-            )
+            rprint("[yellow]Not configured, looking for a local defined function[/yellow]")
         try:
             function = globals()[function]
             return function

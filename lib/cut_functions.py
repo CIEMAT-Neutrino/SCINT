@@ -237,9 +237,9 @@ def cut_min_max(
         )
         if run != my_runs["NRun"][0] and ch == chs_cut[0] and key == keys[0]:
             idx_list = []
-            rprint("... NEW RUN ...", color="WARNING")
+            rprint("[yellow]... NEW RUN ...[/yellow]")
         rprint("--- CUTTING events with ", end="")
-        rprint(key, color="cyan", end="")
+        rprint(f"[cyan]{key}[/cyan]")
         rprint(
             " in (" + str(limits[key][0]) + ", " + str(limits[key][1]) + ")",
             my_runs[run][ch]["UnitsDict"][key],
@@ -360,7 +360,7 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
         )
         if run != my_runs["NRun"][0] and ch == chs_cut[0]:
             idx_list = []
-            rprint("... NEW RUN ...", color="WARNING")
+            rprint("[yellow]... NEW RUN ...[/yellow]")
 
         data = my_runs[run][ch]["PedSTD"]
         ypbot = np.percentile(data, 0.1)
@@ -373,8 +373,8 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
         # moda = stat.mode(data)
         mediana = np.median(data)
         std = np.std(data)
-        rprint("--- CUTTING events with ", end="")
-        rprint("PedSTD", color="cyan", end="")
+        rprint("--- CUTTING events with ")
+        rprint("[cyan]PedSTD[/cyan]")
         rprint(
             " <",
             str(n_std) + "* std (of the distribution) for Ch",
@@ -453,7 +453,7 @@ def cut_lin_rel(my_runs, keys, compare="NONE", percentile=[0.1, 99.9]):
     :return: None
     """
 
-    rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])
+    rprint("[cyan,bold]---- LET'S CUT! ----[/cyan,bold]")
     counter = 0
     fig, ax = vis_two_var_hist(my_runs, keys, compare, percentile, OPT={"SHOW": False})
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
@@ -551,7 +551,7 @@ def cut_peak_finder(my_runs, number_peaks, wdth=4, prom=0.01, dist=30):
     :return: None
     """
 
-    rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])
+    rprint("[cyan,bold]---- LET'S CUT! ----[/cyan,bold]")
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             rprint("...Running generate_cut_array...")
@@ -610,7 +610,7 @@ def cut_min_max_sim(my_runs, keys, limits, debug=False):
     :return: None
     """
 
-    rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])
+    rprint("[cyan,bold]---- LET'S CUT! ----[/cyan,bold]")
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             generate_cut_array(my_runs)
@@ -644,4 +644,4 @@ def cut_min_max_sim(my_runs, keys, limits, debug=False):
             len(my_runs[run][ch]["MyCuts"][my_runs[run][ch]["MyCuts"] == False]),
         )
     if debug == True:
-        rprint("---- END OF CUTS ----", color="cyan", styles=["bold"])
+        rprint("[cyan,bold]---- END OF CUTS ----[/cyan,bold]")

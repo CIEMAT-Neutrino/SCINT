@@ -609,10 +609,10 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
 
 def check_array_len(wvf1, wvf2):
     if len(wvf1) < len(wvf2):
-        rprint("RAW WVF IS LONGER THAN WVF TEMPLATE", "WARNING")
+        rprint("[yellow]RAW WVF IS LONGER THAN WVF TEMPLATE[/yellow]")
         wvf2 = wvf2[: -(len(wvf2) - len(wvf1))]
     if len(wvf1) > len(wvf2):
-        rprint("RAW WVF IS SHORTER THAN WVF TEMPLATE", "WARNING")
+        rprint("[yellow]RAW WVF IS SHORTER THAN WVF TEMPLATE[/yellow]")
         wvf1 = wvf1[: -(len(wvf1) - len(wvf2))]
 
     return wvf1, wvf2

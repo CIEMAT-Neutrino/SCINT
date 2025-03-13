@@ -132,9 +132,7 @@ def read_input_file(
                         )  # Takes the second element of the line
                     except IndexError:
                         if debug == True:
-                            rprint(
-                                str(LABEL) + ":\nNo value found!\n", "WARNING"
-                            )
+                            rprint(f"[yellow]{LABEL}:\nNo value found!\n[/yellow]")
                         continue
 
                     for i in numbers.split(","):
@@ -158,9 +156,7 @@ def read_input_file(
                         )  # Takes the second element of the line
                     except IndexError:
                         if debug == True:
-                            rprint(
-                                str(LABEL) + ":\nNo value found!\n", "WARNING"
-                            )
+                            rprint(f"[yellow]{LABEL}:\nNo value found!\n[/yellow]")
                         continue
 
                     for i in numbers.split(","):
@@ -184,9 +180,7 @@ def read_input_file(
                         )  # Takes the second element of the line
                     except IndexError:
                         if debug == True:
-                            rprint(
-                                str(LABEL) + ":\nNo value found!\n", "WARNING"
-                            )
+                            rprint(f"[yellow]{LABEL}:\nNo value found!\n[/yellow]")
                         continue
 
                     for i in numbers.split(","):
@@ -209,9 +203,7 @@ def read_input_file(
                         )  # Takes the second element of the line
                     except IndexError:
                         if debug == True:
-                            rprint(
-                                str(LABEL) + ":\nNo value found!\n", "WARNING"
-                            )
+                            rprint(f"[yellow]{LABEL}:\nNo value found!\n[/yellow]")
                         continue
 
                     for i in numbers.split(","):
@@ -572,7 +564,7 @@ def binary2npy(
             os.makedirs(out_path + out_folder, mode=0o777)
         
         except FileExistsError:
-            rprint("DATA STRUCTURE ALREADY EXISTS", "WARNING")
+            rprint("[yellow]DATA STRUCTURE ALREADY EXISTS[/yellow]")
 
         try:
             ADC, TIMESTAMP = binary2npy_express(
@@ -624,7 +616,7 @@ def binary2npy(
                     # If file already exists, skip
                     elif branch + ".npz" in files and force == False:
                         rprint(
-                            "File (%s.npz) alredy exists." % branch, "WARNING"
+                            "[yellow]File (%s.npz) alredy exists.[/yellow]" % branch
                         )
                         continue
 
@@ -872,7 +864,7 @@ def get_preset_list(my_run: dict, path: str, folder: str, preset: str, option:st
                 aux.append(key)
 
         else:
-            rprint("Preset not found. Returning all the branches.", "WARNING")
+            rprint("[yellow]Preset not found. Returning all the branches.[/yellow]")
             raise ValueError("Preset not found. Returning all the branches.")
 
     branch_list = aux
@@ -1089,7 +1081,7 @@ def save_proccesed_variables(
                             path + out_folder + key + ".npz",
                             stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
                         )
-                        rprint("\tFile (%s.npz) OVERWRITTEN " % key, "WARNING")
+                        rprint("\t[yellow]File (%s.npz) OVERWRITTEN [/yellow]" % key)
                     else:
                         os.remove(path + out_folder + key + ".npy")
                         np.save(path + out_folder + key + ".npy", aux[run][ch][key])
@@ -1097,7 +1089,7 @@ def save_proccesed_variables(
                             path + out_folder + key + ".npy",
                             stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO,
                         )
-                        rprint("\tFile (%s.npy) OVERWRITTEN " % key, "WARNING")
+                        rprint("\t[yellow]File (%s.npy) OVERWRITTEN [/yellow]" % key)
 
                 # If the file does not exist, create it
                 elif check_key(aux[run][ch], key):

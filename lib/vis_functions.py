@@ -372,12 +372,8 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
 
                 if check_key(OPT, "SHOW_PARAM") == True and OPT["SHOW_PARAM"]:
                     rprint(
-                        "\nEvent Number {} from RUN_{} CH_{} ({})".format(
-                            idx, run, ch_list[j], my_run[run][ch_list[j]]["Label"]
-                        ),
-                        "white",
-                        styles=["bold"],
-                    )
+                        "[white,bold]\nEvent Number {} from RUN_{} CH_{} ({})[/white,bold]".format(
+                            idx, run, ch_list[j], my_run[run][ch_list[j]]["Label"]))
                     try:
                         rprint("- Sampling:\t{:.0E}".format(sampling))
                     except KeyError:
@@ -631,7 +627,7 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
 
     if not check_key(OPT, "COMPARE"):
         OPT["COMPARE"] = "NONE"
-        rprint("No comparison selected. Default is NONE", "WARNING")
+        rprint("[yellow]No comparison selected. Default is NONE[/yellow]")
     if OPT["COMPARE"] == "RUNS":
         a_list = ch_list
         b_list = r_list
@@ -889,7 +885,7 @@ def vis_var_hist(
 
     if not check_key(OPT, "COMPARE"):
         OPT["COMPARE"] = "NONE"
-        rprint("No comparison selected. Default is NONE", "WARNING")
+        rprint("[yellow]No comparison selected. Default is NONE[/yellow]")
     if OPT["COMPARE"] == "CHANNELS":
         a_list = r_list
         b_list = ch_list
@@ -1230,7 +1226,7 @@ def vis_two_var_hist(
 
     if not check_key(OPT, "COMPARE"):
         OPT["COMPARE"] = "NONE"
-        rprint("No comparison selected. Default is NONE", "WARNING")
+        rprint("[yellow]No comparison selected. Default is NONE[/yellow]")
     
     if OPT["COMPARE"] == "CHANNELS":
         a_list = r_list

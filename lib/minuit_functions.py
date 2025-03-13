@@ -1,4 +1,4 @@
-import os
+from rich import print as rprint    
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
@@ -46,7 +46,7 @@ def minuit_fit(data, OPT, debug: bool = False):
     ydata, bins = np.histogram(data, bins=OPT["ACCURACY"])
     xdata = bins[:-1] + (bins[1] - bins[0]) / 2
 
-    print(f"DEFAULT MINUIT BINNED FIT ({OPT['FIT']})", "WARNING")
+    rprint(f"[yellow]DEFAULT MINUIT BINNED FIT ({OPT['FIT']})[/yellow]")
     ini_val = initial_values(data, OPT["FIT"], debug=debug)
 
     function, norm_ydata = setup_fitting_function(OPT["FIT"], ydata, xdata, debug=debug)

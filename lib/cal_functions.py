@@ -66,7 +66,7 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
     rprint("[magenta]True key: %s[/magenta]" % true_key)
     rprint("[magenta]True label: %s[/magenta]" % true_label)
     if true_key == "RawADC":
-        rprint("\nAnaADC not saved but we compute it now :)", "WARNING")
+        rprint("[yellow]\nAnaADC not saved but we compute it now :)[/yellow]")
         compute_ana_wvfs(my_run, info, debug=debug)
         key = "AnaADC"
     else:
@@ -154,14 +154,14 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
         calibration[(run, ch, key)] = dict()
         if len(my_runs[run][ch].keys()) == 0:
-            rprint("\n RUN DOES NOT EXIST. Looking for the next", "WARNING")
+            rprint("[yellow]\n RUN DOES NOT EXIST. Looking for the next[/yellow]")
             popt = [-99, -99, -99]
             pcov = [-99, -99, -99]
 
         else:
             det_label = my_runs[run][ch]["Label"]
             if check_key(my_runs[run][ch], "MyCuts") == False:
-                rprint("Cuts not generated. Generating them now...", "WARNING")
+                rprint("[yellow]Cuts not generated. Generating them now...[/yellow]")
                 generate_cut_array(
                     my_runs, debug=debug
                 )  # If cuts not generated, generate them
@@ -245,7 +245,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                 my_runs[run][ch]["AnaMinChargeSPE"] = popt[3] - (popt[3] - popt[0]) / 2
             except IndexError:
                 rprint(
-                    "Fit failed to find min of 3 calibration peaks!", "WARNING"
+                    "[yellow]Fit failed to find min of 3 calibration peaks![/yellow]"
                 )
                 my_runs[run][ch]["Gain"] = -99
                 my_runs[run][ch]["AnaMaxChargeNoise"] = -99
@@ -399,7 +399,7 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
             color="red",
         )
     except:
-        rprint("Fit failed. Returning initial parameters.", "WARNING")
+        rprint("[yellow]Fit failed. Returning initial parameters.[/yellow]")
         xt_popt = np.asarray([len(PNs), p, l])
         xt_pcov = np.asarray([-99, -99, -99])
         # ax_xt.plot(xdata, PoissonPlusBinomial(xdata, *xt_popt), 'x', label="Fit: CT = " + str(int(xt_popt[1] * 100)) + "% - " + r'$\lambda = {:.2f}$'.format(xt_popt[2]), color="red")
@@ -567,8 +567,8 @@ def calibration_txt(run, ch, key, popt, pcov, info, debug=False) -> bool:
                 ), "{:.2E}".format(cal_parameters[i][j][1])
                 table.add_row(parameter, value, error)
 
-            console.rprint("\nPeak:", i)
-            console.rprint(table)
+            console.print("\nPeak:", i)
+            console.print(table)
 
         export = write_output_file(
             run,
@@ -638,8 +638,8 @@ def xtalk_txt(run, ch, key, xt_popt, xt_pcov, info, debug=False) -> bool:
             table.add_row(parameter, value, error)
         except TypeError:
             table.add_row(parameter, "N/A", "N/A")
-    console.rprint("\nX-Talk:")
-    console.rprint(table)
+    console.print("\nX-Talk:")
+    console.print(table)
 
     export = write_output_file(
         run,
