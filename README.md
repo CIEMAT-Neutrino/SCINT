@@ -1,26 +1,17 @@
 # SCINT (Sensor Calibration Interface for Neutrino Team!)
 
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Documentation Status](https://readthedocs.org/projects/scint/badge/?version=latest)](https://scint.readthedocs.io/en/latest/?badge=latest)
+[![DockerPulls](https://img.shields.io/docker/pulls/neutrinosciemat/scint)](https://hub.docker.com/r/neutrinosciemat/scint)
 
-:book: :page_with_curl: Access the [DOCUMENTATION](https://scint.readthedocs.io/en/latest/) for more information :page_with_curl: :book:
+This is a Python library to process and analyze raw data from the lab (waveform per waveform mode).
 
-This is a Python library to process and analyze raw data from the lab.
+### :book: Access the [DOCUMENTATION](https://scint.readthedocs.io/en/latest/) for more information 
 
-We want:
 
-* Classless structure, dictionaries hold all the run/channels variables (+ wvfs).
-* To avoid as much overcalculation as possible:
-  * Calculate pedestal/charge/time... values at once and store them separately from the raw data.
-  * Prevent excessive memory usage when dealing with multiple runs by only loading the variables and not the wvfs.
+### 0 Download
 
-We don't want:
-
-* Complicated hierarchies
-* Commented/uncommented lines with the same code but different runs/configs
-
-0 Download
-
-* Clone the repository into a local directory and create your branch:
+Clone the repository into a local directory and create your branch:
 
 ```bash
 git clone https://github.com/CIEMAT-Neutrino/SCINT.git
@@ -37,39 +28,30 @@ mkdir <your_folder_name>
 echo "<your_folder_name/*>" >> .gitignore
 ```
 
-1 To start RUN:
+### 1 To start RUN:
 
-* Go to the scripts folder and set all the utilities needed for the macros:
+Set all the utilities needed for the macros:
   
 ```bash
-cd SCINT/scripts
-sh setup.sh 
+source setup.sh 
 ```
 
-* Create a folder data/ (or use the copy_data.sh script) to copy the data from the server.
+### 2 Run the following macros FROM the macros' folder:
 
 ```bash
-mkdir data/
-sshfs user@server:path_to_data data
-```
-
-2 Run the following macros FROM the macros' folder:
-
-```bash
-cd ../macros
+cd srcs/macros
 python3 XXmacro.py (--flags input) 
 ```
 
-3 To better visualize what is happening and perform non-standard analysis, there are Jupyter notebooks available in notebooks
+## CONTRIBUTING
 
-```bash
-cd ../notebooks
-jupyter notebook 00TUTORIAL.ipynb
-```
+:construction: Work in progress (check [TO DO LIST](https://github.com/orgs/CIEMAT-Neutrino/projects/4)) :construction:
 
-:construction:
-Work in progress (check [TO DO LIST](https://github.com/CIEMAT-Neutrino/CYTHON_TOOLS/blob/main/To_Do.md))
-:construction:
+* Make sure you create your `branch` or fork the repository for commiting your changes.
+* The branch should tell something about the development you are carring out.
+* Once you are sure your development is ready to be shared with the group open a pull request and merge to the main.
+* Follow [pep-8](https://peps.python.org/pep-0008/) style Python code ([Black Formatter](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) extension in VSCode will do the formatting for you)
+* **Document the code as you go!** (Work in progress to homogenize style in the functions doc)
 
 ## LICENSE
 [MIT](https://choosealicense.com/licenses/mit/)
@@ -80,5 +62,3 @@ Work in progress (check [TO DO LIST](https://github.com/CIEMAT-Neutrino/CYTHON_T
 * [**de la Torre Rojo, Andrés**](https://github.com/andtorre)
 * [**Manthey Corchado, Sergio**](https://github.com/mantheys)
 * [**Pérez-Molina, Laura**](https://github.com/LauPM)
-
-![alt text](https://i.imgflip.com/72cpdl.jpg)
