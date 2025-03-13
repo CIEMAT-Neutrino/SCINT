@@ -18,12 +18,18 @@ from .ana_functions import compute_power_spec, find_amp_decrease, find_baseline_
 
 
 def generate_SER(my_runs, light_runs, SPE_runs, scaling_type="Amplitude", debug=False):
-    """
-    \nThis function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution:
-    \n**VARIABLES:**
-    \n- my_runs: DICTIONARY containing the wvf to be deconvolved.
-    \n- light_runs: DICTIONARY containing the wvfs that work as detector response (light runs).
-    \n- SPE_runs: DICTIONARY containing the SPE wvf that serve as reference to rescale dec_runs.
+    """This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution.
+    
+    :param my_runs: dictionary containing the wvf to be deconvolved
+    :type my_runs: dict
+    :param light_runs: dictionary containing the wvfs that work as detector response (light runs)
+    :type light_runs: dict
+    :param SPE_runs: dictionary containing the SPE wvf that serve as reference to rescale dec_runs
+    :type SPE_runs: dict
+    :param scaling_type: type of scaling to be used, defaults to "Amplitude"
+    :type scaling_type: str, optional
+    :param debug: debug flag, defaults to False
+    :type debug: bool, optional
     """
 
     for ii in range(len(my_runs["NRun"])):
@@ -61,14 +67,22 @@ def generate_SER(my_runs, light_runs, SPE_runs, scaling_type="Amplitude", debug=
 
 
 def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, debug=False):
-    """
-    \nThis function deconvolves any given number of arrays according to a provided SPE template.
-    \nBy default it uses a gaussian filter fitted to a wiener assuming gaussian noise at 0.5 amp. SPE level.
-    \n**VARIABLES:**
-    \n- my_runs: DICTIONARY containing the wvf to be deconvolved.
-    \n- keys: LIST containing the keys of [wvf, template, outputkey].
-    \n- peak_buffer: INT with left distance from peak to calculate baseline.
-    \n- OPT: DICTIONARY with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).
+    """This function deconvolves any given number of arrays according to a provided SPE template.
+    
+    :param my_runs: dictionary containing the wvf to be deconvolved
+    :type my_runs: dict
+    :param info: dictionary containing the output path
+    :type info: dict
+    :param keys: list containing the keys of [wvf, template, outputkey]
+    :type keys: list
+    :param noise_run: dictionary containing the noise run
+    :type noise_run: dict
+    :param peak_buffer: left distance from peak to calculate baseline
+    :type peak_buffer: int
+    :param OPT: dictionary with settings and vis options ("SHOW", "LOGY", "NORM", "FILTER": Gauss/Wiener, etc.).
+    :type OPT: dict
+    :param debug: debug flag, defaults to False
+    :type debug: bool, optional
     """
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):

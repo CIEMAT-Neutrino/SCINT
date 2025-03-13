@@ -33,13 +33,16 @@ from matplotlib.ticker import MultipleLocator
 
 
 def figure_features(tex=tex_installed, font="serif", dpi=600):
+    """Customize figure settings.
+    
+    :param tex: use LaTeX, defaults to tex_installed
+    :type tex: bool, optional
+    :param font: font type, defaults to "serif"
+    :type font: str, optional
+    :param dpi: dots per inch, defaults to 600
+    :type dpi: int, optional
     """
-    \nCustomize figure settings.
-    \n**VARIABLES**:
-    \n - tex (bool, optional): use LaTeX. Defaults to True.
-    \n - font (str, optional): font type. Defaults to "serif".
-    \n - dpi (int, optional): dots per inch. Defaults to 180.
-    """
+
     plt.rcParams.update(
         {
             "font.size": 16,
@@ -79,13 +82,14 @@ def figure_features(tex=tex_installed, font="serif", dpi=600):
 
 
 def add_grid(ax, lines=True, locations=None):
-    """
-    \nAdd a grid to the current plot.
-    \n**VARIABLES**:
-    \n - ax (Axis): axis object in which to draw the grid.
-    \n - lines (bool, optional): add lines to the grid. Defaults to True.
-    \n - locations (tuple, optional):
-    \n - (xminor, xmajor, yminor, ymajor). Defaults to None.
+    """Add a grid to the current plot.
+    
+    :param ax: axis object in which to draw the grid.
+    :type ax: Axis
+    :param lines: add lines to the grid, defaults to True
+    :type lines: bool, optional
+    :param locations: (xminor, xmajor, yminor, ymajor), defaults to None
+    :type locations: tuple, optional
     """
 
     if lines:
@@ -116,26 +120,37 @@ def format_coustom_plotly(
     add_units: bool = True,
     debug: bool = False,
 ):
-    """
-    Format a plotly figure
+    """Format a plotly figure
 
-    Args:
-        fig (plotly.graph_objects.Figure): plotly figure
-        title (str): title of the figure (default: None)
-        legend (dict): legend options (default: dict())
-        fontsize (int): font size (default: 16)
-        figsize (tuple): figure size (default: None)
-        ranges (tuple): axis ranges (default: (None,None))
-        matches (tuple): axis matches (default: ("x","y"))
-        tickformat (tuple): axis tick format (default: ('.s','.s'))
-        log (tuple): axis log scale (default: (False,False))
-        margin (dict): figure margin (default: {"auto":True,"color":"white","margin":(0,0,0,0)})
-        add_units (bool): True to add units to axis labels, False otherwise (default: False)
-        debug (bool): True to print debug statements, False otherwise (default: False)
-
-    Returns:
-        fig (plotly.graph_objects.Figure): plotly figure
+    :param fig: plotly figure
+    :type fig: go.Figure
+    :param title: title of the figure, defaults to None
+    :type title: str, optional
+    :param legend: legend options, defaults to dict()
+    :type legend: dict, optional
+    :param fontsize: font size, defaults to 16
+    :type fontsize: int, optional
+    :param figsize: figure size, defaults to None
+    :type figsize: tuple, optional
+    :param ranges: axis ranges, defaults to (None,None)
+    :type ranges: tuple, optional
+    :param matches: axis matches, defaults to ("x","y")
+    :type matches: tuple, optional
+    :param tickformat: axis tick format, defaults to ('.s','.s')
+    :type tickformat: tuple, optional
+    :param log: axis log scale, defaults to (False,False)
+    :type log: tuple, optional
+    :param margin: figure margin, defaults to {"auto":True}
+    :type margin: dict, optional
+    :param add_units: True to add units to axis labels, False otherwise, defaults to True
+    :type add_units: bool, optional
+    :param debug: True to print debug statements, False otherwise, defaults to False
+    :type debug: bool, optional
+    
+    :return: plotly figure
+    :rtype: go.Figure
     """
+
     # Find the number of subplots
     if type(fig) == go.Figure:
         try:
@@ -229,12 +244,17 @@ def format_coustom_plotly(
 
 
 def get_run_units(var, debug=False):
-    """
-    Returns the units of a variable based on the variable name
+    """Returns the units of a variable based on the variable name
 
-    Args:
-        var (str): variable name
+    :param var: variable name
+    :type var: str
+    :param debug: True to print debug statements, False otherwise, defaults to False
+    :type debug: bool
+    
+    :return: units
+    :rtype: str
     """
+
     units = {
         "R": " (cm) ",
         "X": " (cm) ",
@@ -255,15 +275,18 @@ def get_run_units(var, debug=False):
             unit = units[unit_key]
             if debug:
                 print("Unit found for " + var)
+                
     return unit
 
 
 def unicode(x):
-    """
-    Returns the unicode character for a given string
+    """Returns the unicode character for a given string
 
-    Args:
-        x (str): string to convert to unicode
+    :param x: string to convert to unicode
+    :type x: str
+    
+    :return: unicode character
+    :rtype: str
     """
     if type(x) != str:
         raise TypeError("Input must be a string")
@@ -362,4 +385,5 @@ def unicode(x):
     }
 
     unicode_dict = {**unicode_greek, **unicode_symbol}
+    
     return unicode_dict[x]

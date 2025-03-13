@@ -91,7 +91,7 @@ It will ask for confirmation to make sure you are running from ``SCINT`` folder 
       cd srcs/macros
       python3 XXmacro.py (--flags input)
 
-If you want to have a personal folder to store your test files locally you can create a ``scratch`` folder (it won't be synchronized with the repository).
+If you want to have a personal folder to store your test files locally you can create a ``test`` folder (it won't be synchronized with the repository).
 Otherwise, you can create a folder for your custom scripts and add them to the ``.gitignore`` file:
 
 .. code-block:: bash

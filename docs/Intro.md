@@ -160,7 +160,7 @@ Or run `git checkout -b <your_branch_name>` in a terminal.
 
 ### 3. Install packages needed for the library to run
 
-* Execute the `setup.sh` script that will create a virtual environment to run `SCINT` with all the required packages. It will also generate a symbolic link to a folder were data to follow the tutorial is included.
+* Execute `source setup.sh` script that will create a virtual environment to run `SCINT` with all the required packages. It will also generate a symbolic link to a folder were data to follow the tutorial is included.
 
 <img class="image-align-left" src="_static/venv1_setup.png" width="1000">
 

@@ -5,9 +5,21 @@ from rich import print as rprint
 
 
 def group_selector(data, remove=False, operation="add", debug=False):
+    """Ask the user to select runs and/or chs to group and generate a combination dictionary
+    
+    :param data: dictionary containing the data
+    :type data: dict
+    :param remove: flag to remove the runs/chs from the data dictionary, defaults to False
+    :type remove: bool, optional
+    :param operation: operation to perform on the data, defaults to "add"
+    :type operation: str, optional
+    :param debug: flag to print debug information, defaults to False
+    :type debug: bool, optional
+    
+    :return: comb_data
+    :rtype: dict
     """
-    Ask the user to select runs and/or chs to group and generate a combination dictionary
-    """
+    
     # Ask the user to select runs and/or chs to group
     rprint("Select runs and/or chs to group (Type 'done' when finished)")
     combination_dict = {"NRun": [], "NChannel": []}
@@ -48,9 +60,23 @@ def group_selector(data, remove=False, operation="add", debug=False):
 
 
 def group_data(data, combination_dict, remove=False, operation="add", debug=False):
+    """Group runs and/or chs in the data dictionary.
+    
+    :param data: dictionary containing the data
+    :type data: dict
+    :param combination_dict: dictionary containing the runs and chs to group
+    :type combination_dict: dict
+    :param remove: flag to remove the runs/chs from the data dictionary, defaults to False
+    :type remove: bool, optional
+    :param operation: operation to perform on the data, defaults to "add"
+    :type operation: str, optional
+    :param debug: flag to print debug information, defaults to False
+    :type debug: bool, optional
+    
+    :return: data
+    :rtype: dict
     """
-    group runs and/or chs in the data dictionary
-    """
+    
     # First check that the combination dictionary has the correct structure
     if not all(key in ["NRun", "NChannel"] for key in combination_dict.keys()):
         raise ValueError(
@@ -75,9 +101,23 @@ def group_data(data, combination_dict, remove=False, operation="add", debug=Fals
 
 
 def group_runs(data, runs: tuple, operation, remove=True, debug=False):
+    """Group runs in the data dictionary
+    
+    :param data: dictionary containing the data
+    :type data: dict
+    :param runs: tuple containing the runs to group
+    :type runs: tuple
+    :param operation: operation to perform on the data
+    :type operation: str
+    :param remove: flag to remove the runs from the data dictionary, defaults to True
+    :type remove: bool, optional
+    :param debug: flag to print debug information, defaults to False
+    :type debug: bool, optional
+    
+    :return: grouped_runs
+    :rtype: dict
     """
-    group runs in the data dictionary
-    """
+    
     # First check if the runs exist in the data dictionary
     if not all(run in data["NRun"] for run in runs):
         raise ValueError("Runs not found in data dictionary")
@@ -132,8 +172,21 @@ def group_runs(data, runs: tuple, operation, remove=True, debug=False):
 
 
 def group_chns(data, chs: tuple, operation, remove=True, debug=False):
-    """
-    group chs in the data dictionary
+    """Group chs in the data dictionary
+    
+    :param data: dictionary containing the data
+    :type data: dict
+    :param chs: tuple containing the chs to group
+    :type chs: tuple
+    :param operation: operation to perform on the data
+    :type operation: str
+    :param remove: flag to remove the chs from the data dictionary, defaults to True
+    :type remove: bool, optional
+    :param debug: flag to print debug information, defaults to False
+    :type debug: bool, optional
+    
+    :return: grouped_chns
+    :rtype: dict
     """
     # First check if the chs exist in the data dictionary
     if not all(ch in data["NChannel"] for ch in chs):
@@ -189,6 +242,29 @@ def group_chns(data, chs: tuple, operation, remove=True, debug=False):
 
 
 def group_vars(operation, data, grouped_chns, run, new_ch, var, ch, debug=False):
+    """Group variables in the data dictionary
+    
+    :param operation: operation to perform on the data
+    :type operation: str
+    :param data: dictionary containing the data
+    :type data: dict
+    :param grouped_chns: dictionary containing the grouped data
+    :type grouped_chns: dict
+    :param run: run number
+    :type run: str
+    :param new_ch: new channel
+    :type new_ch: str
+    :param var: variable
+    :type var: str
+    :param ch: channel
+    :type ch: str
+    :param debug: flag to print debug information, defaults to False
+    :type debug: bool, optional
+    
+    :return: grouped_chns
+    :rtype: dict
+    """
+
     try:
         if operation == "append":
             grouped_chns[run][new_ch][var] = np.concatenate(

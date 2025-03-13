@@ -51,13 +51,19 @@ def cut_selector(my_runs, user_input, debug=False):
 
 
 def generate_cut_array(my_runs, ref="", debug=False):
+    """This function generates an array of bool = True. If cuts are applied and then you run this function, it resets the cuts.
+    
+    :param my_runs: dictionary containing the data
+    :type my_runs: dict
+    :param ref: reference variable to generate the cut array, defaults to ""
+    :type ref: str, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: my_runs
+    :rtype: dict
     """
-    \nThis function generates an array of bool = True. If cuts are applied and then you run this function, it resets the cuts.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data
-    \n**- ref**:     reference variable to generate the cut array
-    \n**- debug**:   boolean to print debug messages
-    """
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         try:
             if debug:
@@ -88,6 +94,7 @@ def generate_cut_array(my_runs, ref="", debug=False):
                     if debug:
                         rprint("[magenta]Key " + key + " does not exist[magenta]")
                     pass
+                
     return my_runs
 
 
@@ -107,10 +114,18 @@ def print_cut_info(my_cuts, stage="partial", debug=False):
 
 
 def cut_df(my_runs, cut_dict={}, debug=False):
+    """This function cuts the data using a dictionary with the cuts.
+    
+    :param my_runs: dictionary containing the data
+    :type my_runs: dict
+    :param cut_dict: dictionary containing the cuts, defaults to {}. It must follow the format {(key, logic, value, inclusive): channels}
+    :type cut_dict: dict, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool
+    
+    :return: None
     """
-    This function cuts the data using a dictionary with the cuts. The dictionary must be in the following format:
-    cut_dict = {(key, logic, value, inclusive): channels}
-    """
+    
     rprint("[green,bold]---- LET'S CUT! ----[/green,bold]")
     if debug:
         rprint(cut_dict)
@@ -185,16 +200,24 @@ def cut_df(my_runs, cut_dict={}, debug=False):
 def cut_min_max(
     my_runs, keys, limits, ranges=[0, 0], chs_cut=[], apply_all_chs=False, debug=False
 ):
-    """
-    \nThis is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-    \n**VARIABLES:**
-    \n- keys: a LIST of variables you want to constrain
-    \n- limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    \n- ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
-    \n- chs_cut: a LIST with the affected channels.
-    \n- apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
-    \nImportant! Each key works independently. If one key gives True and the other False, it remains False.
-    \nExample: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
+    """This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits. Important! Each key works independently. If one key gives True and the other False, it remains False. Example: keys = ["PeakAmp", "PeakTime"], limits = {"PeakAmp": [20,50], "PeakTime": [4e-6, 5e-6]}
+    
+    :param my_runs: dictionary containing the data 
+    :type my_runs: dict
+    :param keys: list of variables you want to constrain
+    :type keys: list
+    :param limits: dictionary with same keys than variable "keys" and a list of the min and max values you want
+    :type limits: dict
+    :param ranges: list with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec, defaults to [0,0]
+    :type ranges: list, optional
+    :param chs_cut: list with the affected channels, defaults to []
+    :type chs_cut: list, optional
+    :param apply_all_chs: boolean to decide if we want to reject each cut event for ALL loaded channels, defaults to False
+    :type apply_all_chs: bool, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool
+    
+    :return: None
     """
 
     rprint("[green,bold]---- LET'S CUT! ----[/green,bold]")
@@ -306,16 +329,20 @@ def cut_min_max(
 
 
 def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
-    """
-    \nThis is a fuction for a cut in the PedSTD. It uses the median as reference and eliminates events with
-    \nPedSTD > median + n_std*std, where std is the Standard Deviation of the PedSTD distribution (previously filtered
-    \nwith percentiles).
-    \n**VARIABLES:**
-    \n- keys: a LIST of variables you want to constrain
-    \n- limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    \n- ranges: a LIST with the range where we want to check the key value. If [0,0] it uses the whole window. Time in sec.
-    \n- chs_cut: a LIST with the affected channels.
-    \n- apply_all_chs: a BOOL to decide if we want to reject each cut event for ALL loaded channels.
+    """This is a fuction for a cut in the PedSTD. It uses the median as reference and eliminates events with PedSTD > median + n_std*std, where std is the Standard Deviation of the PedSTD distribution (previously filtered with percentiles).
+    
+    :param my_runs: dictionary containing the data
+    :type my_runs: dict
+    :param n_std: number of standard deviations to cut, defaults to 2
+    :type n_std: int, optional
+    :param chs_cut: list with the affected channels, defaults to []
+    :type chs_cut: list, optional
+    :param apply_all_chs: boolean to decide if we want to reject each cut event for ALL loaded channels, defaults to False
+    :type apply_all_chs: bool, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool
+    
+    :return: None
     """
 
     rprint("[green,bold]---- LET'S CUT! ----[/green,bold]")
@@ -412,13 +439,18 @@ def cut_ped_std(my_runs, n_std=2, chs_cut=[], apply_all_chs=False, debug=False):
 
 
 def cut_lin_rel(my_runs, keys, compare="NONE", percentile=[0.1, 99.9]):
-    """
-    \nThis is a function to cut manually with a polygonal figure on two variables. You can do any polygonal figure (avoid strange figures with crossed lines).
-    \n"Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
-    \n**VARIABLES:**
-    \n- keys: a LIST of variables you want to plot and cut
-    \n- compare: NONE, RUNS, CHANNELS to decide the histogram to use
-    \n- percentile: the percentile used to reject outliers in the histogram
+    """This is a function to cut manually with a polygonal figure on two variables. You can do any polygonal figure (avoid strange figures with crossed lines). "Left click" chooses vertexes, "right click" deletes the last vertex and "middle click" finishes the figure.
+    
+    :param my_runs: dictionary containing the data
+    :type my_runs: dict
+    :param keys: list of variables you want to plot and cut
+    :type keys: list
+    :param compare: NONE, RUNS, CHANNELS to decide the histogram to use, defaults to "NONE"
+    :type compare: str, optional
+    :param percentile: the percentile used to reject outliers in the histogram, defaults to [0.1, 99.9]
+    :type percentile: list, optional
+    
+    :return: None
     """
 
     rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])
@@ -503,10 +535,20 @@ def cut_lin_rel(my_runs, keys, compare="NONE", percentile=[0.1, 99.9]):
 
 
 def cut_peak_finder(my_runs, number_peaks, wdth=4, prom=0.01, dist=30):
-    """
-    \nThis is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes)
-    \nand set the threshold in 3/4 of the SPE max. Other way it takes into account the Max value in Pedestal (this works well for laser runes).
-    \nWARNING! Maybe the values of width, prominence and distance may be changed.
+    """This is a peak finder (aprox) and cuts events with more than "number_peaks" in the window. It checks if AveWvfSPE exists (for calibration runes) and set the threshold in 3/4 of the SPE max. Other way it takes into account the Max value in Pedestal (this works well for laser runes). WARNING! Maybe the values of width, prominence and distance may be changed.
+    
+    :param my_runs: dictionary containing the data
+    :type my_runs: dict
+    :param number_peaks: number of peaks to cut
+    :type number_peaks: int
+    :param wdth: width of the peaks, defaults to 4
+    :type wdth: int, optional
+    :param prom: prominence of the peaks, defaults to 0.01
+    :type prom: float, optional
+    :param dist: distance between peaks, defaults to 30
+    :type dist: int, optional
+    
+    :return: None
     """
 
     rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])
@@ -554,13 +596,18 @@ def cut_peak_finder(my_runs, number_peaks, wdth=4, prom=0.01, dist=30):
 
 
 def cut_min_max_sim(my_runs, keys, limits, debug=False):
-    """
-    \nThis is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits.
-    \n**VARIABLES:**
-    \n- keys: a LIST of variables you want to constrain at the same time
-    \n- limits: a DICTIONARY with same keys than variable "keys" and a list of the min and max values you want.
-    \nImportant! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted.
-    \nExample: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
+    """This is a fuction for cuts of min - max values. It takes a variable(s) and checks whether its value is between the specified limits. Important! Keys are related, so all keys must be False to cut the event. If any of the conditions is True, the event is not cutted. Example: keys = ["PeakAmp"], limits = {"PeakAmp": [20,50]}
+    
+    :param my_runs: dictionary containing the data
+    :type my_runs: dict
+    :param keys: list of variables you want to constrain
+    :type keys: list
+    :param limits: dictionary with same keys than variable "keys" and a list of the min and max values you want
+    :type limits: dict
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool
+    
+    :return: None
     """
 
     rprint("---- LET'S CUT! ----", color="cyan", styles=["bold"])

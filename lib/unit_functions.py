@@ -49,12 +49,16 @@ def calibrate_charges(my_runs, info, user_input, debug=False):
 
 
 def get_run_units(my_runs, debug=False):
+    """Computes and store in a dictionary the units of each variable.
+    
+    :param my_runs: dictionary containing the data
+    :type my_runs: dict
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: None
     """
-    \nComputes and store in a dictionary the units of each variable.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data
-    \n**- debug**:   boolean to print debug messages
-    """
+
     if debug:
         rprint("Getting units...")
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):

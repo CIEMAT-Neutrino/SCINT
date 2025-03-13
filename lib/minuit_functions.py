@@ -31,10 +31,18 @@ def initial_values(data, function, debug: bool = False):
 
 
 def minuit_fit(data, OPT, debug: bool = False):
+    """This function performs a fit to the data, using the function specified in the input using MINUIT. It returns the parameters of the fit (if performed)
+    
+    :param data: data to fit
+    :type data: np.array
+    :param OPT: dictionary containing the options
+    :type OPT: dict
+    :param debug: debug flag, defaults to False
+    :type debug: bool, optional
+    
+    :return: m, xdata, norm_ydata -- fit parameters, xdata and normalized ydata
     """
-    \nThis function performs a fit to the data, using the function specified in the input using MINUIT.
-    \nIt returns the parameters of the fit (if performed)
-    """
+    
     ydata, bins = np.histogram(data, bins=OPT["ACCURACY"])
     xdata = bins[:-1] + (bins[1] - bins[0]) / 2
 
@@ -51,6 +59,7 @@ def minuit_fit(data, OPT, debug: bool = False):
     if debug:
         print("[cyan,bold]Fitting with Minuit[/cyan,bold]")
         print(m.hesse())
+        
     return m, xdata, norm_ydata
 
 

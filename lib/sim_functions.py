@@ -14,14 +14,21 @@ root = get_project_root()
 
 
 def rand_scint_times(n, fast=6e-9, slow=1.4e-6, ratio=0.23):
-    """
-    \nThis function is a randon number generator that returns a sorted nparray of photon arrival times according to a given scintilation profile.
-    \n**VARIABLES**:
-    \n - n: (int) number of produced times.
-    \n - fast: (float) tau value of fast scint component -- default: 6e-9 [s]
-    \n - slow: (float) tau value of slow scint component -- default: 1e-6 [s]
-    \n - ratio: (float) ratio of the slow scint components sholud be [0,1] -- default: 0.23
-    \n***Values adopted from: Enhancement of the X-Arapuca photon detection device for the DUNE experiment, Journal of Instrumentation, vol. 16, p. P09027, sep (2021).
+    """This function is a randon number generator that returns a sorted nparray of photon arrival times according to a given scintilation profile. Values adopted from: Enhancement of the X-Arapuca photon detection device for the DUNE experiment, Journal of Instrumentation, vol. 16, p. P09027, sep (2021).
+    
+    :param n: number of produced times.
+    :type n: int
+    :param fast: tau value of fast scint component -- default: 6e-9 [s]
+    :type fast: float
+    :param slow: tau value of slow scint component -- default: 1e-6 [s]
+    :type slow: float
+    :param ratio: ratio of the slow scint components sholud be [0,1] -- default: 0.23
+    :type ratio: float
+    :return: sorted nparray of photon arrival times.
+    :rtype: nparray
+    
+    :return: array -- sorted nparray of photon arrival times.
+    :rtype: nparray
     """
 
     if ratio < 0 or ratio > 1:
@@ -42,6 +49,25 @@ def rand_scint_times(n, fast=6e-9, slow=1.4e-6, ratio=0.23):
 def larsoft_template(
     time_in_us, fPeakTime, fVoltageToADC, fMaxAmplitude, fFrontTime, fBackTime
 ):
+    """LArSoft template
+    
+    :param time_in_us: time in microseconds.
+    :type time_in_us: nparray
+    :param fPeakTime: peak time.
+    :type fPeakTime: float
+    :param fVoltageToADC: voltage to ADC conversion.
+    :type fVoltageToADC: float
+    :param fMaxAmplitude: maximum amplitude.
+    :type fMaxAmplitude: float
+    :param fFrontTime: front time.
+    :type fFrontTime: float
+    :param fBackTime: back time.
+    :type fBackTime: float
+    
+    :return: array -- template.
+    :rtype: nparray
+    """
+    
     template = []
     for i in time_in_us:
         if i < fPeakTime:
@@ -62,6 +88,17 @@ def larsoft_template(
 
 
 def expand_bins(bins, data):
+    """This function expands the bins to the data range if the bins are smaller than the data range.
+    
+    :param bins: bins.
+    :type bins: nparray
+    :param data: data.
+    :type data: nparray
+    
+    :return: array -- expanded bins.
+    :rtype: nparray
+    """
+    
     if np.max(bins) > np.max(data) and np.min(bins) < np.min(data):
         pass
     elif np.max(bins) > np.max(data):
@@ -70,10 +107,24 @@ def expand_bins(bins, data):
     elif np.min(bins) < np.min(data):
         bin_width = bins[1] - bins[0]
         bins = np.arange(np.min(bins), np.max(data) + bin_width, bin_width)
+        
     return bins
 
 
 def interpolate_sim_data(bins, path, percentile=(1, 99)):
+    """This function interpolates the simulated data to the desired binning.
+    
+    :param bins: bins.
+    :type bins: int or nparray
+    :param path: path to the simulated data.
+    :type path: str
+    :param percentile: percentile range to consider, defaults to (1, 99).
+    :type percentile: tuple, optional
+    
+    :return: bin_centers, hist -- bin centers and histogram.
+    :rtype: tuple
+    """
+    
     data = np.load(path)
     data = data[
         (data > np.percentile(data, percentile[0]))
@@ -87,6 +138,7 @@ def interpolate_sim_data(bins, path, percentile=(1, 99)):
         bins = expand_bins(bins, data)
         hist, bin_edges = np.histogram(data, bins=bins, density=True)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        
     return bin_centers, hist
 
 
@@ -109,6 +161,7 @@ def combi_convolve_poisson(bins, height, eff):
         bounds_error=False,
     )
     convolved_hist = f(bins)
+    
     return height * convolved_hist / np.max(convolved_hist)
 
 
@@ -131,6 +184,7 @@ def sipm1_convolve_poisson(bins, height, eff):
         bounds_error=False,
     )
     convolved_hist = f(bins)
+    
     return height * convolved_hist / np.max(convolved_hist)
 
 

@@ -27,23 +27,33 @@ root = get_project_root()
 
 
 def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
+    """This function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit. We can interact with the plot and pass through the events freely (go back, jump to a specific event...)
+    
+    :param my_run: run(s) we want to check
+    :type my_run: dict
+    :param info: info dictionary
+    :type info: dict
+    :param keys: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively
+    :type keys: list
+    :param OPT: several options that can be True or False
+        (a) MICRO_SEC: if True we multiply Sampling by 1e6
+        (b) NORM: True if we want normalized waveforms
+        (c) LOGY: True if we want logarithmic y-axis
+        (d) SHOW_AVE: if computed and True, it will show average
+        (e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...)
+        (f) CHARGE_KEY: if computed and True, it will show the parametre value
+        (g) PEAK_FINDER: True if we want to check how many peaks are
+        (h) CUTTED_WVF: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed
+        (i) SAME_PLOT: True if we want to plot different channels in the SAME plot
+    :type OPT: dict
+    :param save: True if we want to save the plot
+    :type save: bool
+    :param debug: True if we want to print debug messages
+    :type debug: bool
+    
+    :return: None
     """
-    \nThis function is a event visualizer. It plots individual events of a run, indicating the pedestal level, pedestal std and the pedestal calc limit.
-    \nWe can interact with the plot and pass through the events freely (go back, jump to a specific event...)
-    \n**VARIABLES:**
-    \n- my_run: run(s) we want to check
-    \n- KEYS: choose between ADC or AnaADC to see raw (as get from ADC) or Analyzed events (starting in 0 counts), respectively. Type: List
-    \n- OPT: several options that can be True or False. Type: List
-      (a) MICRO_SEC: if True we multiply Sampling by 1e6.
-      (b) NORM: True if we want normalized waveforms.
-      (c) LOGY: True if we want logarithmic y-axis.
-      (d) SHOW_AVE: if computed and True, it will show average.
-      (e) SHOW_PARAM: True if we want to check calculated parameters (pedestal, amplitude, charge...).
-      (f) CHARGE_KEY: if computed and True, it will show the parametre value.
-      (g) PEAK_FINDER: True if we want to check how many peaks are.
-      (h) CUTTED_WVF: choose the events we want to see. If -1 all events are displayed, if 0 only uncutted events are displayed, if 1 only cutted events are displayed.
-      (i) SAME_PLOT: True if we want to plot different channels in the SAME plot.
-    """
+
     colors = get_prism_colors()
     if not check_key(OPT, "CUTTED_WVF"):
         OPT["CUTTED_WVF"] = -1
@@ -563,18 +573,27 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
 
 
 def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
-    """
-    \nThis function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
-    \n**VARIABLES:**
-    \n- my_run: run(s) we want to check
-    \n- KEYS: waveform to plot (AveWvf, AveWvdSPE, ...). Type: List
-    \n- OPT: several options that can be True or False.  Type: List
-      (a) MICRO_SEC: if True we multiply Sampling by 1e6
-      (b) NORM: True if we want normalized waveforms
-      (c) LOGY: True if we want logarithmic y-axis
-    \n- compare:
-      (a) "RUNS" to get a plot for each channel and the selected runs. Type: String
-      (b) "CHANNELS" to get a plot for each run and the selected channels. Type: String
+    """This function is a waveform visualizer. It plots the selected waveform with the key and allow comparisson between runs/channels.
+    
+    :param my_run: run(s) we want to check
+    :type my_run: dict
+    :param info: info dictionary
+    :type info: dict
+    :param keys: waveform to plot (AveWvf, AveWvdSPE, ...)
+    :type keys: list
+    :param OPT: several options that can be True or False
+        (a) MICRO_SEC: if True we multiply Sampling by 1e6
+        (b) NORM: True if we want normalized waveforms
+        (c) LOGY: True if we want logarithmic y-axis
+        (d) COMPARE: "RUNS" to get a plot for each channel and the selected runs, "CHANNELS" to get a plot for each run and the selected channels
+        (e) STATS: True if we want to print statistics
+    :type OPT: dict
+    :param save: True if we want to save the plot
+    :type save: bool
+    :param debug: True if we want to print debug messages
+    :type debug: bool
+    
+    :return: None
     """
 
     style_selector(OPT)
@@ -711,6 +730,37 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
 def plot_compare_wvf(
     my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx=None, stats=False
 ):
+    """This function plots the waveform of the selected key. It allows to compare between runs or channels.
+    
+    :param my_run: run(s) we want to check
+    :type my_run: dict
+    :param run: run we want to check
+    :type run: int
+    :param ch: channel we want to check
+    :type ch: int
+    :param key: key we want to plot
+    :type key: str
+    :param fig: figure to plot
+    :type fig: matplotlib.figure.Figure
+    :param axs: axis to plot
+    :type axs: matplotlib.axes._subplots.AxesSubplot
+    :param idx: index to plot
+    :type idx: int
+    :param OPT: several options that can be True or False
+        (a) MICRO_SEC: if True we multiply Sampling by 1e6
+        (b) NORM: True if we want normalized waveforms
+        (c) LOGY: True if we want logarithmic y-axis
+        (d) STATS: True if we want to print statistics
+    :type OPT: dict
+    :param ref_max_idx: index to align the waveforms
+    :type ref_max_idx: int
+    :param stats: True if we want to print statistics
+    :type stats: bool
+    
+    :return: ref_max_idx
+    :rtype: int
+    """
+    
     if OPT["COMPARE"] == "NONE":
         label = "Run {} - Channel {} ({}) - {}".format(
             run, ch, my_run[run][ch]["Label"], key
@@ -766,6 +816,7 @@ def plot_compare_wvf(
 
     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
         axs.legend()
+        
     return ref_max_idx
 
 
@@ -779,19 +830,37 @@ def vis_var_hist(
     save=False,
     debug=False,
 ):
+    """This function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate. Outliers are taken into account with the percentile. It discards values below and above the indicated percetiles. It returns values of counts, bins and bars from the histogram to be used in other function. WARNING! Maybe the binning stuff should be studied in more detail.
+    
+    :param my_run: run(s) we want to check
+    :type my_run: dict
+    :param info: info dictionary
+    :type info: dict
+    :param key: variables we want to plot as histograms. Type: List
+        (a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
+        (b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
+        (c) Other variable: any other variable. Here we reject outliers.
+    :type key: list
+    :param percentile: percentile used for outliers removal
+    :type percentile: list
+    :param OPT: several options that can be True or False
+        (a) DENSITY: True if we want density histograms
+        (b) ACCURACY: binning of the histogram
+        (c) TERMINAL_MODE: True if we want to select the channels in the terminal
+        (d) COMPARE: "RUNS" to get a plot for each channel and the selected runs, "CHANNELS" to get a plot for each run and the selected channels
+        (e) SHOW: True if we want to show the plot
+        (f) SAVE: True if we want to save the plot
+    :type OPT: dict
+    :param select_range: True if we want to select the range of the histogram
+    :type select_range: bool
+    :param save: True if we want to save the plot
+    :type save: bool
+    :param debug: True if we want to print debug messages
+    :type debug: bool
+    
+    :return: all_counts, all_bins    
     """
-    \nThis function takes the specified variables and makes histograms. The binning is fix to 600, so maybe it is not the appropriate.
-    \nOutliers are taken into account with the percentile. It discards values below and above the indicated percetiles.
-    \nIt returns values of counts, bins and bars from the histogram to be used in other function.
-    \n**VARIABLES:**
-    \n- my_run: run(s) we want to check
-    \n- keys: variables we want to plot as histograms. Type: List
-      (a) PeakAmp: histogram of max amplitudes of all events. The binning is 1 ADC. There are not outliers.
-      (b) PeakTime: histogram of times of the max amplitude in events. The binning is the double of the sampling. There are not outliers.
-      (c) Other variable: any other variable. Here we reject outliers.
-    \n- percentile: percentile used for outliers removal
-    \nWARNING! Maybe the binning stuff should be studied in more detail.
-    """
+    
     style_selector(OPT)
     all_counts = []
     all_bins = []
@@ -1008,6 +1077,19 @@ def vis_var_hist(
 
 
 def print_stats_terminal(my_run, labels, data):
+    """This function prints the statistics of the data in the terminal.
+    
+    :param my_run: run(s) we want to check
+    :type my_run: dict
+    :param labels: labels of the data
+    :type labels: tuple
+    :param data: data to analyze
+    :type data: list
+    
+    :return: rate
+    :rtype: float
+    """
+    
     run, ch, key = labels
     try:
         times = np.asarray(my_run[run][ch]["TimeStamp"])[
@@ -1025,13 +1107,31 @@ def print_stats_terminal(my_run, labels, data):
     rprint("[cyan]- Mean: {:.2E}[/cyan]".format(np.mean(data)))
     rprint("[cyan]- Median: {:.2E}[/cyan]".format(np.median(data)))
     rprint("[cyan]- Std: {:.2E}[/cyan]".format(np.std(data)))
+    
     return rate
 
 
 def print_stats(my_run, labels, ax, data, info, save=False, debug=False):
+    """This function prints the statistics of the data.
+    
+    :param my_run: run(s) we want to check
+    :type my_run: dict
+    :param labels: labels of the data
+    :type labels: tuple
+    :param ax: axis to plot
+    :type ax: matplotlib axis
+    :param data: data to analyze
+    :type data: list
+    :param info: info dictionary
+    :type info: dict
+    :param save: True if we want to save the statistics
+    :type save: bool
+    :param debug: True if we want to print debug messages
+    :type debug: bool
+    
+    :return: None
     """
-    \nThis function prints the statistics of the data.
-    """
+    
     run, ch, key = labels
     rate = print_stats_terminal(my_run, labels, data)
 
@@ -1073,15 +1173,34 @@ def vis_two_var_hist(
     save=False,
     debug=False,
 ):
+    """This function plots two variables in a 2D histogram. Outliers are taken into account with the percentile. It plots values below and above the indicated percetiles, but values are not removed from data.
+    
+    :param my_run: run(s) we want to check
+    :type my_run: dict
+    :param info: info dictionary
+    :type info: dict
+    :param keys: variables we want to plot as histograms. Type: List
+    :type keys: list
+    :param percentile: percentile used for outliers removal
+    :type percentile: list
+    :param select_range: True if we want to select the range of the histogram (useful if there are many outliers)
+    :type select_range: bool
+    :param OPT: several options that can be True or False
+        (a) DENSITY: True if we want density histograms
+        (b) ACCURACY: binning of the histogram
+        (c) TERMINAL_MODE: True if we want to select the channels in the terminal
+        (d) COMPARE: "RUNS" to get a plot for each channel and the selected runs, "CHANNELS" to get a plot for each run and the selected channels
+        (e) SHOW: True if we want to show the plot
+        (f) SAVE: True if we want to save the plot
+    :type OPT: dict
+    :param save: True if we want to save the plot
+    :type save: bool
+    :param debug: True if we want to print debug messages
+    :type debug: bool
+    
+    :return: None
     """
-    \nThis function plots two variables in a 2D histogram. Outliers are taken into account with the percentile.
-    \nIt plots values below and above the indicated percetiles, but values are not removed from data.
-    \n**VARIABLES:**
-    \n- my_run: run(s) we want to check
-    \n- keys: variables we want to plot as histograms. Type: List
-    \n- percentile: percentile used for outliers removal
-    \n- select_range: if we still have many outliers we can select the ranges in x and y axis.
-    """
+    
     style_selector(OPT)
     r_list = my_run["NRun"]
     ch_loaded = my_run["NChannel"]

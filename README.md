@@ -51,7 +51,22 @@ python3 XXmacro.py (--flags input)
 * The branch should tell something about the development you are carring out.
 * Once you are sure your development is ready to be shared with the group open a pull request and merge to the main.
 * Follow [pep-8](https://peps.python.org/pep-0008/) style Python code ([Black Formatter](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter) extension in VSCode will do the formatting for you)
-* **Document the code as you go!** (Work in progress to homogenize style in the functions doc)
+* **Document the code as you go!** (Work in progress to homogenize style in the functions' doc)
+    - [Sphinx docstring format](https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html) - [VSCode Python Docstring Generator](https://marketplace.visualstudio.com/items?itemName=njpwerner.autodocstring)
+
+    ```bash
+    """[Summary]
+
+    :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
+    :type [ParamName]: [ParamType](, optional)
+    ...
+    :raises [ErrorType]: [ErrorDescription]
+    ...
+    :return: [ReturnDescription]
+    :rtype: [ReturnType]
+    """
+    ```
+
 
 ## LICENSE
 [MIT](https://choosealicense.com/licenses/mit/)

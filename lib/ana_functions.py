@@ -28,13 +28,21 @@ root = get_project_root()
 def compute_ana_wvfs(
     my_runs: dict, info: dict, filter: bool = False, debug: bool = False
 ):
+    """Computes the AnaADC wvfs from the RawADC and the baseline value computed from PED_KEY.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param filter: boolean to apply filter to the wvfs, defaults to False
+    :type filter: bool, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: True if the computation was successful, False otherwise.
+    :rtype: bool
     """
-    \nComputes the AnaADC wvfs from the RawADC and the baseline value computed from PED_KEY.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data.
-    \n**- info**:    dictionary containing the info.
-    \n**- debug**:   boolean to print debug messages.
-    """
+
     for run, ch in product(
         np.array(my_runs["NRun"]).astype(str), np.array(my_runs["NChannel"]).astype(str)
     ):
@@ -85,15 +93,20 @@ def filter_wvf(wvf):
 def compute_fft_wvfs(
     my_runs: dict, info: dict, key: str, label: str, debug: bool = False
 ):
+    """Computes the FFT wvfs from the given ADC key.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param label: label to be inserted.
+    :type label: str
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
     """
-    \nComputes the FFT wvfs from the given ADC key.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data.
-    \n**- info**:    dictionary containing the info.
-    \n**- key**:     key to be inserted.
-    \n**- label**:   label to be inserted.
-    \n**- debug**:   boolean to print debug messages.
-    """
+
     for run, ch in product(
         np.array(my_runs["NRun"]).astype(str), np.array(my_runs["NChannel"]).astype(str)
     ):
@@ -120,16 +133,22 @@ def compute_peak_variables(
     buffer: int = 30,
     debug: bool = False,
 ):
+    """Computes the peaktime and amplitude for a given ADC key.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param label: label to be inserted.
+    :type label: str
+    :param buffer: size in bins of the buffer to compute the valley amplitude, defaults to 30
+    :type buffer: int, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
     """
-    \nComputes the peaktime and amplitude for a given ADC key.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data.
-    \n**- info**:    dictionary containing the info.
-    \n**- key**:     key to be inserted.
-    \n**- label**:   label to be inserted.
-    \n**- buffer**:  size in bins of the buffer to compute the valley amplitude
-    \n**- debug**:   boolean to print debug messages.
-    """
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux_ADC = my_runs[run][ch][key]
         if key == "RawADC" and label == "Raw":
@@ -172,18 +191,26 @@ def compute_peak_variables(
 def compute_pedestal_variables(
     my_runs, info, key, label, ped_lim="", buffer=50, sliding=200, debug=False
 ):
+    """Computes the pedestal variables of a collection of a run's collection in several windows.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param label: label to be inserted. Eg: label = Raw, variable = PedSTD --> RawPedSTD.
+    :type label: str
+    :param ped_lim: size in bins of the sliding window, defaults to ""
+    :type ped_lim: str, optional
+    :param buffer: size in bins of the buffer to compute the valley amplitude, defaults to 50
+    :type buffer: int, optional
+    :param sliding: bins moved between shifts of the window, defaults to 200
+    :type sliding: int, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
     """
-    \nComputes the pedestal variables of a collection of a run's collection in several windows.
-    \n**VARIABLES:**
-    \n**- my_runs**: dictionary containing the data.
-    \n**- info**:    dictionary containing the info.
-    \n**- key**:     key to be inserted.
-    \n**- label**:   string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD.
-    \n**- ped_lim**: size in bins of the sliding window.
-    \n**- buffer**:  size in bins of the buffer to compute the valley amplitude.
-    \n**- sliding**: bins moved between shifts of the window.
-    \n**- debug**:   boolean to print debug messages.
-    """
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if type(ped_lim) != int:
             values, counts = np.unique(
@@ -316,15 +343,20 @@ def compute_pedestal_variables(
 
 
 def compute_wvf_variables(my_runs, info, key, label, debug=False):
+    """Computes the mean, std and rms of the given ADC key.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param label: label to be inserted.
+    :type label: str
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
     """
-    \nComputes the mean, std and rms of the given ADC key.
-    \n**VARIABLES:**
-    \n**- my_runs**: dictionary containing the data.
-    \n**- info**:    dictionary containing the info.
-    \n**- key**:     key to be inserted.
-    \n**- label**:   string added to the new variables. Eg: label = Raw, variable = PedSTD --> RawPedSTD.
-    \n**- debug**:   boolean to print debug messages.
-    """
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         my_runs[run][ch][label + "Mean"] = np.mean(my_runs[run][ch][key], axis=1)
         my_runs[run][ch][label + "STD"] = np.std(my_runs[run][ch][key], axis=1)
@@ -340,14 +372,19 @@ def compute_wvf_variables(my_runs, info, key, label, debug=False):
 
 
 def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=200, debug=False):
-    """
-    \nTaking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window".
-    It checks for the best window.
-    \n**VARIABLES:**
-    \n**- ADC**:      array containing the ADCs.
-    \n**- ped_lim**:  size in bins of the sliding window.
-    \n**- sliding**:  bins moved between shifts of the window.
-    \n**- debug**:    boolean to print debug messages.
+    """Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window". It checks for the best window.
+    
+    :param ADC: array containing the ADCs.
+    :type ADC: nparray
+    :param ped_lim: size in bins of the sliding window.
+    :type ped_lim: int
+    :param sliding: bins moved between shifts of the window, defaults to 200
+    :type sliding: int, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: ADC_s, start_window -- shifted ADCs and start window.
+    :rtype: nparray, nparray
     """
     if ped_lim < sliding:
         ped_lim = sliding
@@ -378,13 +415,19 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=200, debug=False):
 
 
 def compute_power_spec(ADC, timebin, debug=False):
+    """Computes the power spectrum of the given events. It returns both axis.
+    
+    :param ADC: array containing the ADCs.
+    :type ADC: nparray
+    :param timebin: timebin of the data.
+    :type timebin: float
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: power spectrum and frequency axis.
+    :rtype: nparray, nparray
     """
-    \nComputes the power spectrum of the given events. It returns both axis.
-    \n**VARIABLES**:
-    \n**- ADC**:     array containing the ADCs.
-    \n**- timebin**: timebin of the data.
-    \n**- debug**:   boolean to print debug messages.
-    """
+
     aux = []
     aux_X = np.fft.rfftfreq(len(ADC[0]), timebin)
     for i in range(len(ADC)):
@@ -395,13 +438,19 @@ def compute_power_spec(ADC, timebin, debug=False):
 
 @numba.njit
 def shift_ADCs(ADC, shift, debug=False):
+    """Used for the sliding window.
+    
+    :param ADC: array containing the ADCs.
+    :type ADC: nparray
+    :param shift: array containing the shift values.
+    :type shift: nparray
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: aux_ADC -- shifted ADCs.
+    :rtype: nparray
     """
-    \nUsed for the sliding window.
-    \n**VARIABLES**:
-    \n**- ADC**:   array containing the ADCs.
-    \n**- shift**: array containing the shift values.
-    \n**- debug**: boolean to print debug messages.
-    """
+
     N_wvfs = ADC.shape[0]
     aux_ADC = np.zeros(ADC.shape)
     for i in range(N_wvfs):
@@ -414,14 +463,21 @@ def shift_ADCs(ADC, shift, debug=False):
 def shift4_numba(
     arr, num, fill_value=0, debug=False
 ):  # default shifted value is 0, remember to always substract your pedestal first
+    """Used for the sliding window.
+    
+    :param arr: array containing the ADCs.
+    :type arr: nparray
+    :param num: array containing the shift values.
+    :type num: nparray
+    :param fill_value: value to be inserted in the empty bins, defaults to 0
+    :type fill_value: int, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: arr -- shifted array.
+    :rtype: nparray
     """
-    \nUsed for the sliding window.
-    \n**VARIABLES**:
-    \n**- arr**:        array to be shifted.
-    \n**- num**:        number of bins to be shifted.
-    \n**- fill_value**: value to be inserted in the empty bins.
-    \n**- debug**:      boolean to print debug messages.
-    """
+
     if num > 0:
         return np.concatenate((np.full(num, fill_value), arr[:-num]))
     elif num < 0:
@@ -446,12 +502,28 @@ def average_wvfs(
     OPT={},
     debug=False,
 ):
+    """This function calculates the average waveform of a run. 
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param label: label to be inserted.
+    :type label: str
+    :param centering: centering method (NONE, PEAK, THRESHOLD), defaults to "NONE"
+    :type centering: str, optional
+    :param threshold: threshold value, defaults to 0
+    :type threshold: int, optional
+    :param cut_label: label for the cut, defaults to ""
+    :type cut_label: str, optional
+    :param OPT: dictionary containing the options, defaults to {}
+    :type OPT: dict, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
     """
-    \nIt calculates the average waveform of a run. Select centering:
-    \n- "NONE"      -> AveWvf: each event is added without centering.
-    \n- "PEAK"      -> AveWvfPeak: each event is centered according to wvf argmax.
-    \n- "THRESHOLD" -> AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
-    """
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if check_key(my_runs[run][ch], "MyCuts") == False:
             generate_cut_array(my_runs)
@@ -468,11 +540,13 @@ def average_wvfs(
         if bin_ref_peak < buffer:
             bin_ref_peak = buffer
 
-        if centering == "NONE":
+        # AveWvf: each event is added without centering.
+        if centering == "NONE": 
             my_runs[run][ch][label + "AveWvf" + cut_label] = np.asarray(
                 [np.mean(aux_ADC, axis=0)]
             )  # It saves the average waveform as "AveWvf_*"
-
+        
+        # AveWvfPeak: each event is centered according to wvf argmax.
         if centering == "PEAK":
             bin_max_peak = np.argmax(
                 aux_ADC[:, bin_ref_peak - buffer : bin_ref_peak + buffer], axis=1
@@ -485,7 +559,8 @@ def average_wvfs(
             my_runs[run][ch][label + "AveWvfPeak" + cut_label] = np.asarray(
                 [np.mean(aux_ADC, axis=0)]
             )  # It saves the average waveform as "AveWvfPeak_*"
-
+        
+        # AveWvfThreshold: each event is centered according to first wvf entry exceding a threshold.
         if centering == "THRESHOLD":
             if threshold == 0:
                 threshold = np.max(np.mean(aux_ADC, axis=0)) / 2
@@ -512,10 +587,19 @@ def average_wvfs(
 
 
 def expo_average(my_run, alpha, debug=False):
+    """This function calculates the exponential average with a given alpha.
+    
+    :param my_run: run we want to use.
+    :type my_run: nparray
+    :param alpha: alpha value.
+    :type alpha: float
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: v_averaged -- averaged run computed as average[i+1] = (1-alpha) * average[i] + alpha * my_run[i+1]
+    :rtype: nparray
     """
-    \nThis function calculates the exponential average with a given alpha.
-    \n**returns**: average[i+1] = (1-alpha) * average[i] + alpha * my_run[i+1]
-    """
+ 
     v_averaged = np.zeros(len(my_run))
     v_averaged[0] = my_run[0]
     for i in range(len(my_run) - 1):
@@ -527,10 +611,17 @@ def expo_average(my_run, alpha, debug=False):
 
 
 def unweighted_average(my_run, debug=False):
+    """This function calculates the unweighted average.
+    
+    :param my_run: run we want to use.
+    :type my_run: nparray
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: v_averaged -- averaged run computed as average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3
+    :rtype: nparray
     """
-    \nThis function calculates the unweighted average.
-    \n**returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3
-    """
+
     v_averaged = np.zeros(len(my_run))
     v_averaged[0] = my_run[0]
     v_averaged[-1] = my_run[-1]
@@ -539,14 +630,24 @@ def unweighted_average(my_run, debug=False):
         v_averaged[i + 1] = (
             my_run[i] + my_run[i + 1] + my_run[i + 2]
         ) / 3  # e.g. average[1] = (my_run[0] + my_run[1] + my_run[2]) / 3
+
     return v_averaged
 
 
 def smooth(my_run, alpha, debug=False):
+    """This function calculates the exponential average and then the unweighted average.
+    
+    :param my_run: run we want to use.
+    :type my_run: nparray
+    :param alpha: alpha value.
+    :type alpha: float
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: my_run -- averaged run computed as average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 with my_run = (1-alpha) * average[i] + alpha * my_run[i+1]
+    :rtype: nparray
     """
-    \nThis function calculates the exponential average and then the unweighted average.
-    \n**returns**: average[i+1] = (my_run[i] + my_run[i+1] + my_run[i+2]) / 3 with my_run = (1-alpha) * average[i] + alpha * my_run[i+1]
-    """
+
     my_run = expo_average(my_run, alpha)
     my_run = unweighted_average(my_run)
     return my_run
@@ -558,10 +659,15 @@ def smooth(my_run, alpha, debug=False):
 
 
 def find_baseline_cuts(raw, debug=False):
-    """
-    \nIt finds the cuts with the x-axis. It returns the index of both bins.
-    \n**VARIABLES:**
-    \n- raw: the .root that you want to analize.
+    """It finds the cuts with the x-axis. It returns the index of both bins.
+    
+    :param raw: the np array that you want to analize.
+    :type raw: nparray
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: i_idx, f_idx -- initial and final index of the cuts.
+    :rtype: int, int
     """
 
     max = np.argmax(raw)
@@ -580,12 +686,19 @@ def find_baseline_cuts(raw, debug=False):
 
 
 def find_amp_decrease(raw, thrld, debug=False):
+    """It finds bin where the amp has fallen above a certain threshold relative to the main peak. It returns the index of both bins.
+    
+    :param raw: the np array that you want to analize.
+    :type raw: nparray
+    :param thrld: the relative amp that you want to analize.
+    :type thrld: float
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: i_idx, f_idx -- initial and final index of the cuts.
+    :rtype: int, int
     """
-    \nIt finds bin where the amp has fallen above a certain threshold relative to the main peak. It returns the index of both bins.
-    \n**VARIABLES:**
-    \n- raw: the np array that you want to analize.
-    \n- thrld: the relative amp that you want to analize.
-    """
+
     max = np.argmax(raw)
     i_idx = 0
     f_idx = 0
@@ -602,17 +715,27 @@ def find_amp_decrease(raw, thrld, debug=False):
 
 
 def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
+    """This function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param key: key to be inserted (by default any ADC).
+    :type key: str
+    :param label: label to be inserted.
+    :type label: str
+    :param cut_label: label for the cut, defaults to ""
+    :type cut_label: str, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return my_runs: dictionary containing the data with the integrated values.
+    :rtype: dict
     """
-    \nThis function integrates each event waveform. There are several ways to do it and we choose it with the argument "types".
-    \n**VARIABLES**:
-    \n- my_runs: run(s) we want to use
-    \n- info: input information from .txt with DAQ characteristics and Charge Information.
-    \n- key: waveform we want to integrate (by default any ADC)
-    \nIn txt Charge Info part we can indicate the type of integration, the reference average waveform and the ranges we want to integrate.
-    \nIf I_RANGE == -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
-    \nIf I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
-    \nI_RANGE must have same length than F_RANGE!
-    """
+    # If I_RANGE == -1 it fixes t0 to pedestal time and it integrates the time indicated in F_RANGE, e.g. I_RANGE = -1 F_RANGE = 6e-6 it integrates 6 microsecs from pedestal time.
+    # If I_RANGE != -1 it integrates from the indicated time to the F_RANGE value, e.g. I_RANGE = 2.1e-6 F_RANGE = 4.3e-6 it integrates in that range.
+    # I_RANGE must have same length than F_RANGE!
 
     integration_dict = {"ChargeAveRange": {}, "ChargePedRange": {}, "ChargeRange": {}}
     conversion_factor = (
@@ -725,13 +848,28 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
 
     filename = f'{root}/{info["NPY_PATH"][0]}/run{run.zfill(2)}_ch{ch}/ChargeDict.yml'
     update_yaml_file(filename, integration_dict, convert=False, debug=debug)
+    
     return my_runs
 
 
 def compute_peak_RMS(my_runs, info, key, label, debug=False):
+    """This function uses the calculated average wvf for a given run and computes the RMS of the peak in the given buffer.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param label: label to be inserted.
+    :type label: str
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return my_runs: dictionary containing the data with the RMS values.
+    :rtype: dict
     """
-    \nThis function uses the calculated average wvf for a given run and computes the RMS of the peak in the given buffer.
-    """
+    
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         ref = np.asarray(my_runs[run][ch][label + "AveWvf"][0])
         i_idx, f_idx = find_baseline_cuts(ref)
@@ -795,14 +933,18 @@ def compute_peak_RMS(my_runs, info, key, label, debug=False):
 
 
 def insert_variable(my_runs, var, key, debug=False):
+    """Insert values for each type of signal.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param var: array of values to be inserted.
+    :type var: nparray
+    :param key: key to be inserted.
+    :type key: str
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
     """
-    \nInsert values for each type of signal.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data
-    \n**- var**:     array of values to be inserted
-    \n**- key**:     key to be inserted
-    \n**- debug**:   boolean to print debug messages
-    """
+
     for run, ch in product(
         np.array(my_runs["NRun"]).astype(str), np.array(my_runs["NChannel"]).astype(str)
     ):
@@ -817,13 +959,19 @@ def insert_variable(my_runs, var, key, debug=False):
 
 
 def get_ADC_key(my_runs, key, debug=False):
+    """This function returns the ADC key for a given run.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: key, label -- key and label for the ADC.
+    :rtype: str, str
     """
-    \nThis function returns the ADC key for a given run.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data
-    \n**- key**:     key to be inserted
-    \n**- debug**:   boolean to print debug messages
-    """
+
     found_duplicate = 0
     if key == "":
         for this_key in my_runs[my_runs["NRun"][0]][my_runs["NChannel"][0]].keys():
@@ -855,14 +1003,21 @@ def get_ADC_key(my_runs, key, debug=False):
 
 
 def get_wvf_label(my_runs, key, label, debug=False):
+    """This function returns the label for a given run. This depends on the found ADC key or the one provided by the user.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param label: label to be inserted.
+    :type label: str
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: out_key, out_label -- key and label for the ADC.
+    :rtype: str, str
     """
-    \nThis function returns the label for a given run. This depends on the found ADC key or the one provided by the user.
-    \n**VARIABLES**:
-    \n**- my_runs**: dictionary containing the data
-    \n**- key**:     key to be inserted
-    \n**- label**:   label to be inserted
-    \n**- debug**:   boolean to print debug messages
-    """
+
     if key == "" and label == "":
         found_key, found_label = get_ADC_key(my_runs, key, debug=debug)
         out_key = found_key

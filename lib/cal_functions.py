@@ -46,13 +46,18 @@ root = get_project_root()
 
 
 def vis_persistence(my_run, info, OPT, save=False, debug=False):
-    """
-    \nThis function plot the PERSISTENCE histogram of the given runs&ch.
-    \nIt perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed.
-    \nBinning is fixed (x=5000, y=1000) [study upgrade].
-    \nX_data (time) and Y_data (waveforms) are deleted after the plot to save space.
-    \n
-    \nWARNING! flattening long arrays leads to MEMORY problems :/
+    """This function plot the PERSISTENCE histogram of the given runs&ch. It perfoms a cut in 20<"PeakTime"(bins)<50 so that all the events not satisfying the condition are removed. Binning is fixed (x=5000, y=1000) [study upgrade]. X_data (time) and Y_data (waveforms) are deleted after the plot to save space. WARNING! flattening long arrays leads to MEMORY problems :/.
+    
+    :param my_run: run(s) we want to check.
+    :type my_run: dict
+    :param info: dictionary with the information of the run.
+    :type info: dict
+    :param OPT: several options that can be True or False.
+    :type OPT: dict
+    :param save: if True, it will save the plot in the images folder.
+    :type save: bool
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
     """
 
     style_selector(OPT)
@@ -123,16 +128,27 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
 
 
 def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
-    """
-    \nComputes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as
-    \na return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
-    \n**VARIABLES:**
-    \n- my_run: run(s) we want to check
-    \n- keys: variables we want to plot as histograms. Type: List
-    \n- OPT: several options that can be True or False. Type: List
+    """Computes calibration hist of a collection of runs. A fit is performed (train of gaussians) and we have as a return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
+    
+    :param my_runs: run(s) we want to check.
+    :type my_runs: dict
+    :param info: dictionary with the information of the run.
+    :type info: dict
+    :param keys: variables we want to plot as histograms.
+    :type keys: list
+    :param OPT: several options that can be True or False.
       (a) LOGY: True if we want logarithmic y-axis
       (b) SHOW: if True, it will show the calibration plot
+    :type OPT: dict
+    :param save: if True, it will save the plot in the images folder.
+    :type save: bool
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
+    
+    :return: calibration
+    :rtype: dict
     """
+    
     calibration = dict()
     style_selector(OPT)
     for run, ch, key in product(my_runs["NRun"], my_runs["NChannel"], keys):
@@ -244,6 +260,23 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
 
 
 def calibration_fit_plot(ax_cal, counts, bins, OPT, debug=False):
+    """This function performs the calibration fit and plots the results.
+    
+    :param ax_cal: axis to plot the calibration fit.
+    :type ax_cal: matplotlib axis
+    :param counts: counts of the histogram.
+    :type counts: nparray
+    :param bins: bins of the histogram.
+    :type bins: nparray
+    :param OPT: several options that can be True or False.
+    :type OPT: dict
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
+    
+    :return: popt, pcov
+    :rtype: tuple
+    """
+    
     new_params = {}
     params = {
         "THRESHOLD": 0.1,
@@ -296,6 +329,23 @@ def calibration_fit_plot(ax_cal, counts, bins, OPT, debug=False):
 
 
 def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
+    """This function performs the xtalk fit and plots the results.
+    
+    :param ax_xt: axis to plot the xtalk fit.
+    :type ax_xt: matplotlib axis
+    :param popt: best fit parameters.
+    :type popt: nparray
+    :param labels: labels of the histogram.
+    :type labels: tuple
+    :param OPT: several options that can be True or False.
+    :type OPT: dict
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
+    
+    :return: xt_popt, xt_pcov
+    :rtype: tuple
+    """
+    
     run, ch, key = labels
     PNs = popt[1::3] * np.abs(popt[2::3]) / sum(popt[1::3] * np.abs(popt[2::3]))
     PNs_err = (popt[1::3] * np.abs(popt[2::3])) ** 0.5 / sum(
@@ -361,6 +411,18 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
 
 
 def export_txt(data: dict, info: dict, debug: bool = False) -> None:
+    """This function exports the calibration and xtalk data to a txt file.
+    
+    :param data: data to be exported.
+    :type data: dict
+    :param info: dictionary with the information of the run.
+    :type info: dict
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
+    
+    :return: None
+    """
+    
     for labels in data:
         run, ch, key = labels
         for measurement in data[labels]:
@@ -396,9 +458,27 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
 
 
 def calibration_txt(run, ch, key, popt, pcov, info, debug=False) -> bool:
+    """Computes calibration parameters.
+    
+    :param run: run number.
+    :type run: int
+    :param ch: channel number.
+    :type ch: int
+    :param key: key of the histogram.
+    :type key: str
+    :param popt: best fit parameters.
+    :type popt: nparray
+    :param pcov: covariance matrix.
+    :type pcov: nparray
+    :param info: dictionary with the information of the run.
+    :type info: dict
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
+    
+    :return: export
+    :rtype: bool
     """
-    \nComputes calibration parameters.
-    """
+
     if all(x != -99 for x in popt):
         cal_parameters = []
         perr = np.sqrt(np.diag(pcov))  # error for each variable
@@ -516,8 +596,25 @@ def calibration_txt(run, ch, key, popt, pcov, info, debug=False) -> bool:
 
 
 def xtalk_txt(run, ch, key, xt_popt, xt_pcov, info, debug=False) -> bool:
-    """
-    \nComputes xtalk parameters.
+    """Computes xtalk parameters.
+    
+    :param run: run number.
+    :type run: int
+    :param ch: channel number.
+    :type ch: int
+    :param key: key of the histogram.
+    :type key: str
+    :param xt_popt: best fit parameters.
+    :type xt_popt: nparray
+    :param xt_pcov: covariance matrix.
+    :type xt_pcov: nparray
+    :param info: dictionary with the information of the run.
+    :type info: dict
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
+    
+    :return: export
+    :rtype: bool
     """
     xt_parameters = []
     xt_perr = np.sqrt(np.diag(xt_pcov))  # error for each variable
@@ -558,6 +655,21 @@ def xtalk_txt(run, ch, key, xt_popt, xt_pcov, info, debug=False) -> bool:
 
 
 def get_gains(run, channels, folder_path="TUTORIAL", debug=False):
+    """This function reads the gains from the txt files.
+    
+    :param run: run number.
+    :type run: int
+    :param channels: channels to read the gains from.
+    :type channels: list
+    :param folder_path: path to the folder where the gains are stored.
+    :type folder_path: str
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
+    
+    :return: gains, Dgain
+    :rtype: dict, dict
+    """
+    
     gains = dict.fromkeys(channels)
     Dgain = dict.fromkeys(channels)
     for c, ch in enumerate(channels):
@@ -598,13 +710,25 @@ def get_gains(run, channels, folder_path="TUTORIAL", debug=False):
 
 
 def scintillation_txt(run, ch, key, popt, pcov, filename, info):
-    """
-    \nComputes charge parameters.
-    \nGiven popt and pcov which are the output for the best parameters when performing the Gaussian fit.
-    \nIt returns an array of arrays:
-    \nsave_scintillation = [ [[mu,dmu],[height,dheight],[sigma,dsigma],] ]
-    \nSave in a txt the calibration parameters to be exported directly.
-    \nTakes as input an array of arrays with the computed parameters (see compute_charge_parameters())
+    """Computes charge parameters. Given popt and pcov which are the output for the best parameters when performing the Gaussian fit.
+    
+    :param run: run number.
+    :type run: int
+    :param ch: channel number.
+    :type ch: int
+    :param key: key of the histogram.
+    :type key: str
+    :param popt: best fit parameters.
+    :type popt: nparray
+    :param pcov: covariance matrix.
+    :type pcov: nparray
+    :param filename: name of the file to save the parameters.
+    :type filename: str
+    :param info: dictionary with the information of the run.
+    :type info: dict
+    
+    :return: export
+    :rtype: bool
     """
 
     charge_parameters = []
@@ -639,15 +763,19 @@ def scintillation_txt(run, ch, key, popt, pcov, filename, info):
 
 
 def charge_fit(my_runs, keys, OPT={}):
-    """
-    \nComputes charge hist of a collection of runs. A fit is performed (1 gaussian) and we have as
-    \na return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
-    \n**VARIABLES:**
-    \n- my_run: run(s) we want to check
-    \n- keys: variables we want to plot as histograms. Type: List
-    \n- OPT: several options that can be True or False. Type: List
+    """Computes charge hist of a collection of runs. A fit is performed (1 gaussian) and we have as a return the popt, pcov, perr for the best fitted parameters. Not only that but a plot is displayed.
+    
+    :param my_runs: run(s) we want to check.
+    :type my_runs: dict
+    :param keys: variables we want to plot as histograms.
+    :type keys: list
+    :param OPT: several options that can be True or False.
       (a) LOGY: True if we want logarithmic y-axis
       (b) SHOW: if True, it will show the calibration plot
+    :type OPT: dict
+    
+    :return: all_popt, all_pcov, all_perr
+    :rtype: list, list, list
     """
 
     next_plot = False
@@ -743,6 +871,22 @@ def charge_fit(my_runs, keys, OPT={}):
 
 
 def save_figures(fig_cal, fig_xt, labels, save_path, debug=False):
+    """Saves the figures in the images folder.
+    
+    :param fig_cal: figure of the calibration.
+    :type fig_cal: matplotlib figure
+    :param fig_xt: figure of the xtalk.
+    :type fig_xt: matplotlib figure
+    :param labels: labels of the histogram.
+    :type labels: tuple
+    :param save_path: path to the folder where the images are stored.
+    :type save_path: str
+    :param debug: if True, it will display the debug messages.
+    :type debug: bool
+    
+    :return: None
+    """
+    
     run, ch, key = labels
     # Check if the folder exists, if not create it
     try:

@@ -16,15 +16,14 @@ root = get_project_root()
 
 
 def get_flag_dict():
-    """
-    This function returns a dictionary with the available flags for the macro.
+    """This function returns a dictionary with the available flags for the macro.
 
-    Args:
-        None
+    :params None:
 
-    Returns:
-        flag_dict (dict): Dictionary with the available flags for the macro.
+    :returns: flag_dict (dict) -- Dictionary with the available flags for the macro.
+    :rtype: dict
     """
+
     flag_dict = {
         ("-c", "--channels"): "channels \t(optional)",
         ("-d", "--debug"): "debug \t(True/False)",
@@ -44,10 +43,19 @@ def get_flag_dict():
 def initialize_macro(
     macro, input_list: Optional[list] = ["input_file", "debug"], default_dict: Optional[dict] = None, debug: bool = False
 ):
-    """
-    \nThis function initializes the macro by reading the input file and the user input.
-    \n**VARIABLES:**
-    \n- **macro** (*str*) - Name of the macro to be executed.
+    """This function initializes the macro by reading the input file and the user input.
+    
+    :param macro: Name of the macro to be executed.
+    :type macro: str
+    :param input_list: List with the keys of the user input that need to be updated, defaults to ["input_file", "debug"]
+    :type input_list: list, optional
+    :param default_dict: Dictionary with the default values for the user input, defaults to None
+    :type default_dict: dict, optional
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    
+    :return: user_input, info -- Dictionary with the user input and dictionary with the information from the input file.
+    :rtype: tuple
     """
 
     flag_dict = get_flag_dict()
@@ -118,12 +126,21 @@ def initialize_macro(
 
 
 def update_user_input(user_input, new_input_list, info, debug=False):
+    """This function updates the user input by asking the user to provide the missing information.
+    
+    :param user_input: Dictionary with the user input.
+    :type user_input: dict
+    :param new_input_list: List with the keys of the user input that need to be updated.
+    :type new_input_list: list
+    :param info: Dictionary with the information from the input file.
+    :type info: dict
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    
+    :return: new_user_input, info -- Dictionary with the updated user input and dictionary with the information from the input file.
+    :rtype: tuple
     """
-    \nThis function updates the user input by asking the user to provide the missing information.
-    \n**VARIABLES:**
-    \n- **user_input** (*dict*) - Dictionary with the user input.
-    \n- **new_input_list** (*list*) - List with the keys of the user input that need to be updated.
-    """
+
     new_user_input = user_input.copy()
     defaults = {
         "preset_load": "ANA",
@@ -166,14 +183,20 @@ def update_user_input(user_input, new_input_list, info, debug=False):
                 )
         else:
             pass
+        
     return new_user_input, info
 
 
 def select_input_file(user_input, debug=False):
-    """
-    \nThis function asks the user to select the input file.
-    \n**VARIABLES:**
-    \n- **user_input** (*dict*) - Dictionary with the user input.
+    """This function asks the user to select the input file.
+    
+    :param user_input: Dictionary with the user input.
+    :type user_input: dict
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    
+    :return: new_user_input -- Dictionary with the updated user input.
+    :rtype: dict
     """
 
     new_user_input = user_input.copy()
@@ -192,16 +215,26 @@ def select_input_file(user_input, debug=False):
         new_user_input["input_file"] = [inquirer.prompt(q)["input_file"]]
     if debug:
         rprint("[cyan]Using input file %s[/cyan]" % new_user_input["input_file"][0])
+        
     return new_user_input
 
 
 def use_default_input(user_input, default_dict, info, debug=False):
+    """This function updates the user input by asking the user to provide the missing information.
+    
+    :param user_input: Dictionary with the user input.
+    :type user_input: dict
+    :param default_dict: Dictionary with the default values for the user input.
+    :type default_dict: dict
+    :param info: Dictionary with the information from the input file.
+    :type info: dict
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    
+    :return: new_user_input -- Dictionary with the updated user input.
+    :rtype: dict
     """
-    \nThis function updates the user input by asking the user to provide the missing information.
-    \n**VARIABLES:**
-    \n- **user_input** (*dict*) - Dictionary with the user input.
-    \n- **info** (*dict*) - Dictionary with the information from the input file.
-    """
+ 
     new_user_input = user_input.copy()
     for default_key in default_dict:
         if check_key(new_user_input, default_key) == False:
@@ -225,10 +258,19 @@ def use_default_input(user_input, default_dict, info, debug=False):
                     "[yellow]No %s provided. Using all %s from input file. %s[/yellow]"
                     % (default_key, default_key, runs)
                 )
+                
     return new_user_input
 
 
 def print_macro_info(macro, debug=False):
+    """This function prints the information about the macro.
+    
+    :param macro: Name of the macro to be executed
+    :type macro: str
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    """
+    
     f = open("info/" + macro + ".txt", "r")
     file_contents = f.read()
     rprint(file_contents + "\n")
@@ -238,6 +280,9 @@ def print_macro_info(macro, debug=False):
 
 
 def print_header():
+    """This function prints the header of the macro.
+    """
+    
     f = open("info/header.txt", "r")
     file_contents = f.read()
     rprint(file_contents)
@@ -246,11 +291,19 @@ def print_header():
 
 
 def apply_cuts(user_input, info, debug=False):
+    """This function asks the user to select the cuts to be apply to your events.
+    
+    :param user_input: Dictionary with the user input.
+    :type user_input: dict
+    :param info: Dictionary with the information from the input file.
+    :type info: dict
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    
+    :return: cut_dict -- Dictionary with the cuts to be applied to your events.
+    :rtype: dict
     """
-    \nThis function asks the user to select the cuts to be apply to your events.
-    \n**VARIABLES:**
-    \n- **user_input** (*dict*) - Dictionary with the user input.
-    """
+
     cuts_choices = ["cut_df", "cut_lin_rel", "cut_peak_finder"]
     cut_dict = cuts_info2dict(user_input, info, debug=True)
     for cut in cuts_choices:
@@ -377,10 +430,24 @@ def apply_cuts(user_input, info, debug=False):
 
             if debug:
                 rprint("[cyan]Using cuts options %s[/cyan]" % cut_dict)
+                
             return cut_dict
 
 
 def opt_selector(filename: str = "options", arguments: Optional[list] = None, debug: bool = False):
+    """This function reads the options from a YAML file and allows the user to select the options to be used.
+    
+    :param filename: Name of the YAML file, defaults to "options"
+    :type filename: str, optional
+    :param arguments: List with the arguments to be used, defaults to None
+    :type arguments: list, optional
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    
+    :return: updated_opt -- Dictionary with the updated options.
+    :rtype: dict
+    """
+    
     my_opt = read_yaml_file(filename, path=f"{root}/config/", debug=debug)
     if arguments is None:
         new_opt = my_opt.copy()
@@ -430,6 +497,17 @@ def opt_selector(filename: str = "options", arguments: Optional[list] = None, de
 
 
 def convert_str_to_type(value, debug=False):
+    """This function converts a string to its corresponding type.
+    
+    :param value: Value to be converted.
+    :type value: str
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    
+    :return: value -- Converted value.
+    :rtype: any
+    """
+    
     try:
         value = ast.literal_eval(value)
         # If value is numpy array, convert it to list
@@ -445,6 +523,19 @@ def convert_str_to_type(value, debug=False):
 def update_yaml_file(
     file_path: str, new_data: dict, convert: bool = True, debug: bool = False
 ):
+    """This function updates a YAML file with new data.
+    
+    :param file_path: Path to the YAML file.
+    :type file_path: str
+    :param new_data: Dictionary with the new data to be added.
+    :type new_data: dict
+    :param convert: Convert string to type, defaults to True
+    :type convert: bool, optional
+    :param debug: Debug mode, defaults to False
+    :type debug: bool, optional
+    
+    :return: None
+    """
     # If file path doesn't exist, create it. Take into account that the file name is included in the path.
     if not os.path.exists(file_path):
         rprint(f"YAML file '{file_path}' doesn't exist. Creating it...")

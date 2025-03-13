@@ -230,10 +230,23 @@ def PoissonPlusBinomial(x, N, p, L, debug=False):
 # *********************** FITTING FUNCTIONS *********************************#
 # ===========================================================================#
 def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit=[0]):
-    """
-    \nThis function fits the histogram, to a gaussians, which has been previoulsy visualized with:
-    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    \nAnd return the parameters of the fit (if performed)
+    """This function fits the histogram, to a gaussians.
+    
+    :params counts: counts of the histogram
+    :type counts: np.array
+    :params bins: bins of the histogram
+    :type bins: np.array
+    :params bars: bars of the histogram
+    :type bars: np.array
+    :params thresh: threshold value (for height of peaks and valleys)
+    :type thresh: int
+    :params fit_function: function to fit to, defaults to "gaussian"
+    :type fit_function: str, optional
+    :params custom_fit: custom fit, defaults to [0]
+    :type custom_fit: list, optional
+    
+    :return: x, popt, pcov, perr -- x values, fit parameters, covariance matrix and errors
+    :rtype: tuple
     """
 
     #### PEAK FINDER PARAMETERS #### thresh = int(len(my_runs[run][ch][key])/1000), wdth = 10 and prom = 0.5 work well
@@ -306,11 +319,9 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
 
 
 def peak_valley_finder(x, y, params):
+    """This function finds the peaks and valleys of the histogram.
     """
-    \nThis function finds the peaks and valleys of the histogram, which has been previoulsy visualized with:
-    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    \nAnd return the indices of the peaks and valleys.
-    """
+    
     dist = params["PEAK_DISTANCE"]
     thresh = params["THRESHOLD"]
     wdth = params["WIDTH"]
@@ -336,10 +347,7 @@ def peak_valley_finder(x, y, params):
 
 
 def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=False):
-    """
-    \nThis function fits the histogram, to a train of gaussians, which has been previoulsy visualized with:
-    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    \nAnd return the parameters of the fit (if performed)
+    """This function fits the histogram, to a train of gaussians.
     """
 
     initial = []  # Saving for input to the TRAIN FIT
@@ -418,10 +426,7 @@ def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=F
 
 
 def pmt_spe_fit(counts, bins, bars, thresh):
-    """
-    \nThis function fits the histogram, to a train of gaussians, which has been previoulsy visualized with:
-    \n**counts, bins, bars = vis_var_hist(my_runs, run, ch, key, OPT=OPT)**
-    \nAnd return the parameters of the fit (if performed)
+    """This function fits the histogram, to a train of gaussians
     \n[es muy parecida a gaussian_train_fit; hay algunas cosas que las coge en log pero igual se pueden unificar]
     \n[se le puede dedicar un poco mas de tiempo para tener un ajuste mas fino pero parece que funciona]
     """
@@ -514,8 +519,7 @@ def cut_threshold(raw, thrld):
 def peak_fit(
     fit_raw, raw_x, buffer, thrld, sigma_fast=1e-9, a_fast=1, tau_fast=1e-8, OPT={}
 ):
-    """
-    \nThis function fits the peak to a gaussian function, and returns the parameters
+    """This function fits the peak to a gaussian function, and returns the parameters
     """
 
     raw_max = np.argmax(fit_raw)

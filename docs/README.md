@@ -19,7 +19,7 @@ Recommended: create an environment for installing all the needed packages
 
 Each time you need to update the documentation you need to run ```make html```. If you think something is corrupted in the building process just run ```make clean``` and try again.
 
-Create .readthedocs.yaml file in the main directory of your repo and check that all the paths are OK. It will be used to compile when proyect is added to readthedocs
+Create ```.readthedocs.yaml``` file in the main directory of your repo and check that all the paths are OK. It will be used to compile when project is added to ```readthedocs```
 
 ```bash
     myst-docutils-demo Macros.md --myst-enable-extensions=colon_fence
