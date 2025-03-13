@@ -4,9 +4,7 @@
 ===========
 
 
-If you are interested in the examples probably you have alredy cloned the repository into a local directory (and you are ready to start). 
-
-You can also see this examples and run them locally in ``notebooks/00TUTORIAL.ipynb``
+If you are interested in the examples probably you have already cloned the repository into a local directory (and you are ready to start). 
 
 If you are **not** working from `gaeuidc1.ciemat.es` you will need to download the data (or work with a mounted folder) into an EMPTY folder ``data`` 📂.
 
@@ -24,7 +22,7 @@ If you are **not** working from `gaeuidc1.ciemat.es` you will need to download t
 
 .. image:: images/01PreProcess.png
 
-With this step we will have all the **RAW** variables computed (including a **RawAveWvf**) and you can alredy visualize them to see that everything is OK. 
+With this step we will have all the **RAW** variables computed (including a **RawAveWvf**) and you can already visualize them to see that everything is OK. 
 
 .. code-block:: bash
 
