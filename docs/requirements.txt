@@ -13,6 +13,7 @@ sphinx_rtd_theme==0.5.0rc1
 awkward
 curve
 inquirer
+iminuit
 ipywidgets
 jacobi
 keyboard
