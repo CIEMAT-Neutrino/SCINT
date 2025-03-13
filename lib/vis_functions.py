@@ -259,7 +259,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             out_path
                             + "/run"
                             + str(run).zfill(2)
-                            + f"_ch{ch_list[j]}/ChargeDict.yml"
+                            + f"/ch{ch_list[j]}/ChargeDict.yml"
                         ),
                         Loader=yaml.FullLoader,
                     )

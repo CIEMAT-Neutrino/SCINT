@@ -311,7 +311,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
     out_path = info["NPY_PATH"][0]
     out_path = os.path.expandvars(out_path)
 
-    filename = f'{root}/{info["NPY_PATH"][0]}/run{run.zfill(2)}_ch{ch}/ChargeDict.yml'
+    filename = f'{root}/{info["NPY_PATH"][0]}/run{run.zfill(2)}/ch{ch}/ChargeDict.yml'
     update_yaml_file(filename, integration_dict, convert=False, debug=debug)
     return my_runs
 
