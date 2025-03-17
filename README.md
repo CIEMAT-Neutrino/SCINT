@@ -59,13 +59,21 @@ python3 XXmacro.py (--flags input)
 
     :param [ParamName]: [ParamDescription], defaults to [DefaultParamVal]
     :type [ParamName]: [ParamType](, optional)
-    ...
+    
     :raises [ErrorType]: [ErrorDescription]
-    ...
+
     :return: [ReturnDescription]
     :rtype: [ReturnType]
     """
     ```
+* We adopted a formatting style for functions, variables and so on:
+    ```bash
+    FUNCTIONS & ARGUMENTS → PYTHON NOTATION: low_case + “_” binding (i.e my_runs) 
+    KEYS → C++ notation
+    SPECIAL DICTIONARIES
+        OPT: visualization Options + CHECK KEY
+    ```
+
 
 
 ## LICENSE
