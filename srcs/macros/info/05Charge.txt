@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
-#  ======================================== RUN:$ python3 05Scintillation.py TEST ====================================== #
+#  ======================================== RUN:$ python3 05Charge.py TEST ====================================== #
 # This macro allow us to visualize average waveforms comparing ch or runs with vis_compare_wvf.                          #
 # It also loads the "ChargeAveRange" computed in 02Process for the scintillation runs and plot the charge histogram      #
 # The histogram is fitted to a Gaussian and the results can be stored in a txt in ../fits/filename_chX.txt           #

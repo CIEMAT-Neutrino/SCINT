@@ -10,14 +10,14 @@ default_dict = {
     "preset_load": {"LOAD_PRESET": 4},
 }
 user_input, info = initialize_macro(
-    "05Scintillation",
+    "05Charge",
     ["input_file", "variables", "filter", "group", "save", "debug"],
     default_dict=default_dict,
     debug=True,
 )
 
 OPT = opt_selector(arguments=["PERCENTILE", "NORM", "LIMITS", "XLIM", "YLIM", "ZLIM", "LOGZ"], debug=user_input["debug"])
-## 05Scintillation
+## 05Charge
 my_runs = load_npy(
     np.asarray(user_input["runs"]).astype(str),
     np.asarray(user_input["channels"]).astype(str),

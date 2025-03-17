@@ -113,7 +113,7 @@ Or run `git checkout -b <your_branch_name>` in a terminal.
 │   │   ├── 02AnaProcess.py
 │   │   ├── 03Integration.py
 │   │   ├── 04Calibration.py
-│   │   ├── 05Scintillation.py
+│   │   ├── 05Charge.py
 │   │   ├── 06Deconvolution.py
 │   │   ├── 0VVisPersistance.py
 │   │   ├── 0WVisWvf.py
