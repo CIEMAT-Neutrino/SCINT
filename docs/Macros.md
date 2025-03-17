@@ -259,7 +259,7 @@ If everything is working as it should you should obtain the following plots:
 Note that we perform two fits here, one for obtain the SPE gain and another to get the cross--talk through Vinogradov method. To go from one plot to the next one just type any keyword in the plot window. All the plots are saved in `images` folder and the fit parameters if you choose to save them in the `analysis` one. ✅
 
 
-### 05Scintillation <a ID="scintillation"></a>
+### 05Charge <a ID="charge"></a>
 
 ```python
 
@@ -284,10 +284,10 @@ Note that we perform two fits here, one for obtain the SPE gain and another to g
 ⏩ **RUN** (in `macros` folder) ⏩
 
 ```bash
-python3 05Scintillation.py
+python3 05Charge.py
 ```
 
-<img src="_static/05Scintillation.png">
+<img src="_static/05Charge.png">
 
 <img class="image-align-left" src="_static/05Scintillation_1.png">
 
