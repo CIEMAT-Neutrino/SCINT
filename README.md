@@ -1,4 +1,4 @@
-# SCINT (Sensor Calibration Interface for Neutrino Team!)
+# SCINT (Sensor Calibration Interface for Neutrino Team)
 
 [![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![Documentation Status](https://readthedocs.org/projects/scint/badge/?version=latest)](https://scint.readthedocs.io/en/latest/?badge=latest)
