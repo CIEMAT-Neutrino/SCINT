@@ -10,7 +10,7 @@ default_dict = {
     "preset_load": {"LOAD_PRESET": 4},
 }
 user_input, info = initialize_macro(
-    "05Scintillation",
+    "05Charge",
     ["input_file", "variables", "filter", "group", "save", "debug"],
     default_dict=default_dict,
     debug=True,

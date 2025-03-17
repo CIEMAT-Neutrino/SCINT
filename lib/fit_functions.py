@@ -4,20 +4,20 @@
 from srcs.utils import get_project_root
 
 import os, stat, math, scipy
-import numpy as np
-import matplotlib.pyplot as plt
+from lmfit import models
+from typing import Optional
 from itertools import product
-from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
+from scipy.optimize import curve_fit
+import numpy as np
 from scipy.special import erf
-from scipy.stats import poisson
+import matplotlib.pyplot as plt
 from math import factorial as fact
 from rich import print as rprint
-from lmfit import models
 from scipy.ndimage import gaussian_filter1d
 
 # Imports from other libraries
-from .io_functions import check_key, read_yaml_file
+from .io_functions import check_key, read_yaml_file, save_figure
 from .ana_functions import get_run_units, find_amp_decrease
 
 np.seterr(divide="ignore")
@@ -577,11 +577,12 @@ def peak_fit(
     return popt, perr
 
 
-def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
+def sipm_fit(info, labels, raw, raw_x, fit_range, thrld=1e-6, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
     """
     \nDOC
     """
 
+    run, ch, key = labels
     max = np.argmax(raw)
     # thrld = 1e-4
     buffer1 = fit_range[0]
@@ -669,11 +670,12 @@ def sipm_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
     return aux, raw, param, perr2, labels2
 
 
-def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
+def scint_fit(info, labels, raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
     """
     \nDOC
     """
 
+    run, ch, key = labels
     next_plot = False
     OPT["CUT_THRESHOLD"] = True
 
@@ -771,10 +773,12 @@ def scint_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     return aux, raw, param, perr, labels
 
 
-def purity_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
+def purity_fit(info, labels, raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
     """
     \nDOC
     """
+
+    run, ch, key = labels
     raw_max = np.argmax(raw)
     buffer1 = fit_range[0]
     buffer2 = fit_range[1]
@@ -820,10 +824,12 @@ def purity_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     return purity(raw_x, *popt), raw, popt, perr, labels
 
 
-def simple_purity_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
+def simple_purity_fit(info, labels, raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
     """
     \nDOC
     """
+
+    run, ch, key = labels
     raw_max = np.argmax(raw)
     buffer1 = fit_range[0]
     buffer2 = fit_range[1]
@@ -869,8 +875,9 @@ def simple_purity_fit(raw, raw_x, fit_range, thrld=1e-6, i_param={}, OPT={}):
     return simple_purity(raw_x, *popt), raw, popt, perr, labels
 
 
-def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
+def sc_fit(info, labels, raw, raw_x, fit_range, thrld=1e-6, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
 
+    run, ch, key = labels
     # Prepare plot vis
     next_plot = False
     plt.rcParams["figure.figsize"] = [8, 8]
@@ -907,6 +914,8 @@ def sc_fit(raw, raw_x, fit_range, thrld=1e-6, OPT={}):
             plt.semilogy()
             plt.ylim(thrld, raw[t0] * 1.1)
         plt.legend()
+        if save:
+            save_figure(fig, f"{info['OUT_PATH'][0]}/images", run, ch, "TauFit", debug=debug)
         while not plt.waitforbuttonpress(-1):
             pass
         plt.clf()
@@ -925,13 +934,16 @@ def fit_wvfs(
     i_param={},
     in_key=["ADC"],
     out_key="",
-    OPT={},
-    save=False,
-    debug=False,
+    OPT:Optional[dict]=None,
+    save:bool=False,
+    debug:bool=False,
 ):
     """
     \nDOC
     """
+    if OPT is None:
+        OPT = {}
+
     fit_dict, ref_dict, popt_dict, perr_dict, label_dict = {}, {}, {}, {}, {}
     i_param = get_initial_parameters(i_param)
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(
@@ -950,32 +962,36 @@ def fit_wvfs(
             raw[i] = raw[i] / raw_max
             if signal_type == "SiPM":
                 fit, new_raw, popt, perr, labels = sipm_fit(
-                    raw[i], raw_x, fit_range, thrld, OPT
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thrld, OPT, save, debug
                 )
-            if signal_type == "SC":
+            elif signal_type == "SC":
                 fit, new_raw, popt, perr, labels = sc_fit(
-                    raw[i], raw_x, fit_range, thrld, OPT
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thrld, OPT, save, debug
                 )
-            if signal_type == "Scint":
+            elif signal_type == "Scint":
                 fit, new_raw, popt, perr, labels = scint_fit(
-                    raw[i], raw_x, fit_range, thrld, i_param, OPT
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thrld, i_param, OPT, save, debug
                 )
-            if signal_type == "Purity":
+            elif signal_type == "Purity":
                 fit, new_raw, popt, perr, labels = purity_fit(
-                    raw[i], raw_x, fit_range, thrld, i_param, OPT
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thrld, i_param, OPT, save, debug
                 )
-            if signal_type == "SimplePurity":
+            elif signal_type == "SimplePurity":
                 fit, new_raw, popt, perr, labels = simple_purity_fit(
-                    raw[i], raw_x, fit_range, thrld, i_param, OPT
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thrld, i_param, OPT, save, debug
                 )
-            if signal_type == "SimpleScint":
+            elif signal_type == "SimpleScint":
                 fit, new_raw, popt, perr, labels = simple_scint_fit(
-                    raw[i], raw_x, fit_range, i_param, OPT
+                    info, (run, ch, key), raw[i], raw_x, fit_range, i_param, OPT, save, debug
                 )
-            if signal_type == "TauSlow":
+            elif signal_type == "TauSlow":
                 fit, new_raw, popt, perr, labels = tau_fit(
-                    raw[i], raw_x, fit_range, i_param, OPT
+                    info, (run, ch, key), raw[i], raw_x, fit_range, i_param, OPT, save, debug
                 )
+            else:
+                rprint("[red]Fit type not recognized[/red]")
+                return
+            
             aux[i] = fit * raw_max
             ref[i] = new_raw * raw_max
             raw[i] = raw[i] * raw_max
@@ -1082,11 +1098,11 @@ def log_tau_slow_profile(x, a_s, tau_s):
     return y
 
 
-def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
+def simple_scint_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
     """
     \nDOC
     """
-
+    run, ch, key = labels
     next_plot = False
     thrld = 1e-10
     for i in range(len(raw)):
@@ -1154,6 +1170,7 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     ) == False:
         # rprint("SHOW key not included in OPT")
         # CHECK FIRST FIT
+        fig = plt.figure()
         plt.rcParams["figure.figsize"] = [16, 8]
         plt.subplot(1, 1, 1)
         plt.title("First fit to determine peak")
@@ -1169,6 +1186,8 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
         if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
             plt.semilogy()
         plt.legend()
+        if save:
+            save_figure(fig, f"{root}/{info['OUT_PATH'][0]}/images", run, ch, "TauFit", debug=debug)
         while not plt.waitforbuttonpress(-1):
             pass
         plt.clf()
@@ -1177,18 +1196,17 @@ def simple_scint_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     return aux, raw, popt, perr, labels2
 
 
-def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
+def tau_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
     """
     \nDOC
     """
 
+    run, ch, key = labels
+    if OPT == None:
+        OPT = {}
+
     next_plot = False
-    # thrld = 1e-10
-    # for i in range(len(raw)):
-    #     if raw[i] <= thrld:
-    #         raw[i] = thrld
-    #     if np.isnan(raw[i]):
-    #         raw[i] = thrld
+
     # Define input parameters from dictionary
     a_slow = i_param["a_slow"]
     tau_slow = i_param["tau_slow"]
@@ -1211,7 +1229,7 @@ def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     initial2 = (a2, tau2)
     # try:
     # popt, pcov = curve_fit(scint_profile, raw_x[:buffer2] ,raw[raw_max:raw_max+buffer2],p0=initial2, bounds=bounds2)
-    y = np.log(raw[raw_max + buffer1 : raw_max + buffer2])
+    y = np.log(raw[buffer1 : buffer2])
     y[np.isinf(y)] = 0
     y[np.isnan(y)] = 0
     popt, pcov = curve_fit(
@@ -1223,15 +1241,15 @@ def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
     # rprint("Fit could not be performed")
     # popt2 = initial2
     # perr2 = np.zeros(len(popt2))
-    zeros_aux = np.zeros(raw_max + buffer1)
-    zeros_aux2 = np.zeros(len(raw) - raw_max - buffer2)
+    zeros_aux = np.zeros(buffer1)
+    zeros_aux2 = np.zeros(len(raw) - buffer2)
 
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(
         OPT, "SHOW"
     ) == False:
         # rprint("SHOW key not included in OPT")
         # CHECK FIRST FIT
-        plt.rcParams["figure.figsize"] = [16, 8]
+        fig = plt.figure()
         plt.subplot(1, 1, 1)
         plt.title("First fit to determine peak")
         plt.plot(raw_x, raw, label="raw", c="black")
@@ -1244,7 +1262,7 @@ def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
                     zeros_aux2,
                 ]
             ),
-            label="FIT",
+            label="TauFit",
         )
         # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
         plt.xlabel("Time in [s]")
@@ -1252,9 +1270,13 @@ def tau_fit(raw, raw_x, fit_range, i_param={}, OPT={}):
         if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
             plt.semilogy()
         plt.legend()
+        if save:
+            save_figure(fig, f"{root}/{info['OUT_PATH'][0]}/images", run, ch, f"{key}_TauFit", debug=debug)
+        
         while not plt.waitforbuttonpress(-1):
             pass
         plt.clf()
+    plt.close()
 
     aux = np.concatenate(
         [zeros_aux, tau_slow_profile(raw_x[: buffer2 - buffer1], *popt), zeros_aux2]
