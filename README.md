@@ -33,7 +33,8 @@ echo "<your_folder_name/*>" >> .gitignore
 Set all the utilities needed for the macros:
   
 ```bash
-source setup.sh 
+source setup.sh
+source .venv/bin/activate
 ```
 
 ### 2 Run the following macros FROM the macros' folder:
