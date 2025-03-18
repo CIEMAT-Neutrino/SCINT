@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product
-from curve import Curve
 from rich import print as rprint
 from rich.progress import track
 
