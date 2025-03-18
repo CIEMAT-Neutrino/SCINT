@@ -6,7 +6,9 @@ import os
 import numba
 import inquirer
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
 
 from itertools import product
 from scipy.signal import find_peaks
