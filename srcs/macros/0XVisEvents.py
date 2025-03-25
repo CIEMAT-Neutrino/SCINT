@@ -13,7 +13,7 @@ user_input, info = initialize_macro(
     default_dict=default_dict,
     debug=True,
 )
-OPT = opt_selector(arguments=["COMPARE", "CHARGE_KEY", "NORM", "LIMITS", "XLIM", "YLIM", "ZLIM", "LOGZ"], debug=user_input["debug"])
+OPT = opt_selector(arguments=["CHARGE_KEY", "NORM", "XLIM", "YLIM", "LOGY"], debug=user_input["debug"])
 ### 0XVisEvent
 my_runs = load_npy(
     np.asarray(user_input["runs"]).astype(str),
