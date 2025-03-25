@@ -240,7 +240,7 @@ def vis_npy(my_run, keys, OPT = {}, debug = False):
                     except KeyError: print_colored("Pedestal mean not found!", color="ERROR")
                     try: print("- Pedestal std: {:.4f}".format(my_run[run][ch_list[j]][label+"PedSTD"][idx]))
                     except KeyError: print_colored("Pedestal std not found!", color="ERROR")
-                    try: print("- Pedestal min: {:.4f}\t Pedestal max {:.4f}".format(my_run[run][ch_list[j]][label+"PedMin"][idx],my_run[run][ch_list[j]][label+"PedMax"][idx]))
+                    try: print("- Pedestal min: {:.4f}Pedestal max {:.4f}".format(my_run[run][ch_list[j]][label+"PedMin"][idx],my_run[run][ch_list[j]][label+"PedMax"][idx]))
                     except KeyError: print_colored("Pedestal min/max not found!", color="ERROR")
                     try: print("- Pedestal time limit: {:.4E}".format(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"PedLim"]))
                     except KeyError: print_colored("Pedestal time limit not found!", color="ERROR")
@@ -404,10 +404,11 @@ def vis_var_hist(my_run, key, percentile = [0.1, 99.9], OPT = {"SHOW": True}, se
     r_list = my_run["NRun"]; ch_loaded = my_run["NChannel"]
 
     # Make query to user: choose loaded chanels or select specific channels
-    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
-        q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
-        ch_list =  inquirer.prompt(q)["channels"]
-    if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: ch_list = ch_loaded
+    #if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == True:
+    #    q = [ inquirer.Checkbox("channels", message="Select channels to plot?", choices=ch_loaded) ]
+    #    ch_list =  inquirer.prompt(q)["channels"]
+    #if check_key(OPT, "TERMINAL_MODE") == True and OPT["TERMINAL_MODE"] == False: 
+    ch_list = ch_loaded
 
     if not check_key(OPT, "COMPARE"): OPT["COMPARE"] = "NONE"; print_colored("No comparison selected. Default is NONE", "WARNING")
     if OPT["COMPARE"] == "CHANNELS": a_list = r_list;  b_list = ch_list 
