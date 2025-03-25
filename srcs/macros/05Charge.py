@@ -16,7 +16,7 @@ user_input, info = initialize_macro(
     debug=True,
 )
 
-OPT = opt_selector(arguments=["PERCENTILE", "NORM", "LIMITS", "XLIM", "YLIM", "ZLIM", "LOGZ"], debug=user_input["debug"])
+OPT = opt_selector(arguments=["PERCENTILE", "NORM", "LIMITS", "XLIM", "YLIM", "ZLIM", "LOGZ", "SHOW_LEGEND", "SHOW_FIT_PARAMETERS"], debug=user_input["debug"])
 ## 05Charge
 my_runs = load_npy(
     np.asarray(user_input["runs"]).astype(str),

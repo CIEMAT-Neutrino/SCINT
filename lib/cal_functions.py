@@ -7,9 +7,8 @@ import scipy, os, stat, yaml
 import numpy as np
 import pandas as pd
 import matplotlib
+matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
-
-matplotlib.use("Qt5Agg")
 
 from jacobi import propagate
 from matplotlib.colors import LogNorm

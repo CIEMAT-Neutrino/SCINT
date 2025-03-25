@@ -3,6 +3,10 @@ tex_installed = False
 import sys
 import plotly.graph_objects as go
 
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
+
 if not sys.platform.startswith("win"):
     import subprocess
 

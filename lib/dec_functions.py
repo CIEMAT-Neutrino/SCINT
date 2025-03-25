@@ -3,7 +3,9 @@
 # ================================================================================================================================================#
 
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
 import scipy.interpolate
 from scipy.optimize import curve_fit
 from itertools import product

@@ -1,7 +1,7 @@
 ACCURACY: 150
 ALIGN: false
 CHARGE_KEY: ChargeAveRange
-COMPARE: NONE
+COMPARE: CHANNELS
 CUTTED_WVF: -1
 DENSITY: false
 FILTER: 1
@@ -9,7 +9,7 @@ FIT: gaussian
 LEGEND: true
 LIMITS: false
 LOGX: false
-LOGY: false
+LOGY: true
 LOGZ: true
 MICRO_SEC: false
 NAME: VisConfig
@@ -18,13 +18,15 @@ PE: false
 PEAK_DISTANCE: 20
 PEAK_FINDER: false
 PERCENTILE:
-- 2
-- 98
+  - 4
+  - 98
 PROMINENCE: 0.02
 SCINT_FIT: false
 SHOW: true
 SHOW_PARAM: true
 SHOW_AVE: AveWvf
+SHOW_LEGEND: true
+SHOW_FIT_PARAMETERS: false
 SPACE_OUT: 0
 STATS: true
 STYLE: HEP
@@ -33,11 +35,11 @@ THRESHOLD: 0
 WFV_FILTER: false
 WIDTH: 10
 XLIM:
-- 2.5e-06
-- 1.25e-05
+  - 2.5e-06
+  - 1.25e-05
 YLIM:
-- -2
-- 30
+  - -2
+  - 30
 ZLIM:
-- 0
-- 0
+  - 0
+  - 0

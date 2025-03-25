@@ -1,4 +1,7 @@
 import numpy as np
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
 from rich import print as rprint
 
 # Imports from other libraries

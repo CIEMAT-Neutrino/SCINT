@@ -4,6 +4,8 @@ import plotly.express as px
 
 from typing import Optional
 from rich import print as rprint
+import matplotlib
+matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
 
 from .io_functions import check_key

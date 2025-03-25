@@ -1,9 +1,12 @@
 import sys, inquirer, os, yaml, ast
 
 import numpy as np
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
+
 from typing import Optional
 from rich import print as rprint
-
 from srcs.utils import get_project_root
 from .io_functions import (
     check_key,

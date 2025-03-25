@@ -11,7 +11,11 @@ from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 import numpy as np
 from scipy.special import erf
-import matplotlib.pyplot as plt
+
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
+
 from math import factorial as fact
 from rich import print as rprint
 from scipy.ndimage import gaussian_filter1d

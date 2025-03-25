@@ -5,7 +5,9 @@ from srcs.utils import get_project_root
 
 import math, inquirer, yaml, os, stat
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
 import pandas as pd
 
 # Imports from other libraries

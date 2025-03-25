@@ -3,7 +3,9 @@ from srcs.utils import get_project_root
 import glob
 import inquirer
 import numpy as np
-
+import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
 from itertools import product
 from rich import print as rprint
 

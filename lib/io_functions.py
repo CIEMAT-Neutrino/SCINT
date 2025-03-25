@@ -4,7 +4,11 @@
 from srcs.utils import get_project_root
 
 import os, gc, uproot, copy, stat, yaml, glob
+
 import matplotlib
+matplotlib.use('Qt5Agg')
+from matplotlib import pyplot as plt
+
 import numpy as np
 import pandas as pd
 from itertools import product
@@ -794,7 +798,7 @@ def get_preset_list(my_run: dict, path: str, folder: str, preset: str, option:st
     #    (b) "ANA": only Ana keys/branches (removing RAW info)
     #    (c) "INT": only Charge*, Ave* keys/branches
     #    (d) "RAW": only Raw information i.e loaded from Raw2Np + Raw* keys
-    #    (e) "EVA": all the existing keys/branches EXCEPT ADC
+    #    (e) "EVA": all the existing keys/branches EXCEPT ADC, Dict, Cuts and Raw
     #    (f) "DEC": only DEC info i.e Wiener*, Gauss*, Dec* or Charge* keys
     #    (g) "CAL": only Charge* keys
     #    (h) "WVF": only Wvf* keys
@@ -816,6 +820,7 @@ def get_preset_list(my_run: dict, path: str, folder: str, preset: str, option:st
     dict_option["SAVE"] = my_run.keys()
 
     aux = ["TimeStamp"]
+    
     branch_list = dict_option[option]
     for key in branch_list:
         if preset == "ALL":  # Save all branches
@@ -838,8 +843,12 @@ def get_preset_list(my_run: dict, path: str, folder: str, preset: str, option:st
             if "Ana" in key and "ADC" not in key:
                 aux.append(key)
 
-        elif preset == "EVA":  # Remove ADC, Dict and Cuts branches
+        elif preset == "EVA" and option == "LOAD":  # Remove ADC, Dict and Cuts branches
             if not "ADC" in key and not "Dict" in key and not "Cuts" in key:
+                aux.append(key)
+
+        elif preset == "EVA" and option == "SAVE":  # Remove ADC, Dict and Cuts branches
+            if not "ADC" in key and not "Dict" in key and not "Cuts" in key and not "Raw" in key:
                 aux.append(key)
 
         elif preset == "DEC":  # Save aux + Gauss*, Wiener*, Dec* and Charge* branches
@@ -873,6 +882,7 @@ def get_preset_list(my_run: dict, path: str, folder: str, preset: str, option:st
             try:
                 branch_list.remove(branch)
             except:
+                rprint(f"[cyan]INFO: Branch {branch} not found in the preset list for removal[/cyan]")
                 pass
     try:
         branch_list.remove("Label")

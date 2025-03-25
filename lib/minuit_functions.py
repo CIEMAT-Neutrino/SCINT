@@ -1,9 +1,8 @@
 from rich import print as rprint    
 import numpy as np
 import matplotlib
+matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
-
-matplotlib.use("Qt5Agg")
 
 from jacobi import propagate
 from iminuit import Minuit, cost
@@ -103,7 +102,11 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
     add_grid(ax)
     plt.title(f"run{run} ch{ch} {variable} Fit".format(variable))
-    plt.xlabel(variable_units)
+    if "Charge" in variable:
+        plt.xlabel(f"Charge ({variable_units})")
+    else:
+        plt.xlabel(f"{variable} ({variable_units})")
+    
     plt.ylabel("Norm Counts")
 
     y_fit, ycov = propagate(
@@ -118,10 +121,9 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
     ]
     legend.append(r"$\chi^2$ = %.2f" % (m_fit.fval))
 
-    print(ydata[-2:], y_fit[-2:])
     plt.hist(
         xdata,
-        xdata,
+        bins=len(xdata),
         weights=ydata,
         label="run {} ch {}".format(run, ch),
         histtype="step",
@@ -130,17 +132,13 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
     )
     plt.hist(
         xdata,
-        xdata,
+        bins=len(xdata),
         weights=y_fit,
         label=f"{OPT['FIT']} fit:",
         histtype="step",
         align="left",
         color="red",
     )
-    plt.axvline(
-        xdata[int(len(xdata) / 2)], color="white", label="\n".join(legend), alpha=0
-    )
-
     yerr = np.sqrt(np.diag(ycov))
     plt.fill_between(
         xdata,
@@ -149,15 +147,25 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
         alpha=0.2,
         color=get_color(ch, even=False),
     )
-    plt.legend()
-    plt.setp(ax.get_legend().get_texts(), fontsize="12")
+    if OPT["SHOW_LEGEND"]:
+        if OPT["SHOW_FIT_PARAMETERS"]:
+            plt.axvline(
+                xdata[int(len(xdata) / 2)], color="white", label="\n".join(legend), alpha=0
+            )
+            # Pin legend to the upper left corner
+            plt.legend(loc="lower center")
+
+        plt.legend()
+        plt.setp(ax.get_legend().get_texts(), fontsize="12")
+        # Change font size for legend
+        matplotlib.rcParams.update({"font.size": 11})
+    
+    else:
+        plt.legend().set_visible(False)
+    
     # Force x axis tcks to be scintific notation
     plt.ticklabel_format(axis="x", style="sci")
 
-    # Change font size for legend
-    matplotlib.rcParams.update({"font.size": 11})
-    # Pin legend to the upper left corner
-    plt.legend(loc="lower center")
     plt.show()
     while not plt.waitforbuttonpress(-1):
         pass
@@ -165,17 +173,6 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
 
     if user_input["save"]:
         save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images/', run, ch, f'{variable}_Fit', debug=user_input["debug"])
-        # fig.savefig(
-        #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
-        #     dpi=500,
-        # )
-        # try:
-        #     os.chmod(
-        #         f'{root}/{info["OUT_PATH"][0]}/images/run{run}_ch{ch}_{variable}_Fit.png',
-        #         0o770,
-        #     )
-        # except:
-        #     pass
 
         save_fit_parameters(run, ch, m_fit, OPT["FIT"], variable, info, user_input)
         if user_input["debug"]:

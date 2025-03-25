@@ -1,8 +1,11 @@
 import numpy as np
 import inquirer
+import matplotlib
+matplotlib.use('Qt5Agg')
+
+from matplotlib import pyplot as plt
 from itertools import product
 from rich import print as rprint
-
 
 def group_selector(data, remove=False, operation="add", debug=False):
     """Ask the user to select runs and/or chs to group and generate a combination dictionary
