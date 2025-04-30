@@ -43,6 +43,9 @@ def compute_ana_wvfs(
     
     :return: True if the computation was successful, False otherwise.
     :rtype: bool
+
+
+    
     """
 
     for run, ch in product(
