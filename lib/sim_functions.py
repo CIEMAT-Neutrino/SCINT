@@ -149,7 +149,7 @@ def combi_convolve_poisson(bins, height, eff):
     from scipy.stats import poisson
     from scipy.interpolate import interp1d
 
-    path = f"{root}/data/MegaCell_LAr/Dic23/sim/combi.npy"
+    path = f"{root}/data/MEGACELL/sim/combi.npy"
     bin_centers, hist = interpolate_sim_data(50, path)
     new_bins = np.arange(int(np.min(bins)), int(np.max(bins) + 1))
     convolved_hist = np.zeros(len(new_bins))
@@ -172,7 +172,7 @@ def sipm1_convolve_poisson(bins, height, eff):
     from scipy.stats import poisson
     from scipy.interpolate import interp1d
 
-    path = f"{root}/data/MegaCell_LAr/Dic23/sim/sipm1.npy"
+    path = f"{root}/data/MEGACELL/sim/sipm1.npy"
     bin_centers, hist = interpolate_sim_data(50, path)
     new_bins = np.arange(int(np.min(bins)), int(np.max(bins) + 1))
     convolved_hist = np.zeros(len(new_bins))
