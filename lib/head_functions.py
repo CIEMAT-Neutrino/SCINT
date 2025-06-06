@@ -30,6 +30,7 @@ def get_flag_dict():
     flag_dict = {
         ("-c", "--channels"): "channels \t(optional)",
         ("-d", "--debug"): "debug \t(True/False)",
+        ("-e", "--export"): "export \t(True/False)",
         ("-f", "--filter"): "filter \t(optional)",
         ("-g", "--group"): "group \t(True/False)",
         ("-i", "--input_file"): "input_file",
@@ -149,6 +150,7 @@ def update_user_input(user_input, new_input_list, info, debug=False):
         "runs": "1",
         "channels": "0",
         "group": "n",
+        "export": "n",
         "save": "y",
         "debug": "y",
     }
@@ -160,6 +162,7 @@ def update_user_input(user_input, new_input_list, info, debug=False):
         "runs": "-r",
         "channels": "-c",
         "group": "-g",
+        "export": "-e",
         "save": "-s",
         "debug": "-d",
     }
