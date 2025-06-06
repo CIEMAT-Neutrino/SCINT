@@ -97,7 +97,7 @@ def read_input_file(
         info = dict()
         info["NAME"] = [input]
         if NUMBERS == []:
-            NUMBERS = ["BITS", "DYNAMIC_RANGE", "CHAN_POLAR", "CHAN_AMPLI"]
+            NUMBERS = ["BITS", "DYNAMIC_RANGE", "CHAN_POLAR", "CHAN_AMPLI","CHAN_PED_LIM"]
         if DOUBLES == []:
             DOUBLES = ["SAMPLING", "I_RANGE", "F_RANGE"]
         if STRINGS == []:
@@ -142,7 +142,7 @@ def read_input_file(
                     for i in numbers.split(","):
                         try:
                             info[LABEL].append(
-                                float(i)
+                                float(i) if i != "NON" else None
                             )  # Try to convert to float and append to LABEL list
                         except ValueError:
                             if debug == True:
@@ -166,7 +166,7 @@ def read_input_file(
                     for i in numbers.split(","):
                         try:
                             info[LABEL].append(
-                                int(i)
+                                int(i) if i != "NON" else None
                             )  # Try to convert to int and append to LABEL list
                         except ValueError:
                             if debug == True:
@@ -190,7 +190,7 @@ def read_input_file(
                     for i in numbers.split(","):
                         try:
                             info[LABEL].append(
-                                i
+                                i if i != "NON" else None
                             )  # Try to append the string to LABEL list
                         except ValueError:
                             if debug == True:
@@ -360,11 +360,11 @@ def write_output_file(
     ch,
     output,
     filename,
-    info,
-    header_list,
-    write_mode="w",
-    not_saved=[2, 3],
-    debug=False,
+    info: dict,
+    header_list: list,
+    write_mode: str = "w",
+    not_saved: "list[int]" = [2, 3],
+    debug: bool = False,
 ) -> bool:
     """ General function to write a txt file with the outputs obtained. The file name is defined by the given "filename" variable + _chX. If the file existed previously it appends the new fit values (it save the run for each introduced row). By default we dont save the height of the fitted gaussian in the txt.
     
@@ -417,37 +417,45 @@ def write_output_file(
         os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
     
     if debug:
-        rprint("Saving in: " + str(folder_path + filename + "Ch%s.txt" % ch))
+        rprint(f"Saving in: {folder_path}run{run}_ch{ch}_{filename}.txt")
 
     flat_data = flatten_data(output)
     flat_data = remove_columns(flat_data, not_saved)
 
     confirmation = input(
-        "\nConfirmation to save in "
-        + folder_path
-        + filename
-        + "Ch%s.txt the printed parameters (except HEIGHT) (y/n)? " % ch
+        f"\nConfirmation to save in {folder_path}run{run}_ch{ch}_{filename}.txt the printed parameters (except HEIGHT) (y/n)? "
     )
     if confirmation.lower() in ["yes", "y", "true", "t", "si", "s"]:
         rprint("\n----------- Saving -----------")
-        if not os.path.exists(folder_path + filename + "Ch%s.txt" % ch):  # HEADER#
+        if not os.path.exists(f"{folder_path}run{run}_ch{ch}_{filename}.txt"):  # HEADER#
             os.makedirs(
                 name=folder_path, mode=0o777, exist_ok=True
             )  # Create the directory if it doesnt exist
-            with open(folder_path + filename + "Ch%s.txt" % ch, "+a") as f:
+            with open(f"{folder_path}run{run}_ch{ch}_{filename}.txt", "+a") as f:
                 f.write("\t".join(header_list) + "\n")  # Write the header
 
-        with open(folder_path + filename + "Ch%s.txt" % ch, write_mode) as f:
+        with open(f"{folder_path}run{run}_ch{ch}_{filename}.txt", write_mode) as f:
             if write_mode in ["w"]:
                 column_widths = [
                     max(len(str(item)) for item in col) for col in zip(*flat_data)
                 ]
-                header_line = (
-                    "\t".join(
-                        "{{:<{}}}".format(width) for width in column_widths
-                    ).format(*header_list)
-                    + "\n"
-                )
+                try:
+                    header_line = (
+                        "\t".join(
+                            "{{:<{}}}".format(width) for width in column_widths
+                        ).format(*header_list)
+                        + "\n"
+                    )
+                except IndexError:
+                    rprint(
+                        "[yellow]Header length does not match data length. Adjusting header to fit data.[/yellow]"
+                    )
+                    rprint(
+                        f"Header length: {len(header_list)}, Data length: {len(column_widths)}"
+                    )
+                    header_line = (
+                        "\t".join(header_list) + "\n"
+                    )  # Adjust header to fit data length
                 f.write(header_line)
 
             for i, row in enumerate(flat_data):
@@ -942,6 +950,7 @@ def load_npy(
     my_runs["NChannel"] = channels
     aux_PChannel = dict(zip(info["CHAN_TOTAL"], info["CHAN_POLAR"]))
     aux_Label = dict(zip(info["CHAN_TOTAL"], info["CHAN_LABEL"]))
+    aux_Ped_Lim = dict(zip(info["CHAN_TOTAL"], info["CHAN_PED_LIM"]))
 
     for run in runs:
         my_runs[run] = dict()
@@ -1018,6 +1027,7 @@ def load_npy(
 
             my_runs[run][ch]["Label"] = aux_Label[ch]
             my_runs[run][ch]["PChannel"] = aux_PChannel[ch]
+            my_runs[run][ch]["PedestalLimit"] = aux_Ped_Lim[ch]
             my_runs[run][ch]["Sampling"] = float(info["SAMPLING"][0])
             del branch_list
 
@@ -1158,7 +1168,7 @@ def save_figure(fig, path, run, ch, label, debug: bool=False):
         fig.savefig(f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
         return
     else:
-        print(f"[red][ERROR] Input figure type {type(fig)} not implemented[/red]")
+        rprint(f"[red][ERROR] Input figure type {type(fig)} not implemented[/red]")
     # Give permissions to the file
     os.chmod(
         f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png",
@@ -1166,7 +1176,7 @@ def save_figure(fig, path, run, ch, label, debug: bool=False):
     )
     
     if debug:
-        print(f"Figure saved in: {path}")
+        rprint(f"Figure saved in: {path}")
 
 
 def npy2root(my_runs, debug: bool=False):
