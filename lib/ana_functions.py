@@ -216,9 +216,16 @@ def compute_pedestal_limit(my_runs, info, keys, label, ped_lim:Optional[int]=Non
     run, ch, key = keys
     if isinstance(ped_lim, int):
         rprint(f"[cyan]INFO: Using user-defined pedestal limit: {ped_lim}[/cyan]")
-        ped_mode = np.mean(
-            my_runs[run][ch][key][:, : ped_lim], axis=1
+        values, counts = np.unique(
+            my_runs[run][ch][key][:, : ped_lim],
+            return_counts=True,
         )
+        ped_mode = values[np.argmax(counts)]
+        if ped_mode == 0:
+            rprint(
+                f"[yellow]WARNING: Pedestal mode is 0. Setting ped_mode = mean of the first {ped_lim} bins.[/yellow]"
+            )
+            ped_mode = np.mean(np.mean(np.mean(my_runs[run][ch][key][:, : ped_lim], axis=1)))
         pass
     
     else:
@@ -246,10 +253,9 @@ def compute_pedestal_limit(my_runs, info, keys, label, ped_lim:Optional[int]=Non
                 rprint(
                     f"[yellow]WARNING: Pedestal mode is 0. Setting ped_mode = mean of the first 18% of the waveform.[/yellow]"
                 )
-                ped_mode = np.mean(
+                ped_mode = np.mean(np.mean(
                     my_runs[run][ch][key][:, : int(0.18 * wvf_length)], axis=1
-                )
-
+                ))
     # Find the most likely rise time wrt the most likely peak time
     end = (my_runs[run][ch][key][:, ped_lim:] - ped_mode) < 0
     start = (my_runs[run][ch][key][:, :ped_lim] - ped_mode) < 0
