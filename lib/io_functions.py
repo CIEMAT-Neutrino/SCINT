@@ -719,8 +719,6 @@ def root2npy(
             del my_dict["ADC"]
             my_dict["NBinsWvf"] = my_dict["RawADC"][0].shape[0]
             my_dict["Sampling"] = info["SAMPLING"][0]
-            # my_dict["Label"]       = info["CHAN_LABEL"][j]
-            # my_dict["RawPChannel"] = int(info["CHAN_POLAR"][j])
 
             np.save(out_path + out_file, my_dict)
 
@@ -895,6 +893,7 @@ def get_preset_list(my_run: dict, path: str, folder: str, preset: str, option:st
     try:
         branch_list.remove("Label")
         branch_list.remove("PChannel")
+        branch_list.remove("PedestalLimit")
         branch_list.remove("Sampling")
         # if option == "SAVE" remove branches in aux
     except ValueError:
