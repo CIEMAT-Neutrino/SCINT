@@ -216,6 +216,9 @@ def compute_pedestal_limit(my_runs, info, keys, label, ped_lim:Optional[int]=Non
     run, ch, key = keys
     if isinstance(ped_lim, int):
         rprint(f"[cyan]INFO: Using user-defined pedestal limit: {ped_lim}[/cyan]")
+        ped_mode = np.mean(
+            my_runs[run][ch][key][:, : ped_lim], axis=1
+        )
         pass
     
     else:
