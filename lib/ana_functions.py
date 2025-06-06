@@ -154,14 +154,34 @@ def compute_peak_variables(
     :type debug: bool, optional
     """
 
+    calib_runs = info["CALIB_RUNS"]
+
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux_ADC = my_runs[run][ch][key]
+
+        # Define the time window [ticks] where to look for the peak
+        run_str = f"{int(run):02d}"
+        if run_str in calib_runs :
+            ch_idx = info["CHAN_TOTAL"].index(str(ch))
+            ch_label = info["CHAN_LABEL"][ch_idx]
+            if ch_label.startswith("SiPM"):
+                center_tick = info["SIPM_PULSE"][0]
+                half_width = info["WINDOW_SIPM_PULSE"][0]
+            else:
+                center_tick = info["CELL_PULSE"][0]
+                half_width = info["WINDOW_CELL_PULSE"][0]
+
+            peak_window = slice(center_tick - half_width, center_tick + half_width + 1)
+
+        else :
+            peak_window = my_runs[run][ch]["Sampling"]
+        
         if key == "RawADC" and label == "Raw":
             my_runs[run][ch][label + "PeakAmp"] = my_runs[run][ch]["PChannel"] * np.max(
-                my_runs[run][ch]["PChannel"] * aux_ADC[:, :], axis=1
+                my_runs[run][ch]["PChannel"] * aux_ADC[:, peak_window], axis=1
             )
-            my_runs[run][ch][label + "PeakTime"] = np.argmax(
-                my_runs[run][ch]["PChannel"] * aux_ADC[:, :], axis=1
+            my_runs[run][ch][label + "PeakTime"] = peak_window.start + np.argmax(
+                my_runs[run][ch]["PChannel"] * aux_ADC[:, peak_window], axis=1
             )
 
             # Compute valley amplitude in the buffer around the peak to avoid noise
@@ -177,8 +197,8 @@ def compute_peak_variables(
             )
 
         else:
-            my_runs[run][ch][label + "PeakAmp"] = np.max(aux_ADC[:, :], axis=1)
-            my_runs[run][ch][label + "PeakTime"] = np.argmax(aux_ADC[:, :], axis=1)
+            my_runs[run][ch][label + "PeakAmp"] = np.max(aux_ADC[:, peak_window], axis=1)
+            my_runs[run][ch][label + "PeakTime"] = peak_window.start + np.argmax(aux_ADC[:, peak_window], axis=1)
             # Compute valley amplitude in the buffer around the peak to avoid noise
             i_idx = my_runs[run][ch][label + "PeakTime"]
             i_idx[i_idx < 0] = 0
@@ -194,7 +214,7 @@ def compute_peak_variables(
 
 
 def compute_pedestal_variables(
-    my_runs, info, key, label, ped_lim="", buffer=50, sliding=200, debug=False
+    my_runs, info, key, label, ped_lim="", buffer=50, sliding=600, debug=False
 ):
     """Computes the pedestal variables of a collection of a run's collection in several windows.
     
@@ -376,7 +396,7 @@ def compute_wvf_variables(my_runs, info, key, label, debug=False):
     rprint("[green]--> Computed Wvf Variables!!![/green]")
 
 
-def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=200, debug=False):
+def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=600, debug=False):
     """Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window". It checks for the best window.
     
     :param ADC: array containing the ADCs.

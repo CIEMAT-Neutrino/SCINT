@@ -24,11 +24,14 @@ my_runs = load_npy(
     compressed=True,
     debug=user_input["debug"],
 )
+
+key, label = get_wvf_label(my_runs, "", "", debug=user_input["debug"])
+
 compute_fft_wvfs(
     my_runs,
     info=info,
     key=user_input["key"][0],
-    label=user_input["label"][0],
+    label=label,
     debug=user_input["debug"],
 )
 

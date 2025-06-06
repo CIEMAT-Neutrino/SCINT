@@ -9,37 +9,38 @@ FIT: gaussian
 LEGEND: true
 LIMITS: false
 LOGX: false
-LOGY: true
+LOGY: false
 LOGZ: true
-MICRO_SEC: false
+MICRO_SEC: true
 NAME: VisConfig
 NORM: false
 PE: false
 PEAK_DISTANCE: 20
 PEAK_FINDER: false
 PERCENTILE:
-  - 4
-  - 98
+- 4
+- 98
 PROMINENCE: 0.02
 SCINT_FIT: false
 SHOW: true
 SHOW_PARAM: true
 SHOW_AVE: AveWvf
 SHOW_LEGEND: true
-SHOW_FIT_PARAMETERS: false
+SHOW_FIT_PARAMETERS: true
 SPACE_OUT: 0
 STATS: true
-STYLE: HEP
+STYLE: CIEMAT
 TERMINAL_MODE: true
+TERMINAL_OUTPUT: true
 THRESHOLD: 0
 WFV_FILTER: false
 WIDTH: 10
 XLIM:
-  - 2.5e-06
-  - 1.25e-05
+- 2.5e-06
+- 1.25e-05
 YLIM:
-  - -2
-  - 30
+- -2
+- 30
 ZLIM:
-  - 0
-  - 0
+- 0
+- 0

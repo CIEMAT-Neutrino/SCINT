@@ -18,6 +18,7 @@ from matplotlib.cm import viridis
 from scipy.signal import find_peaks
 from matplotlib.colors import LogNorm
 from scipy.ndimage.interpolation import shift
+from scipy.signal import savgol_filter
 
 # Imports from this library
 from .io_functions import check_key, save_figure
@@ -174,7 +175,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     label="%s" % key,
                     drawstyle="steps",
                     alpha=0.95,
-                    linewidth=1.2,
+                    linewidth=1,
                     c=colors[0],
                     zorder=0,
                 )
@@ -186,7 +187,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         label="%s" % key,
                         drawstyle="steps",
                         alpha=0.95,
-                        linewidth=1.2,
+                        linewidth=1,
                         c="red",
                         zorder=0,
                     )
@@ -194,14 +195,21 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                 try:
                     axs[j].scatter(
                         my_run[run][ch_list[j]]["Sampling"]
-                        * my_run[run][ch_list[j]][label + "PeakTime"][idx],
+                        * (my_run[run][ch_list[j]][label + "PeakTime"][idx] - 0.5),
                         my_run[run][ch_list[j]][label + "PeakAmp"][idx],
+                        label="Peak",
                         c=colors[1],
                         zorder=10,
                     )
                 except KeyError:
                     rprint("[red]PeakAmp not computed![/red]")
-                # try: axs[j].scatter(my_run[run][ch_list[j]]["Sampling"]*my_run[run][ch_list[j]][label+"ValleyTime"][idx],my_run[run][ch_list[j]][label+"ValleyAmp"][idx], c=colors[1], zorder=10)
+                # try: axs[j].scatter(
+                #     my_run[run][ch_list[j]]["Sampling"]
+                #     *my_run[run][ch_list[j]][label + "ValleyTime"][idx],
+                #     my_run[run][ch_list[j]][label + "ValleyAmp"][idx],
+                #     label="Valley", 
+                #     c=colors[3], 
+                #     zorder=10)
                 # except KeyError: rprint("[red]ValleyAmp not computed![/red]")
                 try:
                     axs[j].plot(
@@ -213,8 +221,9 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             ]
                         ),
                         np.array([ped + 4 * std, ped - 4 * std]) / norm_raw[j],
+                        label="Pedestal limit",
                         lw=2,
-                        c=colors[6],
+                        c=colors[4],
                         zorder=3,
                     )
                 except KeyError:
@@ -230,7 +239,8 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                                 ]
                             ),
                             np.array([ped + 4 * std, ped - 4 * std]) / norm_raw[j],
-                            lw=2,
+                            label="Signal window",
+                            lw=1.5,
                             c=colors[8],
                             zorder=3,
                         )
@@ -247,8 +257,9 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                                 ]
                             ),
                             np.array([ped + 4 * std, ped - 4 * std]) / norm_raw[j],
-                            lw=2,
-                            c=colors[4],
+                            label=value,
+                            lw=1.5,
+                            c=colors[6],
                             zorder=3,
                         )
                 except KeyError:
@@ -276,13 +287,13 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                                     ]
                                 ),
                                 np.array([ped + 4 * std, ped - 4 * std]) / norm_raw[j],
-                                lw=2,
+                                lw=1.5,
                                 c=colors[3],
                                 zorder=3,
                             )
                 except FileNotFoundError:
                     rprint("[red]ChargeDict.yml not found![/red]")
-                axs[j].axhline((ped) / norm_raw[j], c="k", alpha=0.55, zorder=2)
+                axs[j].axhline((ped) / norm_raw[j], c="k", alpha=0.5, zorder=2)
                 axs[j].axhline(
                     (ped + std) / norm_raw[j], c="k", alpha=0.5, ls="--", zorder=2
                 )
@@ -312,6 +323,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                             ave,
                             label="%s" % ave_key,
                             drawstyle="steps",
+                            lw=1.5,
                             c=colors[5],
                             alpha=0.5,
                             zorder=1,
@@ -322,7 +334,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         )
 
                 if check_key(OPT, "LEGEND") == True and OPT["LEGEND"]:
-                    axs[j].legend()
+                    axs[j].legend(loc="upper right", fontsize=7)
 
                 if check_key(OPT, "PEAK_FINDER") == True and OPT["PEAK_FINDER"]:
                     # These parameters must be modified according to the run...
@@ -434,7 +446,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     rprint("\n--- Pedestal from SlidingWindow Algorithm ---")
                     try:
                         rprint(
-                            "- S. Pedestal mean:\t{:.2E}".format(
+                            "- S. Pedestal mean:\t{:.2f}".format(
                                 my_run[run][ch_list[j]][label + "PedMean"][idx]
                             )
                         )
@@ -459,7 +471,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         rprint("[red]Pedestal min/max not found![/red]")
                     try:
                         rprint(
-                            "- S. Window start:\t{:.2E}".format(
+                            "- S. Window start:\t{:.3E}".format(
                                 my_run[run][ch_list[j]]["Sampling"]
                                 * my_run[run][ch_list[j]][label + "PedStart"][idx]
                             )
@@ -468,7 +480,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         rprint("[red]window start not found![/red]")
                     try:
                         rprint(
-                            "- S. Window stop:\t{:.2E}".format(
+                            "- S. Window stop:\t{:.3E}".format(
                                 my_run[run][ch_list[j]]["Sampling"]
                                 * my_run[run][ch_list[j]][label + "PedEnd"][idx]
                             )
@@ -478,7 +490,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     rprint("\n--- Peak Variables ---")
                     try:
                         rprint(
-                            "- Max peak amplitude:\t{:.4f}".format(
+                            "- Max peak amplitude:\t{:.2f}".format(
                                 my_run[run][ch_list[j]][label + "PeakAmp"][idx]
                             )
                         )
@@ -486,7 +498,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                         rprint("[red]Max peak amplitude not found![/red]")
                     try:
                         rprint(
-                            "- Max peak time:\t{:.2E}".format(
+                            "- Max peak time:\t{:.3E}".format(
                                 my_run[run][ch_list[j]][label + "PeakTime"][idx]
                                 * my_run[run][ch_list[j]]["Sampling"]
                             )
@@ -496,7 +508,7 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     rprint("\n--- Valley Variables ---")
                     try:
                         rprint(
-                            "- Min valley amplitude:\t{:.4f}".format(
+                            "- Min valley amplitude:\t{:.3E}".format(
                                 my_run[run][ch_list[j]][label + "ValleyAmp"][idx]
                             )
                         )
@@ -668,6 +680,7 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
                 for key in keys:
                     ref_max_idx = plot_compare_wvf(
                         my_run,
+                        info,
                         run,
                         ch,
                         key,
@@ -682,6 +695,7 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
             elif isinstance(keys, dict):
                 ref_max_idx = plot_compare_wvf(
                     my_run,
+                    info,
                     run,
                     ch,
                     keys[(run, ch)],
@@ -726,12 +740,14 @@ def vis_compare_wvf(my_run, info, keys, OPT={}, save=False, debug=False):
 
 
 def plot_compare_wvf(
-    my_run, run, ch, key, fig, axs, idx, OPT, ref_max_idx=None, stats=False
+    my_run, info, run, ch, key, fig, axs, idx, OPT, ref_max_idx=None, stats=False
 ):
     """This function plots the waveform of the selected key. It allows to compare between runs or channels.
     
     :param my_run: run(s) we want to check
     :type my_run: dict
+    :param info: info dictionary
+    :type info: dict
     :param run: run we want to check
     :type run: int
     :param ch: channel we want to check
@@ -795,16 +811,58 @@ def plot_compare_wvf(
     if check_key(OPT, "SPACE_OUT") and OPT["SPACE_OUT"] != 0:
         # for each b in b_list, we want to plot the same waveform with a different offset in x
         ave = np.roll(ave, int(idx) * int(OPT["SPACE_OUT"]))
+    
+    ave_smooth = savgol_filter(ave, window_length=11, polyorder=3)
+    
+    colors = get_prism_colors() + get_prism_colors()
+    
     axs.plot(
         sampling * np.arange(len(ave)),
-        ave,
-        drawstyle="steps",
+        ave_smooth,
         alpha=0.95,
         linewidth=1.2,
         label=label.replace("#", " "),
-        c=get_prism_colors()[idx],
+        c=colors[int(ch)],
     )
+    
+    # Adding the integration time window on the plot 
+    npy_path = info["NPY_PATH"][0]
+    range_path = f"{root}/{npy_path}/run{run}/ch{ch}/ChargeDict.yml"
+    
+    if os.path.exists(range_path):
+        range_file = os.path.join(range_path)
+        with open(range_file, 'r', encoding='latin1') as stream:
+            charge_dict = yaml.safe_load(stream)
+        
+        int_range = charge_dict["ChargeAveRange"]["AnaChargeAveRange"]
+        int_start_range = sampling*int_range[0]
+        int_end_range = sampling*int_range[1]
+        
+        axs.axvline(x=int_start_range, color=colors[int(ch)], linestyle='--', lw=1, label=f'Int window ch{ch} = [{int_start_range:.2f} - {int_end_range:.2f}] $\mu$s')
+        axs.axvline(x=int_end_range, color=colors[int(ch)], linestyle='--', lw=1)
 
+    # Adding the PeakAmp time window on the plot 
+    run_str = f"{int(run):02d}"
+    if run_str in info["CALIB_RUNS"] :
+        ch_idx = info["CHAN_TOTAL"].index(str(ch))
+        ch_label = info["CHAN_LABEL"][ch_idx]
+        if ch_label.startswith("SiPM"):
+            center_tick = info["SIPM_PULSE"][0]
+            half_width = info["WINDOW_SIPM_PULSE"][0]
+        else:
+            center_tick = info["CELL_PULSE"][0]
+            half_width = info["WINDOW_CELL_PULSE"][0]
+
+        peak_start_range = (center_tick - half_width)*sampling
+        peak_end_range = (center_tick + half_width)*sampling
+
+    else :
+        peak_start_range = 0
+        peak_end_range = sampling*len(ave)
+    
+    # axs.axvline(x=peak_start_range, color="grey", linestyle='--', lw=1, label=f'Peak window ch{ch} = [{peak_start_range:.2f} - {peak_end_range:.2f}] $\mu$s')
+    # axs.axvline(x=peak_end_range, color="grey", linestyle='--', lw=1)
+    
     axs.grid(True, alpha=0.7)
     axs.set_title(title, size=14)
     axs.xaxis.offsetText.set_fontsize(14)  # Smaller fontsize for scientific notation
@@ -927,8 +985,9 @@ def vis_var_hist(
                     "#", " "
                 ) + " (Ch {})".format(ch)
                 label = ""
-            # if check_key(my_run[run][ch], "MyCuts") == False:
-            #     generate_cut_array(my_run, debug=True)
+
+            if check_key(my_run[run][ch], "MyCuts") == False:
+                generate_cut_array(my_run, debug=True)
             if check_key(my_run[run][ch], "UnitsDict") == False:
                 get_run_units(my_run)
 
@@ -1017,7 +1076,7 @@ def vis_var_hist(
                     label=label,
                     alpha=0.95,
                     linewidth=1.2,
-                    c=colors[jdx],
+                    c=colors[int(b)],
                 )
 
                 label = label.replace(" - " + k, "")
@@ -1026,12 +1085,12 @@ def vis_var_hist(
                 # all_bars.append(bars)
             if check_key(OPT, "LIMITS") and OPT["LIMITS"]:
                 ax.set_xlim(OPT["XLIM"])
-            if check_key(OPT, "LEGEND") and OPT["LEGEND"]:
-                ax.legend()
             if check_key(OPT, "LOGY") and OPT["LOGY"] == True:
                 ax.semilogy()
             if check_key(OPT, "STATS") and OPT["STATS"] == True:
                 print_stats(my_run, (run, ch, k), ax, data, info, save, debug)
+            if check_key(OPT, "LEGEND") and OPT["LEGEND"]:
+                 ax.legend()
             if (
                 check_key(OPT, "SHOW")
                 and OPT["SHOW"] == True
@@ -1046,7 +1105,7 @@ def vis_var_hist(
                     while not plt.waitforbuttonpress(-1):
                         pass
                     plt.close()
-        if (
+        if (    
             check_key(OPT, "SHOW") == True
             and OPT["SHOW"] == True
             and OPT["COMPARE"] != "NONE"
@@ -1066,6 +1125,12 @@ def vis_var_hist(
             #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{"_".join(key)}_Hist.png',
             #     dpi=500,
             # )
+            
+            # if OPT["COMPARE"] == "CHANNELS" and len(ch_list) > 1 :
+            #     save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', run, f'{"_".join(key)}_Hist', debug=debug)
+            # if OPT["COMPARE"] == "RUNS" and len(r_list) > 1 :
+            #     save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', f'{"_".join(key)}_Hist', debug=debug)
+
             save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', run, ch, f'{"_".join(key)}_Hist', debug=debug)
             if debug:
                 rprint(f"Saved figure as: run{run}_ch{ch}_{'_'.join(key)}_Hist.png")
@@ -1134,9 +1199,9 @@ def print_stats(my_run, labels, ax, data, info, save=False, debug=False):
     rate = print_stats_terminal(my_run, labels, data)
 
     # Add reference lines to the plot
-    ax.axvline(np.mean(data), c="k", alpha=0.5)
-    ax.axvline(np.mean(data) + np.std(data), c="k", ls="--", alpha=0.5)
-    ax.axvline(np.mean(data) - np.std(data), c="k", ls="--", alpha=0.5)
+    # ax.axvline(np.mean(data), label="Mean", c="k", alpha=0.5)
+    # ax.axvline(np.mean(data) + np.std(data), label="STD", c="k", ls="--", alpha=0.5)
+    # ax.axvline(np.mean(data) - np.std(data), c="k", ls="--", alpha=0.5)
     if save:
         df = pd.DataFrame(
             {
@@ -1275,6 +1340,7 @@ def vis_two_var_hist(
                     aux_y_data = my_run[a][ch_list[1]][keys[1]][
                         my_run[a][ch_list[1]]["MyCuts"] == True
                     ]
+                else:
                     rprint(f"[red][ERROR] There is only one channel in the list. Please select more than one to compare or change the settins![/red]")
             
             if OPT["COMPARE"] == "RUNS":
@@ -1319,6 +1385,9 @@ def vis_two_var_hist(
             y_ymin = y_ypbot - y_ypad
             y_ymax = y_yptop + y_ypad
 
+            #### Color map choice ####
+            colors = "viridis"
+
             if "Time" in keys[0]:
                 if check_key(OPT, "LOGZ") == True and OPT["LOGZ"] == True:
                     hist = ax.hist2d(
@@ -1332,7 +1401,7 @@ def vis_two_var_hist(
                             ],
                             [y_ymin, y_ymax],
                         ],
-                        cmap=viridis,
+                        cmap=colors,
                         norm=LogNorm(),
                     )
                 else:
@@ -1347,7 +1416,7 @@ def vis_two_var_hist(
                             ],
                             [y_ymin, y_ymax],
                         ],
-                        cmap=viridis,
+                        cmap=colors,
                     )
                 plt.colorbar(hist[3])
             else:
@@ -1357,7 +1426,7 @@ def vis_two_var_hist(
                         y_data,
                         bins=[600, 600],
                         range=[[x_ymin, x_ymax], [y_ymin, y_ymax]],
-                        cmap=viridis,
+                        cmap=colors,
                         norm=LogNorm(),
                     )
                 else:
@@ -1366,7 +1435,7 @@ def vis_two_var_hist(
                         y_data,
                         bins=[600, 600],
                         range=[[x_ymin, x_ymax], [y_ymin, y_ymax]],
-                        cmap=viridis,
+                        cmap=colors,
                     )
                 plt.colorbar(hist[3])
 
@@ -1404,7 +1473,7 @@ def vis_two_var_hist(
                         y_data,
                         bins=[300, 300],
                         range=[[x1, x2], [y1, y2]],
-                        cmap=viridis,
+                        cmap=colors,
                         norm=LogNorm(),
                     )
                 else:
@@ -1413,7 +1482,7 @@ def vis_two_var_hist(
                         y_data,
                         bins=[300, 300],
                         range=[[x1, x2], [y1, y2]],
-                        cmap=viridis,
+                        cmap=colors,
                     )
                 plt.colorbar(hist[3])
                 ax.grid("both")

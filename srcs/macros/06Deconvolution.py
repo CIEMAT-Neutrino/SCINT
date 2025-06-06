@@ -16,11 +16,25 @@ user_input, info = initialize_macro(
     debug=True,
 )
 # info = read_input_file(user_input["input_file"][0])
+
+noise_run = "17"
+
+# 06Deconvolution
 for run, ch in product(
     np.asarray(user_input["runs"]).astype(str),
     np.asarray(user_input["channels"]).astype(str),
 ):
-    # 06Deconvolution
+    noise_runs = load_npy(
+    [noise_run],
+    [ch],
+    preset=user_input["preset_load"][0],
+    info=info,
+    compressed=True,
+    debug=user_input["debug"],
+    )
+    noise = noise_runs[noise_run][user_input["channels"][0]]["AnaAveWvf"]
+    # Import the noise run
+
     my_runs = load_npy(
         [run],
         [ch],
@@ -36,30 +50,37 @@ for run, ch in product(
     ]  # keys contains the 3 labels required for deconvolution keys[0] = raw, keys[1] = det_response and keys[2] = deconvolution
 
     OPT = {
+        "CONVERT_ADC": True,
         "NOISE_AMP": 1,
+        "FILTER": "WIENER",
         "FIX_EXP": True,
         "FIXED_CUTOFF": False,
         "LOGY": True,
         "NORM": False,
         "FOCUS": False,
-        "SHOW": False,
+        "SAVE": True,
+        "SHOW": True,
         "SHOW_F_SIGNAL": True,
-        "SHOW_F_GSIGNAL": True,
+        "SHOW_F_FSIGNAL": False,
         "SHOW_F_DET_RESPONSE": True,
-        "SHOW_F_GAUSS": True,
+        "SHOW_F_GAUSS": False,
         "SHOW_F_WIENER": True,
         "SHOW_F_DEC": True,
-        "WIENER_BUFFER": 800,
+        "TERMINAL_OUTPUT": True,
         "THRLD": 1e-4,
+        "WIENER_BUFFER": 800
     }
 
-    deconvolve(my_runs, info, keys=keys, noise_run=[], OPT=OPT, debug=user_input["debug"])
+    deconvolve(my_runs, info, keys=keys, noise_run=noise, OPT=OPT, debug=user_input["debug"])
 
-    OPT = {"SHOW": False, "FIXED_CUTOFF": True}
+    # OPT = {
+    #     "SHOW": False, 
+    #     "FILTER": "WIENER",
+    #     "FIXED_CUTOFF": True}
 
-    keys[0] = "RawADC"
-    keys[2] = "ADC"
-    deconvolve(my_runs, keys=keys, OPT=OPT, debug=user_input["debug"])
+    # keys[0] = "RawADC"
+    # keys[2] = "ADC"
+    # deconvolve(my_runs, info, keys=keys, OPT=OPT, debug=user_input["debug"])
 
     save_proccesed_variables(
         my_runs,

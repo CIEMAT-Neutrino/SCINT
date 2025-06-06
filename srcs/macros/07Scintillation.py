@@ -28,14 +28,14 @@ my_runs = load_npy(
 )
 
 parameters = {
-"type": "TauSlow",
+"type": "SiPM",
 "sigma":    1e-8,
 "a_fast":   1e-8,
 "a_slow":   1e-7,
 "tau_slow": 1e-6,
 "threshold":1e-6,
 "i_range":  2.5e-6,
-"f_range":  4.5e-6,
+"f_range":  5.5e-6,
 }
 
 ranges = (np.asarray([parameters["i_range"], parameters["f_range"]])/info["SAMPLING"][0]).astype(int)

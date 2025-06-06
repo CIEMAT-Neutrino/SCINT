@@ -97,7 +97,7 @@ def read_input_file(
         info = dict()
         info["NAME"] = [input]
         if NUMBERS == []:
-            NUMBERS = ["BITS", "DYNAMIC_RANGE", "CHAN_POLAR", "CHAN_AMPLI"]
+            NUMBERS = ["BITS", "DYNAMIC_RANGE", "CHAN_POLAR", "CHAN_AMPLI", "SIPM_PULSE", "WINDOW_SIPM_PULSE", "CELL_PULSE", "WINDOW_CELL_PULSE"]
         if DOUBLES == []:
             DOUBLES = ["SAMPLING", "I_RANGE", "F_RANGE"]
         if STRINGS == []:
