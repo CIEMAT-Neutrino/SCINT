@@ -849,9 +849,10 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
             for k in range(len(f_range)):
                 i_idx = int(np.round(i_range[k] * 1e-6 / my_runs[run][ch]["Sampling"]))
                 f_idx = int(np.round(f_range[k] * 1e-6 / my_runs[run][ch]["Sampling"]))
+                peak_time = np.asarray(my_runs[run][ch][label + "PeakTime"])
                 this_aux_ADC = shift_ADCs(
                     aux_ADC,
-                    -np.asarray(my_runs[run][ch][label + "PeakTime"]) + i_idx,
+                    -peak_time + i_idx,
                     debug=debug,
                 )
                 charge_name = label + typ + str(k) + cut_label
@@ -866,6 +867,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
                     )
                 )
                 integration_dict[typ][charge_name] = [int(i_idx), int(f_idx)]
+                integration_dict[typ][f"Mean{charge_name}"] = [int(np.mean(peak_time))-i_idx, int(np.mean(peak_time))+f_idx]
 
     # rprintintegration_dict)
     out_path = info["NPY_PATH"][0]

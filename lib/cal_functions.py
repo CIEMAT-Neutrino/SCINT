@@ -189,7 +189,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                 label=key,
                 align="left",
                 lw=2,
-                color=get_color(ch, even=True, debug=debug),
+                color=get_prism_colors()[int(ch)],
                 zorder=1
             )
             fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run, ch, key))
@@ -243,6 +243,8 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                 )
                 my_runs[run][ch]["AnaMaxChargeSPE"] = popt[3] + (popt[6] - popt[3]) / 2
                 my_runs[run][ch]["AnaMinChargeSPE"] = popt[3] - (popt[3] - popt[0]) / 2
+                my_runs[run][ch]["AnaMaxCharge2PE"] = popt[6] + (popt[9] - popt[6]) / 2
+                my_runs[run][ch]["AnaMinCharge2PE"] = popt[6] - (popt[3] - popt[0]) / 2
             except IndexError:
                 rprint(
                     "[yellow]Fit failed to find min of 3 calibration peaks![/yellow]"
@@ -359,7 +361,7 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
             [0],
             label="No PE density (1 peak)",
             width=0.4,
-            color=get_color(ch, even=True, debug=debug),
+            color=get_prism_colors()[int(ch)],
         )
         if check_key(OPT, "LEGEND") and OPT["LEGEND"]:
             ax_xt.legend()
@@ -387,7 +389,7 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
         PNs,
         label="Data",
         width=0.4,
-        color=get_color(ch, even=True, debug=debug),
+        color=get_prism_colors()[int(ch)],
     )
     # Add vertical line to mean value
     mean = np.sum(np.array(xdata) * PNs) / np.sum(np.array(xdata))

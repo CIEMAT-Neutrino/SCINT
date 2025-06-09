@@ -3,7 +3,7 @@
 # ================================================================================================================================================#
 from srcs.utils import get_project_root
 
-import math, inquirer, yaml, os, stat
+import math, inquirer, scipy, yaml, os, stat
 import numpy as np
 import matplotlib
 matplotlib.use('Qt5Agg')
@@ -211,41 +211,41 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                 #     c=colors[3], 
                 #     zorder=10)
                 # except KeyError: rprint("[red]ValleyAmp not computed![/red]")
-                try:
-                    axs[j].plot(
-                        my_run[run][ch_list[j]]["Sampling"]
-                        * np.array(
-                            [
-                                my_run[run][ch_list[j]][label + "PedLim"],
-                                my_run[run][ch_list[j]][label + "PedLim"],
-                            ]
-                        ),
-                        np.array([ped + 4 * std, ped - 4 * std]) / norm_raw[j],
-                        label="Pedestal limit",
-                        lw=2,
-                        c=colors[4],
-                        zorder=3,
-                    )
-                except KeyError:
-                    rprint("[red]PedLim not computed![/red]")
-                try:
-                    for value in ["SignalStart", "SignalEnd"]:
-                        axs[j].plot(
-                            my_run[run][ch_list[j]]["Sampling"]
-                            * np.array(
-                                [
-                                    my_run[run][ch_list[j]][label + value][idx],
-                                    my_run[run][ch_list[j]][label + value][idx],
-                                ]
-                            ),
-                            np.array([ped + 4 * std, ped - 4 * std]) / norm_raw[j],
-                            label="Signal window",
-                            lw=1.5,
-                            c=colors[8],
-                            zorder=3,
-                        )
-                except KeyError:
-                    rprint("[red]SignalWindow not computed![/red]")
+                # try:
+                #     axs[j].plot(
+                #         my_run[run][ch_list[j]]["Sampling"]
+                #         * np.array(
+                #             [
+                #                 my_run[run][ch_list[j]][label + "PedLim"],
+                #                 my_run[run][ch_list[j]][label + "PedLim"],
+                #             ]
+                #         ),
+                #         np.array([ped + 4 * std, ped - 4 * std]) / norm_raw[j],
+                #         label="Pedestal limit",
+                #         lw=2,
+                #         c=colors[6],
+                #         zorder=3,
+                #     )
+                # except KeyError:
+                #     rprint("[red]PedLim not computed![/red]")
+                # try:
+                #     for value in ["SignalStart", "SignalEnd"]:
+                #         axs[j].plot(
+                #             my_run[run][ch_list[j]]["Sampling"]
+                #             * np.array(
+                #                 [
+                #                     my_run[run][ch_list[j]][label + value][idx],
+                #                     my_run[run][ch_list[j]][label + value][idx],
+                #                 ]
+                #             ),
+                #             np.array([ped + 4 * std, ped - 4 * std]) / norm_raw[j],
+                #             label="Signal window",
+                #             lw=1.5,
+                #             c=colors[8],
+                #             zorder=3,
+                #         )
+                # except KeyError:
+                #     rprint("[red]SignalWindow not computed![/red]")
                 try:
                     for value in ["PedStart", "PedEnd"]:
                         axs[j].plot(
@@ -834,7 +834,7 @@ def plot_compare_wvf(
         with open(range_file, 'r', encoding='latin1') as stream:
             charge_dict = yaml.safe_load(stream)
         
-        int_range = charge_dict["ChargeAveRange"]["AnaChargeAveRange"]
+        int_range = charge_dict["ChargeRange"]["MeanAnaChargeRange2"]
         int_start_range = sampling*int_range[0]
         int_end_range = sampling*int_range[1]
         
@@ -1008,7 +1008,7 @@ def vis_var_hist(
                 ]
                 aux_data = aux_data[~np.isnan(aux_data)]
 
-                if k == "PeakAmp":
+                if k == "AnaPeakAmp" or k == "RawPeakAmp":
                     data = aux_data
                     if binning == 0:
                         binning = 1000
@@ -1050,6 +1050,20 @@ def vis_var_hist(
                     counts, bins = np.histogram(
                         data, bins=int(binning), density=density
                     )
+                
+                if k == "AnaPeakAmp" or k == "RawPeakAmp":
+                    dist = OPT["PEAK_DISTANCE"]
+                    thresh = OPT["THRESHOLD"]
+                    wdth = OPT["WIDTH"]
+                    prom = OPT["PROMINENCE"]
+                    counts = counts[0]
+                    bins = bins[0]
+                    x = np.linspace(bins[1], bins[-2], binning)
+                    y_intrp = scipy.interpolate.interp1d(bins[:-1], counts)
+                    y = y_intrp(x)
+                    peak_idx, _ = find_peaks(y, height=thresh, width=wdth, prominence=prom, distance=dist)
+                    rprint("Peaks found at: ", peak_idx)
+                
                 if check_key(OPT, "NORM") and OPT["NORM"]:
                     counts = counts / np.max(counts)
                     y_label = "Norm (a.u.)"
