@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
 
+from typing import Optional
 from jacobi import propagate
 from iminuit import Minuit, cost
 
@@ -29,7 +30,7 @@ def initial_values(data, function, debug: bool = False):
     return ini_val
 
 
-def minuit_fit(data, OPT, debug: bool = False):
+def minuit_fit(data, OPT, export: bool = False, debug: bool = False):
     """This function performs a fit to the data, using the function specified in the input using MINUIT. It returns the parameters of the fit (if performed)
     
     :param data: data to fit
@@ -41,8 +42,11 @@ def minuit_fit(data, OPT, debug: bool = False):
     
     :return: m, xdata, norm_ydata -- fit parameters, xdata and normalized ydata
     """
-    
-    ydata, bins = np.histogram(data, bins=OPT["ACCURACY"])
+    data = percentile_cut(data, OPT["PERCENTILE"])
+    bins = OPT["ACCURACY"]
+    if OPT["PE"]:
+        bins = np.arange(int(np.min(data)), int(np.max(data)) + 1)
+    ydata, bins = np.histogram(data, bins=bins)
     xdata = bins[:-1] + (bins[1] - bins[0]) / 2
 
     rprint(f"[yellow]DEFAULT MINUIT BINNED FIT ({OPT['FIT']})[/yellow]")
@@ -58,8 +62,56 @@ def minuit_fit(data, OPT, debug: bool = False):
     if debug:
         print("[cyan,bold]Fitting with Minuit[/cyan,bold]")
         print(m.hesse())
-        
+
     return m, xdata, norm_ydata
+
+
+def export_minuit_fit(m_fit, xdata, ydata, labels:tuple, info, OPT:Optional[dict] = None, debug: bool = False):
+    """This function exports the fit parameters to a file, if the user has requested it.
+    
+    :param m_fit: fit parameters
+    :type m_fit: Minuit object
+    :param xdata: x data
+    :type xdata: np.array
+    :param ydata: y data
+    :type ydata: np.array
+    :param labels: labels for the plot
+    :type labels: tuple (run, channel, variable)
+    :param user_input: user input dictionary
+    :type user_input: dict
+    
+    """
+
+    run, ch, variable = labels
+    yfit, ycov = propagate(
+        lambda p: fitting_function(OPT["FIT"], debug=False)(xdata, *p),
+        m_fit.values,
+        m_fit.covariance,
+    )
+    yerr = np.sqrt(np.diag(ycov))
+
+    # Export the data xdata, ydata, and the yfit to a file so that there is a header and the data is saved in a readable format
+    if debug:
+        print(f"[cyan,bold]Exporting fit parameters for run {run}, channel {ch}, variable {variable}[/cyan,bold]")
+    # parameters = [
+    #     [[x, 0] for x in xdata].T,
+    #     [[y, 1/np.sqrt(y)] for y in ydata].T,
+    #     [[y, dy] for y, dy in zip(yfit, yerr)].T,
+    # ]
+    parameters = [
+        [[x, 0],[y, dy],[fit, dfit]] for x, y, fit, dy, dfit in zip(xdata, ydata, yfit, np.sqrt(ydata), yerr)
+    ]
+    header = ["PE", "DPE", "AMP", "DAMP", "FIT", "DFIT"]
+    write_output_file(
+        run,
+        ch,
+        output=parameters,
+        filename=f"{OPT['FIT']}_{variable}",
+        header_list=header,
+        info=info,  # Not used in this context
+        not_saved=[],
+        debug=debug,
+    )
 
 
 def percentile_cut(data, percentile):
@@ -84,7 +136,7 @@ def save_fit_parameters(run, ch, m_fit, fit_function, variable, info, user_input
         run,
         ch,
         output=parameters,
-        filename=fit_function + variable,
+        filename=f"{fit_function}_{variable}_fit",
         header_list=header,
         info=info,
         not_saved=[],
@@ -173,9 +225,8 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
 
     if user_input["save"]:
         save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images/', run, ch, f'{variable}_Fit', debug=user_input["debug"])
-
-        save_fit_parameters(run, ch, m_fit, OPT["FIT"], variable, info, user_input)
         if user_input["debug"]:
             print(
                 f"Saving plot in {root}/{info['OUT_PATH'][0]}/images/run{run}_ch{ch}_{variable}_{fit_function}_Fit.png"
             )
+

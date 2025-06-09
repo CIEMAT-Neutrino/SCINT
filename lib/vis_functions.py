@@ -548,10 +548,33 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                 "\nPress q to quit, p to save plot, r to go back, n to choose event or any key to continue: "
             )
 
-            if tecla == "q":
+            if tecla == "e":
+                # Export plot data
+                rprint("[yellow]Exporting data to txt...[/yellow]")
+                # Check if the output path exists, if not create it
+                if not os.path.exists(f'{root}/{info["OUT_PATH"][0]}/analysis/data'):
+                    os.makedirs(f'{root}/{info["OUT_PATH"][0]}/analysis/data', mode=0o770, exist_ok=True)
+                for j in range(nch):
+                    # Open a file to save the data
+                    rprint(f"[yellow]Saving file to {root}/{info['OUT_PATH'][0]}/analysis/data/run{run}_ch{ch_list[j]}_event{idx}.txt[/yellow]")
+                    with open(
+                        f'{root}/{info["OUT_PATH"][0]}/analysis/data/run{run}_ch{ch_list[j]}_event{idx}.txt',
+                        "w",
+                    ) as f:
+                        f.write(
+                            "# Time [ns]\tRawADC\tAnaADC\n"
+                        )
+                        for i in range(len(raw[j])):
+                            f.write(
+                                "{:.6f}\t{:.6f}\t{:.6f}\n".format(
+                                    1e9 * my_run[run][ch_list[j]]["Sampling"] * i,
+                                    raw[j][i],
+                                    filtered_ana[j][i] if key == "AnaADC" else 0,
+                                )
+                            )
+
+            elif tecla == "q":
                 break
-            elif tecla == "r":
-                idx = idx - 1
             elif tecla == "n":
                 ev_num = int(input("Enter event number: "))
                 idx = ev_num
@@ -562,11 +585,9 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     )
             elif tecla == "p":
                 save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images', run, ch, f'{key}_Event{idx}', debug=debug)
-                # fig.savefig(
-                #     f'{root}/{info["OUT_PATH"][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_event{idx}.png',
-                #     dpi=500,
-                # )
                 idx = idx + 1
+            elif tecla == "r":
+                idx = idx - 1
             else:
                 idx = idx + 1
             if idx == len(my_run[run][ch_list[j]]["MyCuts"]):

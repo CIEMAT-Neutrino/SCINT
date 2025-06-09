@@ -26,6 +26,7 @@ CHAN_LABEL: SiPM0,SiPM1,SC
 CHAN_TOTAL: 0,1,6
 CHAN_POLAR: -1,-1,1
 CHAN_AMPLI: 250,250,1030
+CHAN_PED_LIM: NON,NON,NON
 ########################
 ####   BRANCH INFO  ####
 ########################

@@ -11,12 +11,12 @@ default_dict = {
 }
 user_input, info = initialize_macro(
     "05Charge",
-    ["input_file", "variables", "filter", "group", "save", "debug"],
+    ["input_file", "variables", "filter", "group", "export", "save", "debug"],
     default_dict=default_dict,
     debug=True,
 )
 
-OPT = opt_selector(arguments=["PERCENTILE", "NORM", "LIMITS", "XLIM", "YLIM", "ZLIM", "LOGZ", "SHOW_LEGEND", "SHOW_FIT_PARAMETERS"], debug=user_input["debug"])
+OPT = opt_selector(arguments=["PE", "PERCENTILE", "FIT", "NORM", "LIMITS", "XLIM", "YLIM", "SHOW_LEGEND", "SHOW_FIT_PARAMETERS"], debug=user_input["debug"])
 ## 05Charge
 my_runs = load_npy(
     np.asarray(user_input["runs"]).astype(str),
@@ -44,6 +44,17 @@ for run, ch, variable in product(
     np.asarray(user_input["variables"]),
 ):
     data = np.asarray(my_runs[run][ch][variable])
-    data = percentile_cut(data, OPT["PERCENTILE"])
-    m_fit, xdata, ydata = minuit_fit(data, OPT, user_input["debug"])
+    m_fit, xdata, ydata = minuit_fit(data, OPT, user_input["export"], user_input["debug"])
     plot_minuit_fit(m_fit, xdata, ydata, (run, ch, variable), user_input, info, OPT)
+    if user_input["export"]:
+        save_fit_parameters(run, ch, m_fit, OPT["FIT"], variable, info, user_input)
+        export_minuit_fit(
+            m_fit,
+            xdata,
+            ydata,
+            (run, ch, variable),
+            info,
+            OPT,
+            user_input["debug"],
+        )
+

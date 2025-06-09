@@ -10,6 +10,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as plt
 
+from typing import Optional
 from itertools import product
 from scipy.signal import find_peaks
 from rich import print as rprint
@@ -213,8 +214,158 @@ def compute_peak_variables(
     rprint("[green]--> Computed Peak Variables!!![/green]")
 
 
+def compute_pedestal_limit(my_runs, info, keys, label, ped_lim:Optional[int]=None, buffer=50, debug=False):
+    """Computes the pedestal limit for a collection of runs.
+    
+    :param my_runs: dictionary containing the data.
+    :type my_runs: dict
+    :param info: dictionary containing the info.
+    :type info: dict
+    :param key: key to be inserted.
+    :type key: str
+    :param label: label to be inserted. Eg: label = Raw, variable = PedSTD --> RawPedSTD.
+    :type label: str
+    :param ped_lim: size in bins of the sliding window, defaults to None
+    :type ped_lim: int, optional
+    :param buffer: size in bins of the buffer to compute the valley amplitude, defaults to 50
+    :type buffer: int, optional
+    :param debug: boolean to print debug messages, defaults to False
+    :type debug: bool, optional
+    
+    :return: ped_lim -- computed pedestal limit.
+    :rtype: int
+    """
+    ped_lim_search = False
+    run, ch, key = keys
+    if isinstance(ped_lim, int):
+        rprint(f"[cyan]INFO: Using user-defined pedestal limit: {ped_lim}[/cyan]")
+        values, counts = np.unique(
+            my_runs[run][ch][key][:, : ped_lim],
+            return_counts=True,
+        )
+        ped_mode = values[np.argmax(counts)]
+        if ped_mode == 0:
+            rprint(
+                f"[yellow]WARNING: Pedestal mode is 0. Setting ped_mode = mean of the first {ped_lim} bins.[/yellow]"
+            )
+            ped_mode = np.mean(np.mean(np.mean(my_runs[run][ch][key][:, : ped_lim], axis=1)))
+        pass
+    
+    else:
+        ped_lim_search = True
+        values, counts = np.unique(
+            my_runs[run][ch][label + "PeakTime"], return_counts=True
+        )
+        ped_lim = values[np.argmax(counts)]
+        ped_mode = 0
+
+        if ped_lim <= buffer:
+            ped_lim = int(len(my_runs[run][ch][key][0]) * 0.2)
+            rprint(
+                f"[yellow]WARNING: Peak time is smaller than {buffer}. Setting ped_lim = {ped_lim} (20% window length)[/yellow]"
+            )
+
+        if key == "RawADC" and label == "Raw":
+            wvf_length = len(my_runs[run][ch][key][0])
+            values, counts = np.unique(
+                my_runs[run][ch][key][:, : int(0.18 * wvf_length)],
+                return_counts=True,
+            )
+            ped_mode = values[np.argmax(counts)]
+            if ped_mode == 0:
+                rprint(
+                    f"[yellow]WARNING: Pedestal mode is 0. Setting ped_mode = mean of the first 18% of the waveform.[/yellow]"
+                )
+                ped_mode = np.mean(np.mean(
+                    my_runs[run][ch][key][:, : int(0.18 * wvf_length)], axis=1
+                ))
+    # Find the most likely rise time wrt the most likely peak time
+    end = (my_runs[run][ch][key][:, ped_lim:] - ped_mode) < 0
+    start = (my_runs[run][ch][key][:, :ped_lim] - ped_mode) < 0
+    if label == "Raw" and my_runs[run][ch]["PChannel"] == -1:
+        my_runs[run][ch][label + "SignalEnd"] = ped_lim + np.argmin(end, axis=1)
+        my_runs[run][ch][label + "SignalStart"] = ped_lim - np.argmin(
+            start[:, ::-1], axis=1
+        )
+        rprint(
+            f"[cyan]INFO: Negative polarity. Finding signal start and end in negative values.[/cyan]"
+        )
+    else:
+        my_runs[run][ch][label + "SignalEnd"] = ped_lim + np.argmax(end, axis=1)
+        my_runs[run][ch][label + "SignalStart"] = ped_lim - np.argmax(
+            start[:, ::-1], axis=1
+        )
+
+    if ped_lim_search:
+        # Look for max counts in the signal start for values up to ped_lim - buffer
+        min_signal_start = np.min(my_runs[run][ch][label + "SignalStart"])
+        max_signal_start = np.max(my_runs[run][ch][label + "SignalStart"])
+        hist, bins = np.histogram(
+            my_runs[run][ch][label + "SignalStart"],
+            bins=np.arange(min_signal_start, max_signal_start + 1),
+        )
+        bins = bins[:-1]
+        hist = hist / np.max(hist)
+        # Apply peak finder to the histogram
+        peaks, _ = find_peaks(hist, prominence=0.1, height=0.1)
+
+        if len(peaks) == 0:
+            rprint(
+                f"[yellow]WARNING:[/yellow] No peak found in the 'SignalStart' histogram. Starting peak search with lower threshold."
+            )
+            lower_thld = 0.1
+            while len(peaks) == 0 or lower_thld >= 0.01:
+                lower_thld -= 0.001
+                peaks, _ = find_peaks(
+                    hist, prominence=lower_thld, height=lower_thld
+                )
+                if lower_thld < 0:
+                    rprint(f"[red]ERROR:[/red] No peak found in the 'SignalStart' histogram for any threshold. Exiting.")
+                    break
+
+        elif len(peaks) == 1:
+            ped_lim = bins[peaks[0]]
+            rprint(f"[cyan]INFO: Setting ped_lim = {ped_lim}[/cyan]")
+
+        elif len(peaks) > 1:
+            rprint(
+                f"[yellow]WARNING: Found more than one peak in the signal start histogram.[/yellow]"
+            )
+            # Plot the histogram and the peaks
+            plt.ion()
+            plt.plot(bins, hist)
+            plt.plot(bins[peaks], hist[peaks], "x")
+            plt.title(f"Signal Start Histogram for Run {run} Ch {ch}")
+            plt.xlabel("Signal Start (ticks)")
+            plt.ylabel("Norm.")
+            plt.show()
+            while not plt.waitforbuttonpress(-1):
+                pass
+            plt.close()
+            plt.ioff()
+
+            # Select in the terminal the peak to use (defailt is the first one)
+            questions = [
+                inquirer.List(
+                    "peak",
+                    message="Select the peak to use as signal start",
+                    choices=[str(i) for i in bins[peaks]],
+                )
+            ]
+            answers = inquirer.prompt(questions)
+            ped_lim = bins[int(answers["peak"])]
+
+        if ped_lim <= buffer:
+            ped_lim = int(len(my_runs[run][ch][key][0]) * 0.15)
+            rprint(
+                f"[yellow]WARNING: Peak time is smaller than {buffer}. Setting ped_lim = {ped_lim} (15% window length)[/yellow]"
+            )
+        
+    my_runs[run][ch][label + "PedLim"] = ped_lim
+
+
 def compute_pedestal_variables(
-    my_runs, info, key, label, ped_lim="", buffer=50, sliding=600, debug=False
+    my_runs, info, key, label, ped_lim:Optional[int]=None, buffer:int=50, sliding:int=600, debug:bool=False
 ):
     """Computes the pedestal variables of a collection of a run's collection in several windows.
     
@@ -237,127 +388,18 @@ def compute_pedestal_variables(
     """
 
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
-        if type(ped_lim) != int:
-            values, counts = np.unique(
-                my_runs[run][ch][label + "PeakTime"], return_counts=True
-            )
-            ped_lim = values[np.argmax(counts)]
-            ped_mode = 0
-
-            if ped_lim <= buffer:
-                ped_lim = int(len(my_runs[run][ch][key][0]) * 0.2)
-                rprint(
-                    f"[yellow]WARNING: Peak time is smaller than {buffer}. Setting ped_lim = {ped_lim} (20% window length)[/yellow]"
-                )
-
-            if key == "RawADC" and label == "Raw":
-                wvf_length = len(my_runs[run][ch][key][0])
-                values, counts = np.unique(
-                    my_runs[run][ch][key][:, : int(0.18 * wvf_length)],
-                    return_counts=True,
-                )
-                ped_mode = values[np.argmax(counts)]
-                if ped_mode == 0:
-                    rprint(
-                        f"[yellow]WARNING: Pedestal mode is 0. Setting ped_mode = mean of the first 18% of the waveform.[/yellow]"
-                    )
-                    ped_mode = np.mean(
-                        my_runs[run][ch][key][:, : int(0.18 * wvf_length)], axis=1
-                    )
-
-            # Find the most likely rise time wrt the most likely peak time
-            end = (my_runs[run][ch][key][:, ped_lim:] - ped_mode) < 0
-            start = (my_runs[run][ch][key][:, :ped_lim] - ped_mode) < 0
-            if label == "Raw" and my_runs[run][ch]["PChannel"] == -1:
-                my_runs[run][ch][label + "SignalEnd"] = ped_lim + np.argmin(end, axis=1)
-                my_runs[run][ch][label + "SignalStart"] = ped_lim - np.argmin(
-                    start[:, ::-1], axis=1
-                )
-                rprint(
-                    f"[cyan]INFO: Negative polarity. Finding signal start and end in negative values.[/cyan]"
-                )
-            else:
-                my_runs[run][ch][label + "SignalEnd"] = ped_lim + np.argmax(end, axis=1)
-                my_runs[run][ch][label + "SignalStart"] = ped_lim - np.argmax(
-                    start[:, ::-1], axis=1
-                )
-
-            # Look for max counts in the signal start for values up to ped_lim - buffer
-            min_signal_start = np.min(my_runs[run][ch][label + "SignalStart"])
-            max_signal_start = np.max(my_runs[run][ch][label + "SignalStart"])
-            hist, bins = np.histogram(
-                my_runs[run][ch][label + "SignalStart"],
-                bins=np.arange(min_signal_start, max_signal_start + 1),
-            )
-            bins = bins[:-1]
-            hist = hist / np.max(hist)
-            # Apply peak finder to the histogram
-            peaks, _ = find_peaks(hist, prominence=0.1, height=0.1)
-
-            if len(peaks) == 0:
-                rprint(
-                    f"[yellow]WARNING:[/yellow] No peak found in the 'SignalStart' histogram. Starting peak search with lower threshold."
-                )
-                lower_thld = 0.1
-                while len(peaks) == 0 or lower_thld >= 0.01:
-                    lower_thld -= 0.001
-                    peaks, _ = find_peaks(
-                        hist, prominence=lower_thld, height=lower_thld
-                    )
-                    if lower_thld < 0:
-                        rprint(f"[red]ERROR:[/red] No peak found in the 'SignalStart' histogram for any threshold. Exiting.")
-                        break
-
-            elif len(peaks) == 1:
-                ped_lim = bins[peaks[0]]
-                rprint(f"[cyan]INFO: Setting ped_lim = {ped_lim}[/cyan]")
-
-            elif len(peaks) > 1:
-                rprint(
-                    f"[yellow]WARNING: Found more than one peak in the signal start histogram.[/yellow]"
-                )
-                # Plot the histogram and the peaks
-                plt.ion()
-                plt.plot(bins, hist)
-                plt.plot(bins[peaks], hist[peaks], "x")
-                plt.title(f"Signal Start Histogram for Run {run} Ch {ch}")
-                plt.xlabel("Signal Start (ticks)")
-                plt.ylabel("Norm.")
-                plt.show()
-                while not plt.waitforbuttonpress(-1):
-                    pass
-                plt.close()
-                plt.ioff()
-
-                # Select in the terminal the peak to use (defailt is the first one)
-                questions = [
-                    inquirer.List(
-                        "peak",
-                        message="Select the peak to use as signal start",
-                        choices=[str(i) for i in bins[peaks]],
-                    )
-                ]
-                answers = inquirer.prompt(questions)
-                ped_lim = bins[int(answers["peak"])]
-
-            if ped_lim <= buffer:
-                ped_lim = int(len(my_runs[run][ch][key][0]) * 0.15)
-                rprint(
-                    f"[yellow]WARNING: Peak time is smaller than {buffer}. Setting ped_lim = {ped_lim} (15% window length)[/yellow]"
-                )
-
+        compute_pedestal_limit(my_runs, info, (run, ch, key), label, ped_lim=my_runs[run][ch]["PedestalLimit"], buffer=buffer, debug=debug)
         ADC_aux = my_runs[run][ch][key]
-        my_runs[run][ch][label + "PreTriggerSTD"] = np.std(ADC_aux[:, :ped_lim], axis=1)
+        my_runs[run][ch][label + "PreTriggerSTD"] = np.std(ADC_aux[:, :my_runs[run][ch][label + "PedLim"]], axis=1)
         my_runs[run][ch][label + "PreTriggerMean"] = np.mean(
-            ADC_aux[:, :ped_lim], axis=1
+            ADC_aux[:, :my_runs[run][ch][label + "PedLim"]], axis=1
         )
-        my_runs[run][ch][label + "PreTriggerMax"] = np.max(ADC_aux[:, :ped_lim], axis=1)
-        my_runs[run][ch][label + "PreTriggerMin"] = np.min(ADC_aux[:, :ped_lim], axis=1)
+        my_runs[run][ch][label + "PreTriggerMax"] = np.max(ADC_aux[:, :my_runs[run][ch][label + "PedLim"]], axis=1)
+        my_runs[run][ch][label + "PreTriggerMin"] = np.min(ADC_aux[:, :my_runs[run][ch][label + "PedLim"]], axis=1)
 
         ADC, start_window = compute_pedestal_sliding_windows(
-            ADC_aux, ped_lim=ped_lim, sliding=sliding
+            ADC_aux, ped_lim=my_runs[run][ch][label + "PedLim"], sliding=sliding
         )
-        my_runs[run][ch][label + "PedLim"] = ped_lim
         my_runs[run][ch][label + "PedSTD"] = np.std(ADC[:, :sliding], axis=1)
         my_runs[run][ch][label + "PedMean"] = np.mean(ADC[:, :sliding], axis=1)
         my_runs[run][ch][label + "PedMax"] = np.max(ADC[:, :sliding], axis=1)
@@ -396,7 +438,7 @@ def compute_wvf_variables(my_runs, info, key, label, debug=False):
     rprint("[green]--> Computed Wvf Variables!!![/green]")
 
 
-def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=600, debug=False):
+def compute_pedestal_sliding_windows(ADC, ped_lim:Optional[int]=None, sliding=600, debug=False):
     """Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window". It checks for the best window.
     
     :param ADC: array containing the ADCs.
@@ -411,6 +453,10 @@ def compute_pedestal_sliding_windows(ADC, ped_lim, sliding=600, debug=False):
     :return: ADC_s, start_window -- shifted ADCs and start window.
     :rtype: nparray, nparray
     """
+    if ped_lim is None:
+        ped_lim = 0.2 * len(ADC[0])  # Default value is 20% of the wvf length
+        rprint("[yellow]WARNING: Pedestal limit not defined. Setting ped_lim = %s[/yellow]" % ped_lim)
+    
     if ped_lim < sliding:
         ped_lim = sliding
         rprint(
