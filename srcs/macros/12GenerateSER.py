@@ -15,8 +15,8 @@ user_input, info = initialize_macro(
 )
 
 ### Configure SER
-light_runs = ["00"]
-calib_runs = ["00"]
+light_runs = ["09"]
+calib_runs = ["02"]
 
 OPT = opt_selector(arguments=["ALIGN", "SPACE_OUT", "NORM", "LIMITS", "XLIM", "YLIM", "ZLIM", "LOGZ"], debug=user_input["debug"])
 

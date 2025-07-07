@@ -189,7 +189,8 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                 label=key,
                 align="left",
                 lw=2,
-                color=get_color(ch, even=True, debug=debug),
+                color=get_prism_colors()[int(ch)],
+                zorder=1
             )
             fig_cal.suptitle("Run_{} Ch_{} - {} histogram".format(run, ch, key))
             fig_cal.supxlabel(key + " (" + my_runs[run][ch]["UnitsDict"][key] + ")")
@@ -242,6 +243,8 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                 )
                 my_runs[run][ch]["AnaMaxChargeSPE"] = popt[3] + (popt[6] - popt[3]) / 2
                 my_runs[run][ch]["AnaMinChargeSPE"] = popt[3] - (popt[3] - popt[0]) / 2
+                my_runs[run][ch]["AnaMaxCharge2PE"] = popt[6] + (popt[9] - popt[6]) / 2
+                my_runs[run][ch]["AnaMinCharge2PE"] = popt[6] - (popt[3] - popt[0]) / 2
             except IndexError:
                 rprint(
                     "[yellow]Fit failed to find min of 3 calibration peaks![/yellow]"
@@ -252,7 +255,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
                 my_runs[run][ch]["AnaMaxChargeSPE"] = -99
                 my_runs[run][ch]["AnaMinChargeSPE"] = -99
 
-        calibration[(run, ch, key)]["XTALK"] = {"popt": xt_popt, "pcov": xt_pcov}
+        calibration[(run, ch, key)]["XTALK"] = {"popt": xt_popt, "pcov": xt_pcov}  
         calibration[(run, ch, key)]["CALIB"] = {"popt": popt, "pcov": pcov}
 
     return calibration
@@ -296,9 +299,10 @@ def calibration_fit_plot(ax_cal, counts, bins, OPT, debug=False):
     y = y_intrp(x)
 
     peak_idx, valley_idx = peak_valley_finder(x, y, new_params)
+    
+    ax_cal.plot(x[peak_idx], y[peak_idx], "r.", ms=9, label="Peaks", zorder=4)
+    ax_cal.plot(x[valley_idx], y[valley_idx], "b.", ms=9, label="Valleys", zorder=5)
     ax_cal.axhline(np.max(y) * new_params["THRESHOLD"], ls="--")
-    ax_cal.plot(x[peak_idx], y[peak_idx], "r.", lw=4, label="Peaks")
-    ax_cal.plot(x[valley_idx], y[valley_idx], "b.", lw=6, label="Valleys")
 
     popt, pcov = gaussian_train_fit(
         ax_cal,
@@ -310,7 +314,7 @@ def calibration_fit_plot(ax_cal, counts, bins, OPT, debug=False):
         params=new_params,
         debug=debug,
     )
-    ax_cal.plot(x, gaussian_train(x, *popt), label="Final fit", color="red")
+    ax_cal.plot(x, gaussian_train(x, *popt), label="Final fit", color="red", lw=1, zorder=2)
 
     if check_key(OPT, "LEGEND") == True and OPT["LEGEND"] == True:
         ax_cal.legend()
@@ -346,18 +350,35 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
     """
     
     run, ch, key = labels
+    
+    # Check if there is more than 1 gaussian fitted to compute PE densities
+    if len(popt) == 3:
+        rprint("[yellow]Only one Gaussian found. Setting all PE densities to 0.[/yellow]")
+        xt_popt = np.asarray([0, 0, 0])
+        xt_pcov = np.asarray([0, 0, 0])
+        ax_xt.bar(
+            [0],
+            [0],
+            label="No PE density (1 peak)",
+            width=0.4,
+            color=get_prism_colors()[int(ch)],
+        )
+        if check_key(OPT, "LEGEND") and OPT["LEGEND"]:
+            ax_xt.legend()
+        return xt_popt.tolist(), xt_pcov.tolist()
+    
     PNs = popt[1::3] * np.abs(popt[2::3]) / sum(popt[1::3] * np.abs(popt[2::3]))
     PNs_err = (popt[1::3] * np.abs(popt[2::3])) ** 0.5 / sum(
         popt[1::3] * np.abs(popt[2::3])
     )
-
+    
     if len(PNs) > 5:
         rprint(
             f"[yellow]More than 5 peaks found. Using the first {len(PNs)} peaks for the fit.[/yellow]"
         )
         PNs = PNs[:-1]
         PNs = PNs / np.sum(PNs)
-        PNs_err = PNs_err[:-1]
+        PNs_err = PNs_err[:-1]  
 
     l = -np.log(PNs[0])
     p = 1 - PNs[1] / (l * PNs[0])
@@ -368,7 +389,7 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
         PNs,
         label="Data",
         width=0.4,
-        color=get_color(ch, even=True, debug=debug),
+        color=get_prism_colors()[int(ch)],
     )
     # Add vertical line to mean value
     mean = np.sum(np.array(xdata) * PNs) / np.sum(np.array(xdata))

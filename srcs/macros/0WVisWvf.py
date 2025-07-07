@@ -9,7 +9,7 @@ default_dict = {
 
 user_input, info = initialize_macro(
     "0WVisWvf",
-    ["input_file", "preset_load", "variables", "runs", "channels", "save", "debug"],
+    ["input_file", "preset_load", "variables", "runs", "channels", "filter", "save", "debug"],
     default_dict=default_dict,
     debug=True,
 )

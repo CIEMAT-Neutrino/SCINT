@@ -23,6 +23,7 @@ from scipy.ndimage import gaussian_filter1d
 # Imports from other libraries
 from .io_functions import check_key, read_yaml_file, save_figure
 from .ana_functions import get_run_units, find_amp_decrease
+from .sty_functions import get_prism_colors
 
 np.seterr(divide="ignore")
 root = get_project_root()
@@ -402,14 +403,14 @@ def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=F
             initial.append(popt[0])  # CENTER
             initial.append(popt[1])  # HEIGHT
             initial.append(np.abs(popt[2]))  # WIDTH
-            fig.plot(
-                x_gauss,
-                gaussian(x_gauss, *popt),
-                ls="--",
-                c="black",
-                alpha=0.5,
-                label=labels[i],
-            )
+            # fig.plot(
+            #     x_gauss,
+            #     gaussian(x_gauss, *popt),
+            #     ls="--",
+            #     c="black",
+            #     alpha=0.5,
+            #     label=labels[i],
+            # )
         except:
             continue
 
@@ -1253,24 +1254,34 @@ def tau_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Optional[dict]=
     ) == False:
         # rprint("SHOW key not included in OPT")
         # CHECK FIRST FIT
+        tau_slow_fit = tau_slow_profile(raw_x[: buffer2 - buffer1], *popt)
+        
         fig = plt.figure()
         plt.subplot(1, 1, 1)
-        plt.title("First fit to determine peak")
-        plt.plot(raw_x, raw, label="raw", c="black")
+        plt.title("%s - Tau fit - run %s" %(key, run))
+        
+        if check_key(OPT, "MICRO_SEC") == True and OPT["MICRO_SEC"] == True:
+            plt.xlabel(r"Time [$\mu$s]")
+            raw_x = raw_x* 1e6
+        
+        else:
+            plt.xlabel("Time in [s]")
+        
+        plt.ylabel("ADC Counts")
+        plt.plot(raw_x, raw, label="Raw - ch%s" %(ch), c=get_prism_colors()[int(ch)])
         plt.plot(
             raw_x,
             np.concatenate(
                 [
                     zeros_aux,
-                    tau_slow_profile(raw_x[: buffer2 - buffer1], *popt),
+                    tau_slow_fit,
                     zeros_aux2,
                 ]
             ),
             label="TauFit",
+            c="red"
         )
         # plt.axvline(raw_x[-buffer2], ls = "--", c = "k")
-        plt.xlabel("Time in [s]")
-        plt.ylabel("ADC Counts")
         if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
             plt.semilogy()
         plt.legend()
