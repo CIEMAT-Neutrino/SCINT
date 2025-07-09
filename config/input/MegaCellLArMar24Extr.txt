@@ -25,6 +25,7 @@ CHAN_LABEL: SiPM7
 CHAN_TOTAL: 0
 CHAN_POLAR: -1
 CHAN_AMPLI: 250
+CHAN_PED_LIM: NON
 ########################
 ####   BRANCH INFO  ####
 ########################
