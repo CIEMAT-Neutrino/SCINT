@@ -34,11 +34,11 @@ def cut_selector(my_runs, user_input, debug=False):
             )
         cut_df(my_runs, cut_dict=cut_dict, debug=user_input["debug"])
 
-    if user_input["filter"]["cut_lin_rel"][0]:
+    elif user_input["filter"]["cut_lin_rel"][0]:
         label = "cut_lin_rel_"
         cut_lin_rel(my_runs, user_input["filter"]["cut_lin_rel"][1])
 
-    if user_input["filter"]["cut_peak_finder"][0]:
+    elif user_input["filter"]["cut_peak_finder"][0]:
         label = "cut_peak_finder_"
         cut_peak_finder(
             my_runs,
@@ -46,12 +46,14 @@ def cut_selector(my_runs, user_input, debug=False):
             user_input["filter"]["cut_peak_finder"][2],
             debug=user_input["debug"],
         )
+        
+    else:
+        generate_cut_array(my_runs, debug=debug)
 
-    generate_cut_array(my_runs, debug=debug)
     return label, my_runs
 
 
-def generate_cut_array(my_runs, ref="", debug=False):
+def generate_cut_array(my_runs, ref="TimeStamp", debug=False):
     """This function generates an array of bool = True. If cuts are applied and then you run this function, it resets the cuts.
     
     :param my_runs: dictionary containing the data
@@ -65,10 +67,11 @@ def generate_cut_array(my_runs, ref="", debug=False):
     :rtype: dict
     """
 
-    for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
+    for run, ch in product(np.unique(my_runs["NRun"]), np.unique(my_runs["NChannel"])):
         try:
             if debug:
-                rprint("Check cut array ref: ", my_runs[run][ch][ref])
+                rprint(f"Prepare cut for run {run}, channel {ch}")
+                rprint(f"Check cut array ref: ", my_runs[run][ch][ref])
             my_runs[run][ch]["MyCuts"] = np.ones(len(my_runs[run][ch][ref]), dtype=bool)
 
         except KeyError:

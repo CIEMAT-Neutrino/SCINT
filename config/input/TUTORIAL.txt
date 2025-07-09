@@ -12,12 +12,12 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-RAW_PATH: data/BASIC/raw
-NPY_PATH: data/BASIC/${USER}/npy
-OUT_PATH: data/BASIC/${USER}
+RAW_PATH: data/TUTORIAL/BASIC/raw
+NPY_PATH: data/TUTORIAL/BASIC/${USER}/npy
+OUT_PATH: data/TUTORIAL/BASIC/${USER}
 
 OV_LABEL: OV1,0V2,0V3
-CALIB_RUNS: 01
+CALIB_RUNS: 01,02,03
 LIGHT_RUNS: 09
 NOISE_RUNS: 17,128
 ALPHA_RUNS: 25
@@ -50,3 +50,10 @@ PED_KEY: PreTriggerMean
 #0CUT_LOGIC: bigger
 #0CUT_VALUE: 0
 #0CUT_INCLUSIVE: False
+########################
+####   CALIB INFO   ####
+########################
+SIPM_PULSE: 575
+WINDOW_SIPM_PULSE: 4
+CELL_PULSE: 620
+WINDOW_CELL_PULSE: 12

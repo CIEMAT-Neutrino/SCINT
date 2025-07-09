@@ -5,7 +5,8 @@ from lib import *
 
 default_dict = {
     "input_file": ["TUTORIAL"],
-    "channels": ["CHAN_TOTAL"]
+    "channels": ["CHAN_TOTAL"],
+    "runs": ["CALIB_RUNS"]
 }
 user_input, info = initialize_macro(
     "11Average",

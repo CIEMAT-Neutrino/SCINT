@@ -49,38 +49,38 @@ def figure_features(tex=tex_installed, font="serif", dpi=600):
 
     plt.rcParams.update(
         {
-            "font.size": 16,
-            "font.family": font,
-            "font.weight": "bold",
-            "text.usetex": tex,
-            "figure.subplot.top": 0.92,
-            "figure.subplot.right": 0.95,
-            "figure.subplot.left": 0.10,
-            "figure.subplot.bottom": 0.12,
-            "figure.subplot.hspace": 0.2,
-            "figure.subplot.wspace": 0.2,
-            "savefig.dpi": dpi,
-            "savefig.format": "png",
-            "axes.titlesize": 16,
-            "axes.labelsize": 16,
-            "axes.axisbelow": True,
-            "xtick.direction": "in",
-            "ytick.direction": "in",
-            "xtick.major.size": 5,
-            "xtick.minor.size": 2.25,
-            "xtick.major.pad": 7.5,
-            "xtick.minor.pad": 7.5,
-            "ytick.major.pad": 7.5,
-            "ytick.minor.pad": 7.5,
-            "ytick.major.size": 5,
-            "ytick.minor.size": 2.25,
-            "xtick.labelsize": 15,
-            "ytick.labelsize": 15,
-            "legend.fontsize": 12,
-            "legend.framealpha": 1,
-            "figure.titlesize": 18,
-            "lines.linewidth": 2,
-            "figure.constrained_layout.use": True,
+            "font.size": 16,                    # Taille de police générale
+            "font.family": font,                # Famille de police (passée par variable 'font')
+            "font.weight": "bold",              # Épaisseur de police (gras ici)
+            "text.usetex": tex,                 # Utiliser LaTeX pour le rendu du texte (booléen passé par 'tex')
+            "figure.subplot.top": 0.92,         # Marge supérieure de la figure (0 = bord bas, 1 = bord haut)
+            "figure.subplot.right": 0.95,       # Marge droite de la figure
+            "figure.subplot.left": 0.10,        # Marge gauche de la figure
+            "figure.subplot.bottom": 0.12,      # Marge inférieure de la figure
+            "figure.subplot.hspace": 0.2,       # Espacement vertical entre les subplots
+            "figure.subplot.wspace": 0.2,       # Espacement horizontal entre les subplots
+            "savefig.dpi": dpi,                 # Résolution (dpi) lors de la sauvegarde de la figure (variable 'dpi')
+            "savefig.format": "png",            # Format de sauvegarde des figures (ici PNG)
+            "axes.titlesize": 16,               # Taille de police pour le titre des axes
+            "axes.labelsize": 16,               # Taille de police pour les labels des axes
+            "axes.axisbelow": True,             # Placer la grille sous les éléments du graphique
+            "xtick.direction": "in",            # Orientation des ticks en X (vers l'intérieur)
+            "ytick.direction": "in",            # Orientation des ticks en Y (vers l'intérieur)
+            "xtick.major.size": 5,              # Taille des ticks majeurs en X
+            "xtick.minor.size": 2.25,           # Taille des ticks mineurs en X
+            "xtick.major.pad": 7.5,             # Espace entre les ticks majeurs X et les labels
+            "xtick.minor.pad": 7.5,             # Espace entre les ticks mineurs X et les labels
+            "ytick.major.pad": 7.5,             # Espace entre les ticks majeurs Y et les labels
+            "ytick.minor.pad": 7.5,             # Espace entre les ticks mineurs Y et les labels
+            "ytick.major.size": 5,              # Taille des ticks majeurs en Y
+            "ytick.minor.size": 2.25,           # Taille des ticks mineurs en Y
+            "xtick.labelsize": 15,              # Taille de police pour les labels des ticks en X
+            "ytick.labelsize": 15,              # Taille de police pour les labels des ticks en Y
+            "legend.fontsize": 12,              # Taille de police pour la légende
+            "legend.framealpha": 1,             # Transparence du cadre de la légende (1 = opaque)
+            "figure.titlesize": 18,             # Taille de police pour le titre global de la figure
+            "lines.linewidth": 2,               # Épaisseur des lignes tracées
+            "figure.constrained_layout.use": True,  # Activation du layout contraint (optimise la disposition auto)
         }
     )
 
