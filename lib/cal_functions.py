@@ -23,10 +23,10 @@ from scipy.optimize import curve_fit
 from .io_functions import check_key, write_output_file, save_figure
 from .head_functions import update_yaml_file
 from .ana_functions import (
-    get_run_units,
     get_wvf_label,
     compute_ana_wvfs,
 )
+from .unit_functions import get_run_units
 from .cut_functions import generate_cut_array
 from .fig_config import figure_features, add_grid
 from .fit_functions import (
@@ -304,6 +304,10 @@ def calibration_fit_plot(ax_cal, counts, bins, OPT, debug=False):
     ax_cal.plot(x[valley_idx], y[valley_idx], "b.", ms=9, label="Valleys", zorder=5)
     ax_cal.axhline(np.max(y) * new_params["THRESHOLD"], ls="--")
 
+    if len(peak_idx) > 5:
+        peak_idx = peak_idx[:6]
+        valley_idx = valley_idx[:6]
+    
     popt, pcov = gaussian_train_fit(
         ax_cal,
         x=x,
@@ -374,11 +378,11 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
     
     if len(PNs) > 5:
         rprint(
-            f"[yellow]More than 5 peaks found. Using the first {len(PNs)} peaks for the fit.[/yellow]"
+            f"[yellow]More than 5 peaks found. Using the first 5 peaks for the fit.[/yellow]"
         )
-        PNs = PNs[:-1]
+        PNs = PNs[:5]
         PNs = PNs / np.sum(PNs)
-        PNs_err = PNs_err[:-1]  
+        PNs_err = PNs_err[:5]  
 
     l = -np.log(PNs[0])
     p = 1 - PNs[1] / (l * PNs[0])
