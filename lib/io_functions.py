@@ -1031,7 +1031,7 @@ def load_npy(
             del branch_list
 
     my_runs["NEvents"] = nevents
-    rprint(f"[bold green]--> Loaded Data Succesfully!!![/bold green]")
+    rprint(f"[bold green]--> Loaded Data Successfully!!![/bold green]")
     
     return my_runs
 
@@ -1134,7 +1134,7 @@ def save_proccesed_variables(
                                 "\t[magenta]" + path + out_folder + key + ".npy[/magenta]"
                             )
 
-    rprint("[green]--> Saved Data Succesfully!!![/green]")
+    rprint("[green]--> Saved Data Successfully!!![/green]")
     del my_runs
 
 

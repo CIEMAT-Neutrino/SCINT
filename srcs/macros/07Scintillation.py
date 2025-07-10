@@ -16,7 +16,7 @@ user_input, info = initialize_macro(
     debug=True,
 )
 
-OPT = opt_selector(arguments=["NORM", "COMPARE", "XLIM", "YLIM", "LOGX", "LOGY"], debug=user_input["debug"])
+OPT = opt_selector(arguments=["NORM", "COMPARE", "XLIM", "YLIM", "LOGX", "LOGY", "SHOW"], debug=user_input["debug"])
 ## 07Scintillation
 my_runs = load_npy(
     np.asarray(user_input["runs"]).astype(str),
@@ -27,15 +27,25 @@ my_runs = load_npy(
     debug=user_input["debug"],
 )
 
+# parameters = {
+# "type": "SiPM",
+# "sigma":    1e-8,
+# "a_fast":   1e-8,
+# "a_slow":   1e-7,
+# "tau_slow": 1e-6,
+# "threshold":1e-6,
+# "i_range":  2.5e-6,
+# "f_range":  5.5e-6,
+# }
+
+
 parameters = {
-"type": "SiPM",
-"sigma":    1e-8,
-"a_fast":   1e-8,
+"type": "TauSlow",
+"threshold":1e-6,
 "a_slow":   1e-7,
 "tau_slow": 1e-6,
-"threshold":1e-6,
-"i_range":  2.5e-6,
-"f_range":  5.5e-6,
+"i_range":  5.0e-6,
+"f_range":  7.0e-6,
 }
 
 ranges = (np.asarray([parameters["i_range"], parameters["f_range"]])/info["SAMPLING"][0]).astype(int)

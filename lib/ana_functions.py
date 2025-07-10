@@ -156,27 +156,35 @@ def compute_peak_variables(
     """
 
     calib_runs = info["CALIB_RUNS"]
-
+    alpha_runs = info["ALPHA_RUNS"]
     for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         aux_ADC = my_runs[run][ch][key]
 
         # Define the time window [ticks] where to look for the peak
         run_str = f"{int(run):02d}"
-        if run_str in calib_runs :
+        if run_str in calib_runs or run_str in alpha_runs:
             ch_idx = info["CHAN_TOTAL"].index(str(ch))
             ch_label = info["CHAN_LABEL"][ch_idx]
-            if ch_label.startswith("SiPM"):
+            if ch_label.startswith("SiPM") and "WINDOW_SIPM_PULSE" in info:
+                rprint(f"[cyan]INFO:[/cyan] Run {run} Ch {ch} is a SiPM channel. Using the SiPM pulse window.")
                 center_tick = info["SIPM_PULSE"][0]
                 half_width = info["WINDOW_SIPM_PULSE"][0]
-            else:
+            
+            elif ch_label.startswith("XA") and "WINDOW_CELL_PULSE" in info:
+                rprint(f"[cyan]INFO:[/cyan] Run {run} Ch {ch} is a XA channel. Using the XA pulse window.")
                 center_tick = info["CELL_PULSE"][0]
                 half_width = info["WINDOW_CELL_PULSE"][0]
-
-            peak_window = slice(center_tick - half_width, center_tick + half_width + 1)
-        else :
-            peak_window = slice(0, aux_ADC.shape[1])
             
-        # peak_window = slice(0, aux_ADC.shape[1])
+            else:
+                rprint(f"[yellow]WARNING:[/yellow] Run {run} Ch {ch} is not a SiPM or XA channel. Using the whole waveform as peak window.")
+                half_width = int(len(aux_ADC[0]) / 2)
+                center_tick = int(len(aux_ADC[0]) / 2)
+            
+            peak_window = slice(center_tick - half_width, center_tick + half_width + 1)
+        
+        else:
+            rprint(f"[cyan]INFO:[/cyan] Run {run} Ch {ch} is not a calibration or alpha run. Using the whole waveform as peak window.")
+            peak_window = slice(0, aux_ADC.shape[1])  # Default peak window is the whole wvf
         
         if key == "RawADC" and label == "Raw":
             my_runs[run][ch][label + "PeakAmp"] = my_runs[run][ch]["PChannel"] * np.max(
