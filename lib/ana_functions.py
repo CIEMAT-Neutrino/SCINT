@@ -175,7 +175,7 @@ def compute_peak_variables(
             peak_window = slice(center_tick - half_width, center_tick + half_width + 1)
 
         else :
-            peak_window = my_runs[run][ch]["Sampling"]
+            peak_window = slice(0, aux_ADC.shape[1])  # Default peak window is the whole wvf
         
         if key == "RawADC" and label == "Raw":
             my_runs[run][ch][label + "PeakAmp"] = my_runs[run][ch]["PChannel"] * np.max(
