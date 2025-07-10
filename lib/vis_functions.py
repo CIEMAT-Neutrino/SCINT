@@ -90,8 +90,18 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
             axs = ax
 
         idx = 0
-        # if check_key(my_run[run][ch_list[0]], "MyCuts") == False:
-        #     generate_cut_array(my_run, debug=debug)
+        if check_key(my_run[run][ch_list[0]], "MyCuts") == False:
+            # generate_cut_array(my_run, debug=debug)
+            if "RawADC" not in my_run[run][ch_list[0]]:
+                rprint("[red]RawADC not found![/red]")
+                ref_variable = "AnaADC"
+            elif "AnaADC" not in my_run[run][ch_list[0]]:
+                rprint("[red]RawADC is empty![/red]")
+                ref_variable = "RawADC"
+            my_run[run][ch_list[0]]["MyCuts"] = np.zeros(
+                len(my_run[run][ch_list[0]][ref_variable]), dtype=bool
+            )
+        
         while idx < len(my_run[run][ch_list[0]]["MyCuts"]):
             try:
                 skip = 0
@@ -855,7 +865,8 @@ def plot_compare_wvf(
         with open(range_file, 'r', encoding='latin1') as stream:
             charge_dict = yaml.safe_load(stream)
         
-        int_range = charge_dict["ChargeRange"]["MeanAnaChargeRange2"]
+        rprint(f"[green]Plotting integration time window for run {run} ch {ch} loaded from {range_file}[/green]")
+        int_range = charge_dict["ChargeAveRange"]["AnaChargeAveRange"]
         int_start_range = sampling*int_range[0]
         int_end_range = sampling*int_range[1]
         
@@ -1008,7 +1019,12 @@ def vis_var_hist(
                 label = ""
 
             if check_key(my_run[run][ch], "MyCuts") == False:
-                generate_cut_array(my_run, debug=True)
+                # Check if RawADC is present
+                if check_key(my_run[run][ch], "RawADC") == True:
+                    my_run[run][ch]["MyCuts"] = np.ones(
+                        len(my_run[run][ch]["RawADC"]), dtype=bool
+                    )
+            
             if check_key(my_run[run][ch], "UnitsDict") == False:
                 get_run_units(my_run)
 
@@ -1199,7 +1215,9 @@ def print_stats_terminal(my_run, labels, data):
 
     rate = 1 / np.mean(np.diff(times))
     rprint("[cyan]\nStatistics of the histogram:[/cyan]")
-    rprint("[cyan]- Counts: %i[/cyan]" % len(data))
+    # Check if data is iterable
+    if isinstance(data, (list, np.ndarray)):
+        rprint("[cyan]- Counts: %i[/cyan]" % len(data))
     rprint("[cyan]- Rate: %.2E[/cyan]" % rate)
     rprint("[cyan]- Max: %.2E[/cyan]" % np.max(data))
     rprint("[cyan]- Mean: {:.2E}[/cyan]".format(np.mean(data)))
