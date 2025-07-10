@@ -1127,7 +1127,7 @@ def vis_var_hist(
                     label=label,
                     alpha=0.95,
                     linewidth=1.2,
-                    c=colors[int(b)],
+                    c=colors[int(b)%len(colors)],
                 )
 
                 label = label.replace(" - " + k, "")
