@@ -22,7 +22,8 @@ from scipy.ndimage import gaussian_filter1d
 
 # Imports from other libraries
 from .io_functions import check_key, read_yaml_file, save_figure
-from .ana_functions import get_run_units, find_amp_decrease
+from .ana_functions import find_amp_decrease
+from .unit_functions import get_run_units
 from .sty_functions import get_prism_colors
 
 np.seterr(divide="ignore")
@@ -324,7 +325,7 @@ def gaussian_fit(counts, bins, bars, thresh, fit_function="gaussian", custom_fit
 
 
 def peak_valley_finder(x, y, params):
-    """This function finds the peaks and valleys of the histogram.
+    """This function finds the alternating peaks and valleys of the histogram.
     """
     
     dist = params["PEAK_DISTANCE"]
@@ -333,22 +334,53 @@ def peak_valley_finder(x, y, params):
     prom = params["PROMINENCE"]
     acc = params["ACCURACY"]
     max_y = np.max(y)
-    y = y / max_y
+    y_norm = y / max_y
 
-    peak_idx, _ = find_peaks(
-        y, height=thresh, width=wdth, prominence=prom, distance=dist
-    )
-    valley_idx, _ = find_peaks(
-        1 - y, height=0, width=wdth, prominence=prom, distance=dist
-    )
-    rprint("Peaks found at: ", peak_idx)
-    rprint("Valleys found at: ", valley_idx)
+    # Initial peak and valley detection
+    peak_idx, _ = find_peaks(y_norm, height=thresh, width=wdth, prominence=prom, distance=dist)
+    valley_idx, _ = find_peaks(1 - y_norm, height=0, width=wdth, prominence=prom, distance=dist)
+
+    # Combine and sort
+    points = [(p, 'peak') for p in peak_idx] + [(v, 'valley') for v in valley_idx]
+    points.sort()
+
+    filtered_points = []
+    i = 0
+    while i < len(points):
+        group = [points[i]]
+        j = i + 1
+
+        # Group consecutive points of same type (peak or valley)
+        while j < len(points) and points[j][1] == points[i][1]:
+            group.append(points[j])
+            j += 1
+
+        if len(group) == 1:
+            filtered_points.append(group[0])
+        else:
+            # Looking for previous and next points of opposite types
+            prev_boundary = points[i - 1][0] if i > 0 else group[0][0] - dist
+            next_boundary = points[j][0] if j < len(points) else group[-1][0] + dist
+
+            # Keep the most centered point between the grouped points
+            center = (prev_boundary + next_boundary) / 2
+            best_point = min(group, key=lambda pt: abs(pt[0] - center))
+            filtered_points.append(best_point)
+
+        i = j
+
+    # Separate indices by type
+    final_peaks = np.array([i for i, t in filtered_points if t == 'peak'])
+    final_valleys = np.array([i for i, t in filtered_points if t == 'valley'])
+
+    rprint("Peaks found at: ", final_peaks)
+    rprint("Valleys found at: ", final_valleys)
 
     rprint(
         "[cyan]PeakFinder using parameters: dist = %i, thresh = %.2f, wdth = %i, prom = %.2f, acc = %i[/cyan]"
         % (dist, thresh, wdth, prom, acc)
     )
-    return peak_idx, valley_idx[: len(peak_idx)]
+    return final_peaks, final_valleys
 
 
 def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=False):
