@@ -374,7 +374,7 @@ def compute_pedestal_limit(my_runs, info, keys, label, ped_lim:Optional[int]=Non
 
 
 def compute_pedestal_variables(
-    my_runs, info, key, label, ped_lim:Optional[int]=None, buffer:int=50, sliding:int=600, debug:bool=False
+    my_runs, info, key, label, ped_lim:Optional[int]=None, buffer:int=50, sliding:int=900, debug:bool=False
 ):
     """Computes the pedestal variables of a collection of a run's collection in several windows.
     
@@ -409,6 +409,7 @@ def compute_pedestal_variables(
         ADC, start_window = compute_pedestal_sliding_windows(
             ADC_aux, ped_lim=my_runs[run][ch][label + "PedLim"], sliding=sliding
         )
+        sliding = my_runs[run][ch][label + "PedLim"]      
         my_runs[run][ch][label + "PedSTD"] = np.std(ADC[:, :sliding], axis=1)
         my_runs[run][ch][label + "PedMean"] = np.mean(ADC[:, :sliding], axis=1)
         my_runs[run][ch][label + "PedMax"] = np.max(ADC[:, :sliding], axis=1)
@@ -447,7 +448,7 @@ def compute_wvf_variables(my_runs, info, key, label, debug=False):
     rprint("[green]--> Computed Wvf Variables!!![/green]")
 
 
-def compute_pedestal_sliding_windows(ADC, ped_lim:Optional[int]=None, sliding=600, debug=False):
+def compute_pedestal_sliding_windows(ADC, ped_lim:Optional[int]=None, sliding=900, debug=False):
     """Taking the best between different windows in pretrigger. Same variables than "compute_pedestal_variables_sliding_window". It checks for the best window.
     
     :param ADC: array containing the ADCs.
@@ -866,6 +867,8 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
                                 f_idx * my_runs[run][ch]["Sampling"],
                             )
                         )
+                if my_runs[run][ch]["PedestalLimit"] != "NON":
+                    i_idx = my_runs[run][ch]["PedestalLimit"]
                 charge_name = label + typ + ref.split("Wvf")[-1] + cut_label
                 my_runs[run][ch][charge_name] = np.sum(
                     aux_ADC[:, i_idx:f_idx], axis=1

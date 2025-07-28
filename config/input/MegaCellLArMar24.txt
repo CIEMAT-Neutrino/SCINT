@@ -12,12 +12,13 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
+PATH: /data/SCINT/MEGACELL/
 RAW_PATH: data/MEGACELL/Mar24/raw
 NPY_PATH: data/MEGACELL/Mar24/${USER}/npy
 OUT_PATH: data/MEGACELL/Mar24/${USER}
 
 OV_LABEL: OV1,0V2,0V3
-CALIB_RUNS: 
+CALIB_RUNS: 19,20,25,26,30,31
 LIGHT_RUNS: 
 NOISE_RUNS: 
 ALPHA_RUNS: 
@@ -39,9 +40,17 @@ SAVE_PRESET: NON,ALL,ANA,CAL,SPE,NON,DEC
 ########################
 TYPE: ChargeAveRange,ChargePedRange
 REF: AveWvf
-I_RANGE: 0.1,0.1,0.1,0.1,0.1
-F_RANGE: 0.4,0.9,1.9,2.9,3.9
+I_RANGE: 0.3,0.1
+F_RANGE: 3.1,0.7
 PED_KEY: PreTriggerMean
 ########################
 ####   CUTS INFO    ####
 ########################
+
+########################
+####   CALIB INFO   ####
+########################
+SIPM_PULSE: 1092
+WINDOW_SIPM_PULSE: 10
+CELL_PULSE: 1110
+WINDOW_CELL_PULSE: 25

@@ -10,7 +10,7 @@ from iminuit import Minuit, cost
 
 from srcs.utils import get_project_root
 from .io_functions import write_output_file, read_yaml_file, save_figure
-from .sty_functions import add_grid, get_color, style_selector
+from .sty_functions import add_grid, get_color, style_selector, get_prism_colors
 from .sim_functions import setup_fitting_function, fitting_function
 from .unit_functions import get_unit
 
@@ -149,6 +149,11 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
     variable_units = get_unit(variable)
     fit_function = OPT["FIT"]
     style_selector(OPT)
+    
+    if "+" in ch :
+        ch_color = int(ch[-1])
+    else:
+        ch_color = int(ch)
 
     plt.ion()
     fig, ax = plt.subplots(1, 1, figsize=(8, 6))
@@ -172,6 +177,8 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
         for m, value in enumerate(m_fit.values)
     ]
     legend.append(r"$\chi^2$ = %.2f" % (m_fit.fval))
+    
+    colors = get_prism_colors() + get_prism_colors()
 
     plt.hist(
         xdata,
@@ -180,7 +187,7 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
         label="run {} ch {}".format(run, ch),
         histtype="step",
         align="left",
-        color=get_color(ch, even=True),
+        color=colors[int(ch_color)],
     )
     plt.hist(
         xdata,
@@ -197,7 +204,7 @@ def plot_minuit_fit(m_fit, xdata, ydata, labels, user_input, info, OPT):
         (y_fit - yerr),
         (y_fit + yerr),
         alpha=0.2,
-        color=get_color(ch, even=False),
+        color=colors[int(ch_color)],
     )
     if OPT["SHOW_LEGEND"]:
         if OPT["SHOW_FIT_PARAMETERS"]:

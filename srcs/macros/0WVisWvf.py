@@ -13,7 +13,8 @@ user_input, info = initialize_macro(
     default_dict=default_dict,
     debug=True,
 )
-OPT = opt_selector(arguments=["ALIGN", "COMPARE", "NORM", "LIMITS", "XLIM", "YLIM", "LOGY"], debug=user_input["debug"])
+OPT = opt_selector(arguments=["ALIGN", "CHARGE_KEY", "COMPARE", "NORM", "LIMITS", "XLIM", "YLIM", "LOGY"], debug=user_input["debug"])
+
 ### 0WVisWvf
 my_runs = load_npy(
     np.asarray(user_input["runs"]).astype(str),
