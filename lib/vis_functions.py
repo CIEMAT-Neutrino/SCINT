@@ -845,7 +845,7 @@ def plot_compare_wvf(
     
     ave_smooth = savgol_filter(ave, window_length=11, polyorder=3)
     
-    colors = get_prism_colors() + get_prism_colors()
+    colors = get_prism_colors()
     
     axs.plot(
         sampling * np.arange(len(ave)),
@@ -853,7 +853,7 @@ def plot_compare_wvf(
         alpha=0.95,
         linewidth=1.2,
         label=label.replace("#", " "),
-        c=colors[int(ch)],
+        c=colors[int(ch)*int(run)%len(colors)],
     )
     
     # Adding the integration time window on the plot 
@@ -870,8 +870,8 @@ def plot_compare_wvf(
         int_start_range = sampling*int_range[0]
         int_end_range = sampling*int_range[1]
         
-        axs.axvline(x=int_start_range, color=colors[int(ch)], linestyle='--', lw=1, label=f'Int window ch{ch} = [{int_start_range:.2f} - {int_end_range:.2f}] $\mu$s')
-        axs.axvline(x=int_end_range, color=colors[int(ch)], linestyle='--', lw=1)
+        axs.axvline(x=int_start_range, color=colors[int(ch)*int(run)%len(colors)], linestyle='--', lw=1, label=f'Int window ch{ch} = [{int_start_range:.2f} - {int_end_range:.2f}] $\mu$s')
+        axs.axvline(x=int_end_range, color=colors[int(ch)*int(run)%len(colors)], linestyle='--', lw=1)
 
     # Adding the PeakAmp time window on the plot 
     run_str = f"{int(run):02d}"
