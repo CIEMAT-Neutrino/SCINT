@@ -112,11 +112,8 @@ def vis_persistence(my_run, info, OPT, save=False, debug=False):
             plt.yscale("log")
         
         if save:
-            save_figure(fig, f"{info['OUT_PATH'][0]}/images", run, ch, "Persistence", debug=debug)
-            # plt.savefig(
-            #     f"{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_Persistence.png",
-            #     dpi=500,
-            # )
+            save_figure(fig, f"{root}/{info['OUT_PATH'][0]}/images", run, ch, "Persistence", debug=debug)
+
         
         del data_flatten, time, time_flatten
         while not plt.waitforbuttonpress(-1):

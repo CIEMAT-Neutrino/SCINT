@@ -6,7 +6,7 @@ CUT_THRESHOLD: true
 CUTTED_WVF: -1
 DENSITY: false
 FILTER: true
-FILTER_SIGMA: 1
+FILTER_SIGMA: 2
 FIT: gaussian
 LEGEND: true
 LIMITS: false

@@ -1138,7 +1138,7 @@ def save_proccesed_variables(
     del my_runs
 
 
-def save_figure(fig, path, run, ch, label, debug: bool=False):
+def save_figure(fig, path, run, ch, label, debug: bool=True):
     """Saves the figure in the desired path with the desired name.
     
     :param fig: figure to be saved
@@ -1165,7 +1165,7 @@ def save_figure(fig, path, run, ch, label, debug: bool=False):
     # Check that fig is a matplotlib figure
     if isinstance(fig, matplotlib.figure.Figure):
         fig.savefig(f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
-        return
+    
     else:
         rprint(f"[red][ERROR] Input figure type {type(fig)} not implemented[/red]")
     # Give permissions to the file
@@ -1175,7 +1175,7 @@ def save_figure(fig, path, run, ch, label, debug: bool=False):
     )
     
     if debug:
-        rprint(f"Figure saved in: {path}")
+        rprint(f"Figure saved in: {path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
 
 
 def npy2root(my_runs, debug: bool=False):

@@ -588,8 +588,6 @@ def peak_fit(
     initial = [t0, sigma, a1, tau1]
     labels = ["TIME", "SIGM", "AMP1", "TAU1"]
 
-    # FIT PEAK
-    # try:
     popt, pcov = curve_fit(
         func,
         raw_x[raw_max - buffer : raw_max + int(buffer / 2)],
@@ -597,10 +595,6 @@ def peak_fit(
         p0=initial,
     )
     perr = np.sqrt(np.diag(pcov))
-    # except:
-    # rprint("Peak fit could not be performed")
-    # popt = initial
-    # perr = np.zeros(len(initial))
 
     # PRINT FIRST FIT VALUE
     if check_key(OPT, "TERMINAL_OUTPUT") == True and OPT["TERMINAL_OUTPUT"] == True:
@@ -609,20 +603,16 @@ def peak_fit(
             rprint("%s:\t%.2E\t%.2E" % (labels[i], popt[i], perr[i]))
         rprint("-------------------------------")
 
-    # EXPORT FIT PARAMETERS
-    # a1 = popt[2];sigma = popt[1];tau1 = popt[3];t0 = popt[0]
-
     return popt, perr
 
 
-def sipm_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
+def sipm_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, OPT:Optional[dict]=None, save:bool=True, debug:bool=False):
     """
     \nDOC
     """
 
     run, ch, key = labels
     max_x = np.argmax(raw)
-    # thld = 1e-4
     buffer1 = fit_range[0]
     buffer2 = fit_range[1]
 
@@ -685,7 +675,7 @@ def sipm_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, OPT:Optional[dict]=
     return aux, raw, param, perr2, labels2
 
 
-def scint_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
+def scint_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=True, debug:bool=False):
     """
     \nDOC
     """
@@ -732,8 +722,6 @@ def scint_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Op
     tau2_high = tau_slow * 1e2
 
     initial2 = (a1, sigma2, a2, tau2)
-    # bounds2  = ([a1_low, sigma2_low, a2_low, tau2_low], [a1_high, sigma2_high, a2_high, tau2_high])
-    # labels2  = ["AMP1", "SIG2", "AMP2", "TAU2"]
 
     try:
         popt2, pcov2 = curve_fit(
@@ -768,7 +756,7 @@ def scint_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Op
     return aux, raw, param, perr, labels
 
 
-def purity_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
+def purity_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=True, debug:bool=False):
     """
     \nDOC
     """
@@ -820,7 +808,7 @@ def purity_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:O
     return purity(raw_x, *popt), raw, popt, perr, labels
 
 
-def simple_purity_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
+def simple_purity_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Optional[dict]=None, save:bool=True, debug:bool=True):
     """
     \nDOC
     """
@@ -870,13 +858,13 @@ def simple_purity_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}
 
     perr = np.sqrt(np.diag(pcov))
 
-    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
+    if "SHOW" in OPT and OPT["SHOW"]:
         show_fit(info, raw, raw_x, simple_purity, (run, ch, key), raw_max=raw_max, buffer1=buffer1, buffer2=buffer2, thld=thld, param=popt, OPT=OPT, save=save, debug=debug)
 
     return simple_purity(raw_x, *popt), raw, popt, perr, labels
 
 
-def sc_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
+def sc_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, OPT:Optional[dict]=None, save:bool=True, debug:bool=False):
 
     run, ch, key = labels
     # Prepare plot vis
@@ -937,8 +925,8 @@ def fit_wvfs(
     in_key=["ADC"],
     out_key="",
     OPT:Optional[dict]=None,
-    save:bool=False,
-    debug:bool=False,
+    save:bool=True,
+    debug:bool=True,
 ):
     """
     \nDOC
@@ -964,31 +952,31 @@ def fit_wvfs(
             raw[i] = raw[i] / raw_max
             if signal_type == "SiPM":
                 fit, new_raw, popt, perr, labels = sipm_fit(
-                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, OPT, save, debug
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, OPT, save=save, debug=debug
                 )
             elif signal_type == "SC":
                 fit, new_raw, popt, perr, labels = sc_fit(
-                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, OPT, save, debug
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, OPT, save=save, debug=debug
                 )
             elif signal_type == "Scint":
                 fit, new_raw, popt, perr, labels = scint_fit(
-                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, i_param, OPT, save, debug
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, i_param, OPT, save=save, debug=debug
                 )
             elif signal_type == "Purity":
                 fit, new_raw, popt, perr, labels = purity_fit(
-                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, i_param, OPT, save, debug
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, i_param, OPT, save=save, debug=debug
                 )
             elif signal_type == "Quenching":
                 fit, new_raw, popt, perr, labels = simple_purity_fit(
-                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, i_param, OPT, save, debug
+                    info, (run, ch, key), raw[i], raw_x, fit_range, thld, i_param, OPT, save=save, debug=debug
                 )
             elif signal_type == "SimpleScint":
                 fit, new_raw, popt, perr, labels = simple_scint_fit(
-                    info, (run, ch, key), raw[i], raw_x, fit_range, i_param, OPT, save, debug
+                    info, (run, ch, key), raw[i], raw_x, fit_range, i_param, OPT, save=save, debug=debug
                 )
             elif signal_type == "TauSlow":
                 fit, new_raw, popt, perr, labels = tau_fit(
-                    info, (run, ch, key), raw[i], raw_x, fit_range, i_param, OPT, save, debug
+                    info, (run, ch, key), raw[i], raw_x, fit_range, i_param, OPT, save=save, debug=debug
                 )
             else:
                 rprint("[red]Fit type not recognized[/red]")
@@ -1029,13 +1017,13 @@ def fit_wvfs(
                 rprint(term_output)
 
             if save:
-                with open(f"{folder_path}/{signal_type}Fit_{run}_{ch}.txt", "w+") as f:
+                with open(f"{folder_path}run{run}_ch{ch}_{(signal_type).lower()}_fit.txt", "w+") as f:
                     if signal_type == "Scint" or signal_type == "SimpleScint":
                         f.write("%s:\t%.2f\t%.2f\n" % ("PE", PE, PE_std))
                     for i in range(len(labels)):
                         f.write("%s:\t%.4E\t%.4E\n" % (labels[i], popt[i], perr[i]))
                 if debug:
-                    rprint("File saved in: %s" % folder_path)
+                    rprint(f"File saved as: {folder_path}run{run}_ch{ch}_{(signal_type).lower()}_fit.txt")
 
         fit_dict[(run, ch, key)] = fit
         ref_dict[(run, ch, key)] = ref
@@ -1044,20 +1032,52 @@ def fit_wvfs(
         label_dict[(run, ch, key)] = labels
         my_runs[run][ch]["Fit" + signal_type + out_key] = aux
         my_runs[run][ch]["Ref" + signal_type + out_key] = ref
-    if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(
-        OPT, "SHOW"
-    ) == False:
+    
+    if check_key(OPT, "SHOW") and OPT["SHOW"]:
         plt.ioff()
+    
     return fit_dict, ref_dict, popt_dict, perr_dict, label_dict
 
 
-def show_fit(info, raw, raw_x, func, labels, raw_max, buffer1, buffer2, param, thld=1e-6, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
+def show_fit(info, raw, raw_x, func, labels, raw_max, buffer1, buffer2, param, thld=1e-6, OPT:Optional[dict]=None, save:bool=True, debug:bool=True):
     """
     \nDOC
+    This function shows the fit of the waveform and saves the figure if required.
+    \nParameters
+    ----------
+    info : dict
+        Dictionary containing information about the run and channel.
+    labels : tuple
+        Tuple containing run, channel, and key information.
+    raw : np.ndarray
+        The raw waveform data to be fitted.
+    raw_x : np.ndarray
+        The x-axis values corresponding to the raw waveform data.
+    func : function
+        The fitting function to be used.
+    raw_max : int
+        The index of the maximum value in the raw waveform.
+    buffer1 : int
+        The number of points before the maximum to include in the fit.
+    buffer2 : int
+        The number of points after the maximum to include in the fit.
+    param : list
+        The parameters obtained from the fit.
+    thld : float, optional
+        Threshold value for the waveform, default is 1e-6.
+    OPT : dict, optional
+        Dictionary containing options for the fit, such as filtering and logging.
+    save : bool, optional
+        Whether to save the figure, default is False.
+    debug : bool, optional
+        Whether to print debug information, default is False.
+    \nReturns
+    -------
+    None
     """
     run, ch, key = labels
     fig = plt.figure()
-    plt.title(f"Fit full wvf {key} with {OPT['SCINT_FIT'] if 'SCINT_FIT' in OPT else 'default'}")
+    plt.title(f"{key} - {OPT['SCINT_FIT'] if 'SCINT_FIT' in OPT else 'default'} - run {run} ch {ch}")
     plt.plot(raw_x, raw, zorder=0, label="raw", c=colors[int(ch)-2])
     
     if check_key(OPT, "CUT_THRESHOLD") and OPT["CUT_THRESHOLD"]:
@@ -1069,9 +1089,12 @@ def show_fit(info, raw, raw_x, func, labels, raw_max, buffer1, buffer2, param, t
     if check_key(OPT, "FILTER") and OPT["FILTER"]:
         plt.plot(raw_x, gaussian_filter1d(ana, sigma=OPT["FILTER_SIGMA"]), zorder=1, label="ana", c=colors[int(ch)-1])
 
-    plt.plot(raw_x[raw_max-buffer1:], func(raw_x[raw_max-buffer1:], *param),  ls = "--", c="red", label="fit")
+    plt.plot(raw_x[raw_max-buffer1:raw_max+buffer2], func(raw_x[raw_max-buffer1:raw_max+buffer2], *param),  ls = "--", c=colors[6], label="fit")
+    plt.plot(raw_x[:raw_max-buffer1], func(raw_x[:raw_max-buffer1], *param),  ls = ":", c=colors[6])
+    plt.plot(raw_x[raw_max+buffer2:], func(raw_x[raw_max+buffer2:], *param),  ls = ":", c=colors[6])
+    
     plt.xlabel("Time in [s]"); plt.ylabel("ADC Counts")
-    plt.axvline(raw_x[raw_max-buffer1], ls = ":", c = "k")
+    plt.axvline(raw_x[raw_max-buffer1], ls = ":", c = "k", label = "limits")
     plt.axvline(raw_x[raw_max+buffer2], ls = ":", c = "k")
     
     if check_key(OPT, "LOGY") == True and OPT["LOGY"] == True:
@@ -1080,40 +1103,54 @@ def show_fit(info, raw, raw_x, func, labels, raw_max, buffer1, buffer2, param, t
     
     plt.legend()
     
+    # if save:
+    save_figure(fig, f'{root}/{info["OUT_PATH"][0]}/images/', run, ch, f'{key}_Fit', debug=debug)
+    # if debug:
+    # rprint(
+    #     f"Saving plot in {root}/{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_{key}_{OPT['SCINT_FIT']}_Fit.png"
+    # )
+
     while not plt.waitforbuttonpress(-1):
         pass
-    
-    if save:
-        save_figure(fig, f"{info['OUT_PATH'][0]}/images", run, ch, OPT["SCINT_FIT"], debug=debug)
     
     plt.clf()
     plt.close(fig)
 
 
-def get_initial_parameters(i_param):
+def get_initial_parameters(params):
     """
     \nDOC
+    This function checks the input parameters dictionary and sets default values
+    for the scintillation fit parameters if they are not provided.
+    \nParameters
+    ----------
+    params : dict
+        A dictionary containing input parameters for the fit.
+    \nReturns
+    -------
+    params : dict
+        The input parameters dictionary with default values set for missing keys.
     """
 
     # Define input parameters from dictionary
-    if check_key(i_param, "ped") == False:
-        i_param["ped"] = 1e-6
-    if check_key(i_param, "t0") == False:
-        i_param["t0"] = 1e-6
-    if check_key(i_param, "sigma") == False:
-        i_param["sigma"] = 1e-8
-    if check_key(i_param, "const") == False:
-        i_param["const"] = 1e-8
-    if check_key(i_param, "a_fast") == False:
-        i_param["a_fast"] = 1e-2
-    if check_key(i_param, "tau_fast") == False:
-        i_param["tau_fast"] = 1e-8
-    if check_key(i_param, "a_slow") == False:
-        i_param["a_slow"] = 1e-2
-    if check_key(i_param, "tau_slow") == False:
-        i_param["tau_slow"] = 1e-6
+    if check_key(params, "ped") == False:
+        params["ped"] = 1e-6
+    if check_key(params, "t0") == False:
+        params["t0"] = 1e-6
+    if check_key(params, "sigma") == False:
+        params["sigma"] = 1e-8
+    if check_key(params, "const") == False:
+        params["const"] = 1e-8
+    if check_key(params, "a_fast") == False:
+        params["a_fast"] = 1e-2
+    if check_key(params, "tau_fast") == False:
+        params["tau_fast"] = 1e-8
+    if check_key(params, "a_slow") == False:
+        params["a_slow"] = 1e-2
+    if check_key(params, "tau_slow") == False:
+        params["tau_slow"] = 1e-6
 
-    return i_param
+    return params
 
 
 def scint_profile(x, const, a_f, tau_f, tau_s):
@@ -1139,7 +1176,7 @@ def log_tau_slow_profile(x, a_s, tau_s):
     return y
 
 
-def simple_scint_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
+def simple_scint_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Optional[dict]=None, save:bool=True, debug:bool=False):
     """
     \nDOC
     """
@@ -1199,10 +1236,6 @@ def simple_scint_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Option
     )
     perr = np.sqrt(np.diag(pcov))
 
-    # except:
-    # rprint("Fit could not be performed")
-    # popt2 = initial2
-    # perr2 = np.zeros(len(popt2))
     zeros_aux = np.zeros(raw_max)
     zeros_aux2 = np.zeros(len(raw) - raw_max - buffer2)
 
@@ -1215,7 +1248,7 @@ def simple_scint_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Option
     return aux, raw, popt, perr, labels2
 
 
-def tau_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Optional[dict]=None, save:bool=False, debug:bool=False):
+def tau_fit(info, labels, raw, raw_x, fit_range, i_param={}, OPT:Optional[dict]=None, save:bool=True, debug:bool=False):
     """
     \nDOC
     """

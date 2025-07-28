@@ -28,7 +28,7 @@ my_runs = load_npy(
 )
 
 wvf_process = {
-    "threshold":1e-5,
+    "threshold":5e-6,
     "i_range":  2e-6,
     "f_range":  8e-6,
 }
