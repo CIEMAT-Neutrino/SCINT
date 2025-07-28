@@ -1,6 +1,7 @@
 # ================================================================================================================================================#
 # This library contains functions to perform deconvolution to our waveforms.                                                                     #
 # ================================================================================================================================================#
+from srcs.utils import get_project_root
 
 import numpy as np
 import matplotlib
@@ -11,13 +12,14 @@ from scipy.optimize import curve_fit
 from itertools import product
 from rich import print as rprint
 from rich.progress import track
-# from curve import Curve
+from curve import Curve
 
 # Imports from other libraries
 from .io_functions import check_key, save_figure
 from .fit_functions import dec_gauss, fit_dec_gauss
 from .ana_functions import compute_power_spec, find_amp_decrease, find_baseline_cuts, smooth
 
+root = get_project_root()
 
 def generate_SER(my_runs, light_runs, SPE_runs, scaling_type="Amplitude", debug=False):
     """This function rescales AveWvfs from light runs to SPE level to be used for wvf deconvolution.
@@ -498,7 +500,7 @@ def deconvolve(my_runs, info, keys=[], noise_run=[], peak_buffer=20, OPT={}, deb
                 while not plt.waitforbuttonpress(-1):
                     pass
                 if check_key(OPT, "SAVE") == True and OPT["SAVE"] == True:
-                    save_figure(fig, f"{info['OUT_PATH'][0]}/images/", run, ch, "Deconvolution", debug=debug)
+                    save_figure(fig, f"{root}/{info['OUT_PATH'][0]}/images", run, ch, "Deconvolution", debug=debug)
                     # plt.savefig(
                     #     f"{info['OUT_PATH'][0]}/images/run{run}/ch{ch}/run{run}_ch{ch}_Deconvolution.png",
                     #     dpi=500,
