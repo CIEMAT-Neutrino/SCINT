@@ -39,13 +39,25 @@ my_runs = load_npy(
 # }
 
 
+# parameters = {
+# "type": "TauSlow",
+# "threshold":1e-6,
+# "a_slow":   1e-7,
+# "tau_slow": 1e-6,
+# "i_range":  5.0e-6,
+# "f_range":  7.0e-6,
+# }
+
 parameters = {
-"type": "TauSlow",
-"threshold":1e-6,
-"a_slow":   1e-7,
-"tau_slow": 1e-6,
-"i_range":  5.0e-6,
-"f_range":  7.0e-6,
+    "type": "Scint",
+    "threshold":1e-6,
+    "sigma":    1e-8,
+    "a_fast":   1e-8,
+    "tau_fast": 1e-9,
+    "a_slow":   1e-7,
+    "tau_slow": 1e-6,
+    "i_range":  1e-7,
+    "f_range":  2.0e-6,
 }
 
 ranges = (np.asarray([parameters["i_range"], parameters["f_range"]])/info["SAMPLING"][0]).astype(int)
