@@ -750,7 +750,7 @@ def scint_fit(info, labels, raw, raw_x, fit_range, thld=1e-6, i_param={}, OPT:Op
     perr = [p_std, perr1[0], perr1[1], perr2[0], perr1[2], perr2[1], perr2[2], perr2[3]]
 
     if (check_key(OPT, "SHOW") == True and OPT["SHOW"] == True) or check_key(OPT, "SHOW") == False:
-        show_fit(info, raw, raw_x, func2, (run, ch, key), raw_max=raw_max, buffer1=buffer1, buffer2=buffer2, param=param, OPT=OPT, save=save, debug=debug)
+        show_fit(info, raw, raw_x, func2, (run, ch, key), raw_max=raw_max, buffer1=buffer1, buffer2=buffer2, param=param, thld=thld, OPT=OPT, save=save, debug=debug)
 
     aux = func2(raw_x, *param)
     return aux, raw, param, perr, labels
