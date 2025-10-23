@@ -17,24 +17,11 @@ user_input, info = initialize_macro(
 )
 # info = read_input_file(user_input["input_file"][0])
 
-noise_run = "17"
-
 # 06Deconvolution
 for run, ch in product(
     np.asarray(user_input["runs"]).astype(str),
     np.asarray(user_input["channels"]).astype(str),
 ):
-    noise_runs = load_npy(
-    [noise_run],
-    [ch],
-    preset=user_input["preset_load"][0],
-    info=info,
-    compressed=True,
-    debug=user_input["debug"],
-    )
-    noise = noise_runs[noise_run][user_input["channels"][0]]["AnaAveWvf"]
-    # Import the noise run
-
     my_runs = load_npy(
         [run],
         [ch],
@@ -52,7 +39,7 @@ for run, ch in product(
     OPT = {
         "CONVERT_ADC": True,
         "NOISE_AMP": 1,
-        "FILTER": "WIENER",
+        "FILTER": "GAUSS",  # "WIENER" or "GAUSS"
         "FIX_EXP": True,
         "FIXED_CUTOFF": False,
         "LOGY": True,
@@ -71,7 +58,7 @@ for run, ch in product(
         "WIENER_BUFFER": 800
     }
 
-    deconvolve(my_runs, info, keys=keys, noise_run=noise, OPT=OPT, debug=user_input["debug"])
+    deconvolve(my_runs, info, keys=keys, OPT=OPT, debug=user_input["debug"])
 
     # OPT = {
     #     "SHOW": False, 
