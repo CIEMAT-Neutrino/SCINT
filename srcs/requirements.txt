@@ -10,7 +10,7 @@ jupyter
 jupyter-dash
 jupyterlab
 kaleido
-keyboard
+# keyboard
 lmfit
 matplotlib
 mplhep
@@ -24,8 +24,8 @@ plotly
 plotly_express
 pydrive
 # pyqt5
-PyQt5==5.9.2
-pynput
+# PyQt5==5.9.2
+# pynput
 pyyaml
 rich
 scipy 

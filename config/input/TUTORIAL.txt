@@ -12,7 +12,7 @@ SAMPLING: 4e-9
 ####   RUNS INFO    ####
 ########################
 RAW_DATA: DAT
-RAW_PATH: data/TUTORIAL/BASIC/raw
+RAW_PATH: /pnfs/ciemat.es/data/neutrinos/LAB/SUPERCELL/Feb22_2/raw
 NPY_PATH: data/TUTORIAL/BASIC/${USER}/npy
 OUT_PATH: data/TUTORIAL/BASIC/${USER}
 

@@ -14,6 +14,8 @@ import pandas as pd
 from itertools import product
 from rich import print as rprint
 
+import struct
+
 root = get_project_root()
 
 # ===========================================================================#
@@ -114,6 +116,7 @@ def read_input_file(
                 "NPY_PATH",
                 "OUT_PATH",
                 "RAW_DATA",
+                "RAW_FILE",
                 "OV_LABEL",
                 "CHAN_LABEL",
                 "LOAD_PRESET",
@@ -473,10 +476,93 @@ def write_output_file(
         return False
 
 
+
+
+
+def write_output_file_batch(
+    run,
+    ch,
+    output,
+    filename,
+    info: dict,
+    header_list: list,
+    write_mode: str = "w",
+    not_saved: "list[int]" = [2, 3],
+    debug: bool = False,
+) -> bool:
+    """
+    Versión no interactiva de write_output_file.
+    Guarda directamente el fichero sin pedir confirmación.
+    Pensada para ejecución en paralelo (multiprocessing).
+    """
+    run = str(run).zfill(2)
+
+    def remove_columns(flattened_data, columns_to_remove):
+        return [
+            [item for j, item in enumerate(row) if j not in columns_to_remove]
+            for row in flattened_data
+        ]
+
+    def flatten_data_recursive(data):
+        flattened = []
+        for item in data:
+            if isinstance(item, list):
+                flattened.extend(flatten_data_recursive(item))
+            else:
+                flattened.append(item)
+        return flattened
+
+    def flatten_data(data):
+        return [flatten_data_recursive(row) for row in data]
+
+    folder_path = f'{root}/{info["OUT_PATH"][0]}/analysis/fits/run{run}/ch{ch}/'
+    if not os.path.exists(folder_path):
+        os.makedirs(name=folder_path, mode=0o777, exist_ok=True)
+        os.chmod(folder_path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+
+    if debug:
+        rprint(f"[yellow][BATCH] Saving in: {folder_path}run{run}_ch{ch}_{filename}.txt[/yellow]")
+
+    flat_data = flatten_data(output)
+    flat_data = remove_columns(flat_data, not_saved)
+
+    file_path = f"{folder_path}run{run}_ch{ch}_{filename}.txt"
+
+    # Si no existe, escribe cabecera
+    if not os.path.exists(file_path):
+        with open(file_path, "w") as f:
+            f.write("\t".join(header_list) + "\n")
+
+    # Escribe/reescribe datos
+    with open(file_path, write_mode) as f:
+        column_widths = [max(len(str(item)) for item in col) for col in zip(*flat_data)]
+        try:
+            header_line = (
+                "\t".join("{{:<{}}}".format(width) for width in column_widths).format(*header_list)
+                + "\n"
+            )
+        except IndexError:
+            header_line = "\t".join(header_list) + "\n"
+
+        if write_mode == "w":
+            f.write(header_line)
+
+        for row in flat_data:
+            data_line = (
+                "\t".join("{{:<{}}}".format(width) for width in column_widths).format(*map(str, row))
+                + "\n"
+            )
+            f.write(data_line)
+
+    return True
+
+
+    
+
 # ===========================================================================#
 # ************************* RAW TO NUMPY ************************************#
 # ===========================================================================#
-def binary2npy_express(in_file: str, header_lines: int=6, debug: bool=False) -> tuple:
+def binary2npy_express_orig(in_file: str, header_lines: int=6, debug: bool=False) -> tuple:
     """Dumper from binary format to npy tuples. Input are binary input file path and npy outputfile as strings.
     
     :param in_file: binary input file path
@@ -533,6 +619,108 @@ def binary2npy_express(in_file: str, header_lines: int=6, debug: bool=False) -> 
     return ADC, TIMESTAMP
 
 
+def binary2npy_express(in_file: str, header_lines: int=6, debug: bool=False) -> tuple:
+    try:
+        headers = np.fromfile(in_file, dtype="I")
+        data = np.fromfile(in_file, dtype="H")
+    except Exception as e:
+        raise RuntimeError(f"Error reading binary file '{in_file}': {e}")
+
+    header = headers[:6]
+    samples = int(header[0] / 2 - header_lines * 2)
+    size = header_lines * 2 + samples
+    events = int(data.shape[0] / size)
+
+    try:
+        ADC = np.reshape(data, (events, size))[:, header_lines * 2 :]
+        headers = np.reshape(headers, (events, int(size / 2)))[:, :header_lines]
+    except Exception as e:
+        raise RuntimeError(f"Error reshaping data from '{in_file}': {e}")
+
+    TIMESTAMP = (headers[:, 4] * 2**32 + headers[:, 5]) * 8e-9
+
+    if debug:
+        rprint(f"#################################")
+        rprint(f"Ticks:\t{samples}")
+        rprint(f"Events:\t{events}")
+        rprint("Time:\t{:.2f}".format((TIMESTAMP[-1] - TIMESTAMP[0]) / 60) + " (min)")
+        rprint("Rate:\t{:.2f}".format(events / (TIMESTAMP[-1] - TIMESTAMP[0])) + " (Hz)")
+        rprint(f"#################################\n")
+
+    return ADC, TIMESTAMP
+
+
+def compass_bin2npy_express(in_file, debug=False):
+
+    with open(in_file, "rb") as f:
+
+        header = struct.unpack("<H", f.read(2))[0]
+
+        has_energy = bool(header & 0x1)
+        has_eshort = bool(header & 0x4)
+        has_wave   = bool(header & 0x8)
+
+        timestamps = []
+        energies = []
+        eshorts = []
+        flags = []
+        adc = []
+
+        while True:
+
+            first = f.read(2)
+
+            if len(first) == 0:
+                break
+
+            board = struct.unpack("<H", first)[0]
+            channel = struct.unpack("<H", f.read(2))[0]
+
+            timestamps.append(
+                struct.unpack("<Q", f.read(8))[0]*1e-12
+            )
+
+            if has_energy:
+                energies.append(
+                    struct.unpack("<H", f.read(2))[0]
+                )
+
+            if has_eshort:
+                eshorts.append(
+                    struct.unpack("<H", f.read(2))[0]
+                )
+
+            flags.append(
+                struct.unpack("<I", f.read(4))[0]
+            )
+
+            if has_wave:
+
+                waveform_code = struct.unpack("<B", f.read(1))[0]
+
+                nsamples = struct.unpack("<I", f.read(4))[0]
+
+                samples = np.frombuffer(
+                    f.read(2*nsamples),
+                    dtype=np.uint16
+                )
+
+                adc.append(samples)
+
+    if debug:
+
+        print("Events =", len(timestamps))
+        print("Samples =", adc[0].shape[0])
+        print("Header = 0x%04X"%header)
+                
+    return {
+        "RawADC": np.asarray(adc),
+        "TimeStamp": np.asarray(timestamps),
+        "Energy": np.asarray(energies),
+        "EnergyShort": np.asarray(eshorts),
+        "Flags": np.asarray(flags),
+    }
+
 def binary2npy(
     runs, channels, info, compressed=True, header_lines=6, force=False, debug=False
 ):
@@ -565,9 +753,27 @@ def binary2npy(
         i = np.where(runs == run)[0][0]
         j = np.where(channels == ch)[0][0]
 
-        in_file = (
-            "run" + str(run).zfill(2) + "/wave" + str(ch) + ".dat"
-        )  # Name of the input file
+        raw_format = info["RAW_DATA"][0].upper()
+
+        print("RAW_DATA =", info["RAW_DATA"])
+        print("raw_format =", raw_format)
+        
+        if raw_format == "COMPASS_BIN":
+
+            pattern = info["RAW_FILE"][0]
+
+            in_file = pattern.format(
+                ch=ch,
+                run=run
+            )
+            
+        else:
+            
+            in_file = (
+                "run" + str(run).zfill(2)
+                + "/wave" + str(ch) + ".dat"
+            )
+            
         out_folder = (
             "run" + str(run).zfill(2) + "/ch" + str(ch) + "/"
         )  # Name of the output folder
@@ -579,11 +785,33 @@ def binary2npy(
             rprint("[yellow]DATA STRUCTURE ALREADY EXISTS[/yellow]")
 
         try:
-            ADC, TIMESTAMP = binary2npy_express(
-                in_path + in_file, header_lines=header_lines, debug=debug
-            )
-            branches = ["RawADC", "TimeStamp"]
-            content = [ADC, TIMESTAMP]
+            raw_format = info["RAW_DATA"][0].upper()
+            if raw_format == "COMPASS_BIN":
+            #if info["DAQ"][0].upper() == "COMPASS":
+
+                data = compass_bin2npy_express(
+                    in_path + in_file,
+                    debug=debug
+                )
+
+                branches = list(data.keys())
+                content = list(data.values())
+
+            else:
+
+                ADC, TIMESTAMP = binary2npy_express(
+                    in_path + in_file,
+                    header_lines=header_lines,
+                    debug=debug
+                )
+
+            
+                #ADC, TIMESTAMP = binary2npy_express(
+                #    in_path + in_file, header_lines=header_lines, debug=debug
+                #)
+                branches = ["RawADC", "TimeStamp"]
+                content = [ADC, TIMESTAMP]
+                
             files = os.listdir(out_path + out_folder)
 
             for i, branch in enumerate(branches):
@@ -1138,7 +1366,7 @@ def save_proccesed_variables(
     del my_runs
 
 
-def save_figure(fig, path, run, ch, label, debug: bool=True):
+def save_figure(fig, path, run, ch, label, debug: bool=False):
     """Saves the figure in the desired path with the desired name.
     
     :param fig: figure to be saved
@@ -1165,7 +1393,7 @@ def save_figure(fig, path, run, ch, label, debug: bool=True):
     # Check that fig is a matplotlib figure
     if isinstance(fig, matplotlib.figure.Figure):
         fig.savefig(f"{path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
-    
+        return
     else:
         rprint(f"[red][ERROR] Input figure type {type(fig)} not implemented[/red]")
     # Give permissions to the file
@@ -1175,7 +1403,7 @@ def save_figure(fig, path, run, ch, label, debug: bool=True):
     )
     
     if debug:
-        rprint(f"Figure saved in: {path}/run{run}/ch{ch}/run{run}_ch{ch}_{label}.png")
+        rprint(f"Figure saved in: {path}")
 
 
 def npy2root(my_runs, debug: bool=False):
