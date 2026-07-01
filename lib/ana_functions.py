@@ -362,7 +362,7 @@ def compute_pedestal_limit(my_runs, info, keys, label, ped_lim:Optional[int]=Non
                 )
             ]
             answers = inquirer.prompt(questions)
-            ped_lim = bins[int(answers["peak"])]
+            ped_lim = int(answers["peak"])
 
         if ped_lim <= buffer:
             ped_lim = int(len(my_runs[run][ch][key][0]) * 0.15)
@@ -867,7 +867,7 @@ def integrate_wvfs(my_runs, info, key, label, cut_label="", debug=False):
                                 f_idx * my_runs[run][ch]["Sampling"],
                             )
                         )
-                if my_runs[run][ch]["PedestalLimit"] != "NON":
+                if my_runs[run][ch]["PedestalLimit"] is not None:
                     i_idx = my_runs[run][ch]["PedestalLimit"]
                 charge_name = label + typ + ref.split("Wvf")[-1] + cut_label
                 my_runs[run][ch][charge_name] = np.sum(
