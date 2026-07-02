@@ -371,8 +371,8 @@ def peak_valley_finder(x, y, params):
         i = j
 
     # Separate indices by type
-    final_peaks = np.array([i for i, t in filtered_points if t == 'peak'])
-    final_valleys = np.array([i for i, t in filtered_points if t == 'valley'])
+    final_peaks = np.array([i for i, t in filtered_points if t == 'peak'], dtype=int)
+    final_valleys = np.array([i for i, t in filtered_points if t == 'valley'], dtype=int)
 
     rprint("Peaks found at: ", final_peaks)
     rprint("Valleys found at: ", final_valleys)
@@ -460,6 +460,8 @@ def gaussian_train_fit(fig, x, y, y_intrp, peak_idx, valley_idx, params, debug=F
         rprint("[red]Full fit could not be performed[/red]")
     except RuntimeError:
         rprint("[red]Full fit could not be performed[/red]")
+    except IndexError:
+        rprint("[red]Full fit could not be performed (no valleys found)[/red]")
     return popt, pcov
 
 

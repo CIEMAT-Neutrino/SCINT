@@ -353,8 +353,11 @@ def xtalk_fit_plot(ax_xt, popt, labels, OPT, debug=False):
     run, ch, key = labels
     
     # Check if there is more than 1 gaussian fitted to compute PE densities
-    if len(popt) == 3:
-        rprint("[yellow]Only one Gaussian found. Setting all PE densities to 0.[/yellow]")
+    if len(popt) < 6:
+        if len(popt) == 0:
+            rprint("[yellow]No Gaussian could be fitted. Setting all PE densities to 0.[/yellow]")
+        else:
+            rprint("[yellow]Only one Gaussian found. Setting all PE densities to 0.[/yellow]")
         xt_popt = np.asarray([0, 0, 0])
         xt_pcov = np.asarray([0, 0, 0])
         ax_xt.bar(
