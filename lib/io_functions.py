@@ -18,6 +18,18 @@ import struct
 
 root = get_project_root()
 
+
+def get_run_name(run) -> str:
+    """Returns the canonical run string used to build every run folder and file name, so that runs "3" and "03" map to the same paths. Change this function to change the naming convention of the whole framework.
+
+    :param run: run number
+    :type run: str or int
+
+    :return: canonical run string (zero-padded to 2 digits)
+    :rtype: str
+    """
+    return str(run).zfill(2)
+
 # ===========================================================================#
 # ************************** INPUT FILE *************************************#
 # ===========================================================================#
@@ -394,7 +406,7 @@ def write_output_file(
     :rtype: bool
     """
     
-    run = str(run).zfill(2)
+    run = get_run_name(run)
 
     def remove_columns(flattened_data, columns_to_remove):
         return [
@@ -495,7 +507,7 @@ def write_output_file_batch(
     Guarda directamente el fichero sin pedir confirmación.
     Pensada para ejecución en paralelo (multiprocessing).
     """
-    run = str(run).zfill(2)
+    run = get_run_name(run)
 
     def remove_columns(flattened_data, columns_to_remove):
         return [
@@ -770,12 +782,12 @@ def binary2npy(
         else:
             
             in_file = (
-                "run" + str(run).zfill(2)
+                "run" + get_run_name(run)
                 + "/wave" + str(ch) + ".dat"
             )
             
         out_folder = (
-            "run" + str(run).zfill(2) + "/ch" + str(ch) + "/"
+            "run" + get_run_name(run) + "/ch" + str(ch) + "/"
         )  # Name of the output folder
 
         try:
@@ -921,10 +933,10 @@ def root2npy(
         j = np.where(channels == ch)[0][0]
 
         in_file = (
-            "run" + str(run).zfill(2) + "_ch" + str(ch) + ".root"
+            "run" + get_run_name(run) + "_ch" + str(ch) + ".root"
         )  # Name of the input file
         out_file = (
-            "run" + str(run).zfill(2) + "_ch" + str(ch) + ".npy"
+            "run" + get_run_name(run) + "_ch" + str(ch) + ".npy"
         )  # Name of the output file
 
         try:
@@ -1188,7 +1200,7 @@ def load_npy(
                 )
 
             my_runs[run][ch] = dict()
-            in_folder = "run" + str(run).zfill(2) + "/ch" + str(ch) + "/"
+            in_folder = "run" + get_run_name(run) + "/ch" + str(ch) + "/"
             if preset == None:
                 rprint(
                     f"[yellow]WARNING: Preset None. Passing run {run} ch {ch}[/yellow]"
@@ -1301,7 +1313,7 @@ def save_proccesed_variables(
             rprint(
                 "[cyan]\n--> Saving Computed Variables (according to preset %s)![/cyan]" % (preset)
             )
-            out_folder = "run" + str(run).zfill(2) + "/ch" + str(ch) + "/"
+            out_folder = "run" + get_run_name(run) + "/ch" + str(ch) + "/"
             os.makedirs(name=f"{path}{out_folder}", mode=0o777, exist_ok=True)
             files = os.listdir(f"{path}{out_folder}")
             if not branch_list:
@@ -1384,7 +1396,7 @@ def save_figure(fig, path, run, ch, label, debug: bool=False):
     """
     
     # Ensure run has leading zeros up to 2 digits
-    run = str(run).zfill(2)
+    run = get_run_name(run)
     # Remove / if path ends with it
     if path[-1] == "/":
         path = path[:-1]

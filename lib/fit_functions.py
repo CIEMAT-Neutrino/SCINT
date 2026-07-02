@@ -21,7 +21,7 @@ from rich import print as rprint
 from scipy.ndimage import gaussian_filter1d
 
 # Imports from other libraries
-from .io_functions import check_key, read_yaml_file, save_figure
+from .io_functions import check_key, read_yaml_file, save_figure, get_run_name
 from .ana_functions import find_amp_decrease
 from .unit_functions import get_run_units
 from .sty_functions import get_prism_colors
@@ -990,7 +990,7 @@ def fit_wvfs(
             PE_std = np.std(raw[i][:i_idx])
 
             folder_path = (
-                f'{root}/{info["OUT_PATH"][0]}/analysis/fits/run{run}/ch{ch}/'
+                f'{root}/{info["OUT_PATH"][0]}/analysis/fits/run{get_run_name(run)}/ch{ch}/'
             )
             if not os.path.exists(folder_path):
                 os.makedirs(name=folder_path, mode=0o777, exist_ok=True)
@@ -1017,13 +1017,13 @@ def fit_wvfs(
                 rprint(term_output)
 
             if save:
-                with open(f"{folder_path}run{run}_ch{ch}_{(signal_type).lower()}_fit.txt", "w+") as f:
+                with open(f"{folder_path}run{get_run_name(run)}_ch{ch}_{(signal_type).lower()}_fit.txt", "w+") as f:
                     if signal_type == "Scint" or signal_type == "SimpleScint":
                         f.write("%s:\t%.2f\t%.2f\n" % ("PE", PE, PE_std))
                     for i in range(len(labels)):
                         f.write("%s:\t%.4E\t%.4E\n" % (labels[i], popt[i], perr[i]))
                 if debug:
-                    rprint(f"File saved as: {folder_path}run{run}_ch{ch}_{(signal_type).lower()}_fit.txt")
+                    rprint(f"File saved as: {folder_path}run{get_run_name(run)}_ch{ch}_{(signal_type).lower()}_fit.txt")
 
         fit_dict[(run, ch, key)] = fit
         ref_dict[(run, ch, key)] = ref

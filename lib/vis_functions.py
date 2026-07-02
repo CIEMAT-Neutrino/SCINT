@@ -21,7 +21,7 @@ from scipy.ndimage.interpolation import shift
 from scipy.signal import savgol_filter
 
 # Imports from this library
-from .io_functions import check_key, save_figure
+from .io_functions import check_key, save_figure, get_run_name
 from .fig_config import figure_features, add_grid
 from .unit_functions import get_run_units
 from .sty_functions import style_selector, get_prism_colors
@@ -566,9 +566,9 @@ def vis_npy(my_run, info, keys, OPT={}, save=False, debug=False):
                     os.makedirs(f'{root}/{info["OUT_PATH"][0]}/analysis/data', mode=0o770, exist_ok=True)
                 for j in range(nch):
                     # Open a file to save the data
-                    rprint(f"[yellow]Saving file to {root}/{info['OUT_PATH'][0]}/analysis/data/run{run}_ch{ch_list[j]}_event{idx}.txt[/yellow]")
+                    rprint(f"[yellow]Saving file to {root}/{info['OUT_PATH'][0]}/analysis/data/run{get_run_name(run)}_ch{ch_list[j]}_event{idx}.txt[/yellow]")
                     with open(
-                        f'{root}/{info["OUT_PATH"][0]}/analysis/data/run{run}_ch{ch_list[j]}_event{idx}.txt',
+                        f'{root}/{info["OUT_PATH"][0]}/analysis/data/run{get_run_name(run)}_ch{ch_list[j]}_event{idx}.txt',
                         "w",
                     ) as f:
                         f.write(
@@ -858,7 +858,7 @@ def plot_compare_wvf(
     
     # Adding the integration time window on the plot 
     npy_path = info["NPY_PATH"][0]
-    range_path = f"{root}/{npy_path}/run{run}/ch{ch}/ChargeDict.yml"
+    range_path = f"{root}/{npy_path}/run{get_run_name(run)}/ch{ch}/ChargeDict.yml"
     
     if os.path.exists(range_path):
         range_file = os.path.join(range_path)
@@ -1250,6 +1250,7 @@ def print_stats(my_run, labels, ax, data, info, save=False, debug=False):
     
     run, ch, key = labels
     rate = print_stats_terminal(my_run, labels, data)
+    run = get_run_name(run)
 
     # Add reference lines to the plot
     # ax.axvline(np.mean(data), label="Mean", c="k", alpha=0.5)

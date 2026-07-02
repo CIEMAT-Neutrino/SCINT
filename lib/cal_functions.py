@@ -20,7 +20,7 @@ from rich.console import Console
 from scipy.optimize import curve_fit
 
 # Import from other libraries
-from .io_functions import check_key, write_output_file, save_figure
+from .io_functions import check_key, write_output_file, save_figure, get_run_name
 from .head_functions import update_yaml_file
 from .ana_functions import (
     get_wvf_label,
@@ -223,7 +223,7 @@ def calibrate(my_runs, info, keys, OPT={}, save=False, debug=False):
             if save:
                 save_path = f'{root}/{info["OUT_PATH"][0]}/images/'
                 try:
-                    os.makedirs(f"{save_path}run{run}/ch{ch}", mode=0o777, exist_ok=True)
+                    os.makedirs(f"{save_path}run{get_run_name(run)}/ch{ch}", mode=0o777, exist_ok=True)
                 
                 except:
                     rprint(f"[yellow][WARNING] Folder {save_path} already exists. No need to create it.[/yellow]")
@@ -457,7 +457,7 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                 if export:
                     rprint("[cyan]Data exported to txt file.[/cyan]")
                     update_yaml_file(
-                        f'{root}/{info["OUT_PATH"][0]}/analysis/calibration/run{run}/ch{ch}/calibration_run{run}_ch{ch}_{key}.yml',
+                        f'{root}/{info["OUT_PATH"][0]}/analysis/calibration/run{get_run_name(run)}/ch{ch}/calibration_run{get_run_name(run)}_ch{ch}_{key}.yml',
                         data[labels][measurement],
                         debug=debug,
                     )
@@ -472,7 +472,7 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                 if export:
                     rprint("[cyan]Data exported to txt file.[/cyan]")
                     update_yaml_file(
-                        f'{root}/{info["OUT_PATH"][0]}/analysis/xtalk/run{run}/ch{ch}/xtalk_run{run}_ch{ch}_{key}.yml',
+                        f'{root}/{info["OUT_PATH"][0]}/analysis/xtalk/run{get_run_name(run)}/ch{ch}/xtalk_run{get_run_name(run)}_ch{ch}_{key}.yml',
                         data[labels][measurement],
                         debug=debug,
                     )
@@ -909,6 +909,7 @@ def save_figures(fig_cal, fig_xt, labels, save_path, debug=False):
     """
     
     run, ch, key = labels
+    run = get_run_name(run)
     # Check if the folder exists, if not create it
     try:
         os.makedirs(f"{save_path}run{run}/ch{ch}", mode=0o777, exist_ok=True)
