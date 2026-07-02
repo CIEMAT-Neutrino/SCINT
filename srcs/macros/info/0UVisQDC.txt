@@ -1,0 +1,13 @@
+# ---------------------------------------------------------------------------------------------------------------------- #
+#  ====================================== RUN:$ python3 0UVisQDC.py -i INPUT_FILE ====================================== #
+# This macro plots the on-board processed data of the CAEN digitizer (DPP-PSD/QDC) saved by 00Raw2Np when the raw data   #
+# is in CoMPASS binary format (RAW_DATA: COMPASS_BIN): Energy (long gate), TimeStamp & Flags.                            #
+# For each selected run/channel it shows:                                                                                #
+#   (1) QDC charge spectrum (Energy, integer-aligned binning)                                                            #
+#   (2) Trigger rate stability computed from the digitizer timestamps                                                    #
+#   (3) Summary of the CoMPASS event flags (pile-up, saturation, etc.)                                                   #
+#   (4) If the selected charge variables exist (-v flag, e.g. AnaChargeAveRange, computed by 03Integration), a 2D        #
+#       comparison of the SCINT charge vs the QDC Energy                                                                 #
+#   (5) Overlay of the SCINT charge spectrum and the QDC Energy spectrum rescaled to the same units (linear fit)         #
+# Use it to cross-check the SCINT raw-waveform analysis against the digitizer's own processing.                          #
+# ---------------------------------------------------------------------------------------------------------------------- #
