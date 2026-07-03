@@ -1,4 +1,4 @@
-import sys
+import sys, select
 
 sys.path.insert(0, "../../")
 from lib import *
@@ -180,7 +180,12 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         add_grid(ax)
         ypbot, yptop = np.percentile(charge, percentile)
         ypad = 0.2 * (yptop - ypbot)
-        bins = np.linspace(ypbot - ypad, yptop + ypad, 401)
+        # Bin both spectra on the rescaled QDC lattice (bin width = a, edges halfway
+        # between the allowed values a*n + b) so the discrete QDC values produce no
+        # moire pattern against the binning
+        n_lo = np.floor((ypbot - ypad - b) / a)
+        n_hi = np.ceil((yptop + ypad - b) / a)
+        bins = a * (np.arange(n_lo, n_hi + 2) - 0.5) + b
         for data, label, color in [
             (charge, charge_key + " (SCINT)", colors[0]),
             (a * energy + b, "QDC Energy x {:.1f} + {:.0f}".format(a, b), colors[5]),
@@ -210,9 +215,14 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         for label, fig in figures.items():
             save_figure(fig, out_path, run, ch, label, debug=user_input["debug"])
 
-    plt.ion()
-    plt.show()
-    rprint("[cyan]Press any key on the last figure to continue...[/cyan]")
-    while not plt.waitforbuttonpress(-1):
-        pass
+    if plt.get_backend().lower() != "agg":
+        plt.ion()
+        plt.show()
+        rprint("[cyan]Figures open. Press ENTER in the terminal to continue...[/cyan]")
+        # Keep the GUI event loop alive while waiting for the terminal so the
+        # figure windows stay responsive (zoom, pan, etc.). Unlike plt.pause,
+        # start_event_loop does not re-show/raise the windows on every cycle.
+        while not select.select([sys.stdin], [], [], 0)[0]:
+            plt.gcf().canvas.start_event_loop(0.2)
+        sys.stdin.readline()
     plt.close("all")
