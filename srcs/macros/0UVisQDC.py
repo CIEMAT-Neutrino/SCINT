@@ -72,9 +72,15 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
     overflow = 100 * np.count_nonzero(data == 0xFFFF) / len(data)
     if overflow > 0:
         data = data[data != 0xFFFF]
+    if data.size == 0 or np.count_nonzero(data) < 0.01 * len(data):
+        rprint(
+            f"[yellow]Run {run} ch {ch}: QDC Energy is ~all zeros or overflow. Check the QDC gate/threshold settings of this channel.[/yellow]"
+        )
+        if data.size == 0:
+            data = np.zeros(1)
     ypbot, yptop = np.percentile(data, percentile)
     ypad = 0.2 * (yptop - ypbot)
-    data = data[(data > ypbot - ypad) * (data < yptop + ypad)]
+    data = data[(data >= ypbot - ypad) * (data <= yptop + ypad)]
     # Energy is integer-valued: align the binning with the channel grid (integer bin
     # width, edges at half-integers) so no bin falls between two allowed values
     width = max(1, int(np.ceil((data.max() - data.min()) / 400)))
@@ -115,7 +121,9 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         title + " - Rate (mean {:.2f} Hz)".format(len(tstamp) / duration)
     )
 
-    # 3) QDC flags summary
+    # 3) QDC flags summary: sorted horizontal bars on a linear scale with the exact
+    # percentage printed on each bar, plus a 1% reference line above which a flag
+    # is worth cutting on
     fig_flag, ax = plt.subplots(1, 1, figsize=(8, 6))
     add_grid(ax)
     labels, values = [], []
@@ -124,10 +132,15 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         if n > 0:
             labels.append(label)
             values.append(100 * n / len(flags))
-    ax.bar(labels, values, color=colors[3], alpha=0.95)
-    ax.tick_params(axis="x", rotation=45)
-    ax.semilogy()
-    fig_flag.supylabel("Flagged events (%)")
+    if values:
+        order = np.argsort(values)
+        labels = [labels[i] for i in order]
+        values = [values[i] for i in order]
+        ax.barh(labels, values, color=colors[3], alpha=0.95)
+        for i, v in enumerate(values):
+            ax.text(v + 0.012 * max(values), i, "{:.3g}%".format(v), va="center")
+        ax.set_xlim(0, 1.18 * max(values))
+    fig_flag.supxlabel("Flagged events (%)")
     fig_flag.suptitle(title + " - QDC flags")
     fig_flag.tight_layout()
 
@@ -172,10 +185,20 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         # Iterative sigma-clipping so that off-diagonal populations (e.g. delayed light inside the QDC gate
         # but outside the SCINT window) do not bias the slope.
         clip = np.ones(len(energy), dtype=bool)
+        a, b = 0.0, 0.0
         for _ in range(5):
+            if np.count_nonzero(clip) < 2:
+                break
             a, b = np.polyfit(energy[clip], charge[clip], 1)
+            if not np.isfinite(a):
+                break
             res = charge - (a * energy + b)
             clip = np.abs(res - np.median(res[clip])) < 2.5 * np.std(res[clip])
+        if not np.isfinite(a) or a <= 0:
+            rprint(
+                f"[yellow]Run {run} ch {ch}: degenerate QDC vs {charge_key} fit (a={a:.2f}). Skipping overlay figure.[/yellow]"
+            )
+            continue
         fig_ovl, ax = plt.subplots(1, 1, figsize=(8, 6))
         add_grid(ax)
         ypbot, yptop = np.percentile(charge, percentile)

@@ -11,7 +11,7 @@ FIT: gaussian
 LEGEND: true
 LIMITS: false
 LOGX: false
-LOGY: true
+LOGY: false
 LOGZ: true
 MICRO_SEC: true
 NAME: VisConfig
