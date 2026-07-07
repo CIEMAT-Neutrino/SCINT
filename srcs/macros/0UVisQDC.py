@@ -72,7 +72,8 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
     overflow = 100 * np.count_nonzero(data == 0xFFFF) / len(data)
     if overflow > 0:
         data = data[data != 0xFFFF]
-    if data.size == 0 or np.count_nonzero(data) < 0.01 * len(data):
+    qdc_degenerate = data.size == 0 or np.count_nonzero(data) < 0.01 * len(data)
+    if qdc_degenerate:
         rprint(
             f"[yellow]Run {run} ch {ch}: QDC Energy is ~all zeros or overflow. Check the QDC gate/threshold settings of this channel.[/yellow]"
         )
@@ -102,7 +103,49 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
     fig_qdc.supylabel("Counts")
     fig_qdc.suptitle(title + " - QDC spectrum")
 
-    # 2) Trigger rate stability from the digitizer timestamps
+    # 2) QDC gain: fit the same gaussian train used by 04Calibration to the QDC
+    # Energy spectrum. The gain is taken as the median separation between
+    # consecutive peak centers, which is robust against the pedestal peak being
+    # clipped at E=0 (channels where the baseline pushes the pedestal below zero)
+    fig_gain, gain_qdc, gain_qdc_err = None, None, None
+    if not qdc_degenerate:
+        fig_gain, ax = plt.subplots(1, 1, figsize=(8, 6))
+        add_grid(ax)
+        center_bins = (bins[:-1] + bins[1:]) / 2
+        ax.hist(
+            center_bins,
+            bins,
+            weights=counts,
+            histtype="step",
+            lw=2,
+            color=colors[0],
+            align="mid",
+            zorder=1,
+        )
+        try:
+            popt, pcov = calibration_fit_plot(
+                ax, counts, bins, OPT={}, debug=user_input["debug"]
+            )
+        except (RuntimeError, ValueError, IndexError, TypeError) as e:
+            popt = []
+            rprint(f"[yellow]Run {run} ch {ch}: QDC gain fit failed ({e}).[/yellow]")
+        centers = np.sort(np.asarray(popt[0::3], dtype=float))
+        if len(centers) >= 2:
+            seps = np.diff(centers)
+            gain_qdc = np.median(seps)
+            gain_qdc_err = np.std(seps) / np.sqrt(len(seps))
+            fig_gain.suptitle(
+                title + " - QDC calibration (gain {:.1f} ch/PE)".format(gain_qdc)
+            )
+        else:
+            rprint(
+                f"[yellow]Run {run} ch {ch}: not enough QDC peaks fitted to compute a gain.[/yellow]"
+            )
+            fig_gain.suptitle(title + " - QDC calibration")
+        fig_gain.supxlabel("QDC Energy (ADC ch)")
+        fig_gain.supylabel("Counts")
+
+    # 3) Trigger rate stability from the digitizer timestamps
     duration = tstamp[-1] - tstamp[0]
     fig_rate, ax = plt.subplots(1, 1, figsize=(8, 6))
     add_grid(ax)
@@ -149,6 +192,8 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         "QDC_Rate": fig_rate,
         "QDC_Flags": fig_flag,
     }
+    if fig_gain is not None:
+        figures["QDC_Calibration"] = fig_gain
 
     # 4) If SCINT charges have already been computed (03Integration), compare them with the QDC output
     charge_keys = []
@@ -229,6 +274,43 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         fig_ovl.supylabel("Counts")
         fig_ovl.suptitle(title + " - QDC rescaled vs " + charge_key, fontsize=14)
         figures[f"QDC_Overlay_{charge_key}"] = fig_ovl
+
+        # 7) Gain comparison: SCINT calibration (04Calibration yml) vs the QDC gain
+        # fitted above. Consistency requires gain_SCINT ~ a * gain_QDC, with a the
+        # event-by-event conversion factor from the overlay fit
+        if gain_qdc is not None:
+            yml_path = (
+                os.path.expandvars(f'{root}/{info["OUT_PATH"][0]}/analysis/calibration')
+                + f"/run{get_run_name(run)}/ch{ch}/calibration_run{get_run_name(run)}_ch{ch}_{charge_key}.yml"
+            )
+            if os.path.exists(yml_path):
+                with open(yml_path, encoding="latin1") as f:
+                    cal = yaml.safe_load(f)
+                # Same estimator as the QDC side: median separation between the
+                # consecutive peak centers fitted by 04Calibration
+                scint_centers = np.sort(np.asarray(cal["popt"][0::3], dtype=float))
+                scint_seps = np.diff(scint_centers)
+                gain_scint = np.median(scint_seps)
+                gain_scint_err = np.std(scint_seps) / np.sqrt(len(scint_seps))
+                gain_table = Table(title=f"Gain comparison - run {run} ch {ch} ({charge_key})")
+                gain_table.add_column("gain QDC (ch/PE)", justify="center")
+                gain_table.add_column("gain SCINT (ADC x ticks/PE)", justify="center")
+                gain_table.add_column("ratio", justify="center")
+                gain_table.add_column("a overlay", justify="center")
+                gain_table.add_column("agreement", justify="center")
+                ratio = gain_scint / gain_qdc
+                gain_table.add_row(
+                    "{:.2f} +/- {:.2f}".format(gain_qdc, gain_qdc_err),
+                    "{:.1f} +/- {:.1f}".format(gain_scint, gain_scint_err),
+                    "{:.2f}".format(ratio),
+                    "{:.2f}".format(a),
+                    "{:+.1f}%".format(100 * (ratio / a - 1)),
+                )
+                rprint(gain_table)
+            else:
+                rprint(
+                    f"[yellow]Run {run} ch {ch}: no calibration yml for {charge_key} (run 04Calibration). QDC gain = {gain_qdc:.2f} ch/PE.[/yellow]"
+                )
     if not charge_keys:
         rprint(
             f"[yellow]Run {run} ch {ch}: no {user_input['variables']} branches found. Run 03Integration to compare SCINT charges with the QDC output.[/yellow]"
