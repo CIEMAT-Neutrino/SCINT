@@ -16,7 +16,7 @@ LOGZ: true
 MICRO_SEC: true
 NAME: VisConfig
 NORM: false
-PE: true
+PE: false
 PEAK_DISTANCE: 30
 PEAK_FINDER: false
 PERCENTILE:
