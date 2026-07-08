@@ -1,0 +1,12 @@
+# ---------------------------------------------------------------------------------------------------------------------- #
+#  ====================================== RUN:$ python3 0TCalQDC.py -i INPUT_FILE ====================================== #
+# QDC calibration and cross-check against the ADC waveform analysis. For each selected run/channel:                      #
+#   (1) Gaussian-train fit to the QDC Energy spectrum (same method as 04Calibration); the QDC gain is the median         #
+#       separation between consecutive peak centers (robust against the pedestal being clipped at E=0)                   #
+#   (2) 2D comparison of the QDC Energy vs the selected ADC charge variables (-v flag, e.g. AnaChargeAveRange)           #
+#   (3) Overlay of both spectra rescaled to the same units (sigma-clipped event-by-event linear fit)                     #
+#   (4) Gain comparison table: gain, SNR = (mu1-mu0)/sqrt(sig1^2+sig0^2) and absolute gain in SiPM electrons             #
+#       (using DYNAMIC_RANGE/BITS/SAMPLING/CHAN_AMPLI from the input file, 50 Ohm and the x128 QDC divisor);             #
+#       consistency requires gain_ADC ~ a x gain_QDC, with a the conversion factor of the overlay fit                    #
+# Results are saved to OUT_PATH/analysis/calibration/runXX/chY/qdc_calibration_runXX_chY.yml                             #
+# ---------------------------------------------------------------------------------------------------------------------- #

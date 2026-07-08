@@ -1,17 +1,9 @@
 # ---------------------------------------------------------------------------------------------------------------------- #
 #  ====================================== RUN:$ python3 0UVisQDC.py -i INPUT_FILE ====================================== #
-# This macro plots the on-board processed data of the CAEN digitizer (DPP-PSD/QDC) saved by 00Raw2Np when the raw data   #
-# is in CoMPASS binary format (RAW_DATA: COMPASS_BIN): Energy (long gate), TimeStamp & Flags.                            #
-# For each selected run/channel it shows:                                                                                #
+# QA visualization of the on-board processed data of the CAEN digitizer (DPP-QDC) saved by 00Raw2Np when the raw data    #
+# is in CoMPASS binary format (RAW_DATA: COMPASS_BIN). For each selected run/channel it shows:                           #
 #   (1) QDC charge spectrum (Energy, integer-aligned binning)                                                            #
-#   (2) QDC calibration: gaussian-train fit to the Energy spectrum (same method as 04Calibration); the QDC gain is the   #
-#       median separation between consecutive peak centers (robust against the pedestal being clipped at E=0)           #
-#   (3) Trigger rate stability computed from the digitizer timestamps                                                    #
-#   (4) Summary of the CoMPASS event flags (pile-up, saturation, etc.)                                                   #
-#   (5) If the selected charge variables exist (-v flag, e.g. AnaChargeAveRange, computed by 03Integration), a 2D        #
-#       comparison of the SCINT charge vs the QDC Energy                                                                 #
-#   (6) Overlay of the SCINT charge spectrum and the QDC Energy spectrum rescaled to the same units (linear fit)         #
-#   (7) Gain comparison table: SCINT gain (from the 04Calibration yml) vs QDC gain; consistency requires                 #
-#       gain_SCINT ~ a x gain_QDC, with a the conversion factor of the overlay fit                                       #
-# Use it to cross-check the SCINT raw-waveform analysis against the digitizer's own processing.                          #
+#   (2) Trigger rate stability computed from the digitizer timestamps                                                    #
+#   (3) Summary of the CoMPASS event flags (pile-up, saturation, etc.)                                                   #
+# For the QDC gain fit and the comparison with the ADC waveform analysis use 0TCalQDC.                                   #
 # ---------------------------------------------------------------------------------------------------------------------- #

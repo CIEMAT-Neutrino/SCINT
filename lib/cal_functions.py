@@ -481,6 +481,31 @@ def export_txt(data: dict, info: dict, debug: bool = False) -> None:
                     )
 
 
+def spe_snr(popt):
+    """Computes the SPE signal-to-noise ratio from the popt of a gaussian train fit:
+    SNR = (mu_1PE - mu_ped) / sqrt(sigma_1PE^2 + sigma_ped^2), i.e. the pedestal-to-1PE
+    separation over the quadrature sum of both widths. The pedestal-subtracted mean
+    makes it valid for spectra whose pedestal is not at zero.
+
+    :param popt: gaussian train parameters as (center, height, width) triplets
+    :type popt: list or nparray
+
+    :return: SNR, or None if fewer than two gaussians were fitted
+    :rtype: float or None
+    """
+
+    centers = np.asarray(popt[0::3], dtype=float)
+    sigmas = np.abs(np.asarray(popt[2::3], dtype=float))
+    if len(centers) < 2:
+        return None
+    order = np.argsort(centers)
+    mu0, mu1 = centers[order[0]], centers[order[1]]
+    s0, s1 = sigmas[order[0]], sigmas[order[1]]
+    if s0 == 0 and s1 == 0:
+        return None
+    return (mu1 - mu0) / np.sqrt(s1**2 + s0**2)
+
+
 def calibration_txt(run, ch, key, popt, pcov, info, debug=False) -> bool:
     """Computes calibration parameters.
     
