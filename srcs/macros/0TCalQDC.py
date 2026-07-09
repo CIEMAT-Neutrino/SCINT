@@ -17,7 +17,6 @@ user_input, info = initialize_macro(
 
 ### 0TCalQDC
 QDC_DIVISOR = 128       # DPP-QDC rescaling of the gate integral for coarse gain X1
-INPUT_IMPEDANCE = 50    # Ohm
 E_CHARGE = 1.602e-19    # C
 
 my_runs = load_npy(
@@ -34,7 +33,14 @@ colors = get_prism_colors()
 out_path = os.path.expandvars(f'{root}/{info["OUT_PATH"][0]}/images')
 ana_cal_path = os.path.expandvars(f'{root}/{info["OUT_PATH"][0]}/analysis/calibration')
 percentile = [0.1, 99.9]
+# CHAN_AMPLI is the total transimpedance (V/A) of the XA + electronic chain
 amplification = dict(zip(info["CHAN_TOTAL"], info["CHAN_AMPLI"]))
+# Bias voltage of each calibration run (CALIB_VBIAS, same order as CALIB_RUNS),
+# needed for the gain vs V fit of section 5
+vbias = {}
+if check_key(info, "CALIB_VBIAS"):
+    vbias = dict(zip(info["CALIB_RUNS"], info["CALIB_VBIAS"]))
+cal_points = {}  # {(ch, "QDC"/"ADC"): [(vbias, Ge, Ge_err), ...]}
 
 for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
     if check_key(my_runs[run][ch], "Energy") == False:
@@ -45,11 +51,11 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
 
     energy = np.asarray(my_runs[run][ch]["Energy"], dtype=float)
     title = f'Run_{run} - {my_runs[run][ch]["Label"]}'.replace("#", " ") + f" (Ch {ch})"
-    # ADC counts x ticks -> Coulombs delivered by the SiPM (undo digitization,
-    # sampling, input impedance and amplification)
+    # ADC counts x ticks -> Coulombs delivered by the SiPM (undo digitization and
+    # sampling, then the transimpedance of the full chain)
     adc2C = (
         info["DYNAMIC_RANGE"][0] / info["BITS"][0]
-    ) * info["SAMPLING"][0] / INPUT_IMPEDANCE / amplification[ch]
+    ) * info["SAMPLING"][0] / amplification[ch]
     figures = {}
 
     # 1) QDC calibration: fit the same gaussian train used by 04Calibration to the
@@ -70,7 +76,7 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
     bins = np.arange(data.min() - 0.5, data.max() + width + 0.5, width)
     counts, bins = np.histogram(data, bins=bins)
 
-    gain_qdc, gain_qdc_err, snr_qdc, ge_qdc = None, None, None, None
+    gain_qdc, gain_qdc_err, snr_qdc, ge_qdc, ge_qdc_err = None, None, None, None, None
     fig_gain, ax = plt.subplots(1, 1, figsize=(8, 6))
     add_grid(ax)
     center_bins = (bins[:-1] + bins[1:]) / 2
@@ -98,6 +104,7 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         gain_qdc_err = np.std(seps) / np.sqrt(len(seps))
         snr_qdc = spe_snr(popt)
         ge_qdc = gain_qdc * QDC_DIVISOR * adc2C / E_CHARGE
+        ge_qdc_err = gain_qdc_err * QDC_DIVISOR * adc2C / E_CHARGE
         fig_gain.suptitle(
             title + " - QDC calibration (gain {:.1f} ch/PE)".format(gain_qdc)
         )
@@ -111,9 +118,14 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
                 "gain_err": float(gain_qdc_err),
                 "snr": None if snr_qdc is None else float(snr_qdc),
                 "gain_electrons": float(ge_qdc),
+                "gain_electrons_err": float(ge_qdc_err),
             },
             debug=user_input["debug"],
         )
+        if get_run_name(run) in vbias:
+            cal_points.setdefault((ch, "QDC"), []).append(
+                (vbias[get_run_name(run)], ge_qdc, ge_qdc_err)
+            )
     else:
         rprint(
             f"[yellow]Run {run} ch {ch}: not enough QDC peaks fitted to compute a gain.[/yellow]"
@@ -204,16 +216,21 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
         fig_ovl.suptitle(title + " - QDC rescaled vs " + charge_key, fontsize=14)
         figures[f"QDC_Overlay_{charge_key}"] = fig_ovl
 
-        # 4) Gain comparison: ADC waveform calibration (04Calibration yml) vs the QDC
+        # 4) Gain summary: ADC waveform calibration (04Calibration yml) vs the QDC
         # gain fitted above, both as the median separation between consecutive peak
-        # centers. Consistency requires gain_ADC ~ a * gain_QDC, with a the
-        # event-by-event conversion factor from the overlay fit. Gains are also
-        # converted to SiPM electrons through the DAQ constants and amplification.
+        # centers. Gains are also converted to SiPM electrons (Ge) through the DAQ
+        # constants and the transimpedance of the chain, with the uncertainty
+        # propagated linearly from the gain error.
         if gain_qdc is not None:
             yml_path = f"{ana_cal_path}/run{get_run_name(run)}/ch{ch}/calibration_run{get_run_name(run)}_ch{ch}_{charge_key}.yml"
             if os.path.exists(yml_path):
                 with open(yml_path, encoding="latin1") as f:
-                    cal = yaml.safe_load(f)
+                    try:
+                        cal = yaml.safe_load(f)
+                    except yaml.constructor.ConstructorError:
+                        # Some 04Calibration ymls embed numpy objects with python tags
+                        f.seek(0)
+                        cal = yaml.unsafe_load(f)
                 adc_centers = np.sort(np.asarray(cal["popt"][0::3], dtype=float))
                 if len(adc_centers) < 2:
                     rprint(
@@ -225,24 +242,18 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
                 gain_adc_err = np.std(adc_seps) / np.sqrt(len(adc_seps))
                 snr_adc = spe_snr(cal["popt"])
                 ge_adc = gain_adc * adc2C / E_CHARGE
+                ge_adc_err = gain_adc_err * adc2C / E_CHARGE
                 fmt_snr = lambda s: "-" if s is None else "{:.2f}".format(s)
-                ratio = gain_adc / gain_qdc
-                gain_table = Table(title=f"Gain comparison - run {run} ch {ch} ({charge_key})")
+                gain_table = Table(title=f"Gain - run {run} ch {ch} ({charge_key})")
                 gain_table.add_column("gain QDC (ch/PE)", justify="center")
                 gain_table.add_column("gain ADC (ADC x ticks/PE)", justify="center")
-                gain_table.add_column("ratio", justify="center")
-                gain_table.add_column("a overlay", justify="center")
-                gain_table.add_column("agreement", justify="center")
                 gain_table.add_column("Ge QDC (e-)", justify="center")
                 gain_table.add_column("Ge ADC (e-)", justify="center")
                 gain_table.add_row(
                     "{:.2f} +/- {:.2f}".format(gain_qdc, gain_qdc_err),
                     "{:.1f} +/- {:.1f}".format(gain_adc, gain_adc_err),
-                    "{:.2f}".format(ratio),
-                    "{:.2f}".format(a),
-                    "{:+.1f}%".format(100 * (ratio / a - 1)),
-                    "{:.2e}".format(ge_qdc),
-                    "{:.2e}".format(ge_adc),
+                    "{:.3e} +/- {:.1e}".format(ge_qdc, ge_qdc_err),
+                    "{:.3e} +/- {:.1e}".format(ge_adc, ge_adc_err),
                 )
                 rprint(gain_table)
                 snr_table = Table(title=f"SPE SNR - run {run} ch {ch} ({charge_key})")
@@ -259,13 +270,15 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
                             "gain_adc_err": float(gain_adc_err),
                             "snr_adc": None if snr_adc is None else float(snr_adc),
                             "gain_adc_electrons": float(ge_adc),
-                            "a_overlay": float(a),
-                            "ratio": float(ratio),
-                            "agreement_percent": float(100 * (ratio / a - 1)),
+                            "gain_adc_electrons_err": float(ge_adc_err),
                         }
                     },
                     debug=user_input["debug"],
                 )
+                if charge_key == charge_keys[0] and get_run_name(run) in vbias:
+                    cal_points.setdefault((ch, "ADC"), []).append(
+                        (vbias[get_run_name(run)], ge_adc, ge_adc_err)
+                    )
             else:
                 rprint(
                     f"[yellow]Run {run} ch {ch}: no calibration yml for {charge_key} (run 04Calibration). QDC gain = {gain_qdc:.2f} ch/PE.[/yellow]"
@@ -290,3 +303,105 @@ for run, ch in product(my_runs["NRun"], my_runs["NChannel"]):
             plt.gcf().canvas.start_event_loop(0.2)
         sys.stdin.readline()
     plt.close("all")
+
+# 5) Calibration curve: absolute gain Ge vs bias voltage, one figure per channel
+# with the QDC and ADC series. A weighted linear fit Ge = m*(V - V_bd) gives the
+# breakdown voltage as the x-intercept, with its uncertainty propagated from the
+# fit covariance.
+from scipy.optimize import curve_fit
+
+for ch in my_runs["NChannel"]:
+    series = {
+        src: cal_points[(ch, src)]
+        for src in ("ADC", "QDC")
+        if (ch, src) in cal_points and len(cal_points[(ch, src)]) >= 3
+    }
+    if not series:
+        continue
+    fig_vbd, ax = plt.subplots(1, 1, figsize=(8, 6))
+    add_grid(ax)
+    fit_table = Table(title=f"Gain vs V_XA - ch {ch}")
+    for col in ["source", "slope (e-/V)", "V_bd (V)"]:
+        fit_table.add_column(col, justify="center")
+    yml_out = {}
+    for src, color in [("ADC", colors[0]), ("QDC", colors[5])]:
+        if src not in series:
+            continue
+        pts = sorted(series[src])
+        v = np.asarray([p[0] for p in pts], dtype=float)
+        ge = np.asarray([p[1] for p in pts], dtype=float)
+        err = np.asarray([p[2] for p in pts], dtype=float)
+        # Fits with only 2 resolved peaks give a null gain error: fall back to the
+        # median error of the series so the weighted fit stays finite
+        good = np.isfinite(err) & (err > 0)
+        if not good.any():
+            err = 0.05 * np.abs(ge)
+        elif not good.all():
+            err[~good] = np.median(err[good])
+        try:
+            # absolute_sigma=False: the run-to-run scatter at fixed V dominates over
+            # the statistical errors, so the covariance is rescaled by the reduced
+            # chi2 to reflect the real dispersion of the points
+            (m, b), cov = curve_fit(
+                lambda x, m, b: m * x + b, v, ge, sigma=err, absolute_sigma=False
+            )
+        except (RuntimeError, ValueError) as e:
+            rprint(f"[yellow]ch {ch} {src}: gain vs V fit failed ({e}).[/yellow]")
+            continue
+        m_err, b_err = np.sqrt(np.diag(cov))
+        v_bd = -b / m
+        v_bd_err = np.sqrt(
+            max(
+                (b_err / m) ** 2 + (b * m_err / m**2) ** 2 - 2 * b * cov[0][1] / m**3,
+                0.0,
+            )
+        )
+        ax.errorbar(
+            v, ge, yerr=err, fmt="o", ms=5, capsize=3, color=color, label=f"Ge {src}"
+        )
+        vv = np.linspace(min(v_bd, v.min()) - 0.2, v.max() + 0.2, 100)
+        ax.plot(
+            vv,
+            m * vv + b,
+            "--",
+            lw=1.2,
+            color=color,
+            label=r"{} fit: $V_{{bd}}$ = {:.2f} $\pm$ {:.2f} V".format(src, v_bd, v_bd_err),
+        )
+        fit_table.add_row(
+            src,
+            "{:.2e} +/- {:.1e}".format(m, m_err),
+            "{:.2f} +/- {:.2f}".format(v_bd, v_bd_err),
+        )
+        yml_out[src] = {
+            "slope": float(m),
+            "slope_err": float(m_err),
+            "intercept": float(b),
+            "intercept_err": float(b_err),
+            "v_bd": float(v_bd),
+            "v_bd_err": float(v_bd_err),
+            "points_v_ge_err": [[float(a_) for a_ in p] for p in pts],
+        }
+    rprint(fit_table)
+    ax.axhline(0, c="k", lw=0.8, alpha=0.5)
+    ax.legend()
+    fig_vbd.supxlabel(r"$V_{XA}$ (V)")
+    fig_vbd.supylabel("Absolute gain (electrons)")
+    fig_vbd.suptitle(f"Gain vs bias voltage - Ch {ch}")
+    update_yaml_file(
+        f"{ana_cal_path}/gain_vs_vbias_ch{ch}.yml", yml_out, debug=user_input["debug"]
+    )
+    if user_input["save"]:
+        os.makedirs(f"{out_path}/calibration/ch{ch}", mode=0o770, exist_ok=True)
+        fig_vbd.savefig(
+            f"{out_path}/calibration/ch{ch}/gain_vs_vbias_ch{ch}.png", dpi=300
+        )
+
+if cal_points and plt.get_backend().lower() != "agg":
+    plt.ion()
+    plt.show()
+    rprint("[cyan]Figures open. Press ENTER in the terminal to continue...[/cyan]")
+    while not select.select([sys.stdin], [], [], 0)[0]:
+        plt.gcf().canvas.start_event_loop(0.2)
+    sys.stdin.readline()
+plt.close("all")

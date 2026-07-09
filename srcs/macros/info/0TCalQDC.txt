@@ -5,8 +5,12 @@
 #       separation between consecutive peak centers (robust against the pedestal being clipped at E=0)                   #
 #   (2) 2D comparison of the QDC Energy vs the selected ADC charge variables (-v flag, e.g. AnaChargeAveRange)           #
 #   (3) Overlay of both spectra rescaled to the same units (sigma-clipped event-by-event linear fit)                     #
-#   (4) Gain comparison table: gain, SNR = (mu1-mu0)/sqrt(sig1^2+sig0^2) and absolute gain in SiPM electrons             #
-#       (using DYNAMIC_RANGE/BITS/SAMPLING/CHAN_AMPLI from the input file, 50 Ohm and the x128 QDC divisor);             #
-#       consistency requires gain_ADC ~ a x gain_QDC, with a the conversion factor of the overlay fit                    #
-# Results are saved to OUT_PATH/analysis/calibration/runXX/chY/qdc_calibration_runXX_chY.yml                             #
+#   (4) Gain table: gain, SNR = (mu1-mu0)/sqrt(sig1^2+sig0^2) and absolute gain Ge in SiPM electrons with its            #
+#       uncertainty (DYNAMIC_RANGE/BITS/SAMPLING and the full-chain transimpedance CHAN_AMPLI in V/A from the input      #
+#       file; the QDC side also undoes the x128 firmware divisor)                                                        #
+#   (5) If several runs are given: calibration curve Ge vs bias voltage (CALIB_VBIAS, same order as CALIB_RUNS in the    #
+#       input file) per channel for QDC and ADC, with a weighted linear fit whose x-intercept is the breakdown           #
+#       voltage V_bd                                                                                                     #
+# Results are saved to OUT_PATH/analysis/calibration/runXX/chY/qdc_calibration_runXX_chY.yml and                         #
+# OUT_PATH/analysis/calibration/gain_vs_vbias_chY.yml; figures go to OUT_PATH/images                                     #
 # ---------------------------------------------------------------------------------------------------------------------- #

@@ -113,7 +113,7 @@ def read_input_file(
         if NUMBERS == []:
             NUMBERS = ["BITS", "DYNAMIC_RANGE", "CHAN_POLAR", "CHAN_AMPLI","CHAN_PED_LIM", "SIPM_PULSE", "WINDOW_SIPM_PULSE", "CELL_PULSE", "WINDOW_CELL_PULSE"]
         if DOUBLES == []:
-            DOUBLES = ["SAMPLING", "I_RANGE", "F_RANGE"]
+            DOUBLES = ["SAMPLING", "I_RANGE", "F_RANGE", "CALIB_VBIAS"]
         if STRINGS == []:
             STRINGS = [
                 "MUONS_RUNS",
